@@ -36,7 +36,7 @@ public interface MarmotConstants extends CharacterConstants
 //G***fix	public final static String BUILD="20020531";
 
 	/**The expiration date of the application.*/
-	public final static Calendar EXPIRATION=CalendarUtilities.createCalendar(2003, Calendar.AUGUST, 15);
+//G***bring back	public final static Calendar EXPIRATION=CalendarUtilities.createCalendar(2003, Calendar.AUGUST, 15);
 
 		//XML/RDF constants
 
