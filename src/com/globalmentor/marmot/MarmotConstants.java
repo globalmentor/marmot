@@ -20,22 +20,13 @@ public interface MarmotConstants extends CharacterConstants
 	public final static String MARMOT_TITLE="Marmot"+TRADE_MARK_SIGN_CHAR;
 
 	/**The application copyright.*/
-	public final static String MARMOT_COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2003-2004 GlobalMentor, Inc. All Rights Reserved.";	//G**i18n
-
-	/**Whether this is a demo build.*/
-	public final static boolean IS_DEMO=false;
-
-	/**Whether this is a release build.*/
-	public final static boolean IS_RELEASE=true;
+	public final static String MARMOT_COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2003-2005 GlobalMentor, Inc. All Rights Reserved.";	//G**i18n
 
 	/**The version of the application.*/
-	public final static String VERSION="Beta Version 0.41 build 20040131";
-
-	/**The build number of the application.*/
-//G***fix	public final static String BUILD="20020531";
+	public final static String VERSION="Beta Version 0.42 build 20050129";
 
 	/**The expiration date of the application.*/
-	public final static Calendar EXPIRATION=new GregorianCalendar(2006, GregorianCalendar.JANUARY, 1);
+//TODO del	public final static Calendar EXPIRATION=new GregorianCalendar(2006, GregorianCalendar.JANUARY, 1);
 
 		//XML/RDF constants
 
