@@ -14,7 +14,8 @@ public interface MarmotConstants extends CharacterConstants
 {
 
 	/**The application URI.*/
-	public final static URI MARMOT_URI=URI.create("http://globalmentor.org/software/marmot");
+	public final static URI MARMOT_URI=URI.create("urn:x-globalmentor:software:/marmot");
+//G***del if not needed	public final static URI MARMOT_URI=URI.create("http://globalmentor.org/software/marmot");
 
 	/**The application title.*/
 	public final static String MARMOT_TITLE="Marmot"+TRADE_MARK_SIGN_CHAR;
