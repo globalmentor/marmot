@@ -2,13 +2,40 @@ package com.globalmentor.marmot;
 
 import java.io.*;
 import java.net.*;
+import java.util.*;
 import com.garretwilson.lang.*;
+import com.garretwilson.text.*;
+import com.garretwilson.util.*;
 
 /**Constant values used by Marmot.
 @author Garret Wilson
 */
-public interface MarmotConstants
+public interface MarmotConstants extends CharacterConstants
 {
+
+	/**The application URI.*/
+	public final static URI MARMOT_URI=URI.create("http://globalmentor.org/software/marmot");
+
+	/**The application title.*/
+	public final static String MARMOT_TITLE="Marmot"+TRADE_MARK_SIGN_CHAR;
+
+	/**The application copyright.*/
+	public final static String MARMOT_COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2003 GlobalMentor, Inc. All Rights Reserved.";	//G**i18n
+
+	/**Whether this is a demo build.*/
+	public final static boolean IS_DEMO=false;
+
+	/**Whether this is a release build.*/
+	public final static boolean IS_RELEASE=false;
+
+	/**The version of the application.*/
+	public final static String VERSION="Beta Version 0.2 build 20030416";
+
+	/**The build number of the application.*/
+//G***fix	public final static String BUILD="20020531";
+
+	/**The expiration date of the application.*/
+	public final static Calendar EXPIRATION=CalendarUtilities.createCalendar(2003, Calendar.MAY, 15);
 
 		//XML/RDF constants
 
