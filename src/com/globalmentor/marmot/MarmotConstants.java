@@ -60,7 +60,7 @@ public interface MarmotConstants extends CharacterConstants
 	/**The file in which the the configuration information are stored.*/
 	public final static File CONFIGURATION_FILE=new File(CONFIGURATION_DIRECTORY, CONFIGURATION_FILENAME);
 
-		//installation constnats
+		//installation constants
 		
 	/**The property for the Marmot install directory, if given by the launcher.*/
 //G***del	public final static String INSTALL_DIR="com.globalmentor.marmot.install.dir";
