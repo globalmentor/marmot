@@ -20,7 +20,7 @@ public interface MarmotConstants extends CharacterConstants
 	public final static String MARMOT_TITLE="Marmot"+TRADE_MARK_SIGN_CHAR;
 
 	/**The application copyright.*/
-	public final static String MARMOT_COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2003 GlobalMentor, Inc. All Rights Reserved.";	//G**i18n
+	public final static String MARMOT_COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2003-2004 GlobalMentor, Inc. All Rights Reserved.";	//G**i18n
 
 	/**Whether this is a demo build.*/
 	public final static boolean IS_DEMO=false;
