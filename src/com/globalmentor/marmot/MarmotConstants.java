@@ -46,20 +46,6 @@ public interface MarmotConstants extends CharacterConstants
 	/**The URI to the Marmot namespace.*/
 	public final static URI MARMOT_NAMESPACE_URI=URI.create("http://globalmentor.com/namespaces/2003/marmot#");
 
-		//configuration file constants
-
-	/**The name of the configuration directory.*/
-	public final static String CONFIGURATION_DIRECTORY_NAME=".marmot";
-	
-	/**The configuration directory.*/
-	public final static File CONFIGURATION_DIRECTORY=new File(System.getProperty(SystemConstants.USER_HOME_PROPERTY), CONFIGURATION_DIRECTORY_NAME);
-
-	/**The filename of the configuration file.*/
-	public final static String CONFIGURATION_FILENAME="configuration.rdf";
-
-	/**The file in which the the configuration information are stored.*/
-	public final static File CONFIGURATION_FILE=new File(CONFIGURATION_DIRECTORY, CONFIGURATION_FILENAME);
-
 		//installation constants
 		
 	/**The property for the Marmot install directory, if given by the launcher.*/
