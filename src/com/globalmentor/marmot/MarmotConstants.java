@@ -26,10 +26,10 @@ public interface MarmotConstants extends CharacterConstants
 	public final static boolean IS_DEMO=false;
 
 	/**Whether this is a release build.*/
-	public final static boolean IS_RELEASE=false;
+	public final static boolean IS_RELEASE=true;
 
 	/**The version of the application.*/
-	public final static String VERSION="Beta Version 0.2 build 20030416";
+	public final static String VERSION="Beta Version 0.2 build 20030417";
 
 	/**The build number of the application.*/
 //G***fix	public final static String BUILD="20020531";
