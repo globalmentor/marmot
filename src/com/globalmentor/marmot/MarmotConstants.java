@@ -31,5 +31,13 @@ public interface MarmotConstants
 
 	/**The file in which the the configuration information are stored.*/
 	public final static File CONFIGURATION_FILE=new File(CONFIGURATION_DIRECTORY, CONFIGURATION_FILENAME);
-	
+
+		//installation constnats
+		
+	/**The property for the Marmot install directory, if given by the launcher.*/
+//G***del	public final static String INSTALL_DIR="com.globalmentor.marmot.install.dir";
+
+	/**The property for the example directory, if given by the launcher.*/
+	public final static String EXAMPLE_DIR_PROPERTY="com.globalmentor.marmot.example.dir";
+
 }
