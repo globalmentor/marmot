@@ -30,13 +30,13 @@ public interface MarmotConstants extends CharacterConstants
 	public final static boolean IS_RELEASE=true;
 
 	/**The version of the application.*/
-	public final static String VERSION="Beta Version 0.3 build 20030502";
+	public final static String VERSION="Beta Version 0.3a build 20030607";
 
 	/**The build number of the application.*/
 //G***fix	public final static String BUILD="20020531";
 
 	/**The expiration date of the application.*/
-	public final static Calendar EXPIRATION=CalendarUtilities.createCalendar(2003, Calendar.JUNE, 15);
+	public final static Calendar EXPIRATION=CalendarUtilities.createCalendar(2003, Calendar.AUGUST, 15);
 
 		//XML/RDF constants
 
