@@ -52,7 +52,7 @@ public interface MarmotConstants extends CharacterConstants
 	public final static String CONFIGURATION_DIRECTORY_NAME=".marmot";
 	
 	/**The configuration directory.*/
-	public final static File CONFIGURATION_DIRECTORY=new File(System.getProperty(SystemConstants.USER_HOME), CONFIGURATION_DIRECTORY_NAME);
+	public final static File CONFIGURATION_DIRECTORY=new File(System.getProperty(SystemConstants.USER_HOME_PROPERTY), CONFIGURATION_DIRECTORY_NAME);
 
 	/**The filename of the configuration file.*/
 	public final static String CONFIGURATION_FILENAME="configuration.rdf";
