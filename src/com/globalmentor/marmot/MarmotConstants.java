@@ -44,7 +44,7 @@ public interface MarmotConstants extends CharacterConstants
 	public final static String MARMOT_NAMESPACE_PREFIX="marmot";
 
 	/**The URI to the Marmot namespace.*/
-	public final static URI MARMOT_NAMESPACE_URI=URI.create("http://globalmentor.org/namespaces/2003/marmot#");
+	public final static URI MARMOT_NAMESPACE_URI=URI.create("http://globalmentor.com/namespaces/2003/marmot#");
 
 		//configuration file constants
 
