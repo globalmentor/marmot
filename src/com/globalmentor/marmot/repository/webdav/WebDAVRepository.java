@@ -163,6 +163,7 @@ public class WebDAVRepository extends AbstractRepository
 	*/
 	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws IOException
 	{
+//TODO del Debug.traceStack("!!!!!!!!getting child resource descriptions");
 		if(depth!=0)	//a depth of zero means don't get child resources
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
