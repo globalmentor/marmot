@@ -1,16 +1,12 @@
 package com.globalmentor.marmot;
 
-import java.io.*;
 import java.net.*;
-import java.util.*;
-import com.garretwilson.lang.*;
-import com.garretwilson.text.*;
-import com.garretwilson.util.*;
+import static com.garretwilson.text.CharacterConstants.*;
 
 /**Constant values used by Marmot.
 @author Garret Wilson
 */
-public interface MarmotConstants extends CharacterConstants
+public class MarmotConstants
 {
 
 	/**The application URI.*/
@@ -34,8 +30,14 @@ public interface MarmotConstants extends CharacterConstants
 	public final static String MARMOT_NAMESPACE_PREFIX="marmot";
 
 	/**The URI to the Marmot namespace.*/
-	public final static URI MARMOT_NAMESPACE_URI=URI.create("http://globalmentor.com/namespaces/2003/marmot#");
+	public final static URI MARMOT_NAMESPACE_URI=URI.create("http://globalmentor.com/namespaces/marmot#");
 
+		//Marmot ontology property names
+	/**The icon of a resource. The local name of marmot:icon.*/
+/*TODO del; moved to XPackage
+	public final static String ICON_PROPERTY_NAME="icon";
+*/
+	
 		//installation constants
 		
 	/**The property for the Marmot install directory, if given by the launcher.*/
