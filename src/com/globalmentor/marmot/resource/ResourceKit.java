@@ -53,26 +53,12 @@ public interface ResourceKit
 	*/
 	public URI getOpenTreeNodeIconURI(final Repository repository, final RDFResource resource);
 
-	/**Returns the resource key of an open icon representing the given resource.
-	@param repository The repository in which the resource resides.
-	@param resource The resource for which an icon should be returned.
-	@return The resource key of an icon to display for an open tree node for this resource, or <code>null</code> if no icon resource key is available.
-	*/
-	public String getOpenTreeNodeIconResourceKey(final Repository repository, final RDFResource resource);
-
 	/**Returns the URI of a closed icon representing the given resource.
 	@param repository The repository in which the resource resides.
 	@param resource The resource for which an icon should be returned.
 	@return The URI of an icon to display for a closed tree node for this resource, or <code>null</code> if no icon URI is available.
 	*/
 	public URI getClosedTreeNodeIconURI(final Repository repository, final RDFResource resource);
-
-	/**Returns the resource key of a closed icon representing the given resource.
-	@param repository The repository in which the resource resides.
-	@param resource The resource for which an icon should be returned.
-	@return The resource key of an icon to display for a closed tree node for this resource, or <code>null</code> if no icon resource key is available.
-	*/
-	public String getClosedTreeNodeIconResourceKey(final Repository repository, final RDFResource resource);
 
 	/**Returns the URI of a leaf icon representing the given resource.
 	@param repository The repository in which the resource resides.
@@ -81,13 +67,6 @@ public interface ResourceKit
 	*/
 	public URI getLeafTreeNodeIconURI(final Repository repository, final RDFResource resource);
 
-	/**Returns the resource key of a leaf icon representing the given resource.
-	@param repository The repository in which the resource resides.
-	@param resource The resource for which an icon should be returned.
-	@return The resource key of an icon to display for a leaf node for this resource, or <code>null</code> if no icon resource key is available.
-	*/
-	public String getLeafTreeNodeIconResourceKey(final Repository repository, final RDFResource resource);
-
 	/**Returns the URI of a general icon representing the given resource.
 	@param repository The repository in which the resource resides.
 	@param resource The resource for which an icon should be returned.
@@ -95,23 +74,11 @@ public interface ResourceKit
 	*/
 	public URI getIconURI(final Repository repository, final RDFResource resource);
 
-	/**Returns the resource key of a general icon representing the given resource.
-	@param repository The repository in which the resource resides.
-	@param resource The resource for which an icon should be returned.
-	@return The resource key of a general icon representing the given resource, or <code>null</code> if no icon resource key is available.
-	*/
-	public String getIconResourceKey(final Repository repository, final RDFResource resource);
-
 	/**Returns the URI of a general icon representing this resource kit.
 	@return The URI of a general icon representing this resource kit, or <code>null</code> if no icon URI is available.
 	*/
 	public URI getIconURI();
 
-	/**Returns the resource key of a general icon representing this resource kit.
-	@return The resource key of a general icon representing this resource kit, or <code>null</code> if no icon resource key is available.
-	*/
-	public String getIconResourceKey();
-	
 	/**Initializes a resource description, creating whatever properties are appropriate.
 	@param repository The repository to use to access the resource content, if needed.
 	@param resource The resource description to initialize.

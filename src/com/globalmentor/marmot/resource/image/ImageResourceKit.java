@@ -12,9 +12,17 @@ import com.garretwilson.rdf.RDFResource;
 import static com.garretwilson.rdf.xpackage.XPackageUtilities.*;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.AbstractResourceKit;
+import com.globalmentor.marmot.resource.BurrowResourceKitManager;
 
 import static com.guiseframework.GuiseResourceConstants.*;
 
+/**Resource kit for handling images.
+<p>Supported media types:</p>
+<ul>
+	<li><code>image/jpeg</code></li>
+</ul>
+@author Garret Wilson
+*/
 public class ImageResourceKit extends AbstractResourceKit
 {
 	/**The default file extension.*/
@@ -74,7 +82,7 @@ public class ImageResourceKit extends AbstractResourceKit
 	/**Default constructor.*/
 	public ImageResourceKit()
 	{
-		super(null, IMAGE_ICON_RESOURCE_KEY, new ContentType(IMAGE, JPEG_SUBTYPE, null));
+		super(URI.create("guise/images/icons/image.gif"), new ContentType(IMAGE, JPEG_SUBTYPE, null));	//TODO use a constant
 	}
 
 	/**Initializes a resource description, creating whatever properties are appropriate.

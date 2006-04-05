@@ -114,6 +114,7 @@ public class WebDAVRepository extends AbstractRepository
 		}
 		else	//if this is some other URI
 		{
+//TODO del Debug.traceStack("!!!!!!!!getting resource description for resource", resourceURI);
 			final RDF rdf=new RDF();	//G***use a common RDF data model
 			final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
 			final List<NameValuePair<QualifiedName, ?>> propertyList=webdavResource.propFind();	//get the properties of this resource
@@ -152,7 +153,15 @@ public class WebDAVRepository extends AbstractRepository
 	public boolean hasChildren(final URI resourceURI) throws IOException
 	{
 		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
-		return webdavResource.propFind().size()>0;	//TODO fix to use cached values
+		final List<NameValuePair<URI, List<NameValuePair<QualifiedName, ?>>>> propertyLists=webdavResource.propFind(Depth.ONE);	//get the properties of the resources one level down
+		for(final NameValuePair<URI, List<NameValuePair<QualifiedName, ?>>> propertyList:propertyLists)	//look at each property list
+		{
+			if(!resourceURI.equals(propertyList.getName()))	//if this property list is *not* for this resource
+			{
+				return true;	//this resource has children
+			}
+		}
+		return false;	//no properties could be found for any children
 	}
 
 	/**Retrieves child resources of the resource at the given URI.
@@ -163,7 +172,7 @@ public class WebDAVRepository extends AbstractRepository
 	*/
 	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws IOException
 	{
-//TODO del Debug.traceStack("!!!!!!!!getting child resource descriptions");
+//	TODO del Debug.traceStack("!!!!!!!!getting child resource descriptions for resource", resourceURI);
 		if(depth!=0)	//a depth of zero means don't get child resources
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
@@ -177,14 +186,16 @@ public class WebDAVRepository extends AbstractRepository
 				throw new IllegalArgumentException(Integer.toString(depth));	//TODO later convert the depth by using infinity and checking the result
 			}
 			final RDF rdf=new RDF();	//create a new RDF data model
-			final List<NameValuePair<URI, List<NameValuePair<QualifiedName, ?>>>> propertyLists;
-			propertyLists=webdavResource.propFind(webdavDepth);	//get the properties of the resources
+			final List<NameValuePair<URI, List<NameValuePair<QualifiedName, ?>>>> propertyLists=webdavResource.propFind(webdavDepth);	//get the properties of the resources
 			final List<RDFResource> childResourceList=new ArrayList<RDFResource>(propertyLists.size());	//create a list of child resources no larger than the number of WebDAV resource property lists
+//		TODO del Debug.trace("looking at children");
 			for(final NameValuePair<URI, List<NameValuePair<QualifiedName, ?>>> propertyList:propertyLists)	//look at each property list
 			{
 				final URI childResourceURI=propertyList.getName();
+//			TODO del Debug.trace("looking at child", childResourceURI);
 				if(!resourceURI.equals(childResourceURI))	//if this property list is *not* for this resource
 				{
+//				TODO del Debug.trace("creating resource for child", childResourceURI);
 					childResourceList.add(createResource(rdf, childResourceURI, propertyList.getValue()));	//create a resource from this URI and property lists
 				}
 			}
@@ -212,6 +223,7 @@ public class WebDAVRepository extends AbstractRepository
 	protected RDFResource createResource(final RDF rdf, final URI resourceURI, List<NameValuePair<QualifiedName, ?>> propertyList)	//G***maybe rename to getResource() for consistency	
 	{
 		final RDFResource resource=rdf.locateResource(resourceURI);	//create a resource to represent the WebDAV property list
+//	TODO del Debug.trace("ready to create resource description for resource", resource, "with property count", propertyList.size());
 /*TODO fix
 		final RK resourceKit=getResourceKitManager().getResourceKit(this, resource);	//get a resource kit for this resource
 		if(resourceKit!=null)	//if we found a resource kit for this resource
@@ -235,7 +247,7 @@ public class WebDAVRepository extends AbstractRepository
 				//TODO fix creationdate
 				if(RESOURCE_TYPE_PROPERTY_NAME.equals(propertyLocalName) && propertyComplexValue!=null)	//D:resourcetype
 				{
-					if(COLLECTION_TYPE.equals(propertyComplexValue.getName()))	//if this is a collection
+					if(COLLECTION_TYPE.equals(propertyComplexValue.getName().getReferenceURI()))	//if this is a collection
 					{
 						isCollection=true;	//show that this is a collection
 						RDFUtilities.addType(resource, FILE_ONTOLOGY_NAMESPACE_URI, FOLDER_TYPE_NAME);	//add the file:folder type to indicate that this resource is a folder
