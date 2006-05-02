@@ -68,8 +68,7 @@ public interface Repository
 
 	/**Retrieves child resources of the resource at the given URI.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
-	@param depth The zero-based depth of child resources which should
-		recursively be retrieved, or <code>-1</code> for an infinite depth.
+	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
 	@return A list of sub-resources descriptions directly under the given resource.
 	@exception IOException if there is an error accessing the repository.
 	*/

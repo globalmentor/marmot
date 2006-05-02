@@ -214,7 +214,7 @@ public class WebDAVRepository extends AbstractRepository
 
 	
 	
-	/*Creates a resource to represent this list of properties.
+	/**Creates a resource to represent this list of properties.
 	@param rdf The RDF data model to use when creating this resource.
 	@param referenceURI The reference URI of the property to create.
 	@param propertyList The list of property qualified names paired with WebDAV property values.

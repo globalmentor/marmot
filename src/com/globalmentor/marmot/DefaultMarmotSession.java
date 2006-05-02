@@ -151,39 +151,43 @@ public class DefaultMarmotSession implements MarmotSession
 	*/
 	public ResourceKit getResourceKit(final Repository repository, final RDFResource resource)
 	{
+		ResourceKit resourceKit=null;
 			//step 1: try to match a resource kit by content type
 		final ContentType contentType=MIMEOntologyUtilities.getMediaType(resource); //get the content type of the resource
-		ResourceKit resourceKit=resourceKit=getResourceKit(contentType);	//see if we have a resource kit registered for this media type
-			//step 2: try to match a resource kit by resource type
-		if(resourceKit==null)	//if we haven't yet found a resource kit, try to match a resource by resource type
+		if(contentType!=null)	//if we know the content type of the resource
 		{
-			final Iterator<RDFObject> typeIterator=RDFUtilities.getTypeIterator(resource);	//get an iterator to all the types of this resource
-			while(resourceKit==null && typeIterator.hasNext())	//while there are more types and we haven't yet found a resource kit
+			resourceKit=getResourceKit(contentType);	//see if we have a resource kit registered for this media type
+				//step 2: try to match a resource kit by resource type
+			if(resourceKit==null)	//if we haven't yet found a resource kit, try to match a resource by resource type
 			{
-				final RDFObject rdfObject=typeIterator.next();	//get the next type
-				if(rdfObject instanceof RDFResource)	//if this is a type resource, as we expect
+				final Iterator<RDFObject> typeIterator=RDFUtilities.getTypeIterator(resource);	//get an iterator to all the types of this resource
+				while(resourceKit==null && typeIterator.hasNext())	//while there are more types and we haven't yet found a resource kit
 				{
-					final RDFResource typeResource=(RDFResource)rdfObject;	//cast the object to an RDF resource
-					resourceKit=getResourceKit(typeResource.getReferenceURI());	//see if we have a resource kit registered for this resource type URI
+					final RDFObject rdfObject=typeIterator.next();	//get the next type
+					if(rdfObject instanceof RDFResource)	//if this is a type resource, as we expect
+					{
+						final RDFResource typeResource=(RDFResource)rdfObject;	//cast the object to an RDF resource
+						resourceKit=getResourceKit(typeResource.getReferenceURI());	//see if we have a resource kit registered for this resource type URI
+					}
 				}
 			}
-		}
-			//step 3: ask each resource kit individually if it supports this resource
-/*G***fix or del if not needed
-		if(resourceKit==null)	//if we haven't yet found a resource kit, ask each resource kit individually
-		{
-			final Iterator resourceKitIterator=getRegisteredResourceKitIterator();	//get an iterator to the resource kits
-			while(resourceKitIterator.hasNext())	//while there are more resource kits
+				//step 3: ask each resource kit individually if it supports this resource
+	/*G***fix or del if not needed
+			if(resourceKit==null)	//if we haven't yet found a resource kit, ask each resource kit individually
 			{
-				final ResourceKit currentResourceKit=(ResourceKit)resourceKitIterator.next();	//get the next resource kit
-				if(currentResourceKit.supports(resource))	//if this resource kit supports the resource
+				final Iterator resourceKitIterator=getRegisteredResourceKitIterator();	//get an iterator to the resource kits
+				while(resourceKitIterator.hasNext())	//while there are more resource kits
 				{
-					resourceKit=currentResourceKit;	//use this resource kit
-					break;	//stop looking for a resource kit
-				}
-			}			
+					final ResourceKit currentResourceKit=(ResourceKit)resourceKitIterator.next();	//get the next resource kit
+					if(currentResourceKit.supports(resource))	//if this resource kit supports the resource
+					{
+						resourceKit=currentResourceKit;	//use this resource kit
+						break;	//stop looking for a resource kit
+					}
+				}			
+			}
+	*/
 		}
-*/
 		if(resourceKit==null)	//if we have exhausted all attempts to get a matching resource kit
 		{
 			resourceKit=getDefaultResourceKit();	//use the default resource kit, if there is one
