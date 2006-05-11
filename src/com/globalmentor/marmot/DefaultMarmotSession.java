@@ -160,7 +160,7 @@ public class DefaultMarmotSession implements MarmotSession
 				//step 2: try to match a resource kit by resource type
 			if(resourceKit==null)	//if we haven't yet found a resource kit, try to match a resource by resource type
 			{
-				final Iterator<RDFObject> typeIterator=RDFUtilities.getTypeIterator(resource);	//get an iterator to all the types of this resource
+				final Iterator<RDFObject> typeIterator=RDFUtilities.getTypes(resource).iterator();	//get an iterator to all the types of this resource
 				while(resourceKit==null && typeIterator.hasNext())	//while there are more types and we haven't yet found a resource kit
 				{
 					final RDFObject rdfObject=typeIterator.next();	//get the next type
