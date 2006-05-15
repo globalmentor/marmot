@@ -15,6 +15,8 @@ import com.globalmentor.marmot.resource.AbstractResourceKit;
 import com.globalmentor.marmot.resource.BurrowResourceKitManager;
 
 import static com.guiseframework.GuiseResourceConstants.*;
+import static com.guiseframework.theme.Theme.*;
+
 
 /**Resource kit for handling images.
 <p>Supported media types:</p>
@@ -82,7 +84,7 @@ public class ImageResourceKit extends AbstractResourceKit
 	/**Default constructor.*/
 	public ImageResourceKit()
 	{
-		super(URI.create("guise/images/icons/image.gif"), new ContentType(IMAGE, JPEG_SUBTYPE, null));	//TODO use a constant
+		super(ICON_IMAGE, new ContentType(IMAGE, JPEG_SUBTYPE, null));
 	}
 
 	/**Initializes a resource description, creating whatever properties are appropriate.

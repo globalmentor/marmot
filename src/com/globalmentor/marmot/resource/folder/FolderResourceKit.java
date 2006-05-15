@@ -9,6 +9,8 @@ import com.garretwilson.rdf.RDFResource;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.AbstractResourceKit;
 
+import static com.guiseframework.theme.Theme.*;
+
 /**Resource kit for handling folder resources that have no content but can contain children.
 <p>Supported RDF resource types:</p>
 <ul>
@@ -26,12 +28,12 @@ public class FolderResourceKit extends AbstractResourceKit
 	*/
 	public URI getOpenTreeNodeIconURI(final Repository repository, final RDFResource resource)
 	{
-		return URI.create("guise/images/icons/folder_open.gif");	//TODO use a constant
+		return ICON_FOLDER_OPEN;
 	}
 
 	/**Default constructor.*/
 	public FolderResourceKit()
 	{
-		super(URI.create("guise/images/icons/folder.gif"), createReferenceURI(FILE_ONTOLOGY_NAMESPACE_URI, FOLDER_TYPE_NAME));	//TODO use a constant
+		super(ICON_FOLDER, createReferenceURI(FILE_ONTOLOGY_NAMESPACE_URI, FOLDER_TYPE_NAME));
 	}
 }
