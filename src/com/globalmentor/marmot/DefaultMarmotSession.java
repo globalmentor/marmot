@@ -8,8 +8,9 @@ import java.util.concurrent.*;
 import javax.mail.internet.ContentType;
 import com.garretwilson.rdf.*;
 import com.garretwilson.rdf.xpackage.*;
+import com.garretwilson.util.CollectionMap;
 import com.garretwilson.util.CopyOnWriteArrayListConcurrentHashMap;
-import com.garretwilson.util.ListMap;
+import com.garretwilson.util.CollectionMap;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.ResourceKit;
 
@@ -22,11 +23,14 @@ public class DefaultMarmotSession implements MarmotSession
 	/**The set of resource kits.*/
 	private Set<ResourceKit> resourceKits=new CopyOnWriteArraySet<ResourceKit>();
 	
+	
+	//TODO should we use set maps instead of list maps here?
+	
 	/**The map of resource kit lists, keyed to supported content type base types.*/
-	private ListMap<String, ResourceKit> contentTypeResourceKitsMap=new CopyOnWriteArrayListConcurrentHashMap<String, ResourceKit>();
+	private CollectionMap<String, ResourceKit, List<ResourceKit>> contentTypeResourceKitsMap=new CopyOnWriteArrayListConcurrentHashMap<String, ResourceKit>();
 
 	/**The map of resource kit lists, keyed to supported resource type URIs.*/
-	private ListMap<URI, ResourceKit> resourceTypeResourceKitsMap=new CopyOnWriteArrayListConcurrentHashMap<URI, ResourceKit>();
+	private CollectionMap<URI, ResourceKit, List<ResourceKit>> resourceTypeResourceKitsMap=new CopyOnWriteArrayListConcurrentHashMap<URI, ResourceKit>();
 
 	/**The default resource kit to use if a specific resource kit cannot be found, or <code>null</code> if there is no default resource kit..*/
 	private final ResourceKit defaultResourceKit;
