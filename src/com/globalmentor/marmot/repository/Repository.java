@@ -18,6 +18,7 @@ public interface Repository
 	/**Gets an input stream to the contents of the resource specified by the given URI.
 	@param resourceURI The URI of the resource to access.
 	@return An input stream to the resource represented by the given URI.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
 	*/
 	public InputStream getResourceInputStream(final URI resourceURI) throws IOException;
@@ -25,6 +26,7 @@ public interface Repository
 	/**Gets an output stream to the contents of the resource specified by the given URI.
 	@param resourceURI The URI of the resource to access.
 	@return An output stream to the resource represented by the given URI.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error accessing the resource.
 	*/
 	public OutputStream getResourceOutputStream(final URI resourceURI) throws IOException;
@@ -32,6 +34,7 @@ public interface Repository
 	/**Retrieves a description of the resource with the given URI.
 	@param resourceURI The URI of the resource the description of which should be retrieved.
 	@return A description of the resource with the given URI.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error accessing the repository.
 	*/
 	public RDFResource getResourceDescription(final URI resourceURI) throws IOException;
@@ -39,6 +42,7 @@ public interface Repository
 	/**Determines if the resource at the given URI exists.
 	@param resourceURI The URI of the resource to check.
 	@return <code>true</code> if the resource exists, else <code>false</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error accessing the repository.
 	*/
 	public boolean resourceExists(final URI resourceURI) throws IOException;
@@ -48,6 +52,7 @@ public interface Repository
 	and retrieving that resource would result in a resource of type <code>file:Folder</code>.
 	@param resourceURI The URI of the requested resource.
 	@return <code>true</code> if the resource is a collection, else <code>false</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error accessing the repository.
 	*/
 	public boolean isCollection(final URI resourceURI) throws IOException;
@@ -55,6 +60,7 @@ public interface Repository
 	/**Determines whether the resource represented by the given URI has children.
 	@param resourceURI The URI of the resource.
 	@return <code>true</code> if the specified resource has child resources.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error accessing the repository.
 	*/
 	public boolean hasChildren(final URI resourceURI) throws IOException;
@@ -62,6 +68,7 @@ public interface Repository
 	/**Retrieves immediate child resources of the resource at the given URI.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
 	@return A list of sub-resource descriptions directly under the given resource.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error accessing the repository.
 	*/
 	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI) throws IOException;
@@ -70,6 +77,7 @@ public interface Repository
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
 	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
 	@return A list of sub-resources descriptions directly under the given resource.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error accessing the repository.
 	*/
 	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws IOException;
@@ -79,6 +87,7 @@ public interface Repository
 	@param resourceURI The URI of the resource to be copied.
 	@param destinationRepository The repository to which the resource should be copied, which may be this repository.
 	@param destinationURI The URI to which the resource should be copied.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error copying the resource.
 	*/
 	public void copyResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws IOException;
@@ -87,12 +96,14 @@ public interface Repository
 	Any resource at the destination URI will be replaced.
 	@param resourceURI The URI of the resource to be copied.
 	@param destinationURI The URI to which the resource should be copied.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error copying the resource.
 	*/
 	public void copyResource(final URI resourceURI, final URI destinationURI) throws IOException;
 
 	/**Deletes a resource.
 	@param resourceURI The reference URI of the resource to delete.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if the resource could not be deleted.
 	*/
 	public void deleteResource(final URI resourceURI) throws IOException;
@@ -102,6 +113,7 @@ public interface Repository
 	@param resourceURI The URI of the resource to be moved.
 	@param destinationRepository The repository to which the resource should be moved, which may be this repository.
 	@param destinationURI The URI to which the resource should be moved.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error moving the resource.
 	*/
 	public void moveResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws IOException;
@@ -110,6 +122,7 @@ public interface Repository
 	Any resource at the destination URI will be replaced.
 	@param resourceURI The URI of the resource to be moved.
 	@param destinationURI The URI to which the resource should be moved.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error moving the resource.
 	*/
 	public void moveResource(final URI resourceURI, final URI destinationURI) throws IOException;

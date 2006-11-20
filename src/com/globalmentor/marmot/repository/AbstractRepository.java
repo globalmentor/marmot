@@ -7,14 +7,15 @@ import java.util.*;
 import com.garretwilson.event.*;
 import static com.garretwilson.io.OutputStreamUtilities.*;
 import com.garretwilson.lang.ClassUtilities;
+import static com.garretwilson.lang.ObjectUtilities.*;
+import static com.garretwilson.net.URIUtilities.*;
 import com.garretwilson.rdf.*;
 import com.garretwilson.rdf.rdfs.RDFSUtilities;
 import static com.globalmentor.marmot.MarmotConstants.*;
 
 /**Abstract repository class the implements common features of a burrow.
-<p>The burrow automatically adds an <code>rdf:type</code> property of
-	<code>marmot:XXXBurrow</code>, where "XXXBurrow" is the local name of the
-	class.</p>
+<p>Resource access methods should call {@link #checkResourceURI(URI)} as a security check to ensure the given URI is within the repository.
+<p>This implementation automatically adds an <code>rdf:type</code> property of <code>marmot:XXXRepository</code>, where "XXXRepository" is the local name of the repository class.</p>
 @author Garret Wilson
 */
 public abstract class AbstractRepository extends TypedRDFResource implements Repository
@@ -29,18 +30,68 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 	/**@return The local name of the default type of this resource.*/
 	public String getDefaultTypeName() {return ClassUtilities.getLocalName(getClass());}
 
-	/**URI contructor.
+	/**The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository.*/
+	private final URI privateRepositoryURI;
+		
+		/**@return The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository.*/
+		protected URI getPrivateRepositoryURI() {return privateRepositoryURI;}
+
+		/**Translates a public URI in the repository to the equivalent private URI in the private URI namespace.
+		@param publicURI The URI in the public URI namesapce.
+		@return A URI equivalent to the public URI in the private URI namespace.
+		*/
+		protected URI getPrivateURI(final URI publicURI)
+		{
+			return changeBase(publicURI, getReferenceURI(), getPrivateRepositoryURI());	//change the base of the URI from the public URI namespace to the private URI namespace
+		}
+
+		/**Translates a private URI to the equivalent public URI in the public repository URI namespace.
+		@param privateURI The URI in the private URI namesapce.
+		@return A URI equivalent to the private URI in the public repository URI namespace.
+		*/
+		protected URI getPublicURI(final URI privateURI)
+		{
+			return changeBase(privateURI, getPrivateRepositoryURI(), getReferenceURI());	//change the base of the URI from the private URI namespace to the public URI namespace
+		}
+
+	/**Checks to make sure the resource designated by the given resource URI is within this repository.
+	This version makes sure the given URI is a child of the resource reference URI.
+	@param resourceURI The URI of the resource to check.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	*/
+	protected void checkResourceURI(final URI resourceURI)
+	{
+		if(!isChild(getReferenceURI(), resourceURI))	//if the given resource URI does not designate a resource within this repository's URI namespace
+		{
+			throw new IllegalArgumentException(resourceURI+" does not designate a resource within the repository "+getReferenceURI());
+		}		
+	}
+	
+	/**URI contructor with no separate private URI namespace.
 	@param repositoryURI The URI identifying the location of this repository.
+	@exception NullPointerException if the given respository URI is <code>null</code>.
 	*/
 	public AbstractRepository(final URI repositoryURI)
 	{
-		this(repositoryURI, null);	//construct the repository with no label
+		this(repositoryURI, repositoryURI);	//use the same repository URI as the public and private namespaces
 	}
-	
+
+	/**Public repository URI and private repository URI contructor.
+	@param publicRepositoryURI The URI identifying the location of this repository.
+	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
+	@exception NullPointerException if one of the given respository URIs is <code>null</code>.
+	*/
+	public AbstractRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
+	{
+		super(checkInstance(publicRepositoryURI, "Public repository URI cannot be null."));	//construct the parent class with the public reference URI
+		this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI cannot be null.");
+	}
+
 	/**URI and label contructor.
 	@param repositoryURI The URI identifying the location of this repository.
 	@param label The label for the repository, or <code>null</code> if no label should be provided.
 	*/
+/*TODO del if not needed
 	public AbstractRepository(final URI repositoryURI, final String label)
 	{
 		super(repositoryURI);	//construct the parent class with the reference URI
@@ -50,6 +101,7 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 			RDFSUtilities.setLabel(this, label);	//replace all labels with the one provided TODO use static import
 		}
 	}
+*/
 
 	/**Retrieves immediate child resources of the resource at the given URI.
 	This implementation retrieves a single-level list of descriptions by calling {@link #getChildResourceDescriptions(URI, int)}.
@@ -59,6 +111,7 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 	*/
 	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI) throws IOException
 	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		return getChildResourceDescriptions(resourceURI, 1);	//get a list of child resource descriptions without going deeper than one level
 	}
 

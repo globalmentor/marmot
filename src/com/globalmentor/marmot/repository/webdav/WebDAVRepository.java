@@ -23,7 +23,6 @@ import com.garretwilson.rdf.RDF;
 import com.garretwilson.rdf.RDFResource;
 import com.garretwilson.rdf.RDFUtilities;
 import com.garretwilson.rdf.rdfs.RDFSUtilities;
-import com.garretwilson.rdf.xpackage.FileOntologyConstants;
 import com.garretwilson.text.xml.QualifiedName;
 import com.garretwilson.util.Debug;
 import com.garretwilson.util.NameValuePair;
@@ -36,14 +35,14 @@ import com.globalmentor.marmot.repository.AbstractRepository;
 	to store child resources.</p>
 @author Garret Wilson
 */
-public class WebDAVRepository extends AbstractRepository
+public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize and allow public/private URIs
 {
 
 	/**The URI represting the XPackage file:folder type.*/	//TODO check; use static imports 
-	protected final static URI FILE_FOLDER_TYPE_URI=RDFUtilities.createReferenceURI(FileOntologyConstants.FILE_ONTOLOGY_NAMESPACE_URI, FileOntologyConstants.FOLDER_TYPE_NAME);	//TODO promote to parent file-based class		
+//TODO move if needed	protected final static URI FILE_FOLDER_TYPE_URI=RDFUtilities.createReferenceURI(FileOntologyConstants.FILE_ONTOLOGY_NAMESPACE_URI, FileOntologyConstants.FOLDER_TYPE_NAME);	//TODO promote to parent file-based class		
 
 	/**The extension used for directories to hold resource children.*/
-	protected final static String DIRECTORY_EXTENSION="@";	//TODO promote to parent file-based class
+//TODO move if needed	protected final static String DIRECTORY_EXTENSION="@";	//TODO promote to parent file-based class
 
 	/**The HTTP client used to create a connection to this resource.*/
 	private final HTTPClient httpClient;
@@ -51,41 +50,33 @@ public class WebDAVRepository extends AbstractRepository
 		/**@return The HTTP client used to create a connection to this resource.*/
 		protected HTTPClient getHTTPClient() {return httpClient;}
 
-	/**URI contructor using the default HTTP client.
+	/**Base URI contructor using the default HTTP client.
 	@param baseURI The WebDAV URI to be used as the base of all resources.
 	*/
 	public WebDAVRepository(final URI baseURI)
 	{
-		this(baseURI, null);	//construct a WebDAV repository with no label
+		this(baseURI, HTTPClient.getInstance());	//use the default HTTP client
 	}
 	
-	/**URI and label contructor using the default HTTP client.
-	@param baseURI The WebDAV URI to be used as the base of all resources.
-	@param label The label for the repository, or <code>null</code> if no label should be provided.
-	*/
-	public WebDAVRepository(final URI baseURI, final String label)
-	{
-		this(baseURI, HTTPClient.getInstance(), label);	//use the default HTTP client
-	}
-
-	/**URI, HTTP client, and label contructor.
+	/**Base URI and HTTP client contructor.
 	@param baseURI The WebDAV URI to be used as the base of all resources.
 	@param httpClient The HTTP client used to create a connection to this resource.	
-	@param label The label for the repository, or <code>null</code> if no label should be provided.
 	*/
-	public WebDAVRepository(final URI baseURI, final HTTPClient httpClient, final String label)
+	public WebDAVRepository(final URI baseURI, final HTTPClient httpClient)
 	{
-		super(baseURI, label);	//construct the parent class with the base URI and the label
+		super(baseURI);	//construct the parent class with the base URI
 		this.httpClient=httpClient;	//save the HTTP client
 	}
 	
 	/**Gets an input stream to the contents of the resource specified by the given URI.
 	@param resourceURI The URI of the resource to access.
 	@return An input stream to the resource represented by the given URI.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
 	*/
 	public InputStream getResourceInputStream(final URI resourceURI) throws IOException
 	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
 		return webdavResource.getInputStream();	//return an input stream to the resource
 	}
@@ -93,10 +84,12 @@ public class WebDAVRepository extends AbstractRepository
 	/**Gets an output stream to the contents of the resource specified by the given URI.
 	@param resourceURI The URI of the resource to access.
 	@return An output stream to the resource represented by the given URI.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error accessing the resource.
 	*/
 	public OutputStream getResourceOutputStream(final URI resourceURI) throws IOException
 	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
 		return webdavResource.getOutputStream();	//return an output stream to the resource
 	}
@@ -104,10 +97,12 @@ public class WebDAVRepository extends AbstractRepository
 	/**Retrieves a description of the resource with the given URI.
 	@param resourceURI The URI of the resource the description of which should be retrieved.
 	@return A description of the resource with the given URI.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error accessing the repository.
 	*/
 	public RDFResource getResourceDescription(final URI resourceURI) throws IOException
 	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		if(getReferenceURI().equals(resourceURI))	//if this is the URI of the repository
 		{
 			return this;	//return the repository itself
@@ -125,10 +120,12 @@ public class WebDAVRepository extends AbstractRepository
 	/**Determines if the resource at the given URI exists.
 	@param resourceURI The URI of the resource to check.
 	@return <code>true</code> if the resource exists, else <code>false</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error accessing the repository.
 	*/
 	public boolean resourceExists(final URI resourceURI) throws IOException
 	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
 		return webdavResource.exists();	//see if the WebDAV resource exists		
 	}
@@ -138,20 +135,24 @@ public class WebDAVRepository extends AbstractRepository
 	and retrieving that resource would result in a resource of type <code>file:Folder</code>.
 	@param resourceURI The URI of the requested resource.
 	@return <code>true</code> if the resource is a collection, else <code>false</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error accessing the repository.
 	*/
 	public boolean isCollection(final URI resourceURI) throws IOException
   {
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		return false;	//TODO fix
   }
 
 	/**Determines whether the resource represented by the given URI has children.
 	@param resourceURI The URI of the resource.
 	@return <code>true</code> if the specified resource has child resources.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error accessing the repository.
 	*/
 	public boolean hasChildren(final URI resourceURI) throws IOException
 	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
 		final List<NameValuePair<URI, List<NameValuePair<QualifiedName, ?>>>> propertyLists=webdavResource.propFind(Depth.ONE);	//get the properties of the resources one level down
 		for(final NameValuePair<URI, List<NameValuePair<QualifiedName, ?>>> propertyList:propertyLists)	//look at each property list
@@ -168,11 +169,13 @@ public class WebDAVRepository extends AbstractRepository
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
 	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
 	@return A list of sub-resources descriptions directly under the given resource.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error accessing the repository.
 	*/
 	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws IOException
 	{
 //	TODO del Debug.traceStack("!!!!!!!!getting child resource descriptions for resource", resourceURI);
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		if(depth!=0)	//a depth of zero means don't get child resources
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
@@ -214,20 +217,24 @@ public class WebDAVRepository extends AbstractRepository
 	Any resource at the destination URI will be replaced.
 	@param resourceURI The URI of the resource to be copied.
 	@param destinationURI The URI to which the resource should be copied.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error copying the resource.
 	*/
 	public void copyResource(final URI resourceURI, final URI destinationURI) throws IOException
 	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
 		webdavResource.copy(destinationURI);	//copy the resource with an infinite depth, overwriting the destination resource if one exists
 	}
 
 	/**Deletes a resource.
 	@param resourceURI The reference URI of the resource to delete.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if the resource could not be deleted.
 	*/
 	public void deleteResource(final URI resourceURI) throws IOException
 	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
 		webdavResource.delete();	//delete the resource		
 	}
@@ -236,10 +243,12 @@ public class WebDAVRepository extends AbstractRepository
 	Any resource at the destination URI will be replaced.
 	@param resourceURI The URI of the resource to be moved.
 	@param destinationURI The URI to which the resource should be moved.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error moving the resource.
 	*/
 	public void moveResource(final URI resourceURI, final URI destinationURI) throws IOException
 	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
 		webdavResource.move(destinationURI);	//move the resource with an infinite depth, overwriting the destination resource if one exists
 	}
@@ -302,6 +311,13 @@ public class WebDAVRepository extends AbstractRepository
 				//TODO fix getlastmodified				
 			}
 		}
+		
+		
+			//TODO fix filename encoding/decoding---there's no way to know what operating system the server is using
+		
+			//TODO encode in UTF-8
+		
+		
 		if(isCollection)	//if this is a collection TODO fix label better; deal with WebDAV display name
 		{
 			final String label=FileUtilities.decodeFilename(filename);	//unescape any reserved characters in the filename
