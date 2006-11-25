@@ -55,7 +55,7 @@ public class FileRepository extends AbstractRepository
 					if(pathname.isDirectory())	//if this is a directory
 						return true;	//always accept directories
 					return true;	//TODO add user-based security
-				}				
+				}
 			};	
 
 	/**File contructor with no separate private URI namespace.
@@ -73,7 +73,7 @@ public class FileRepository extends AbstractRepository
 	@exception NullPointerException if the given respository URI is <code>null</code>.
 	@exception IllegalArgumentException if the repository URI does not use the {@value URIConstants#FILE_SCHEME} scheme.
 	*/
-	protected FileRepository(final URI repositoryURI)
+	public FileRepository(final URI repositoryURI)
 	{
 		this(repositoryURI, repositoryURI);	//use the same repository URI as the public and private namespaces
 	}
@@ -95,7 +95,7 @@ public class FileRepository extends AbstractRepository
 	@exception NullPointerException if one of the given respository URIs is <code>null</code>.
 	@exception IllegalArgumentException if the private repository URI does not use the {@value URIConstants#FILE_SCHEME} scheme.
 	*/
-	protected FileRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
+	public FileRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
 	{
 		super(publicRepositoryURI, privateRepositoryURI);	//construct the parent class
 		if(!FILE_SCHEME.equals(privateRepositoryURI.getScheme()))	//if the private respository URI scheme is not the file scheme
@@ -117,6 +117,7 @@ public class FileRepository extends AbstractRepository
 	}
 	
 	/**Gets an output stream to the contents of the resource specified by the given URI.
+	An error is generated if the resource does not exist.
 	@param resourceURI The URI of the resource to access.
 	@return An output stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -125,7 +126,12 @@ public class FileRepository extends AbstractRepository
 	public OutputStream getResourceOutputStream(final URI resourceURI) throws IOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
-		return new FileOutputStream(new File(getPrivateURI(resourceURI)));	//return an output stream to the file of the private URI
+		final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the private URI
+		if(!resourceFile.exists())	//if the file doesn't exist
+		{
+			throw new FileNotFoundException("Cannot open output stream to non-existent file "+resourceFile+" in repository.");
+		}
+		return new FileOutputStream(resourceFile);	//return an output stream to the file
 	}
 	
 	/**Retrieves a description of the resource with the given URI.
@@ -223,17 +229,44 @@ public class FileRepository extends AbstractRepository
 		}
 	}
 
-	/**Creates an infinitely deep copy of a resource to another URI in this repository.
-	Any resource at the destination URI will be replaced.
-	@param resourceURI The URI of the resource to be copied.
-	@param destinationURI The URI to which the resource should be copied.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IOException if there is an error copying the resource.
+	/**Creates a new resource with the given description and contents.
+	If a resource already exists at the given URI it will be replaced.
+	@param resourceURI The reference URI to use to identify the resource.
+	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@param resourceContents The contents to store in the resource.
+	@return RDFResource A description of the resource that was created.
+	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
+	@exception IOException Thrown if the resource could not be created.
 	*/
-	public void copyResource(final URI resourceURI, final URI destinationURI) throws IOException
+	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription, final byte[] resourceContents) throws IOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
-		throw new UnsupportedOperationException();	//TODO implement
+		final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
+		final OutputStream outputStream=new FileOutputStream(new File(getPrivateURI(resourceURI)));	//get an output stream to the file of the private URI
+		try
+		{
+			outputStream.write(resourceContents);	//write the resource contents to the file
+		}
+		finally
+		{
+			outputStream.close();	//always close the output stream
+		}
+		//TODO update the description
+		return createResourceDescription(new RDF(), resourceFile);	//create and return a description of the new file
+	}
+
+	/**Creates a collection in the repository.
+	@param collectionURI The URI of the collection to be created.
+	@return RDFResource A description of the collection that was created.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IOException if there is an error creating the collection.
+	*/
+	public RDFResource createCollection(final URI collectionURI) throws IOException
+	{
+		checkResourceURI(collectionURI);	//makes sure the resource URI is valid
+		final File directoryFile=new File(getPrivateURI(collectionURI));	//create a file object for the resource
+		mkdir(directoryFile);	//create the directory
+		return createResourceDescription(new RDF(), directoryFile);	//create and return a description of the new directory
 	}
 
 	/**Deletes a resource.
@@ -256,6 +289,19 @@ public class FileRepository extends AbstractRepository
 */
 		}
 		delete(resourceFile, true);	//recursively delete the file or directory	
+	}
+
+	/**Creates an infinitely deep copy of a resource to another URI in this repository.
+	Any resource at the destination URI will be replaced.
+	@param resourceURI The URI of the resource to be copied.
+	@param destinationURI The URI to which the resource should be copied.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IOException if there is an error copying the resource.
+	*/
+	public void copyResource(final URI resourceURI, final URI destinationURI) throws IOException
+	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		throw new UnsupportedOperationException();	//TODO implement
 	}
 
 	/**Moves a resource to another URI in this repository.

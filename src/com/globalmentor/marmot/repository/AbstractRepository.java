@@ -6,11 +6,14 @@ import java.util.*;
 
 import com.garretwilson.event.*;
 import static com.garretwilson.io.OutputStreamUtilities.*;
+import static com.garretwilson.lang.ByteConstants.*;
 import com.garretwilson.lang.ClassUtilities;
 import static com.garretwilson.lang.ObjectUtilities.*;
 import static com.garretwilson.net.URIUtilities.*;
 import com.garretwilson.rdf.*;
 import com.garretwilson.rdf.rdfs.RDFSUtilities;
+import com.garretwilson.util.Debug;
+
 import static com.globalmentor.marmot.MarmotConstants.*;
 
 /**Abstract repository class the implements common features of a burrow.
@@ -103,6 +106,33 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 	}
 */
 
+	/**Creates a new resource with a default description.
+	If a resource already exists at the given URI it will be replaced.
+	This implementation delegates to {@link #createResource(URI, RDFResource)} with a default description.
+	@param resourceURI The reference URI to use to identify the resource.
+	@return RDFResource A description of the resource that was created.
+	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
+	@exception IOException Thrown if the resource could not be created.
+	*/
+	public RDFResource createResource(final URI resourceURI) throws IOException
+	{
+		return createResource(resourceURI, new DefaultRDFResource());	//create the resource with a default description
+	}
+
+	/**Creates a new resource with the given description.
+	If a resource already exists at the given URI it will be replaced.
+	This implementation delegates to {@link Repository#createResource(URI, RDFResource, byte[])} with no contents.
+	@param resourceURI The reference URI to use to identify the resource.
+	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@return RDFResource A description of the resource that was created.
+	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
+	@exception IOException Thrown if the resource could not be created.
+	*/
+	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription) throws IOException
+	{
+		return createResource(resourceURI, resourceDescription, NO_BYTES);	//create the resource with no contents		
+	}
+
 	/**Retrieves immediate child resources of the resource at the given URI.
 	This implementation retrieves a single-level list of descriptions by calling {@link #getChildResourceDescriptions(URI, int)}.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
@@ -132,6 +162,9 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 		}
 		else	//if the resource is being copied to another repository
 		{
+//TODO del Debug.trace("ready to create resource", destinationURI, "in destination repository", destinationRepository.getReferenceURI());
+				//TODO check for non-existent source resource
+			destinationRepository.createResource(destinationURI, getResourceDescription(resourceURI));	//create the destination resource with the same description as the source resource
 			final InputStream inputStream=getResourceInputStream(resourceURI);	//get an input stream to the source resource
 			try
 			{

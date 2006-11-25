@@ -22,8 +22,9 @@ public interface Repository
 	@exception IOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
 	*/
 	public InputStream getResourceInputStream(final URI resourceURI) throws IOException;
-	
+
 	/**Gets an output stream to the contents of the resource specified by the given URI.
+	An error is generated if the resource does not exist.
 	@param resourceURI The URI of the resource to access.
 	@return An output stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -82,6 +83,51 @@ public interface Repository
 	*/
 	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws IOException;
 
+	/**Creates a new resource with a default description.
+	If a resource already exists at the given URI it will be replaced.
+	@param resourceURI The reference URI to use to identify the resource.
+	@return RDFResource A description of the resource that was created.
+	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
+	@exception IOException Thrown if the resource could not be created.
+	*/
+	public RDFResource createResource(final URI resourceURI) throws IOException;
+
+	/**Creates a new resource with the given description.
+	If a resource already exists at the given URI it will be replaced.
+	@param resourceURI The reference URI to use to identify the resource.
+	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@return RDFResource A description of the resource that was created.
+	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
+	@exception IOException Thrown if the resource could not be created.
+	*/
+	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription) throws IOException;
+
+	/**Creates a new resource with the given description and contents.
+	If a resource already exists at the given URI it will be replaced.
+	@param resourceURI The reference URI to use to identify the resource.
+	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@param resourceContents The contents to store in the resource.
+	@return RDFResource A description of the resource that was created.
+	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
+	@exception IOException Thrown if the resource could not be created.
+	*/
+	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription, final byte[] resourceContents) throws IOException;
+
+	/**Creates a collection in the repository.
+	@param collectionURI The URI of the collection to be created.
+	@return RDFResource A description of the collection that was created.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IOException if there is an error creating the collection.
+	*/
+	public RDFResource createCollection(final URI collectionURI) throws IOException;
+
+	/**Deletes a resource.
+	@param resourceURI The reference URI of the resource to delete.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IOException if the resource could not be deleted.
+	*/
+	public void deleteResource(final URI resourceURI) throws IOException;
+
 	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository.
 	Any resource at the destination URI will be replaced.
 	@param resourceURI The URI of the resource to be copied.
@@ -100,13 +146,6 @@ public interface Repository
 	@exception IOException if there is an error copying the resource.
 	*/
 	public void copyResource(final URI resourceURI, final URI destinationURI) throws IOException;
-
-	/**Deletes a resource.
-	@param resourceURI The reference URI of the resource to delete.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IOException if the resource could not be deleted.
-	*/
-	public void deleteResource(final URI resourceURI) throws IOException;
 
 	/**Moves a resource to the specified URI in the specified repository.
 	Any resource at the destination URI will be replaced.

@@ -1,22 +1,24 @@
 package com.globalmentor.marmot.repository.webdav;
 
-import static com.garretwilson.lang.ObjectUtilities.*;
-import static com.garretwilson.net.URIUtilities.*;
-import static com.garretwilson.net.http.webdav.WebDAVConstants.*;
-import static com.garretwilson.rdf.xpackage.FileOntologyConstants.*;
-import static com.garretwilson.rdf.xpackage.MIMEOntologyUtilities.*;
-import static java.util.Collections.*;
-
 import java.io.*;
 import java.net.URI;
 import java.util.ArrayList;
+import static java.util.Collections.*;
 import java.util.List;
 
 import javax.mail.internet.ContentType;
 import javax.mail.internet.ParseException;
 
+import static com.garretwilson.lang.ByteConstants.*;
+import static com.garretwilson.lang.ObjectUtilities.*;
+import static com.garretwilson.net.URIUtilities.*;
+import static com.garretwilson.net.http.webdav.WebDAVConstants.*;
+import static com.garretwilson.rdf.xpackage.FileOntologyConstants.*;
+import static com.garretwilson.rdf.xpackage.MIMEOntologyUtilities.*;
+
 import com.garretwilson.io.FileUtilities;
 import com.garretwilson.net.http.HTTPClient;
+import com.garretwilson.net.http.HTTPNotFoundException;
 import com.garretwilson.net.http.webdav.Depth;
 import com.garretwilson.net.http.webdav.WebDAVResource;
 import com.garretwilson.rdf.RDF;
@@ -82,6 +84,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 	}
 	
 	/**Gets an output stream to the contents of the resource specified by the given URI.
+	An error is generated if the resource does not exist.
 	@param resourceURI The URI of the resource to access.
 	@return An output stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -90,7 +93,11 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 	public OutputStream getResourceOutputStream(final URI resourceURI) throws IOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
-		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
+		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource TODO cache these resources, maybe
+		if(!webdavResource.exists())	//if the resource doesn't already exist
+		{
+			throw new HTTPNotFoundException("Cannot open output stream to non-existent resource "+resourceURI);
+		}
 		return webdavResource.getOutputStream();	//return an output stream to the resource
 	}
 	
@@ -113,7 +120,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 			final RDF rdf=new RDF();	//G***use a common RDF data model
 			final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
 			final List<NameValuePair<QualifiedName, ?>> propertyList=webdavResource.propFind();	//get the properties of this resource
-			return createResource(rdf, resourceURI, propertyList);	//create a resource from this URI and property list
+			return createResourceDescription(rdf, resourceURI, propertyList);	//create a resource from this URI and property list
 		}
 	}
 
@@ -199,7 +206,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 				if(!resourceURI.equals(childResourceURI))	//if this property list is *not* for this resource
 				{
 //				TODO del Debug.trace("creating resource for child", childResourceURI);
-					childResourceList.add(createResource(rdf, childResourceURI, propertyList.getValue()));	//create a resource from this URI and property lists
+					childResourceList.add(createResourceDescription(rdf, childResourceURI, propertyList.getValue()));	//create a resource from this URI and property lists
 				}
 			}
 //TODO do the special Marmot thing about checking for special Marmot directories
@@ -211,6 +218,37 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 		{
 			return emptyList();	//return an empty list
 		}
+	}
+
+	/**Creates a new resource with the given description and contents.
+	If a resource already exists at the given URI it will be replaced.
+	@param resourceURI The reference URI to use to identify the resource.
+	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@param resourceContents The contents to store in the resource.
+	@return RDFResource A description of the resource that was created.
+	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
+	@exception IOException Thrown if the resource could not be created.
+	*/
+	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription, final byte[] resourceContents) throws IOException
+	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
+		webdavResource.put(resourceContents);	//create a WebDAV resource with the guven contents
+		return getResourceDescription(resourceURI);	//return a description of the new resource
+	}
+
+	/**Creates a collection in the repository.
+	@param collectionURI The URI of the collection to be created.
+	@return RDFResource A description of the collection that was created.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IOException if there is an error creating the collection.
+	*/
+	public RDFResource createCollection(final URI collectionURI) throws IOException
+	{
+		checkResourceURI(collectionURI);	//makes sure the resource URI is valid
+		final WebDAVResource webdavResource=new WebDAVResource(collectionURI, getHTTPClient());	//create a WebDAV resource
+		webdavResource.mkCol();	//create the collection
+		return getResourceDescription(collectionURI);	//return a description of the new collection
 	}
 
 	/**Creates an infinitely deep copy of a resource to another URI in this repository.
@@ -259,7 +297,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 	@param propertyList The list of property qualified names paired with WebDAV property values.
 	@return A resource representing the given WebDAV property list.
 	*/
-	protected RDFResource createResource(final RDF rdf, final URI resourceURI, List<NameValuePair<QualifiedName, ?>> propertyList)	//G***maybe rename to getResource() for consistency	
+	protected RDFResource createResourceDescription(final RDF rdf, final URI resourceURI, List<NameValuePair<QualifiedName, ?>> propertyList)	//G***maybe rename to getResource() for consistency	
 	{
 		final RDFResource resource=rdf.locateResource(resourceURI);	//create a resource to represent the WebDAV property list
 //	TODO del Debug.trace("ready to create resource description for resource", resource, "with property count", propertyList.size());
