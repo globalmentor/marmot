@@ -234,7 +234,7 @@ public class FileRepository extends AbstractRepository
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
 	@param resourceContents The contents to store in the resource.
-	@return RDFResource A description of the resource that was created.
+	@return A description of the resource that was created.
 	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
 	@exception IOException Thrown if the resource could not be created.
 	*/
@@ -257,7 +257,7 @@ public class FileRepository extends AbstractRepository
 
 	/**Creates a collection in the repository.
 	@param collectionURI The URI of the collection to be created.
-	@return RDFResource A description of the collection that was created.
+	@return A description of the collection that was created.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error creating the collection.
 	*/
@@ -289,6 +289,34 @@ public class FileRepository extends AbstractRepository
 */
 		}
 		delete(resourceFile, true);	//recursively delete the file or directory	
+	}
+
+	/**Sets the properties of a resource based upon the given description.
+	This implementation only supports the {@value FileOntologyConstants#MODIFIED_TIME_PROPERTY_URI} property, updating the file attribute to match, and ignores all other properties.
+	@param resourceURI The reference URI of the resource.
+	@param resourceDescription A description of the resource with the properties to set; the resource URI is ignored.
+	@return The updated description of the resource.
+	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IOException Thrown if the resource properties could not be updated.
+	*/
+	public RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription) throws IOException
+	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
+		final Date modifiedTime=getModifiedTime(resourceDescription);	//get the modified time designation, if there is one
+		if(modifiedTime!=null)	//if there is a modified time designated
+		{
+			resourceFile.setLastModified(modifiedTime.getTime());	//update the last modified time TODO does this work for directories? should we check?
+		}
+/*TODO del when works
+		for(final RDFPropertyValuePair propertyValuePair:resourceDescription.getProperties())	//look at each property
+		{
+			if(MODIFIED_TIME_PROPERTY_URI.equals(propertyValuePair.getName()))	//if this is the 
+			
+		}
+*/
+		return getResourceDescription(resourceURI);	//return the new resource description
 	}
 
 	/**Creates an infinitely deep copy of a resource to another URI in this repository.
@@ -340,7 +368,7 @@ public class FileRepository extends AbstractRepository
 			final String label=FileUtilities.decodeFilename(filename);	//unescape any reserved characters in the filename
 			addType(resource, FILE_ONTOLOGY_NAMESPACE_URI, FOLDER_TYPE_NAME);	//add the file:folder type to indicate that this resource is a folder
 			addLabel(resource, label); //add the filename as a label
-			setDate(resource, new Date(file.lastModified()));	//set the date as the last modified date of the file			
+			setModifiedTime(resource, new Date(file.lastModified()));	//set the modified time as the last modified date of the file			
 		}
 		else	//if this file is not a directory
 		{
@@ -348,7 +376,7 @@ public class FileRepository extends AbstractRepository
 			final String label=FileUtilities.removeExtension(FileUtilities.decodeFilename(filename));
 			addLabel(resource, label); //add the unescaped filename without an extension as a label
 			setSize(resource, file.length());	//set the file length
-			setDate(resource, new Date(file.lastModified()));	//set the date as the last modified date of the file
+			setModifiedTime(resource, new Date(file.lastModified()));	//set the modified time as the last modified date of the file			
 			final ContentType contentType=getMediaType(filename);	//try to find the content type from the filename
 			if(contentType!=null)	//if we know the content type
 			{

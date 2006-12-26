@@ -86,8 +86,8 @@ public interface Repository
 	/**Creates a new resource with a default description.
 	If a resource already exists at the given URI it will be replaced.
 	@param resourceURI The reference URI to use to identify the resource.
-	@return RDFResource A description of the resource that was created.
-	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
+	@return A description of the resource that was created.
+	@exception NullPointerException if the given resource URI is <code>null</code>.
 	@exception IOException Thrown if the resource could not be created.
 	*/
 	public RDFResource createResource(final URI resourceURI) throws IOException;
@@ -96,8 +96,8 @@ public interface Repository
 	If a resource already exists at the given URI it will be replaced.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
-	@return RDFResource A description of the resource that was created.
-	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
+	@return A description of the resource that was created.
+	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
 	@exception IOException Thrown if the resource could not be created.
 	*/
 	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription) throws IOException;
@@ -107,7 +107,7 @@ public interface Repository
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
 	@param resourceContents The contents to store in the resource.
-	@return RDFResource A description of the resource that was created.
+	@return A description of the resource that was created.
 	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
 	@exception IOException Thrown if the resource could not be created.
 	*/
@@ -115,7 +115,7 @@ public interface Repository
 
 	/**Creates a collection in the repository.
 	@param collectionURI The URI of the collection to be created.
-	@return RDFResource A description of the collection that was created.
+	@return A description of the collection that was created.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error creating the collection.
 	*/
@@ -127,6 +127,16 @@ public interface Repository
 	@exception IOException if the resource could not be deleted.
 	*/
 	public void deleteResource(final URI resourceURI) throws IOException;
+
+	/**Sets the properties of a resource based upon the given description.
+	@param resourceURI The reference URI of the resource.
+	@param resourceDescription A description of the resource with the properties to set; the resource URI is ignored.
+	@return The updated description of the resource.
+	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IOException Thrown if the resource properties could not be updated.
+	*/
+	public RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription) throws IOException;
 
 	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository.
 	Any resource at the destination URI will be replaced.

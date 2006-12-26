@@ -110,8 +110,8 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 	If a resource already exists at the given URI it will be replaced.
 	This implementation delegates to {@link #createResource(URI, RDFResource)} with a default description.
 	@param resourceURI The reference URI to use to identify the resource.
-	@return RDFResource A description of the resource that was created.
-	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
+	@return A description of the resource that was created.
+	@exception NullPointerException if the given resource URI is <code>null</code>.
 	@exception IOException Thrown if the resource could not be created.
 	*/
 	public RDFResource createResource(final URI resourceURI) throws IOException
@@ -124,8 +124,8 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 	This implementation delegates to {@link Repository#createResource(URI, RDFResource, byte[])} with no contents.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
-	@return RDFResource A description of the resource that was created.
-	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
+	@return A description of the resource that was created.
+	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
 	@exception IOException Thrown if the resource could not be created.
 	*/
 	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription) throws IOException

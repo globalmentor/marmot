@@ -2,29 +2,38 @@ package com.globalmentor.marmot.repository.webdav;
 
 import java.io.*;
 import java.net.URI;
+import java.text.*;
 import java.util.ArrayList;
+import java.util.Date;
+
 import static java.util.Collections.*;
 import java.util.List;
 
-import javax.mail.internet.ContentType;
-import javax.mail.internet.ParseException;
+import javax.mail.internet.*;
 
 import static com.garretwilson.lang.ByteConstants.*;
 import static com.garretwilson.lang.ObjectUtilities.*;
 import static com.garretwilson.net.URIUtilities.*;
 import static com.garretwilson.net.http.webdav.WebDAVConstants.*;
+import static com.garretwilson.net.http.webdav.WebDAVUtilities.ALL_PROPERTIES;
 import static com.garretwilson.rdf.xpackage.FileOntologyConstants.*;
+import static com.garretwilson.rdf.xpackage.FileOntologyUtilities.getModifiedTime;
+import static com.garretwilson.rdf.xpackage.FileOntologyUtilities.setModifiedTime;
 import static com.garretwilson.rdf.xpackage.MIMEOntologyUtilities.*;
 
 import com.garretwilson.io.FileUtilities;
 import com.garretwilson.net.http.HTTPClient;
+import com.garretwilson.net.http.HTTPDateFormat;
 import com.garretwilson.net.http.HTTPNotFoundException;
 import com.garretwilson.net.http.webdav.Depth;
 import com.garretwilson.net.http.webdav.WebDAVResource;
 import com.garretwilson.rdf.RDF;
 import com.garretwilson.rdf.RDFResource;
-import com.garretwilson.rdf.RDFUtilities;
-import com.garretwilson.rdf.rdfs.RDFSUtilities;
+import static com.garretwilson.rdf.RDFUtilities.*;
+import static com.garretwilson.rdf.rdfs.RDFSUtilities.*;
+import static com.garretwilson.text.xml.XMLUtilities.appendElement;
+import static com.garretwilson.text.xml.XMLUtilities.createQualifiedName;
+
 import com.garretwilson.text.xml.QualifiedName;
 import com.garretwilson.util.Debug;
 import com.garretwilson.util.NameValuePair;
@@ -225,7 +234,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
 	@param resourceContents The contents to store in the resource.
-	@return RDFResource A description of the resource that was created.
+	@return A description of the resource that was created.
 	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
 	@exception IOException Thrown if the resource could not be created.
 	*/
@@ -239,7 +248,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 
 	/**Creates a collection in the repository.
 	@param collectionURI The URI of the collection to be created.
-	@return RDFResource A description of the collection that was created.
+	@return A description of the collection that was created.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IOException if there is an error creating the collection.
 	*/
@@ -249,6 +258,31 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 		final WebDAVResource webdavResource=new WebDAVResource(collectionURI, getHTTPClient());	//create a WebDAV resource
 		webdavResource.mkCol();	//create the collection
 		return getResourceDescription(collectionURI);	//return a description of the new collection
+	}
+
+	/**Sets the properties of a resource based upon the given description.
+	This implementation only supports the {@value FileOntologyConstants#MODIFIED_TIME_PROPERTY_URI} property, updating the WebDAV property to match, and ignores all other properties.
+	@param resourceURI The reference URI of the resource.
+	@param resourceDescription A description of the resource with the properties to set; the resource URI is ignored.
+	@return The updated description of the resource.
+	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IOException Thrown if the resource properties could not be updated.
+	*/
+	public RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription) throws IOException
+	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
+		final Date modifiedTime=getModifiedTime(resourceDescription);	//get the modified time designation, if there is one
+		if(modifiedTime!=null)	//if there is a modified time designated
+		{
+			
+			//TODO make a general method for property patching, maybe; update AbstractWebDAVServlet to store properties
+			
+			
+//TODO fix			resourceFile.setLastModified(modifiedTime.getTime());	//update the last modified time TODO does this work for directories? should we check?
+		}
+		return getResourceDescription(resourceURI);	//return the new resource description
 	}
 
 	/**Creates an infinitely deep copy of a resource to another URI in this repository.
@@ -322,34 +356,56 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 			{
 				//TODO fix displayname
 				//TODO fix creationdate
-				if(RESOURCE_TYPE_PROPERTY_NAME.equals(propertyLocalName) && propertyComplexValue!=null)	//D:resourcetype
+				if(RESOURCE_TYPE_PROPERTY_NAME.equals(propertyLocalName))	//D:resourcetype
 				{
-					if(COLLECTION_TYPE.equals(propertyComplexValue.getName().getReferenceURI()))	//if this is a collection
+					if(propertyComplexValue!=null)	//TODO check; comment
 					{
-						isCollection=true;	//show that this is a collection
-						RDFUtilities.addType(resource, FILE_ONTOLOGY_NAMESPACE_URI, FOLDER_TYPE_NAME);	//add the file:folder type to indicate that this resource is a folder
+						if(COLLECTION_TYPE.equals(propertyComplexValue.getName().getReferenceURI()))	//if this is a collection
+						{
+							isCollection=true;	//show that this is a collection
+							addType(resource, FILE_ONTOLOGY_NAMESPACE_URI, FOLDER_TYPE_NAME);	//add the file:folder type to indicate that this resource is a folder
+						}
 					}
 				}
 				//TODO fix contentlength
-				if(GET_CONTENT_TYPE_PROPERTY_NAME.equals(propertyLocalName) && propertyStringValue!=null)	//D:getcontenttype
+				else if(GET_CONTENT_TYPE_PROPERTY_NAME.equals(propertyLocalName))	//D:getcontenttype
 				{
-					try
+					if(propertyStringValue!=null)	//if the property is a string value
 					{
-						final ContentType contentType=new ContentType(propertyStringValue);	//create a content type object TODO check for errors
-						if(contentType!=null)	//if we know the content type
+						try
 						{
-							setContentType(resource, contentType);	//set the content type property
+							final ContentType contentType=new ContentType(propertyStringValue);	//create a content type object TODO check for errors
+							if(contentType!=null)	//if we know the content type
+							{
+								setContentType(resource, contentType);	//set the content type property
+							}
+						}
+						catch(final javax.mail.internet.ParseException parseException)	//if the content type is not a correct MIME type
+						{
+							Debug.warn(parseException);	//TODO improve error handling
 						}
 					}
-					catch(final ParseException parseException)	//if the content type is not a correct MIME type
-					{
-						Debug.warn(parseException);	//TODO improve error handling
-					}
 				}
-				//TODO fix getlastmodified				
+				else if(GET_CONTENT_TYPE_PROPERTY_NAME.equals(propertyLocalName))	//D:getlastmodified
+				{
+					if(propertyStringValue!=null)	//if the property is a string value
+					{
+
+						final HTTPDateFormat httpFormat=new HTTPDateFormat(HTTPDateFormat.Style.RFC1123);	//create an HTTP date formatter; WebDAV prefers the RFC 1123 style, as does HTTP
+						try
+						{
+							final Date lastModifiedDate=httpFormat.parse(propertyStringValue);	//parse the date
+							setModifiedTime(resource, lastModifiedDate);	//set the modified time as the last modified date of the WebDAV resource			
+						}
+						catch(final java.text.ParseException parseException)	//if the last modified time is not the correct type
+						{
+							Debug.warn(parseException);	//TODO improve error handling
+						}
+					}
+				}				
 			}
 		}
-		
+
 		
 			//TODO fix filename encoding/decoding---there's no way to know what operating system the server is using
 		
@@ -359,13 +415,13 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 		if(isCollection)	//if this is a collection TODO fix label better; deal with WebDAV display name
 		{
 			final String label=FileUtilities.decodeFilename(filename);	//unescape any reserved characters in the filename
-			RDFSUtilities.addLabel(resource, label); //add the filename as a label
+			addLabel(resource, label); //add the filename as a label
 		}
 		else	//if this file is not a directory
 		{
 				//unescape any reserved characters in the filename and remove the extension
 			final String label=FileUtilities.removeExtension(FileUtilities.decodeFilename(filename));
-			RDFSUtilities.addLabel(resource, label); //add the unescaped filename without an extension as a label
+			addLabel(resource, label); //add the unescaped filename without an extension as a label
 		}
 		return resource;	//return the resource that respresents the file
 	}
