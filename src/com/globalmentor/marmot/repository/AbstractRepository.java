@@ -106,31 +106,33 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 	}
 */
 
-	/**Creates a new resource with a default description.
+	/**Creates a new resource with a default description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
+	The returned output stream should always be closed.
+	If a resource with no contents is desired, {@link #createResource(URI, byte[])} with zero bytes is better suited for this task.
 	This implementation delegates to {@link #createResource(URI, RDFResource)} with a default description.
 	@param resourceURI The reference URI to use to identify the resource.
-	@return A description of the resource that was created.
+	@return An output stream for storing the contents of the resource.
 	@exception NullPointerException if the given resource URI is <code>null</code>.
-	@exception IOException Thrown if the resource could not be created.
+	@exception IOException if the resource could not be created.
 	*/
-	public RDFResource createResource(final URI resourceURI) throws IOException
+	public OutputStream createResource(final URI resourceURI) throws IOException
 	{
 		return createResource(resourceURI, new DefaultRDFResource());	//create the resource with a default description
 	}
 
-	/**Creates a new resource with the given description.
+	/**Creates a new resource with a default description and contents.
 	If a resource already exists at the given URI it will be replaced.
-	This implementation delegates to {@link Repository#createResource(URI, RDFResource, byte[])} with no contents.
+	This implementation delegates to {@link #createResource(URI, RDFResource, byte[])} with a default description.
 	@param resourceURI The reference URI to use to identify the resource.
-	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@param resourceContents The contents to store in the resource.
 	@return A description of the resource that was created.
-	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
-	@exception IOException Thrown if the resource could not be created.
+	@exception NullPointerException if the given resource URI and/or resource contents is <code>null</code>.
+	@exception IOException if the resource could not be created.
 	*/
-	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription) throws IOException
+	public RDFResource createResource(final URI resourceURI, final byte[] resourceContents) throws IOException
 	{
-		return createResource(resourceURI, resourceDescription, NO_BYTES);	//create the resource with no contents		
+		return createResource(resourceURI, new DefaultRDFResource(), resourceContents);	//create the resource with a default description
 	}
 
 	/**Retrieves immediate child resources of the resource at the given URI.
@@ -163,18 +165,21 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 		else	//if the resource is being copied to another repository
 		{
 //TODO del Debug.trace("ready to create resource", destinationURI, "in destination repository", destinationRepository.getReferenceURI());
+Debug.trace("ready to create resource", destinationURI, "in destination repository", destinationRepository.getReferenceURI());
 				//TODO check for non-existent source resource
-			destinationRepository.createResource(destinationURI, getResourceDescription(resourceURI));	//create the destination resource with the same description as the source resource
 			final InputStream inputStream=getResourceInputStream(resourceURI);	//get an input stream to the source resource
 			try
 			{
-				final OutputStream outputStream=destinationRepository.getResourceOutputStream(destinationURI);	//ask the destination repository for an output stream to the destination URI
+Debug.trace("ready to create resource in destination");
+				final OutputStream outputStream=destinationRepository.createResource(destinationURI, getResourceDescription(resourceURI));	//create the destination resource with the same description as the source resource, getting an output stream for storing the contents
 				try
 				{
+Debug.trace("ready to copy");
 					copy(inputStream, outputStream);	//copy the resource
 				}
 				finally
 				{
+Debug.trace("closing copy output stream");
 					outputStream.close();	//always close the output stream
 				}
 			}

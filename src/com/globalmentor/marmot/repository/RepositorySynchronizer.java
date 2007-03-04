@@ -126,6 +126,7 @@ Debug.trace("destination exists", destinationExists);
 				{
 					Debug.info("Resolving discrepancy between source resource", sourceResourceURI, "and destination resource", destinationResourceURI, "by", getUnsynchronizedResolution());
 					resolve(getUnsynchronizedResolution(), sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//resolve the descrepancy between source and destination
+Debug.trace("done resolving");
 				}
 			}
 			else	//if the source and destination are not the same type of resource
@@ -142,6 +143,7 @@ Debug.trace("destination exists", destinationExists);
 				}
 			}
 		}
+Debug.trace("both existed; we did what we needed to do; nothing more should happen (other than checking collection");
 		if(sourceRepository.isCollection(sourceResourceURI) && destinationRepository.isCollection(destinationResourceURI))	//if after all the resource-level synchronization we now have two collections
 		{
 			//TODO synchronize children
@@ -239,10 +241,13 @@ Debug.trace("destination exists", destinationExists);
 	*/
 	protected void resolve(final Resolution resolution, final Repository sourceRepository, final URI sourceResourceURI, final Repository destinationRepository, final URI destinationResourceURI) throws IOException
 	{
+Debug.trace("resolving descrepancy");
 		switch(resolution)	//see how to resolve the descrepancy
 		{
 			case BACKUP:
+Debug.trace("starting to backup through repository");
 				sourceRepository.copyResource(sourceResourceURI, destinationRepository, destinationResourceURI);	//copy the source to the destination
+Debug.trace("finished backing up through repository");
 				break;
 			case RESTORE:
 				destinationRepository.copyResource(destinationResourceURI, sourceRepository, sourceResourceURI);	//copy the destination to the source

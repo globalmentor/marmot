@@ -5,6 +5,8 @@ import java.net.URI;
 
 import static com.garretwilson.net.URIConstants.*;
 import static com.garretwilson.net.URIUtilities.*;
+
+import com.garretwilson.net.http.HTTPClient;
 import com.garretwilson.rdf.RDFResource;
 import com.garretwilson.rdf.dublincore.*;
 import com.garretwilson.rdf.version.*;
@@ -70,6 +72,11 @@ public class MarmotMirror extends Application<Object>
 		final String destinationRepositoryString=getParameter(args, "destinationRepository");	//get the destination repository parameter
 		final URI destinationResourceURI=guessAbsoluteURI(destinationResourceString);	//get the destination URI
 		final URI destinationRepositoryURI=destinationRepositoryString!=null ? guessAbsoluteURI(destinationRepositoryString) : getParentURI(destinationResourceURI);	//if the destination repository is not specified, use the parent URI
+
+		
+		HTTPClient.getInstance().setLogged(Debug.isDebug() && Debug.getReportLevels().contains(Debug.ReportLevel.LOG));	//if debugging is turned on, tell the HTTP client to log its data TODO fix this better---make some sort of flag specifically for communication tracking
+		
+		
 		Debug.info("Mirroring from "+sourceRepositoryURI+" "+sourceResourceURI+" to "+destinationRepositoryURI+" "+destinationResourceURI);
 		final Repository sourceRepository=createRepository(sourceRepositoryURI);	//create the correct type of repository for the source
 		final Repository destinationRepository=createRepository(destinationRepositoryURI);	//create the correct type of repository for the destination

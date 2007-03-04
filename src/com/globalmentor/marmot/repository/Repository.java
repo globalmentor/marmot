@@ -83,24 +83,39 @@ public interface Repository
 	*/
 	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws IOException;
 
-	/**Creates a new resource with a default description.
+	/**Creates a new resource with a default description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
+	The returned output stream should always be closed.
+	If a resource with no contents is desired, {@link #createResource(URI, byte[])} with zero bytes is better suited for this task.
 	@param resourceURI The reference URI to use to identify the resource.
-	@return A description of the resource that was created.
+	@return An output stream for storing the contents of the resource.
 	@exception NullPointerException if the given resource URI is <code>null</code>.
-	@exception IOException Thrown if the resource could not be created.
+	@exception IOException if the resource could not be created.
 	*/
-	public RDFResource createResource(final URI resourceURI) throws IOException;
+	public OutputStream createResource(final URI resourceURI) throws IOException;
 
-	/**Creates a new resource with the given description.
+	/**Creates a new resource with the given description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
+	The returned output stream should always be closed.
+	If a resource with no contents is desired, {@link #createResource(URI, RDFResource, byte[])} with zero bytes is better suited for this task.
+	It is unspecified whether the resource description will be updated before or after the resource contents are stored.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
-	@return A description of the resource that was created.
+	@return An output stream for storing the contents of the resource.
 	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
-	@exception IOException Thrown if the resource could not be created.
+	@exception IOException if the resource could not be created.
 	*/
-	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription) throws IOException;
+	public OutputStream createResource(final URI resourceURI, final RDFResource resourceDescription) throws IOException;
+
+	/**Creates a new resource with a default description and contents.
+	If a resource already exists at the given URI it will be replaced.
+	@param resourceURI The reference URI to use to identify the resource.
+	@param resourceContents The contents to store in the resource.
+	@return A description of the resource that was created.
+	@exception NullPointerException if the given resource URI and/or resource contents is <code>null</code>.
+	@exception IOException if the resource could not be created.
+	*/
+	public RDFResource createResource(final URI resourceURI, final byte[] resourceContents) throws IOException;
 
 	/**Creates a new resource with the given description and contents.
 	If a resource already exists at the given URI it will be replaced.
@@ -109,7 +124,7 @@ public interface Repository
 	@param resourceContents The contents to store in the resource.
 	@return A description of the resource that was created.
 	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
-	@exception IOException Thrown if the resource could not be created.
+	@exception IOException if the resource could not be created.
 	*/
 	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription, final byte[] resourceContents) throws IOException;
 

@@ -229,6 +229,26 @@ public class FileRepository extends AbstractRepository
 		}
 	}
 
+	/**Creates a new resource with the given description and returns an output stream for writing the contents of the resource.
+	If a resource already exists at the given URI it will be replaced.
+	The returned output stream should always be closed.
+	If a resource with no contents is desired, {@link #createResource(URI, RDFResource, byte[])} with zero bytes is better suited for this task.
+	This implementation updates resource properties before storing the contents of the resource.
+	@param resourceURI The reference URI to use to identify the resource.
+	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@return An output stream for storing the contents of the resource.
+	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
+	@exception IOException if the resource could not be created.
+	*/
+	public OutputStream createResource(final URI resourceURI, final RDFResource resourceDescription) throws IOException
+	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
+//TODO bring back if needed		resourceFile.createNewFile();	//create a new file as necessary
+		//TODO update the description
+		return new FileOutputStream(new File(getPrivateURI(resourceURI)));	//return an output stream to the file of the private URI
+	}
+
 	/**Creates a new resource with the given description and contents.
 	If a resource already exists at the given URI it will be replaced.
 	@param resourceURI The reference URI to use to identify the resource.
@@ -236,7 +256,7 @@ public class FileRepository extends AbstractRepository
 	@param resourceContents The contents to store in the resource.
 	@return A description of the resource that was created.
 	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
-	@exception IOException Thrown if the resource could not be created.
+	@exception IOException if the resource could not be created.
 	*/
 	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription, final byte[] resourceContents) throws IOException
 	{
@@ -292,7 +312,7 @@ public class FileRepository extends AbstractRepository
 	}
 
 	/**Sets the properties of a resource based upon the given description.
-	This implementation only supports the {@value FileOntologyConstants#MODIFIED_TIME_PROPERTY_URI} property, updating the file attribute to match, and ignores all other properties.
+	This version delegates to {@link #setResourceProperties(URI, RDFResource, File)}.
 	@param resourceURI The reference URI of the resource.
 	@param resourceDescription A description of the resource with the properties to set; the resource URI is ignored.
 	@return The updated description of the resource.
@@ -304,6 +324,21 @@ public class FileRepository extends AbstractRepository
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
+		return setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
+	}
+
+	/**Sets the properties of a resource based upon the given description.
+	This implementation only supports the {@value FileOntologyConstants#MODIFIED_TIME_PROPERTY_URI} property, updating the file attribute to match, and ignores all other properties.
+	@param resourceURI The reference URI of the resource.
+	@param resourceDescription A description of the resource with the properties to set; the resource URI is ignored.
+	@param resourceFile The file to use in updating the resource properties.
+	@return The updated description of the resource.
+	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IOException Thrown if the resource properties could not be updated.
+	*/
+	protected RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription, final File resourceFile) throws IOException
+	{
 		final Date modifiedTime=getModifiedTime(resourceDescription);	//get the modified time designation, if there is one
 		if(modifiedTime!=null)	//if there is a modified time designated
 		{
@@ -375,6 +410,22 @@ public class FileRepository extends AbstractRepository
 				//unescape any reserved characters in the filename and remove the extension
 			final String label=FileUtilities.removeExtension(FileUtilities.decodeFilename(filename));
 			addLabel(resource, label); //add the unescaped filename without an extension as a label
+
+//TODO del Debug.trace("we're looking at file", file, "which exists", file.exists());
+/*TODO del
+Debug.trace("we're looking at file", file, "which exists", file.exists(), "first resting a bit");
+
+try
+{
+	Thread.sleep(2000L);
+} catch (InterruptedException e)
+{
+	// TODO Auto-generated catch block
+	Debug.error(e);
+}
+*/
+//TODO del Debug.trace("ready to add RDF file size:", file.length());
+			
 			setSize(resource, file.length());	//set the file length
 			setModifiedTime(resource, new Date(file.lastModified()));	//set the modified time as the last modified date of the file			
 			final ContentType contentType=getMediaType(filename);	//try to find the content type from the filename
@@ -383,6 +434,9 @@ public class FileRepository extends AbstractRepository
 				setContentType(resource, contentType);	//set the content type property
 			}
 		}
+
+//TODO del Debug.trace("returning RDF:", RDFUtilities.toString(resource));
+		
 		return resource;	//return the resource that respresents the file
 	}
 	
