@@ -59,21 +59,44 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 		/**@return The HTTP client used to create a connection to this resource.*/
 		protected HTTPClient getHTTPClient() {return httpClient;}
 
-	/**Base URI contructor using the default HTTP client.
-	@param baseURI The WebDAV URI to be used as the base of all resources.
+	/**Repository URI contructor using the default HTTP client.
+	The given repository URI should end in a slash.
+	@param repositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
 	*/
-	public WebDAVRepository(final URI baseURI)
+	public WebDAVRepository(final URI repositoryURI)
 	{
-		this(baseURI, HTTPClient.getInstance());	//use the default HTTP client
+		this(repositoryURI, HTTPClient.getInstance());	//construct the class using the default HTTP client		
 	}
 	
-	/**Base URI and HTTP client contructor.
-	@param baseURI The WebDAV URI to be used as the base of all resources.
+	/**Repository URI and HTTP client contructor.
+	The given repository URI should end in a slash.
+	@param repositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
 	@param httpClient The HTTP client used to create a connection to this resource.	
 	*/
-	public WebDAVRepository(final URI baseURI, final HTTPClient httpClient)
+	public WebDAVRepository(final URI repositoryURI, final HTTPClient httpClient)
 	{
-		super(baseURI);	//construct the parent class with the base URI
+		this(repositoryURI, repositoryURI, httpClient);	//use the same repository URI as the public and private namespaces
+	}
+
+	/**Public repository URI and private repository URI contructor using the default HTTP client.
+	The given private repository URI should end in a slash.
+	@param publicRepositoryURI The URI identifying the location of this repository.
+	@param privateRepositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
+	*/
+	public WebDAVRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
+	{
+		this(publicRepositoryURI, privateRepositoryURI, HTTPClient.getInstance());	//construct the class using the default HTTP client				
+	}
+
+	/**Public repository URI, private repository URI, and HTTP client contructor.
+	The given private repository URI should end in a slash.
+	@param publicRepositoryURI The URI identifying the location of this repository.
+	@param privateRepositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
+	@param httpClient The HTTP client used to create a connection to this resource.	
+	*/
+	public WebDAVRepository(final URI publicRepositoryURI, final URI privateRepositoryURI, final HTTPClient httpClient)
+	{
+		super(publicRepositoryURI, privateRepositoryURI);	//construct the parent class
 		this.httpClient=httpClient;	//save the HTTP client
 	}
 	
@@ -86,7 +109,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 	public InputStream getResourceInputStream(final URI resourceURI) throws IOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
-		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
+		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
 		return webdavResource.getInputStream();	//return an input stream to the resource
 	}
 	
@@ -100,7 +123,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 	public OutputStream getResourceOutputStream(final URI resourceURI) throws IOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
-		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource TODO cache these resources, maybe
+		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource TODO cache these resources, maybe
 		if(!webdavResource.exists())	//if the resource doesn't already exist
 		{
 			throw new HTTPNotFoundException("Cannot open output stream to non-existent resource "+resourceURI);
@@ -125,7 +148,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 		{
 //TODO del Debug.traceStack("!!!!!!!!getting resource description for resource", resourceURI);
 			final RDF rdf=new RDF();	//G***use a common RDF data model
-			final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
+			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
 			final List<WebDAVProperty> propertyList=webdavResource.propFind();	//get the properties of this resource
 			return createResourceDescription(rdf, resourceURI, propertyList);	//create a resource from this URI and property list
 		}
@@ -140,7 +163,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 	public boolean resourceExists(final URI resourceURI) throws IOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
-		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
+		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
 		return webdavResource.exists();	//see if the WebDAV resource exists		
 	}
 
@@ -167,11 +190,12 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 	public boolean hasChildren(final URI resourceURI) throws IOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
-		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
+		final URI privateResourceURI=getPrivateURI(resourceURI);	//get the URI of the resource in the private namespace
+		final WebDAVResource webdavResource=new WebDAVResource(privateResourceURI, getHTTPClient());	//create a WebDAV resource
 		final List<NameValuePair<URI, List<WebDAVProperty>>> propertyLists=webdavResource.propFind(Depth.ONE);	//get the properties of the resources one level down
 		for(final NameValuePair<URI, List<WebDAVProperty>> propertyList:propertyLists)	//look at each property list
 		{
-			if(!resourceURI.equals(propertyList.getName()))	//if this property list is *not* for this resource
+			if(!privateResourceURI.equals(propertyList.getName()))	//if this property list is *not* for this resource
 			{
 				return true;	//this resource has children
 			}
@@ -192,7 +216,8 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		if(depth!=0)	//a depth of zero means don't get child resources
 		{
-			final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
+			final URI privateResourceURI=getPrivateURI(resourceURI);	//get the URI of the resource in the private namespace
+			final WebDAVResource webdavResource=new WebDAVResource(privateResourceURI, getHTTPClient());	//create a WebDAV resource
 			final Depth webdavDepth;	//we'll get the depth based upon the value passed
 			try
 			{
@@ -208,12 +233,12 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 //		TODO del Debug.trace("looking at children");
 			for(final NameValuePair<URI, List<WebDAVProperty>> propertyList:propertyLists)	//look at each property list
 			{
-				final URI childResourceURI=propertyList.getName();
+				final URI childResourcePrivateURI=propertyList.getName();
 //			TODO del Debug.trace("looking at child", childResourceURI);
-				if(!resourceURI.equals(childResourceURI))	//if this property list is *not* for this resource
+				if(!privateResourceURI.equals(childResourcePrivateURI))	//if this property list is *not* for this resource
 				{
 //				TODO del Debug.trace("creating resource for child", childResourceURI);
-					childResourceList.add(createResourceDescription(rdf, childResourceURI, propertyList.getValue()));	//create a resource from this URI and property lists
+					childResourceList.add(createResourceDescription(rdf, getPublicURI(childResourcePrivateURI), propertyList.getValue()));	//create a resource from this URI and property lists
 				}
 			}
 //TODO do the special Marmot thing about checking for special Marmot directories
@@ -241,7 +266,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 	public OutputStream createResource(final URI resourceURI, final RDFResource resourceDescription) throws IOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
-		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
+		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
 		final OutputStream outputStream=webdavResource.getOutputStream();	//get an output stream to the WebDAV resource
 		return new DescriptionWriterOutputStreamDecorator(outputStream, resourceURI, resourceDescription, webdavResource);	//wrap the output stream in a decorator that will update the WebDAV properties after the contents are stored		
 	}
@@ -258,7 +283,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription, final byte[] resourceContents) throws IOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
-		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
+		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
 		webdavResource.put(resourceContents);	//create a WebDAV resource with the guven contents
 		return getResourceDescription(resourceURI);	//return a description of the new resource
 	}
@@ -272,7 +297,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 	public RDFResource createCollection(final URI collectionURI) throws IOException
 	{
 		checkResourceURI(collectionURI);	//makes sure the resource URI is valid
-		final WebDAVResource webdavResource=new WebDAVResource(collectionURI, getHTTPClient());	//create a WebDAV resource
+		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(collectionURI), getHTTPClient());	//create a WebDAV resource
 		webdavResource.mkCol();	//create the collection
 		return getResourceDescription(collectionURI);	//return a description of the new collection
 	}
@@ -289,7 +314,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 	public RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription) throws IOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
-		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
+		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
 		return setResourceProperties(resourceURI, resourceDescription, webdavResource);	//set the properties using the WebDAV resource object
 	}
 
@@ -334,8 +359,8 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 	public void copyResource(final URI resourceURI, final URI destinationURI) throws IOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
-		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
-		webdavResource.copy(destinationURI);	//copy the resource with an infinite depth, overwriting the destination resource if one exists
+		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
+		webdavResource.copy(getPrivateURI(destinationURI));	//copy the resource with an infinite depth, overwriting the destination resource if one exists
 	}
 
 	/**Deletes a resource.
@@ -346,7 +371,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 	public void deleteResource(final URI resourceURI) throws IOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
-		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
+		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
 		webdavResource.delete();	//delete the resource		
 	}
 
@@ -360,8 +385,8 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 	public void moveResource(final URI resourceURI, final URI destinationURI) throws IOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
-		final WebDAVResource webdavResource=new WebDAVResource(resourceURI, getHTTPClient());	//create a WebDAV resource
-		webdavResource.move(destinationURI);	//move the resource with an infinite depth, overwriting the destination resource if one exists
+		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
+		webdavResource.move(getPrivateURI(destinationURI));	//move the resource with an infinite depth, overwriting the destination resource if one exists
 	}
 
 	/**Creates a resource to represent this list of properties.
@@ -371,7 +396,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix to recognize
 	@return A resource representing the given WebDAV property list.
 	@exception NullPointerException if one or more of the provided properties has a value of <code>null</code>.
 	*/
-	protected RDFResource createResourceDescription(final RDF rdf, final URI resourceURI, List<WebDAVProperty> propertyList)	//G***maybe rename to getResource() for consistency	
+	protected RDFResource createResourceDescription(final RDF rdf, final URI resourceURI, List<WebDAVProperty> propertyList)	
 	{
 		final RDFResource resource=rdf.locateResource(resourceURI);	//create a resource to represent the WebDAV property list
 //	TODO del Debug.trace("ready to create resource description for resource", resource, "with property count", propertyList.size());
