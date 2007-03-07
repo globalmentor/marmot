@@ -27,18 +27,57 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 	/**The registered event listeners.*/
 	protected final EventListenerManager eventListenerManager=new EventListenerManager();
 
+	/**Sets the reference URI of the resource.
+	If there currently is no private repository URI, it will be updated to match the given public repository URI.
+	@param uri The new reference URI, or <code>null</code> if the identifier is not known.
+	*/
+	public void setReferenceURI(final URI uri)
+	{
+			//TODO check for the reference URI being set to null
+		super.setReferenceURI(uri);	//set the refeference URI normally
+		if(getPrivateRepositoryURI()==null)	//if there is no private repository URI
+		{
+			setPrivateRepositoryURI(uri);	//update the private repository URI to match
+		}
+	}
+
 	/**@return The namespace URI of the ontology defining the default type of this resource.*/
 	public URI getDefaultTypeNamespaceURI() {return MARMOT_NAMESPACE_URI;}
 
 	/**@return The local name of the default type of this resource.*/
 	public String getDefaultTypeName() {return ClassUtilities.getLocalName(getClass());}
 
-	/**The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository.*/
-	private final URI privateRepositoryURI;
-		
-		/**@return The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository.*/
-		protected URI getPrivateRepositoryURI() {return privateRepositoryURI;}
+	/**Whether the repository has been opened for access.*/
+	private boolean open=false;
 
+	/**The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository.*/
+	private URI privateRepositoryURI=null;
+
+		/**@return The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository.*/
+		public URI getPrivateRepositoryURI() {return privateRepositoryURI;}
+
+		/**Sets the base URI of the private URI namespace being managed.
+		@param privateRepositoryURI The base URI of the private URI namespace being managed.
+		@exception NullPointerException if the given URI is null.
+		*/
+		public void setPrivateRepositoryURI(final URI privateRepositoryURI)
+		{
+			this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI must not be null.");
+		}
+		
+		/**@return The base URI of the public URI namespace being managed; equivalent to {@link #getReferenceURI()}.*/
+		public URI getPublicRepositoryURI() {return getReferenceURI();}
+	
+		/**Sets the base URI of the public URI namespace being managed, reference URI of the repository.
+		If there currently is no private repository URI, it will be updated to match the given public repository URI.
+		@param publicRepositoryURI The base URI of the public URI namespace being managed.
+		@exception NullPointerException if the given URI is null.
+		*/
+		public void setPublicRepositoryURI(final URI publicRepositoryURI)
+		{
+			setReferenceURI(checkInstance(publicRepositoryURI, "Public repository URI must not be null."));
+		}
+		
 		/**Translates a public URI in the repository to the equivalent private URI in the private URI namespace.
 		@param publicURI The URI in the public URI namesapce.
 		@return A URI equivalent to the public URI in the private URI namespace.
@@ -69,6 +108,24 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 			throw new IllegalArgumentException(resourceURI+" does not designate a resource within the repository "+getReferenceURI());
 		}		
 	}
+
+	/**Checks to make sure that the repository is open.
+	@exception IllegalStateException if the repository is not open for access.
+	*/
+	protected void checkOpen()
+	{
+		if(!isOpen())	//if the repository is not open
+		{
+			throw new IllegalArgumentException("Repository is not open.");
+		}
+	}
+
+	/**Default constructor with no settings.
+	Settings must be configured before repository is opened.
+	*/
+	public AbstractRepository()
+	{
+	}
 	
 	/**URI contructor with no separate private URI namespace.
 	@param repositoryURI The URI identifying the location of this repository.
@@ -90,21 +147,42 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 		this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI cannot be null.");
 	}
 
-	/**URI and label contructor.
-	@param repositoryURI The URI identifying the location of this repository.
-	@param label The label for the repository, or <code>null</code> if no label should be provided.
+	/**@return Whether the repository has been opened for access.*/
+	public boolean isOpen() {return open;}
+
+	/**Opens the repository for access.
+	If the repository is already open, no action occurs.
+	At a minimum the respository must have a public and a private URI specified, even though these may both be the same URI. 
+	@exception IllegalStateException if the settings of this repository are inadequate to open the repository.
+	@exception IOException if there is an error opening the repository.
 	*/
-/*TODO del if not needed
-	public AbstractRepository(final URI repositoryURI, final String label)
+	public void open() throws IOException
 	{
-		super(repositoryURI);	//construct the parent class with the reference URI
-		final RDF rdf=new RDF();	//G***use a common RDF data model
-		if(label!=null)	//if a label was provided
+		if(!isOpen())	//if the repository isn't yet open TODO synchronize
 		{
-			RDFSUtilities.setLabel(this, label);	//replace all labels with the one provided TODO use static import
+			if(getPrivateRepositoryURI()==null)	//if the private repository URI is not set
+			{
+				throw new IllegalStateException("Cannot open repository without private repository URI specified.");
+			}
+			if(getPublicRepositoryURI()==null)	//if the public repository URI is not set
+			{
+				throw new IllegalStateException("Cannot open repository without public repository URI specified.");
+			}
+			open=true;	//show that the repository is now open
 		}
 	}
-*/
+
+	/**Closes the repository.
+	If the repository is already closed, no action occurs.
+	@exeption IOException if there is an error closing the repository.
+	*/
+	public void close() throws IOException
+	{
+		if(isOpen())	//if the repository is open TODO synchronize
+		{
+			open=false;	//show that the repository is now closed
+		}
+	}
 
 	/**Creates a new resource with a default description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
@@ -114,6 +192,8 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 	@param resourceURI The reference URI to use to identify the resource.
 	@return An output stream for storing the contents of the resource.
 	@exception NullPointerException if the given resource URI is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access.
 	@exception IOException if the resource could not be created.
 	*/
 	public OutputStream createResource(final URI resourceURI) throws IOException
@@ -128,6 +208,8 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 	@param resourceContents The contents to store in the resource.
 	@return A description of the resource that was created.
 	@exception NullPointerException if the given resource URI and/or resource contents is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access.
 	@exception IOException if the resource could not be created.
 	*/
 	public RDFResource createResource(final URI resourceURI, final byte[] resourceContents) throws IOException
@@ -139,11 +221,14 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 	This implementation retrieves a single-level list of descriptions by calling {@link #getChildResourceDescriptions(URI, int)}.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
 	@return A list of sub-resource descriptions directly under the given resource.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access.
 	@exception IOException if there is an error accessing the repository.
 	*/
 	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI) throws IOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		checkOpen();	//make sure the repository is open
 		return getChildResourceDescriptions(resourceURI, 1);	//get a list of child resource descriptions without going deeper than one level
 	}
 
