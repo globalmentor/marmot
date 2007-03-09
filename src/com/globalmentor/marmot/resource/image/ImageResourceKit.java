@@ -21,7 +21,9 @@ import static com.guiseframework.theme.Theme.*;
 /**Resource kit for handling images.
 <p>Supported media types:</p>
 <ul>
+	<li><code>image/gif</code></li>
 	<li><code>image/jpeg</code></li>
+	<li><code>image/png</code></li>
 </ul>
 @author Garret Wilson
 */
@@ -84,7 +86,7 @@ public class ImageResourceKit extends AbstractResourceKit
 	/**Default constructor.*/
 	public ImageResourceKit()
 	{
-		super(ICON_IMAGE, new ContentType(IMAGE, JPEG_SUBTYPE, null));
+		super(ICON_IMAGE, new ContentType(IMAGE, GIF_SUBTYPE, null), new ContentType(IMAGE, JPEG_SUBTYPE, null), new ContentType(IMAGE, PNG_SUBTYPE, null));
 	}
 
 	/**Initializes a resource description, creating whatever properties are appropriate.

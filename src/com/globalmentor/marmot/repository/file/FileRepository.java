@@ -436,32 +436,19 @@ public class FileRepository extends AbstractRepository
 		final String filename=file.getName();	//get the name of the file
 		if(file.isDirectory())	//if this is a directory
 		{
-			final String label=FileUtilities.decodeFilename(filename);	//unescape any reserved characters in the filename
+//TODO fix			final String label=FileUtilities.decodeFilename(filename);	//unescape any reserved characters in the filename
 			addType(resource, FILE_ONTOLOGY_NAMESPACE_URI, FOLDER_TYPE_NAME);	//add the file:folder type to indicate that this resource is a folder
-			addLabel(resource, label); //add the filename as a label
+//TODO fix			addLabel(resource, label); //add the filename as a label
 			setModifiedTime(resource, new Date(file.lastModified()));	//set the modified time as the last modified date of the file			
 		}
 		else	//if this file is not a directory
 		{
+/*TODO fix
 				//unescape any reserved characters in the filename and remove the extension
 			final String label=FileUtilities.removeExtension(FileUtilities.decodeFilename(filename));
 			addLabel(resource, label); //add the unescaped filename without an extension as a label
-
-//TODO del Debug.trace("we're looking at file", file, "which exists", file.exists());
-/*TODO del
-Debug.trace("we're looking at file", file, "which exists", file.exists(), "first resting a bit");
-
-try
-{
-	Thread.sleep(2000L);
-} catch (InterruptedException e)
-{
-	// TODO Auto-generated catch block
-	Debug.error(e);
-}
 */
-//TODO del Debug.trace("ready to add RDF file size:", file.length());
-			
+
 			setSize(resource, file.length());	//set the file length
 			setModifiedTime(resource, new Date(file.lastModified()));	//set the modified time as the last modified date of the file			
 			final ContentType contentType=getMediaType(filename);	//try to find the content type from the filename

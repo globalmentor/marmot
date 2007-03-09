@@ -511,7 +511,7 @@ public class WebDAVRepository extends AbstractRepository
 		
 			//TODO encode in UTF-8
 		
-		
+/*TODO del
 		if(isCollection)	//if this is a collection TODO fix label better; deal with WebDAV display name
 		{
 			final String label=FileUtilities.decodeFilename(filename);	//unescape any reserved characters in the filename
@@ -523,6 +523,7 @@ public class WebDAVRepository extends AbstractRepository
 			final String label=FileUtilities.removeExtension(FileUtilities.decodeFilename(filename));
 			addLabel(resource, label); //add the unescaped filename without an extension as a label
 		}
+*/
 		return resource;	//return the resource that respresents the file
 	}
 
