@@ -58,6 +58,13 @@ public class FileRepository extends AbstractRepository
 				}
 			};	
 
+	/**Default constructor with no settings.
+	Settings must be configured before repository is opened.
+	*/
+	public FileRepository()
+	{
+	}
+
 	/**File contructor with no separate private URI namespace.
 	@param repositoryDirectory The file identifying the directory of this repository.
 	@exception NullPointerException if the given respository directory is <code>null</code>.

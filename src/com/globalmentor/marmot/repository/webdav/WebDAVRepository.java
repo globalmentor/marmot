@@ -59,6 +59,14 @@ public class WebDAVRepository extends AbstractRepository
 		/**@return The HTTP client used to create a connection to this resource.*/
 		protected HTTPClient getHTTPClient() {return httpClient;}
 
+	/**Default constructor with no settings.
+	Settings must be configured before repository is opened.
+	*/
+	public WebDAVRepository()
+	{
+		this.httpClient=HTTPClient.getInstance();	//TODO improve; consolidate constructors; create HTTPClient constructor
+	}
+
 	/**Repository URI contructor using the default HTTP client.
 	The given repository URI should end in a slash.
 	@param repositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.

@@ -1,5 +1,7 @@
 package com.globalmentor.marmot.repository;
 
+import static com.garretwilson.lang.ObjectUtilities.checkInstance;
+
 import java.io.*;
 import java.net.URI;
 import java.util.List;
@@ -14,6 +16,25 @@ public interface Repository
 
 	/**@return The URI identifying the location of this repository.*/
 	public URI getReferenceURI();
+
+	/**@return The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository.*/
+	public URI getPrivateRepositoryURI();
+
+	/**Sets the base URI of the private URI namespace being managed.
+	@param privateRepositoryURI The base URI of the private URI namespace being managed.
+	@exception NullPointerException if the given URI is <code>null</code>.
+	*/
+	public void setPrivateRepositoryURI(final URI privateRepositoryURI);
+	
+	/**@return The base URI of the public URI namespace being managed; equivalent to {@link #getReferenceURI()}.*/
+	public URI getPublicRepositoryURI();
+
+	/**Sets the base URI of the public URI namespace being managed, reference URI of the repository.
+	If there currently is no private repository URI, it will be updated to match the given public repository URI.
+	@param publicRepositoryURI The base URI of the public URI namespace being managed.
+	@exception NullPointerException if the given URI is <code>null</code>.
+	*/
+	public void setPublicRepositoryURI(final URI publicRepositoryURI);
 
 	/**@return Whether the repository has been opened for access.*/
 	public boolean isOpen();

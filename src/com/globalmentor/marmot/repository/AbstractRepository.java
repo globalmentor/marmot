@@ -58,7 +58,7 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 
 		/**Sets the base URI of the private URI namespace being managed.
 		@param privateRepositoryURI The base URI of the private URI namespace being managed.
-		@exception NullPointerException if the given URI is null.
+		@exception NullPointerException if the given URI is <code>null</code>.
 		*/
 		public void setPrivateRepositoryURI(final URI privateRepositoryURI)
 		{
@@ -71,7 +71,7 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 		/**Sets the base URI of the public URI namespace being managed, reference URI of the repository.
 		If there currently is no private repository URI, it will be updated to match the given public repository URI.
 		@param publicRepositoryURI The base URI of the public URI namespace being managed.
-		@exception NullPointerException if the given URI is null.
+		@exception NullPointerException if the given URI is <code>null</code>.
 		*/
 		public void setPublicRepositoryURI(final URI publicRepositoryURI)
 		{
