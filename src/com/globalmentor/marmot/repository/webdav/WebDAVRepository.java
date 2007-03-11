@@ -3,7 +3,6 @@ package com.globalmentor.marmot.repository.webdav;
 import java.io.*;
 import java.net.URI;
 import java.util.ArrayList;
-import static java.util.Arrays.*;
 import java.util.Date;
 
 import static java.util.Collections.*;
@@ -196,7 +195,8 @@ public class WebDAVRepository extends AbstractRepository
   {
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		return false;	//TODO fix
+		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
+		return webdavResource.isCollection();	//see if the WebDAV resource is a collection		
   }
 
 	/**Determines whether the resource represented by the given URI has children.
