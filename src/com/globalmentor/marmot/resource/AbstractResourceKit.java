@@ -10,9 +10,10 @@ import com.garretwilson.rdf.RDFResource;
 import com.globalmentor.marmot.repository.Repository;
 
 /**Abstract implementation of a resource kit.
+@param <P> The type of presentation supported by this resource kit.
 @author Garret Wilson
 */
-public abstract class AbstractResourceKit implements ResourceKit
+public abstract class AbstractResourceKit<P extends Presentation> implements ResourceKit<P>
 {
 
 	/**A non-<code>null</code> array of the content types this resource kit supports.*/
@@ -85,34 +86,38 @@ public abstract class AbstractResourceKit implements ResourceKit
 	*/
 	public URI getIconURI() {return iconURI;}
 
-	/**Icon and content types constructor.
+	/**Presentation, icon, and content types constructor.
+	@param presentation The presentation support for this resource kit.
 	@param iconURI The URI of a general icon representing this resource kit, or <code>null</code> if no icon URI is available.
 	@param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
-	@exception NullPointerException if the icon URI and/or the supported content types array is <code>null</code>.
+	@exception NullPointerException if the presentation, icon URI and/or the supported content types array is <code>null</code>.
 	*/
-	public AbstractResourceKit(final URI iconURI, final ContentType... supportedContentTypes)
+	public AbstractResourceKit(final P presentation, final URI iconURI, final ContentType... supportedContentTypes)
 	{
-		this(iconURI, supportedContentTypes, new URI[]{});	//construct the class with no supported resource types
+		this(presentation, iconURI, supportedContentTypes, new URI[]{});	//construct the class with no supported resource types
 	}
 
-	/**Icon and resource types constructor.
+	/**Presentation, icon, and resource types constructor.
+	@param presentation The presentation support for this resource kit.
 	@param iconURI The URI of a general icon representing this resource kit, or <code>null</code> if no icon URI is available.
 	@param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
-	@exception NullPointerException if the icon URI and/or the supported resource types array is <code>null</code>.
+	@exception NullPointerException if the presentation, icon URI and/or the supported resource types array is <code>null</code>.
 	*/
-	public AbstractResourceKit(final URI iconURI, final URI... supportedResourceTypes)
+	public AbstractResourceKit(final P presentation, final URI iconURI, final URI... supportedResourceTypes)
 	{
-		this(iconURI, new ContentType[]{}, supportedResourceTypes);	//construct the class with no supported content types
+		this(presentation, iconURI, new ContentType[]{}, supportedResourceTypes);	//construct the class with no supported content types
 	}
 
-	/**Icon, content types, and resource types constructor.
+	/**Presentation, icon, content types, and resource types constructor.
+	@param presentation The presentation support for this resource kit.
 	@param iconURI The URI of a general icon representing this resource kit, or <code>null</code> if no icon URI is available.
 	@param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
 	@param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
-	@exception NullPointerException if the icon URI, the supported content types array, and/or the supported resource types array is <code>null</code>.
+	@exception NullPointerException if the presentation, icon URI, the supported content types array, and/or the supported resource types array is <code>null</code>.
 	*/
-	public AbstractResourceKit(final URI iconURI, final ContentType[] supportedContentTypes, final URI[] supportedResourceTypes)
+	public AbstractResourceKit(final P presentation, final URI iconURI, final ContentType[] supportedContentTypes, final URI[] supportedResourceTypes)
 	{
+		this.presentation=checkInstance(presentation, "Presentation cannot be null.");
 		this.iconURI=checkInstance(iconURI, "Icon URI cannot be null.");
 		this.supportedContentTypes=checkInstance(supportedContentTypes, "Supported content types array cannot be null.");
 		this.supportedResourceTypes=checkInstance(supportedResourceTypes, "Supported resource types array cannot be null.");		
@@ -127,5 +132,11 @@ public abstract class AbstractResourceKit implements ResourceKit
 	public void initializeResourceDescription(final Repository repository, final RDFResource resource) throws IOException
 	{
 	}
+
+	/**The presentation implementation for supported resources.*/
+	private final P presentation;
+	
+		/**@return The presentation implementation for supported resources.*/
+		public P getPresentation() {throw new UnsupportedOperationException("Presentation not yet supported.");}
 
 }

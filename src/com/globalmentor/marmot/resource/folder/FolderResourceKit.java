@@ -8,6 +8,7 @@ import static com.garretwilson.rdf.xpackage.FileOntologyConstants.*;
 import com.garretwilson.rdf.RDFResource;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.AbstractResourceKit;
+import com.globalmentor.marmot.resource.Presentation;
 
 import static com.guiseframework.theme.Theme.*;
 
@@ -17,8 +18,9 @@ import static com.guiseframework.theme.Theme.*;
 <li><code>file:Folder</code></li>
 </ul>
 @author Garret Wilson
+@param <P> The type of presentation supported by this resource kit.
 */
-public class FolderResourceKit extends AbstractResourceKit
+public class FolderResourceKit<P extends Presentation> extends AbstractResourceKit<P>
 {
 
 	/**Returns the URI of an open icon representing the given resource.
@@ -31,9 +33,12 @@ public class FolderResourceKit extends AbstractResourceKit
 		return ICON_FOLDER_OPEN;
 	}
 
-	/**Default constructor.*/
-	public FolderResourceKit()
+	/**Presentation constructor.
+	@param presentation The presentation implementation for supported resources.
+	@exception NullPointerException if the given presentation is <code>null</code>.
+	*/
+	public FolderResourceKit(final P presentation)
 	{
-		super(ICON_FOLDER, createReferenceURI(FILE_ONTOLOGY_NAMESPACE_URI, FOLDER_TYPE_NAME));
+		super(presentation, ICON_FOLDER, createReferenceURI(FILE_ONTOLOGY_NAMESPACE_URI, FOLDER_TYPE_NAME));
 	}
 }

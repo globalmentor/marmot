@@ -10,13 +10,14 @@ import javax.mail.internet.ContentType;
 
 import com.garretwilson.rdf.RDFResource;
 import static com.garretwilson.rdf.xpackage.XPackageUtilities.*;
+
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.AbstractResourceKit;
 import com.globalmentor.marmot.resource.BurrowResourceKitManager;
+import com.globalmentor.marmot.resource.Presentation;
 
 import static com.guiseframework.GuiseResourceConstants.*;
 import static com.guiseframework.theme.Theme.*;
-
 
 /**Resource kit for handling images.
 <p>Supported media types:</p>
@@ -25,9 +26,10 @@ import static com.guiseframework.theme.Theme.*;
 	<li><code>image/jpeg</code></li>
 	<li><code>image/png</code></li>
 </ul>
+@param <P> The type of presentation supported by this resource kit.
 @author Garret Wilson
 */
-public class ImageResourceKit extends AbstractResourceKit
+public class ImageResourceKit<P extends Presentation> extends AbstractResourceKit<P>
 {
 	/**The default file extension.*/
 //TODO del if not needed	protected final static String DEFAULT_EXTENSION=JPG_EXTENSION;
@@ -83,10 +85,13 @@ public class ImageResourceKit extends AbstractResourceKit
 	}
 */
 
-	/**Default constructor.*/
-	public ImageResourceKit()
+	/**Presentation constructor.
+	@param presentation The presentation implementation for supported resources.
+	@exception NullPointerException if the given presentation is <code>null</code>.
+	*/
+	public ImageResourceKit(final P presentation)
 	{
-		super(ICON_IMAGE, new ContentType(IMAGE, GIF_SUBTYPE, null), new ContentType(IMAGE, JPEG_SUBTYPE, null), new ContentType(IMAGE, PNG_SUBTYPE, null));
+		super(presentation, ICON_IMAGE, new ContentType(IMAGE, GIF_SUBTYPE, null), new ContentType(IMAGE, JPEG_SUBTYPE, null), new ContentType(IMAGE, PNG_SUBTYPE, null));
 	}
 
 	/**Initializes a resource description, creating whatever properties are appropriate.

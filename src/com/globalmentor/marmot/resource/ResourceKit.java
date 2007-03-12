@@ -10,9 +10,10 @@ import com.garretwilson.rdf.*;
 import com.globalmentor.marmot.repository.Repository;
 
 /**Support for working with a resource in a repository.
+@param <P> The type of presentation supported by this resource kit.
 @author Garret Wilson
 */
-public interface ResourceKit
+public interface ResourceKit<P extends Presentation>
 {
 
 	/**An empty array of extensions.*/
@@ -85,5 +86,8 @@ public interface ResourceKit
 	@exception IOException if there is an error accessing the repository.
 	*/
 	public void initializeResourceDescription(final Repository repository, final RDFResource resource) throws IOException;
-	
+
+	/**@return The presentation implementation for supported resources.*/
+	public P getPresentation();
+
 }

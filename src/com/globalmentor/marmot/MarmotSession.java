@@ -2,23 +2,26 @@ package com.globalmentor.marmot;
 
 import com.garretwilson.rdf.RDFResource;
 import com.globalmentor.marmot.repository.Repository;
+import com.globalmentor.marmot.resource.Presentation;
 import com.globalmentor.marmot.resource.ResourceKit;
 
 /**Marmot session information.
+@param <P> The type of presentation supported by this session.
+@param <RK> The type of resource kits supported by this session.
 @author Garret Wilson
 */
-public interface MarmotSession
+public interface MarmotSession<P extends Presentation, RK extends ResourceKit<P>>
 {
 
 	/**Registers a resource kit with the session. If the resource kit is already registered, no action occurs.
 	@param resourceKit The resource kit to register.
 	*/
-	public void registerResourceKit(final ResourceKit resourceKit);
+	public void registerResourceKit(final RK resourceKit);
 
 	/**Unregisters a resource kit with the session. If the resource kit is not registered, no action is taken.
 	@param resourceKit The resource kit to unregister.
 	*/
-	public void unregisterResourceKIt(final ResourceKit resourceKit);
+	public void unregisterResourceKit(final RK resourceKit);
 
 	/**Retrieves a resource kit appropriate for the given resource.
 	This method locates a resource kit in the following priority:
@@ -31,6 +34,6 @@ public interface MarmotSession
 	@param resource The resource for which a resource kit should be returned.
 	@return A resource kit to handle the given resource.
 	*/
-	public ResourceKit getResourceKit(final Repository repository, final RDFResource resource);
+	public RK getResourceKit(final Repository repository, final RDFResource resource);
 	
 }

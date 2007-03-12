@@ -12,34 +12,37 @@ import com.garretwilson.util.CollectionMap;
 import com.garretwilson.util.CopyOnWriteArrayListConcurrentHashMap;
 import com.garretwilson.util.CollectionMap;
 import com.globalmentor.marmot.repository.Repository;
+import com.globalmentor.marmot.resource.Presentation;
 import com.globalmentor.marmot.resource.ResourceKit;
 
 /**A Marmot session with installed resource kits.
+@param <P> The type of presentation supported by this session.
+@param <RK> The type of resource kits supported by this session.
 @author Garret Wilson
 */
-public class DefaultMarmotSession implements MarmotSession
+public abstract class AbstractMarmotSession<P extends Presentation, RK extends ResourceKit<P>> implements MarmotSession<P, RK>
 {
 
 	/**The set of resource kits.*/
-	private Set<ResourceKit> resourceKits=new CopyOnWriteArraySet<ResourceKit>();
+	private Set<RK> resourceKits=new CopyOnWriteArraySet<RK>();
 	
 	
 	//TODO should we use set maps instead of list maps here?
 	
 	/**The map of resource kit lists, keyed to supported content type base types.*/
-	private CollectionMap<String, ResourceKit, List<ResourceKit>> contentTypeResourceKitsMap=new CopyOnWriteArrayListConcurrentHashMap<String, ResourceKit>();
+	private CollectionMap<String, RK, List<RK>> contentTypeResourceKitsMap=new CopyOnWriteArrayListConcurrentHashMap<String, RK>();
 
 	/**The map of resource kit lists, keyed to supported resource type URIs.*/
-	private CollectionMap<URI, ResourceKit, List<ResourceKit>> resourceTypeResourceKitsMap=new CopyOnWriteArrayListConcurrentHashMap<URI, ResourceKit>();
+	private CollectionMap<URI, RK, List<RK>> resourceTypeResourceKitsMap=new CopyOnWriteArrayListConcurrentHashMap<URI, RK>();
 
 	/**The default resource kit to use if a specific resource kit cannot be found, or <code>null</code> if there is no default resource kit..*/
-	private final ResourceKit defaultResourceKit;
+	private final RK defaultResourceKit;
 
 		/**@return The default resource kit to use if a specific resource kit cannot be found, or <code>null</code> if there is no default resource kit..*/
-		protected ResourceKit getDefaultResourceKit() {return defaultResourceKit;}
+		protected RK getDefaultResourceKit() {return defaultResourceKit;}
 
 	/**Default constructor.*/
-	public DefaultMarmotSession()
+	public AbstractMarmotSession()
 	{
 		this(null);	//construct the resource kit manager with no default resource kit
 	}
@@ -47,7 +50,7 @@ public class DefaultMarmotSession implements MarmotSession
 	/**Default resource kit constructor.
 	@param defaultResourceKit The default resource kit if a specific resource kit cannot be found, or <code>null</code> if there is no default resource kit.
 	*/
-	public DefaultMarmotSession(final ResourceKit defaultResourceKit)
+	public AbstractMarmotSession(final RK defaultResourceKit)
 	{
 		this.defaultResourceKit=defaultResourceKit;	//save the default resource kit
 	}
@@ -61,7 +64,7 @@ public class DefaultMarmotSession implements MarmotSession
 		{
 			contentTypeResourceKitsMap.clear();	//clear the maps
 			resourceTypeResourceKitsMap.clear();
-			for(final ResourceKit resourceKit:resourceKits)	//for each resource kit
+			for(final RK resourceKit:resourceKits)	//for each resource kit
 			{		
 				for(final ContentType contentType:resourceKit.getSupportedContentTypes())	//for each content type this resource kit supports
 				{
@@ -78,7 +81,7 @@ public class DefaultMarmotSession implements MarmotSession
 	/**Registers a resource kit with the session. If the resource kit is already registered, no action occurs.
 	@param resourceKit The resource kit to register.
 	*/
-	public void registerResourceKit(final ResourceKit resourceKit)
+	public void registerResourceKit(final RK resourceKit)
 	{
 		if(resourceKits.add(resourceKit))	//add the resource kit; if it was not already in the set
 		{
@@ -89,7 +92,7 @@ public class DefaultMarmotSession implements MarmotSession
 	/**Unregisters a resource kit with the session. If the resource kit is not registered, no action is taken.
 	@param resourceKit The resource kit to unregister.
 	*/
-	public void unregisterResourceKIt(final ResourceKit resourceKit)
+	public void unregisterResourceKit(final RK resourceKit)
 	{
 		if(resourceKits.remove(resourceKit))	//remove the resource kit from the set; if the resource kit was in the set
 		{ 
@@ -153,9 +156,9 @@ public class DefaultMarmotSession implements MarmotSession
 	@param resource The resource for which a resource kit should be returned.
 	@return A resource kit to handle the given resource.
 	*/
-	public ResourceKit getResourceKit(final Repository repository, final RDFResource resource)
+	public RK getResourceKit(final Repository repository, final RDFResource resource)
 	{
-		ResourceKit resourceKit=null;
+		RK resourceKit=null;
 			//step 1: try to match a resource kit by content type
 		final ContentType contentType=MIMEOntologyUtilities.getMediaType(resource); //get the content type of the resource
 		if(contentType!=null)	//if we know the content type of the resource
@@ -227,7 +230,7 @@ public class DefaultMarmotSession implements MarmotSession
 	@param typeURI The URI of the resource type.
 	@return A resource kit to handle the given resource type, or <code>null</code> if no appropriate resource kit is registered.
 	*/
-	protected ResourceKit getResourceKit(final URI typeURI)
+	protected RK getResourceKit(final URI typeURI)
 	{	
 		return resourceTypeResourceKitsMap.getItem(typeURI);	//see if we have a resource kit registered for this resource type URI
 	}
@@ -236,7 +239,7 @@ public class DefaultMarmotSession implements MarmotSession
 	@param contentType The type of content the resource contains.
 	@return A resource kit to handle the given content type, or <code>null</code> if no appropriate resource kit is registered.
 	*/
-	protected ResourceKit getResourceKit(final ContentType contentType)
+	protected RK getResourceKit(final ContentType contentType)
 	{
 		return contentTypeResourceKitsMap.getItem(contentType.getBaseType());	//see if we have a resource kit registered for this content type
 	}

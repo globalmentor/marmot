@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 
 import static java.util.Collections.*;
 import java.util.List;
@@ -16,6 +17,7 @@ import static com.garretwilson.lang.ObjectUtilities.*;
 import static com.garretwilson.net.URIUtilities.*;
 import static com.garretwilson.net.http.webdav.WebDAVConstants.*;
 import static com.garretwilson.net.http.webdav.WebDAVUtilities.*;
+import static com.garretwilson.rdf.dublincore.DCUtilities.*;
 import static com.garretwilson.rdf.xpackage.FileOntologyConstants.*;
 import static com.garretwilson.rdf.xpackage.FileOntologyUtilities.*;
 import static com.garretwilson.rdf.xpackage.MIMEOntologyUtilities.*;
@@ -30,9 +32,9 @@ import static com.garretwilson.rdf.RDFUtilities.*;
 import static com.garretwilson.rdf.rdfs.RDFSUtilities.*;
 import static com.garretwilson.text.xml.XMLUtilities.*;
 
-import com.garretwilson.text.W3CDateFormat;
 import com.garretwilson.text.xml.QualifiedName;
 import com.garretwilson.util.Debug;
+import static com.garretwilson.util.LocaleUtilities.*;
 import com.garretwilson.util.NameValuePair;
 import com.globalmentor.marmot.repository.AbstractRepository;
 
@@ -155,7 +157,7 @@ public class WebDAVRepository extends AbstractRepository
 		checkOpen();	//make sure the repository is open
 		if(getReferenceURI().equals(resourceURI))	//if this is the URI of the repository
 		{
-			return this;	//return the repository itself
+			return this;	//return the repository itself TODO fix; this is not appropriate for WebDAV, and probably not appropriate for file repositories, either
 		}
 		else	//if this is some other URI
 		{
@@ -436,7 +438,6 @@ public class WebDAVRepository extends AbstractRepository
 	protected RDFResource createResourceDescription(final RDF rdf, final URI resourceURI, List<WebDAVProperty> propertyList)	
 	{
 		final RDFResource resource=rdf.locateResource(resourceURI);	//create a resource to represent the WebDAV property list
-//	TODO del Debug.trace("ready to create resource description for resource", resource, "with property count", propertyList.size());
 /*TODO fix
 		final RK resourceKit=getResourceKitManager().getResourceKit(this, resource);	//get a resource kit for this resource
 		if(resourceKit!=null)	//if we found a resource kit for this resource
@@ -445,6 +446,7 @@ public class WebDAVRepository extends AbstractRepository
 		}
 */
 			//create a label G***maybe only do this if the resource kit has not added a label
+		final HTTPDateFormat httpDateFormat=new HTTPDateFormat(HTTPDateFormat.Style.RFC1123);	//create an HTTP date formatter, as we most likely will need one; WebDAV prefers the RFC 1123 style, as does HTTP
 		final String filename=getFileName(resourceURI);	//get the filename
 		boolean isCollection=false;	//we'll detect if this is a collection base upon the properties
 		for(final WebDAVProperty webdavProperty:propertyList)	//look at each WebDAV property
@@ -453,16 +455,26 @@ public class WebDAVRepository extends AbstractRepository
 			final String propertyNamespace=propertyName.getNamespaceURI();	//get the string version of the property namespace
 			final String propertyLocalName=propertyName.getLocalName();	//get the local name of the property
 			final WebDAVPropertyValue propertyValue=webdavProperty.getValue();	//get the value of the property
-//TODO del when works			final NodeList valueNodes=documentFragmentValue.getChildNodes();	//get the children of the document fragment
-/*TODO del when works
-			final String propertyStringValue=asInstance(webdavProperty.getValue(), String.class);	//get the value of the property as a string, if it is a string
-			final NameValuePair<QualifiedName, String> propertyComplexValue=(NameValuePair<QualifiedName, String>)asInstance(webdavProperty.getValue(), NameValuePair.class);	//get the value of the property as a string, if it is a string
-*/
 			if(WEBDAV_NAMESPACE.equals(propertyNamespace))	//if this property is in the WebDAV namespace
 			{
-				//TODO fix displayname
-				//TODO fix creationdate
-				if(RESOURCE_TYPE_PROPERTY_NAME.equals(propertyLocalName))	//D:resourcetype
+				if(DISPLAY_NAME_PROPERTY_NAME.equals(propertyLocalName))	//D:displayname
+				{
+					final String displayName=propertyValue.getText().trim();	//get the display name TODO just trim control characters (e.g. CR, LF), as we want users to be able to add whitespace
+					setLabel(resource, displayName);	//set the label as the display name of the WebDAV resource			
+				}				
+				else if(CREATION_DATE_PROPERTY_NAME.equals(propertyLocalName))	//D:creationdate
+				{
+					try
+					{
+						final Date creationDate=httpDateFormat.parse(propertyValue.getText().trim());	//parse the date
+						setCreatedTime(resource, creationDate);	//set the created time as the creation date of the WebDAV resource			
+					}
+					catch(final java.text.ParseException parseException)	//if the creation date is not the correct type
+					{
+						Debug.warn(parseException);	//TODO improve error handling
+					}
+				}				
+				else if(RESOURCE_TYPE_PROPERTY_NAME.equals(propertyLocalName))	//D:resourcetype
 				{
 					if(propertyValue instanceof WebDAVDocumentFragmentPropertyValue)	//if the WebDAV property represents a document fragment
 					{
@@ -474,7 +486,23 @@ public class WebDAVRepository extends AbstractRepository
 						}
 					}
 				}
-				//TODO fix contentlength
+				else if(GET_CONTENT_LANGUAGE_PROPERTY_NAME.equals(propertyLocalName))	//D:getcontentlanguage
+				{
+					final Locale contentLanguage=createLocale(propertyValue.getText().trim());	//get the content language string and create a locale from it
+					setLanguage(resource, contentLanguage);	//set the dc:languate as the content length of the WebDAV resource			
+				}				
+				else if(GET_CONTENT_LENGTH_PROPERTY_NAME.equals(propertyLocalName))	//D:getlastmodified
+				{
+					try
+					{
+						final long contentLength=Long.parseLong(propertyValue.getText().trim());	//parse the content length
+						setSize(resource, contentLength);	//set the size as the content length of the WebDAV resource			
+					}
+					catch(final NumberFormatException numberFormatException)	//if the content length is not a valid value
+					{
+						Debug.warn(numberFormatException);	//TODO improve error handling
+					}
+				}				
 				else if(GET_CONTENT_TYPE_PROPERTY_NAME.equals(propertyLocalName))	//D:getcontenttype
 				{
 					try
@@ -490,12 +518,11 @@ public class WebDAVRepository extends AbstractRepository
 						Debug.warn(parseException);	//TODO improve error handling
 					}
 				}
-				else if(GET_CONTENT_TYPE_PROPERTY_NAME.equals(propertyLocalName))	//D:getlastmodified
+				else if(GET_LAST_MODIFIED_PROPERTY_NAME.equals(propertyLocalName))	//D:getlastmodified
 				{
-					final HTTPDateFormat httpFormat=new HTTPDateFormat(HTTPDateFormat.Style.RFC1123);	//create an HTTP date formatter; WebDAV prefers the RFC 1123 style, as does HTTP
 					try
 					{
-						final Date lastModifiedDate=httpFormat.parse(propertyValue.getText().trim());	//parse the date
+						final Date lastModifiedDate=httpDateFormat.parse(propertyValue.getText().trim());	//parse the date
 						setModifiedTime(resource, lastModifiedDate);	//set the modified time as the last modified date of the WebDAV resource			
 					}
 					catch(final java.text.ParseException parseException)	//if the last modified time is not the correct type
