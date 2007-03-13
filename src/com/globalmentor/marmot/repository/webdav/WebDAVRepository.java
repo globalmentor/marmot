@@ -1,8 +1,11 @@
 package com.globalmentor.marmot.repository.webdav;
 
 import java.io.*;
+import java.net.PasswordAuthentication;
 import java.net.URI;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import static java.util.Arrays.*;
 import java.util.Date;
 import java.util.Locale;
 
@@ -32,6 +35,7 @@ import static com.garretwilson.rdf.RDFUtilities.*;
 import static com.garretwilson.rdf.rdfs.RDFSUtilities.*;
 import static com.garretwilson.text.xml.XMLUtilities.*;
 
+import com.garretwilson.text.W3CDateFormat;
 import com.garretwilson.text.xml.QualifiedName;
 import com.garretwilson.util.Debug;
 import static com.garretwilson.util.LocaleUtilities.*;
@@ -48,11 +52,15 @@ import com.globalmentor.marmot.repository.AbstractRepository;
 public class WebDAVRepository extends AbstractRepository
 {
 
+		//TODO the current technique of erasing the password after each call may become obsolete when the HTTP client supports persistent connections
+	
 	/**The URI represting the XPackage file:folder type.*/	//TODO check; use static imports 
 //TODO move if needed	protected final static URI FILE_FOLDER_TYPE_URI=RDFUtilities.createReferenceURI(FileOntologyConstants.FILE_ONTOLOGY_NAMESPACE_URI, FileOntologyConstants.FOLDER_TYPE_NAME);	//TODO promote to parent file-based class		
 
 	/**The extension used for directories to hold resource children.*/
 //TODO move if needed	protected final static String DIRECTORY_EXTENSION="@";	//TODO promote to parent file-based class
+
+//TODO fix	public final static String WEBDAV_RDF_PROPERTY_PREFIX="rdf_";
 
 	/**The HTTP client used to create a connection to this resource.*/
 	private final HTTPClient httpClient;
@@ -60,6 +68,40 @@ public class WebDAVRepository extends AbstractRepository
 		/**@return The HTTP client used to create a connection to this resource.*/
 		protected HTTPClient getHTTPClient() {return httpClient;}
 
+	/**The username to use in accessing the repository, or <code>null</code> if no username is specified.*/
+	private String username=null;
+
+		/**@return The username to use in accessing the repository, or <code>null</code> if no username is specified.*/
+		public String getUsername() {return username;}
+
+		/**Sets the username to use in accessing the repository.
+		@param username The username to use in accessing the repository, or <code>null</code> if no username is specified.
+		*/
+		public void setUsername(final String username) {this.username=username;}
+
+	/**The password to use in accessing the repository, or <code>null</code> if no password is specified.*/
+	private char[] password=null;
+
+		/**@return The username to use in accessing the repository, or <code>null</code> if no password is specified.*/
+		public char[] getPassword() {return password;}
+
+		/**Sets the password to use in accessing the repository.
+		@param password The password to use in accessing the repository, or <code>null</code> if no password is specified.
+		*/
+		public void setPassword(final char[] password) {this.password=password;}
+
+	/**Returns whatever password authentication should be used when communicating with a resource.
+	@return A password authentication object with the repository's username and password, or <code>null</code> if no username and password are specified.
+	@see #getUsername()
+	@see #getPassword()
+	*/
+	protected PasswordAuthentication getPasswordAuthentication()
+	{
+		final String username=getUsername();	//get the username
+		final char[] password=getPassword();	//get the password
+		return username!=null && password!=null ? new PasswordAuthentication(username, password) : null;	//return new password authentication if this information is available
+	}
+	
 	/**Default constructor with no settings.
 	Settings must be configured before repository is opened.
 	*/
@@ -120,8 +162,19 @@ public class WebDAVRepository extends AbstractRepository
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
-		return webdavResource.getInputStream();	//return an input stream to the resource
+		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+		try
+		{
+			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			return webdavResource.getInputStream();	//return an input stream to the resource
+		}
+		finally
+		{
+			if(passwordAuthentication!=null)	//if we used password authentication
+			{
+				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
+			}
+		}
 	}
 	
 	/**Gets an output stream to the contents of the resource specified by the given URI.
@@ -136,12 +189,23 @@ public class WebDAVRepository extends AbstractRepository
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource TODO cache these resources, maybe
-		if(!webdavResource.exists())	//if the resource doesn't already exist
+		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+		try
 		{
-			throw new HTTPNotFoundException("Cannot open output stream to non-existent resource "+resourceURI);
+			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource TODO cache these resources, maybe
+			if(!webdavResource.exists())	//if the resource doesn't already exist
+			{
+				throw new HTTPNotFoundException("Cannot open output stream to non-existent resource "+resourceURI);
+			}
+			return webdavResource.getOutputStream();	//return an output stream to the resource
 		}
-		return webdavResource.getOutputStream();	//return an output stream to the resource
+		finally
+		{
+			if(passwordAuthentication!=null)	//if we used password authentication
+			{
+				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
+			}
+		}
 	}
 	
 	/**Retrieves a description of the resource with the given URI.
@@ -163,9 +227,20 @@ public class WebDAVRepository extends AbstractRepository
 		{
 //TODO del Debug.traceStack("!!!!!!!!getting resource description for resource", resourceURI);
 			final RDF rdf=new RDF();	//G***use a common RDF data model
-			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
-			final List<WebDAVProperty> propertyList=webdavResource.propFind();	//get the properties of this resource
-			return createResourceDescription(rdf, resourceURI, propertyList);	//create a resource from this URI and property list
+			final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+			try
+			{
+				final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+				final List<WebDAVProperty> propertyList=webdavResource.propFind();	//get the properties of this resource
+				return createResourceDescription(rdf, resourceURI, propertyList);	//create a resource from this URI and property list
+			}
+			finally
+			{
+				if(passwordAuthentication!=null)	//if we used password authentication
+				{
+					fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
+				}
+			}
 		}
 	}
 
@@ -180,8 +255,19 @@ public class WebDAVRepository extends AbstractRepository
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
-		return webdavResource.exists();	//see if the WebDAV resource exists		
+		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+		try
+		{
+			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			return webdavResource.exists();	//see if the WebDAV resource exists		
+		}
+		finally
+		{
+			if(passwordAuthentication!=null)	//if we used password authentication
+			{
+				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
+			}
+		}
 	}
 
 	/**Determines if the resource at a given URI is a collection.
@@ -197,8 +283,19 @@ public class WebDAVRepository extends AbstractRepository
   {
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
-		return webdavResource.isCollection();	//see if the WebDAV resource is a collection		
+		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+		try
+		{
+			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			return webdavResource.isCollection();	//see if the WebDAV resource is a collection		
+		}
+		finally
+		{
+			if(passwordAuthentication!=null)	//if we used password authentication
+			{
+				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
+			}
+		}
   }
 
 	/**Determines whether the resource represented by the given URI has children.
@@ -213,16 +310,27 @@ public class WebDAVRepository extends AbstractRepository
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
 		final URI privateResourceURI=getPrivateURI(resourceURI);	//get the URI of the resource in the private namespace
-		final WebDAVResource webdavResource=new WebDAVResource(privateResourceURI, getHTTPClient());	//create a WebDAV resource
-		final List<NameValuePair<URI, List<WebDAVProperty>>> propertyLists=webdavResource.propFind(Depth.ONE);	//get the properties of the resources one level down
-		for(final NameValuePair<URI, List<WebDAVProperty>> propertyList:propertyLists)	//look at each property list
+		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+		try
 		{
-			if(!privateResourceURI.equals(propertyList.getName()))	//if this property list is *not* for this resource
+			final WebDAVResource webdavResource=new WebDAVResource(privateResourceURI, getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			final List<NameValuePair<URI, List<WebDAVProperty>>> propertyLists=webdavResource.propFind(Depth.ONE);	//get the properties of the resources one level down
+			for(final NameValuePair<URI, List<WebDAVProperty>> propertyList:propertyLists)	//look at each property list
 			{
-				return true;	//this resource has children
+				if(!privateResourceURI.equals(propertyList.getName()))	//if this property list is *not* for this resource
+				{
+					return true;	//this resource has children
+				}
+			}
+			return false;	//no properties could be found for any children
+		}
+		finally
+		{
+			if(passwordAuthentication!=null)	//if we used password authentication
+			{
+				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
 			}
 		}
-		return false;	//no properties could be found for any children
 	}
 
 	/**Retrieves child resources of the resource at the given URI.
@@ -241,34 +349,45 @@ public class WebDAVRepository extends AbstractRepository
 		if(depth!=0)	//a depth of zero means don't get child resources
 		{
 			final URI privateResourceURI=getPrivateURI(resourceURI);	//get the URI of the resource in the private namespace
-			final WebDAVResource webdavResource=new WebDAVResource(privateResourceURI, getHTTPClient());	//create a WebDAV resource
-			final Depth webdavDepth;	//we'll get the depth based upon the value passed
+			final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 			try
 			{
-				webdavDepth=depth==-1 ? Depth.INFINITY : Depth.values()[depth];	//get the depth based upon the value passed
-			}
-			catch(final IndexOutOfBoundsException indexOutOfBoundsException)	//if an illegal depth was passed
-			{
-				throw new IllegalArgumentException(Integer.toString(depth));	//TODO later convert the depth by using infinity and checking the result
-			}
-			final RDF rdf=new RDF();	//create a new RDF data model
-			final List<NameValuePair<URI, List<WebDAVProperty>>> propertyLists=webdavResource.propFind(webdavDepth);	//get the properties of the resources
-			final List<RDFResource> childResourceList=new ArrayList<RDFResource>(propertyLists.size());	//create a list of child resources no larger than the number of WebDAV resource property lists
-//		TODO del Debug.trace("looking at children");
-			for(final NameValuePair<URI, List<WebDAVProperty>> propertyList:propertyLists)	//look at each property list
-			{
-				final URI childResourcePrivateURI=propertyList.getName();
-//			TODO del Debug.trace("looking at child", childResourceURI);
-				if(!privateResourceURI.equals(childResourcePrivateURI))	//if this property list is *not* for this resource
+				final WebDAVResource webdavResource=new WebDAVResource(privateResourceURI, getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+				final Depth webdavDepth;	//we'll get the depth based upon the value passed
+				try
 				{
-//				TODO del Debug.trace("creating resource for child", childResourceURI);
-					childResourceList.add(createResourceDescription(rdf, getPublicURI(childResourcePrivateURI), propertyList.getValue()));	//create a resource from this URI and property lists
+					webdavDepth=depth==-1 ? Depth.INFINITY : Depth.values()[depth];	//get the depth based upon the value passed
+				}
+				catch(final IndexOutOfBoundsException indexOutOfBoundsException)	//if an illegal depth was passed
+				{
+					throw new IllegalArgumentException(Integer.toString(depth));	//TODO later convert the depth by using infinity and checking the result
+				}
+				final RDF rdf=new RDF();	//create a new RDF data model
+				final List<NameValuePair<URI, List<WebDAVProperty>>> propertyLists=webdavResource.propFind(webdavDepth);	//get the properties of the resources
+				final List<RDFResource> childResourceList=new ArrayList<RDFResource>(propertyLists.size());	//create a list of child resources no larger than the number of WebDAV resource property lists
+	//		TODO del Debug.trace("looking at children");
+				for(final NameValuePair<URI, List<WebDAVProperty>> propertyList:propertyLists)	//look at each property list
+				{
+					final URI childResourcePrivateURI=propertyList.getName();
+	//			TODO del Debug.trace("looking at child", childResourceURI);
+					if(!privateResourceURI.equals(childResourcePrivateURI))	//if this property list is *not* for this resource
+					{
+	//				TODO del Debug.trace("creating resource for child", childResourceURI);
+						childResourceList.add(createResourceDescription(rdf, getPublicURI(childResourcePrivateURI), propertyList.getValue()));	//create a resource from this URI and property lists
+					}
+				}
+	//TODO do the special Marmot thing about checking for special Marmot directories
+				
+	//TODO fix				Collections.sort(resourceList);	//sort the resource by URI
+				return childResourceList;	//return the list of resources we constructed
+			}
+			finally
+			{
+				if(passwordAuthentication!=null)	//if we used password authentication
+				{
+					fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
 				}
 			}
-//TODO do the special Marmot thing about checking for special Marmot directories
-			
-//TODO fix				Collections.sort(resourceList);	//sort the resource by URI
-			return childResourceList;	//return the list of resources we constructed
 		}
 		else	//if a depth of zero was requested
 		{
@@ -293,9 +412,10 @@ public class WebDAVRepository extends AbstractRepository
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
+		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 		final OutputStream outputStream=webdavResource.getOutputStream();	//get an output stream to the WebDAV resource
-		return new DescriptionWriterOutputStreamDecorator(outputStream, resourceURI, resourceDescription, webdavResource);	//wrap the output stream in a decorator that will update the WebDAV properties after the contents are stored		
+		return new DescriptionWriterOutputStreamDecorator(outputStream, resourceURI, resourceDescription, webdavResource, passwordAuthentication);	//wrap the output stream in a decorator that will update the WebDAV properties after the contents are stored; this method will erase the provided password, if any, after it completes the resource property updates
 	}
 
 	/**Creates a new resource with the given description and contents.
@@ -313,9 +433,20 @@ public class WebDAVRepository extends AbstractRepository
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
-		webdavResource.put(resourceContents);	//create a WebDAV resource with the guven contents
-		return getResourceDescription(resourceURI);	//return a description of the new resource
+		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+		try
+		{
+			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			webdavResource.put(resourceContents);	//create a WebDAV resource with the guven contents
+			return getResourceDescription(resourceURI);	//return a description of the new resource
+		}
+		finally
+		{
+			if(passwordAuthentication!=null)	//if we used password authentication
+			{
+				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
+			}
+		}
 	}
 
 	/**Creates a collection in the repository.
@@ -329,9 +460,20 @@ public class WebDAVRepository extends AbstractRepository
 	{
 		checkResourceURI(collectionURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(collectionURI), getHTTPClient());	//create a WebDAV resource
-		webdavResource.mkCol();	//create the collection
-		return getResourceDescription(collectionURI);	//return a description of the new collection
+		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+		try
+		{
+			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(collectionURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			webdavResource.mkCol();	//create the collection
+			return getResourceDescription(collectionURI);	//return a description of the new collection
+		}
+		finally
+		{
+			if(passwordAuthentication!=null)	//if we used password authentication
+			{
+				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
+			}
+		}
 	}
 
 	/**Sets the properties of a resource based upon the given description.
@@ -348,8 +490,19 @@ public class WebDAVRepository extends AbstractRepository
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
-		return setResourceProperties(resourceURI, resourceDescription, webdavResource);	//set the properties using the WebDAV resource object
+		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+		try
+		{
+			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			return setResourceProperties(resourceURI, resourceDescription, webdavResource);	//set the properties using the WebDAV resource object
+		}
+		finally
+		{
+			if(passwordAuthentication!=null)	//if we used password authentication
+			{
+				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
+			}
+		}
 	}
 
 	/**Sets the properties of a resource based upon the given description.
@@ -394,8 +547,19 @@ public class WebDAVRepository extends AbstractRepository
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
-		webdavResource.copy(getPrivateURI(destinationURI));	//copy the resource with an infinite depth, overwriting the destination resource if one exists
+		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+		try
+		{
+			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			webdavResource.copy(getPrivateURI(destinationURI));	//copy the resource with an infinite depth, overwriting the destination resource if one exists
+		}
+		finally
+		{
+			if(passwordAuthentication!=null)	//if we used password authentication
+			{
+				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
+			}
+		}
 	}
 
 	/**Deletes a resource.
@@ -408,8 +572,19 @@ public class WebDAVRepository extends AbstractRepository
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
-		webdavResource.delete();	//delete the resource		
+		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+		try
+		{
+			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			webdavResource.delete();	//delete the resource		
+		}
+		finally
+		{
+			if(passwordAuthentication!=null)	//if we used password authentication
+			{
+				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
+			}
+		}
 	}
 
 	/**Moves a resource to another URI in this repository.
@@ -424,8 +599,19 @@ public class WebDAVRepository extends AbstractRepository
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient());	//create a WebDAV resource
-		webdavResource.move(getPrivateURI(destinationURI));	//move the resource with an infinite depth, overwriting the destination resource if one exists
+		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+		try
+		{
+			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			webdavResource.move(getPrivateURI(destinationURI));	//move the resource with an infinite depth, overwriting the destination resource if one exists
+		}
+		finally
+		{
+			if(passwordAuthentication!=null)	//if we used password authentication
+			{
+				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
+			}
+		}
 	}
 
 	/**Creates a resource to represent this list of properties.
@@ -446,7 +632,6 @@ public class WebDAVRepository extends AbstractRepository
 		}
 */
 			//create a label G***maybe only do this if the resource kit has not added a label
-		final HTTPDateFormat httpDateFormat=new HTTPDateFormat(HTTPDateFormat.Style.RFC1123);	//create an HTTP date formatter, as we most likely will need one; WebDAV prefers the RFC 1123 style, as does HTTP
 		final String filename=getFileName(resourceURI);	//get the filename
 		boolean isCollection=false;	//we'll detect if this is a collection base upon the properties
 		for(final WebDAVProperty webdavProperty:propertyList)	//look at each WebDAV property
@@ -466,7 +651,9 @@ public class WebDAVRepository extends AbstractRepository
 				{
 					try
 					{
-						final Date creationDate=httpDateFormat.parse(propertyValue.getText().trim());	//parse the date
+							//TODO fix; RFC 2518 23.2 Appendix 2 says that ISO 8601 can have an optional fractional part of seconds, but Apache mod_dav doesn't seem to do that; make sure this date formatter will handle it if any server tries to send back fractions of a second
+						final DateFormat iso8601DateFormat=new W3CDateFormat(W3CDateFormat.Style.DATE_HOURS_MINUTES_SECONDS);	//create an ISO 8601 date formatter; the WebDAV D:creationdate property prefers the ISO 8601 style
+						final Date creationDate=iso8601DateFormat.parse(propertyValue.getText().trim());	//parse the date
 						setCreatedTime(resource, creationDate);	//set the created time as the creation date of the WebDAV resource			
 					}
 					catch(final java.text.ParseException parseException)	//if the creation date is not the correct type
@@ -491,7 +678,7 @@ public class WebDAVRepository extends AbstractRepository
 					final Locale contentLanguage=createLocale(propertyValue.getText().trim());	//get the content language string and create a locale from it
 					setLanguage(resource, contentLanguage);	//set the dc:languate as the content length of the WebDAV resource			
 				}				
-				else if(GET_CONTENT_LENGTH_PROPERTY_NAME.equals(propertyLocalName))	//D:getlastmodified
+				else if(GET_CONTENT_LENGTH_PROPERTY_NAME.equals(propertyLocalName))	//D:getcontentlength
 				{
 					try
 					{
@@ -522,6 +709,7 @@ public class WebDAVRepository extends AbstractRepository
 				{
 					try
 					{
+						final DateFormat httpDateFormat=new HTTPDateFormat(HTTPDateFormat.Style.RFC1123);	//create an HTTP date formatter; the WebDAV D:getlastmodified property prefers the RFC 1123 style, as does HTTP
 						final Date lastModifiedDate=httpDateFormat.parse(propertyValue.getText().trim());	//parse the date
 						setModifiedTime(resource, lastModifiedDate);	//set the modified time as the last modified date of the WebDAV resource			
 					}
@@ -555,6 +743,7 @@ public class WebDAVRepository extends AbstractRepository
 	}
 
 	/**Creates an output stream that updates the properties of a WebDAV resource after its contents are stored.
+	The password of the given password authentication object, if any, will be erased after updating the properties of the WebDAV resource.
 	@author Garret Wilson
 	*/
 	protected class DescriptionWriterOutputStreamDecorator extends OutputStreamDecorator<OutputStream>
@@ -565,31 +754,39 @@ public class WebDAVRepository extends AbstractRepository
 			/**@protected The reference URI to use to identify the resource.*/
 			public URI getResourceURI() {return resourceURI;}
 	
-		/**The WebDAV resource for updating the WebDAV properties.*/
-		private final WebDAVResource webdavResource;
-
-			/**@return The WebDAV resource for updating the WebDAV properties.*/
-			protected WebDAVResource getWebDAVResource() {return webdavResource;}
-
 		/**The description of the resource to store as WebDAV properties.*/
 		private final RDFResource resourceDescription;
 
 			/**@return The description of the resource to store as WebDAV properties.*/
 			protected RDFResource getResourceDescription() {return resourceDescription;}
 
+		/**The WebDAV resource for updating the WebDAV properties.*/
+		private final WebDAVResource webdavResource;
+
+			/**@return The WebDAV resource for updating the WebDAV properties.*/
+			protected WebDAVResource getWebDAVResource() {return webdavResource;}
+
+		/**The password authentication being used, or <code>null</code> if no password authentication is given.*/
+		private final PasswordAuthentication passwordAuthentication;
+
+			/**@return The password authentication being used, or <code>null</code> if no password authentication is given.*/
+			protected PasswordAuthentication getPasswordAuthentication() {return passwordAuthentication;}
+
 		/**Decorates the given output stream.
 		@param outputStream The output stream to decorate
 		@param resourceURI The reference URI to use to identify the resource.
 		@param resourceDescription The description of the resource to store as WebDAV properties.
 		@param webdavResource The WebDAV resource for updating the WebDAV properties.
+		@param passwordAuthentication The password authentication being used, or <code>null</code> if no password authentication is given.
 		@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
 		*/
-		public DescriptionWriterOutputStreamDecorator(final OutputStream outputStream, final URI resourceURI, final RDFResource resourceDescription, final WebDAVResource webdavResource)
+		public DescriptionWriterOutputStreamDecorator(final OutputStream outputStream, final URI resourceURI, final RDFResource resourceDescription, final WebDAVResource webdavResource, final PasswordAuthentication passwordAuthentication)
 		{
 			super(outputStream);	//construct the parent class
 			this.resourceURI=checkInstance(resourceURI, "Resource URI cannot be null.");
 			this.resourceDescription=checkInstance(resourceDescription, "Resource description cannot be null.");
 			this.webdavResource=checkInstance(webdavResource, "WebDAV resource cannot be null.");
+			this.passwordAuthentication=passwordAuthentication;
 		}
 	
 	  /**Called after the stream is successfully closed.
@@ -598,7 +795,18 @@ public class WebDAVRepository extends AbstractRepository
 		*/
 	  protected void afterClose() throws IOException
 	  {
-			setResourceProperties(getResourceURI(), getResourceDescription(), getWebDAVResource());	//set the properties using the WebDAV resource object
+	  	try
+	  	{
+	  		setResourceProperties(getResourceURI(), getResourceDescription(), getWebDAVResource());	//set the properties using the WebDAV resource object
+			}
+			finally
+			{
+				final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//see if we were given password authentication information
+				if(passwordAuthentication!=null)	//if we used password authentication
+				{
+					fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
+				}
+			}	  		
 	  }
 
 	}

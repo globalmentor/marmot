@@ -32,16 +32,7 @@ public class MarmotConstants
 	/**The URI to the Marmot namespace.*/
 	public final static URI MARMOT_NAMESPACE_URI=URI.create("http://globalmentor.com/namespaces/marmot#");
 
-		//Marmot ontology property names
-	/**The icon of a resource. The local name of marmot:icon.*/
-/*TODO del; moved to XPackage
-	public final static String ICON_PROPERTY_NAME="icon";
-*/
-	
 		//installation constants
-		
-	/**The property for the Marmot install directory, if given by the launcher.*/
-//G***del	public final static String INSTALL_DIR="com.globalmentor.marmot.install.dir";
 
 	/**The property for the example directory, if given by the launcher.*/
 	public final static String EXAMPLE_DIR_PROPERTY="com.globalmentor.marmot.example.dir";
