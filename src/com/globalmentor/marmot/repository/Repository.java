@@ -6,6 +6,7 @@ import java.io.*;
 import java.net.URI;
 import java.util.List;
 
+import com.garretwilson.rdf.RDFPropertyValuePair;
 import com.garretwilson.rdf.RDFResource;
 
 /**A Marmot information store.
@@ -208,6 +209,17 @@ public interface Repository
 	@exception IOException Thrown if the resource properties could not be updated.
 	*/
 	public RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription) throws IOException;
+
+	/**Sets the properties of a given resource.
+	Any existing properties with the same URIs as the given given property/value pairs will be removed.
+	All other existing properties will be left unmodified. 
+	@param resourceURI The reference URI of the resource.
+	@param properties The properties to set.
+	@return The updated description of the resource.
+	@exception NullPointerException if the given resource URI and/or properties is <code>null</code>.
+	@exception IOException Thrown if the resource properties could not be updated.
+	*/
+	public RDFResource setResourceProperties(final URI resourceURI, final RDFPropertyValuePair... properties) throws IOException;
 
 	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository.
 	Any resource at the destination URI will be replaced.
