@@ -1,6 +1,8 @@
 package com.globalmentor.marmot;
 
 import java.net.*;
+
+import static com.garretwilson.rdf.RDFUtilities.*;
 import static com.garretwilson.text.CharacterConstants.*;
 
 /**Constant values used by Marmot.
@@ -31,6 +33,29 @@ public class MarmotConstants
 
 	/**The URI to the Marmot namespace.*/
 	public final static URI MARMOT_NAMESPACE_URI=URI.create("http://globalmentor.com/namespaces/marmot#");
+
+	
+		//Marmot property names
+	/**Specifies a permission of a resource. The local name of <code>marmot:permission</code>.*/
+	public final static String PERMISSION_PROPERTY_NAME="permission";
+	/**Specifies a principal by URI. Used in various contexts. The local name of <code>marmot:principal</code>.*/
+	public final static String PRINCIPAL_PROPERTY_NAME="principal";
+
+		//Marmot type names
+	/**The user may detect that the resource exists, such as when the resource is listed in the contents of a parent collection. The local name of <code>marmot:DiscoverPermission</code>.*/
+	public final static String DISCOVER_PERMISSION_TYPE_NAME="DiscoverPermission";
+	/**The user may detect that the resource exists, such as when the resource is listed in the contents of a parent collection. The local name of <code>marmot:DiscoverPermission</code>.*/
+	public final static URI DISCOVER_PERMISSION_TYPE_URI=createReferenceURI(MARMOT_NAMESPACE_URI, DISCOVER_PERMISSION_TYPE_NAME);
+
+	/**The user may read the literal contents of the resource, including child listings for collections. The local name of <code>marmot:ReadPermission</code>.*/
+	public final static String READ_PERMISSION_TYPE_NAME="ReadPermission";
+	/**The user may read the literal contents of the resource, including child listings for collections. The local name of <code>marmot:ReadPermission</code>.*/
+	public final static URI READ_PERMISSION_TYPE_URI=createReferenceURI(MARMOT_NAMESPACE_URI, READ_PERMISSION_TYPE_NAME);
+
+	/**The user may set the literal contents of the resource, including adding and removing children in collections, but may not delete the resource. The local name of <code>marmot:WritePermission</code>.*/
+	public final static String WRITE_PERMISSION_TYPE_NAME="WritePermission";
+	/**The user may set the literal contents of the resource, including adding and removing children in collections, but may not delete the resource. The local name of <code>marmot:WritePermission</code>.*/
+	public final static URI WRITE_PERMISSION_TYPE_URI=createReferenceURI(MARMOT_NAMESPACE_URI, WRITE_PERMISSION_TYPE_NAME);
 
 		//installation constants
 

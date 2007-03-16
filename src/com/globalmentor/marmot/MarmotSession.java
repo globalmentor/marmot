@@ -4,6 +4,7 @@ import com.garretwilson.rdf.RDFResource;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.Presentation;
 import com.globalmentor.marmot.resource.ResourceKit;
+import com.globalmentor.marmot.security.MarmotSecurityManager;
 
 /**Marmot session information.
 @param <P> The type of presentation supported by this session.
@@ -12,6 +13,9 @@ import com.globalmentor.marmot.resource.ResourceKit;
 */
 public interface MarmotSession<P extends Presentation, RK extends ResourceKit<P>>
 {
+
+	/**@return The installed Marmot security manager.*/
+	public MarmotSecurityManager getSecurityManager();
 
 	/**Registers a resource kit with the session. If the resource kit is already registered, no action occurs.
 	@param resourceKit The resource kit to register.

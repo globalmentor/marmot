@@ -14,6 +14,7 @@ import com.garretwilson.util.CollectionMap;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.Presentation;
 import com.globalmentor.marmot.resource.ResourceKit;
+import com.globalmentor.marmot.security.*;
 
 /**A Marmot session with installed resource kits.
 @param <P> The type of presentation supported by this session.
@@ -23,9 +24,14 @@ import com.globalmentor.marmot.resource.ResourceKit;
 public abstract class AbstractMarmotSession<P extends Presentation, RK extends ResourceKit<P>> implements MarmotSession<P, RK>
 {
 
+	/**The installed Marmot security manager.*/
+	private MarmotSecurityManager securityManager=new DefaultMarmotSecurityManager();
+
+		/**@return The installed Marmot security manager.*/
+		public MarmotSecurityManager getSecurityManager() {return securityManager;}
+
 	/**The set of resource kits.*/
 	private Set<RK> resourceKits=new CopyOnWriteArraySet<RK>();
-	
 	
 	//TODO should we use set maps instead of list maps here?
 	
