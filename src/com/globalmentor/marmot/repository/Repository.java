@@ -1,11 +1,10 @@
 package com.globalmentor.marmot.repository;
 
-import static com.garretwilson.lang.ObjectUtilities.checkInstance;
-
 import java.io.*;
 import java.net.URI;
 import java.util.List;
 
+import com.garretwilson.net.ResourceIOException;
 import com.garretwilson.rdf.RDFPropertyValuePair;
 import com.garretwilson.rdf.RDFResource;
 
@@ -59,9 +58,9 @@ public interface Repository
 	@return An input stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
+	@exception ResourceIOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
 	*/
-	public InputStream getResourceInputStream(final URI resourceURI) throws IOException;
+	public InputStream getResourceInputStream(final URI resourceURI) throws ResourceIOException;
 
 	/**Gets an output stream to the contents of the resource specified by the given URI.
 	An error is generated if the resource does not exist.
@@ -69,27 +68,27 @@ public interface Repository
 	@return An output stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error accessing the resource.
+	@exception ResourceIOException if there is an error accessing the resource.
 	*/
-	public OutputStream getResourceOutputStream(final URI resourceURI) throws IOException;
+	public OutputStream getResourceOutputStream(final URI resourceURI) throws ResourceIOException;
 	
 	/**Retrieves a description of the resource with the given URI.
 	@param resourceURI The URI of the resource the description of which should be retrieved.
 	@return A description of the resource with the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error accessing the repository.
+	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public RDFResource getResourceDescription(final URI resourceURI) throws IOException;
+	public RDFResource getResourceDescription(final URI resourceURI) throws ResourceIOException;
 
 	/**Determines if the resource at the given URI exists.
 	@param resourceURI The URI of the resource to check.
 	@return <code>true</code> if the resource exists, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error accessing the repository.
+	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public boolean resourceExists(final URI resourceURI) throws IOException;
+	public boolean resourceExists(final URI resourceURI) throws ResourceIOException;
 
 	/**Determines if the resource at a given URI is a collection.
 	This is a convenience method to quickly determine if a resource exists at the given URI
@@ -98,27 +97,27 @@ public interface Repository
 	@return <code>true</code> if the resource is a collection, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error accessing the repository.
+	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public boolean isCollection(final URI resourceURI) throws IOException;
+	public boolean isCollection(final URI resourceURI) throws ResourceIOException;
 
 	/**Determines whether the resource represented by the given URI has children.
 	@param resourceURI The URI of the resource.
 	@return <code>true</code> if the specified resource has child resources.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error accessing the repository.
+	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public boolean hasChildren(final URI resourceURI) throws IOException;
+	public boolean hasChildren(final URI resourceURI) throws ResourceIOException;
 
 	/**Retrieves immediate child resources of the resource at the given URI.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
 	@return A list of sub-resource descriptions directly under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error accessing the repository.
+	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI) throws IOException;
+	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI) throws ResourceIOException;
 
 	/**Retrieves child resources of the resource at the given URI.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
@@ -126,9 +125,9 @@ public interface Repository
 	@return A list of sub-resources descriptions directly under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error accessing the repository.
+	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws IOException;
+	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws ResourceIOException;
 
 	/**Creates a new resource with a default description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
@@ -137,9 +136,9 @@ public interface Repository
 	@param resourceURI The reference URI to use to identify the resource.
 	@return An output stream for storing the contents of the resource.
 	@exception NullPointerException if the given resource URI is <code>null</code>.
-	@exception IOException if the resource could not be created.
+	@exception ResourceIOException if the resource could not be created.
 	*/
-	public OutputStream createResource(final URI resourceURI) throws IOException;
+	public OutputStream createResource(final URI resourceURI) throws ResourceIOException;
 
 	/**Creates a new resource with the given description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
@@ -152,9 +151,9 @@ public interface Repository
 	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if the resource could not be created.
+	@exception ResourceIOException if the resource could not be created.
 	*/
-	public OutputStream createResource(final URI resourceURI, final RDFResource resourceDescription) throws IOException;
+	public OutputStream createResource(final URI resourceURI, final RDFResource resourceDescription) throws ResourceIOException;
 
 	/**Creates a new resource with a default description and contents.
 	If a resource already exists at the given URI it will be replaced.
@@ -164,9 +163,9 @@ public interface Repository
 	@exception NullPointerException if the given resource URI and/or resource contents is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if the resource could not be created.
+	@exception ResourceIOException if the resource could not be created.
 	*/
-	public RDFResource createResource(final URI resourceURI, final byte[] resourceContents) throws IOException;
+	public RDFResource createResource(final URI resourceURI, final byte[] resourceContents) throws ResourceIOException;
 
 	/**Creates a new resource with the given description and contents.
 	If a resource already exists at the given URI it will be replaced.
@@ -177,9 +176,9 @@ public interface Repository
 	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if the resource could not be created.
+	@exception ResourceIOException if the resource could not be created.
 	*/
-	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription, final byte[] resourceContents) throws IOException;
+	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException;
 
 	/**Creates a collection in the repository.
 	@param collectionURI The URI of the collection to be created.
@@ -187,17 +186,18 @@ public interface Repository
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error creating the collection.
+	@exception ResourceIOException if there is an error creating the collection.
 	*/
-	public RDFResource createCollection(final URI collectionURI) throws IOException;
+	public RDFResource createCollection(final URI collectionURI) throws ResourceIOException;
 
 	/**Deletes a resource.
 	@param resourceURI The reference URI of the resource to delete.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if the resource could not be deleted.
+	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.
+	@exception ResourceIOException if the resource could not be deleted.
 	*/
-	public void deleteResource(final URI resourceURI) throws IOException;
+	public void deleteResource(final URI resourceURI) throws ResourceIOException;
 
 	/**Sets the properties of a resource based upon the given description.
 	@param resourceURI The reference URI of the resource.
@@ -206,9 +206,9 @@ public interface Repository
 	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException Thrown if the resource properties could not be updated.
+	@exception ResourceIOException Thrown if the resource properties could not be updated.
 	*/
-	public RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription) throws IOException;
+	public RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription) throws ResourceIOException;
 
 	/**Sets the properties of a given resource.
 	Any existing properties with the same URIs as the given given property/value pairs will be removed.
@@ -217,9 +217,9 @@ public interface Repository
 	@param properties The properties to set.
 	@return The updated description of the resource.
 	@exception NullPointerException if the given resource URI and/or properties is <code>null</code>.
-	@exception IOException Thrown if the resource properties could not be updated.
+	@exception ResourceIOException Thrown if the resource properties could not be updated.
 	*/
-	public RDFResource setResourceProperties(final URI resourceURI, final RDFPropertyValuePair... properties) throws IOException;
+	public RDFResource setResourceProperties(final URI resourceURI, final RDFPropertyValuePair... properties) throws ResourceIOException;
 
 	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository.
 	Any resource at the destination URI will be replaced.
@@ -228,9 +228,9 @@ public interface Repository
 	@param destinationURI The URI to which the resource should be copied.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error copying the resource.
+	@exception ResourceIOException if there is an error copying the resource.
 	*/
-	public void copyResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws IOException;
+	public void copyResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException;
 
 	/**Creates an infinitely deep copy of a resource to another URI in this repository.
 	Any resource at the destination URI will be replaced.
@@ -238,9 +238,9 @@ public interface Repository
 	@param destinationURI The URI to which the resource should be copied.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error copying the resource.
+	@exception ResourceIOException if there is an error copying the resource.
 	*/
-	public void copyResource(final URI resourceURI, final URI destinationURI) throws IOException;
+	public void copyResource(final URI resourceURI, final URI destinationURI) throws ResourceIOException;
 
 	/**Moves a resource to the specified URI in the specified repository.
 	Any resource at the destination URI will be replaced.
@@ -249,9 +249,10 @@ public interface Repository
 	@param destinationURI The URI to which the resource should be moved.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error moving the resource.
+	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.	
+	@exception ResourceIOException if there is an error moving the resource.
 	*/
-	public void moveResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws IOException;
+	public void moveResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException;
 
 	/**Moves a resource to another URI in this repository.
 	Any resource at the destination URI will be replaced.
@@ -259,8 +260,9 @@ public interface Repository
 	@param destinationURI The URI to which the resource should be moved.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error moving the resource.
+	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.	
+	@exception ResourceIOException if there is an error moving the resource.
 	*/
-	public void moveResource(final URI resourceURI, final URI destinationURI) throws IOException;
+	public void moveResource(final URI resourceURI, final URI destinationURI) throws ResourceIOException;
 
 }

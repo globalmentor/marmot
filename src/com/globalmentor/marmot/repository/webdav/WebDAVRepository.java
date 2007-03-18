@@ -19,6 +19,7 @@ import org.w3c.dom.*;
 
 import static com.garretwilson.lang.ObjectUtilities.*;
 import static com.garretwilson.net.URIUtilities.*;
+import static com.garretwilson.net.http.webdav.ApacheWebDAVConstants.*;
 import static com.garretwilson.net.http.webdav.WebDAVConstants.*;
 import static com.garretwilson.net.http.webdav.WebDAVUtilities.*;
 import static com.garretwilson.rdf.dublincore.DCUtilities.*;
@@ -28,19 +29,14 @@ import static com.garretwilson.rdf.xpackage.MIMEOntologyUtilities.*;
 
 import com.garretwilson.io.FileUtilities;
 import com.garretwilson.io.OutputStreamDecorator;
-import com.garretwilson.model.Resource;
+import com.garretwilson.net.Resource;
+import com.garretwilson.net.ResourceIOException;
+import com.garretwilson.net.ResourceMovedPermanentlyException;
+import com.garretwilson.net.ResourceMovedTemporarilyException;
+import com.garretwilson.net.ResourceNotFoundException;
 import com.garretwilson.net.http.*;
 import com.garretwilson.net.http.webdav.*;
-import com.garretwilson.rdf.DefaultRDFResource;
-import com.garretwilson.rdf.RDF;
-import com.garretwilson.rdf.RDFLiteral;
-import com.garretwilson.rdf.RDFObject;
-import com.garretwilson.rdf.RDFPlainLiteral;
-import com.garretwilson.rdf.RDFPropertyValuePair;
-import com.garretwilson.rdf.RDFResource;
-import com.garretwilson.rdf.RDFUtilities;
-import com.garretwilson.rdf.RDFXMLGenerator;
-import com.garretwilson.rdf.RDFXMLProcessor;
+import com.garretwilson.rdf.*;
 
 import static com.garretwilson.rdf.RDFUtilities.*;
 import static com.garretwilson.rdf.rdfs.RDFSUtilities.*;
@@ -205,9 +201,9 @@ public class WebDAVRepository extends AbstractRepository
 	@return An input stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
+	@exception ResourceIOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
 	*/
-	public InputStream getResourceInputStream(final URI resourceURI) throws IOException
+	public InputStream getResourceInputStream(final URI resourceURI) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
@@ -216,6 +212,10 @@ public class WebDAVRepository extends AbstractRepository
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			return webdavResource.getInputStream();	//return an input stream to the resource
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 		finally
 		{
@@ -232,9 +232,9 @@ public class WebDAVRepository extends AbstractRepository
 	@return An output stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error accessing the resource.
+	@exception ResourceIOException if there is an error accessing the resource.
 	*/
-	public OutputStream getResourceOutputStream(final URI resourceURI) throws IOException
+	public OutputStream getResourceOutputStream(final URI resourceURI) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
@@ -244,9 +244,13 @@ public class WebDAVRepository extends AbstractRepository
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource TODO cache these resources, maybe
 			if(!webdavResource.exists())	//if the resource doesn't already exist
 			{
-				throw new HTTPNotFoundException("Cannot open output stream to non-existent resource "+resourceURI);
+				throw new ResourceNotFoundException(resourceURI, "Cannot open output stream to non-existent resource "+resourceURI);
 			}
 			return webdavResource.getOutputStream();	//return an output stream to the resource
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 		finally
 		{
@@ -262,33 +266,29 @@ public class WebDAVRepository extends AbstractRepository
 	@return A description of the resource with the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error accessing the repository.
+	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public RDFResource getResourceDescription(final URI resourceURI) throws IOException
+	public RDFResource getResourceDescription(final URI resourceURI) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		if(getReferenceURI().equals(resourceURI))	//if this is the URI of the repository
+		final RDF rdf=new RDF();	//G***use a common RDF data model
+		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+		try
 		{
-			return this;	//return the repository itself TODO fix; this is not appropriate for WebDAV, and probably not appropriate for file repositories, either
+			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			final List<WebDAVProperty> propertyList=webdavResource.propFind();	//get the properties of this resource
+			return createResourceDescription(rdf, resourceURI, propertyList);	//create a resource from this URI and property list
 		}
-		else	//if this is some other URI
+		catch(final IOException ioException)	//if an I/O exception occurs
 		{
-//TODO del Debug.traceStack("!!!!!!!!getting resource description for resource", resourceURI);
-			final RDF rdf=new RDF();	//G***use a common RDF data model
-			final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
-			try
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+		}
+		finally
+		{
+			if(passwordAuthentication!=null)	//if we used password authentication
 			{
-				final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
-				final List<WebDAVProperty> propertyList=webdavResource.propFind();	//get the properties of this resource
-				return createResourceDescription(rdf, resourceURI, propertyList);	//create a resource from this URI and property list
-			}
-			finally
-			{
-				if(passwordAuthentication!=null)	//if we used password authentication
-				{
-					fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
-				}
+				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
 			}
 		}
 	}
@@ -298,9 +298,9 @@ public class WebDAVRepository extends AbstractRepository
 	@return <code>true</code> if the resource exists, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error accessing the repository.
+	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public boolean resourceExists(final URI resourceURI) throws IOException
+	public boolean resourceExists(final URI resourceURI) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
@@ -309,6 +309,10 @@ public class WebDAVRepository extends AbstractRepository
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			return webdavResource.exists();	//see if the WebDAV resource exists		
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 		finally
 		{
@@ -326,9 +330,9 @@ public class WebDAVRepository extends AbstractRepository
 	@return <code>true</code> if the resource is a collection, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error accessing the repository.
+	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public boolean isCollection(final URI resourceURI) throws IOException
+	public boolean isCollection(final URI resourceURI) throws ResourceIOException
   {
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
@@ -337,6 +341,10 @@ public class WebDAVRepository extends AbstractRepository
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			return webdavResource.isCollection();	//see if the WebDAV resource is a collection		
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 		finally
 		{
@@ -352,9 +360,9 @@ public class WebDAVRepository extends AbstractRepository
 	@return <code>true</code> if the specified resource has child resources.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error accessing the repository.
+	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public boolean hasChildren(final URI resourceURI) throws IOException
+	public boolean hasChildren(final URI resourceURI) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
@@ -373,6 +381,10 @@ public class WebDAVRepository extends AbstractRepository
 			}
 			return false;	//no properties could be found for any children
 		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+		}
 		finally
 		{
 			if(passwordAuthentication!=null)	//if we used password authentication
@@ -388,9 +400,9 @@ public class WebDAVRepository extends AbstractRepository
 	@return A list of sub-resources descriptions directly under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error accessing the repository.
+	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws IOException
+	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws ResourceIOException
 	{
 //	TODO del Debug.traceStack("!!!!!!!!getting child resource descriptions for resource", resourceURI);
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
@@ -430,6 +442,10 @@ public class WebDAVRepository extends AbstractRepository
 	//TODO fix				Collections.sort(resourceList);	//sort the resource by URI
 				return childResourceList;	//return the list of resources we constructed
 			}
+			catch(final IOException ioException)	//if an I/O exception occurs
+			{
+				throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+			}
 			finally
 			{
 				if(passwordAuthentication!=null)	//if we used password authentication
@@ -455,16 +471,23 @@ public class WebDAVRepository extends AbstractRepository
 	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if the resource could not be created.
+	@exception ResourceIOException if the resource could not be created.
 	*/
-	public OutputStream createResource(final URI resourceURI, final RDFResource resourceDescription) throws IOException
+	public OutputStream createResource(final URI resourceURI, final RDFResource resourceDescription) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
-		final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
-		final OutputStream outputStream=webdavResource.getOutputStream();	//get an output stream to the WebDAV resource
-		return new DescriptionWriterOutputStreamDecorator(outputStream, resourceURI, resourceDescription, webdavResource, passwordAuthentication);	//wrap the output stream in a decorator that will update the WebDAV properties after the contents are stored; this method will erase the provided password, if any, after it completes the resource property updates
+		try
+		{
+			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			final OutputStream outputStream=webdavResource.getOutputStream();	//get an output stream to the WebDAV resource
+			return new DescriptionWriterOutputStreamDecorator(outputStream, resourceURI, resourceDescription, webdavResource, passwordAuthentication);	//wrap the output stream in a decorator that will update the WebDAV properties after the contents are stored; this method will erase the provided password, if any, after it completes the resource property updates
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+		}
 	}
 
 	/**Creates a new resource with the given description and contents.
@@ -476,9 +499,9 @@ public class WebDAVRepository extends AbstractRepository
 	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if the resource could not be created.
+	@exception ResourceIOException if the resource could not be created.
 	*/
-	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription, final byte[] resourceContents) throws IOException
+	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
@@ -488,6 +511,10 @@ public class WebDAVRepository extends AbstractRepository
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			webdavResource.put(resourceContents);	//create a WebDAV resource with the guven contents
 			return getResourceDescription(resourceURI);	//return a description of the new resource
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 		finally
 		{
@@ -503,9 +530,9 @@ public class WebDAVRepository extends AbstractRepository
 	@return A description of the collection that was created.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error creating the collection.
+	@exception ResourceIOException if there is an error creating the collection.
 	*/
-	public RDFResource createCollection(final URI collectionURI) throws IOException
+	public RDFResource createCollection(final URI collectionURI) throws ResourceIOException
 	{
 		checkResourceURI(collectionURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
@@ -515,6 +542,10 @@ public class WebDAVRepository extends AbstractRepository
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(collectionURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			webdavResource.mkCol();	//create the collection
 			return getResourceDescription(collectionURI);	//return a description of the new collection
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(collectionURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 		finally
 		{
@@ -533,9 +564,9 @@ public class WebDAVRepository extends AbstractRepository
 	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException Thrown if the resource properties could not be updated.
+	@exception ResourceIOException Thrown if the resource properties could not be updated.
 	*/
-	public RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription) throws IOException
+	public RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
@@ -544,6 +575,10 @@ public class WebDAVRepository extends AbstractRepository
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			return setResourceProperties(resourceURI, resourceDescription, webdavResource);	//set the properties using the WebDAV resource object
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 		finally
 		{
@@ -561,9 +596,9 @@ public class WebDAVRepository extends AbstractRepository
 	@param properties The properties to set.
 	@return The updated description of the resource.
 	@exception NullPointerException if the given resource URI and/or properties is <code>null</code>.
-	@exception IOException Thrown if the resource properties could not be updated.
+	@exception ResourceIOException Thrown if the resource properties could not be updated.
 	*/
-	public RDFResource setResourceProperties(final URI resourceURI, final RDFPropertyValuePair... properties) throws IOException
+	public RDFResource setResourceProperties(final URI resourceURI, final RDFPropertyValuePair... properties) throws ResourceIOException
 	{
 Debug.trace("ready to set properties, count", properties.length);
 		final Set<URI> newPropertyURISet=new HashSet<URI>();	//create a set to find out which properties we will be setting
@@ -645,6 +680,10 @@ Debug.trace("this is an RDF property; checking RDF property local name", webdavR
 			webdavResource.propPatch(removePropertyNames, setProperties);	//patch the properties of the resource
 			return getResourceDescription(resourceURI);	//retrieve and return a new description of the resource
 		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+		}
 		finally
 		{
 			if(passwordAuthentication!=null)	//if we used password authentication
@@ -662,9 +701,9 @@ Debug.trace("this is an RDF property; checking RDF property local name", webdavR
 	@param webdavResource The WebDAV resource for setting the resource WebDAV properties
 	@return The updated description of the resource.
 	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
-	@exception IOException Thrown if the resource properties could not be updated.
+	@exception ResourceIOException Thrown if the resource properties could not be updated.
 	*/
-	protected RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription, final WebDAVResource webdavResource) throws IOException
+	protected RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription, final WebDAVResource webdavResource) throws ResourceIOException
 	{
 		final Date modifiedTime=getModifiedTime(resourceDescription);	//get the modified time designation, if there is one
 		if(modifiedTime!=null)	//if there is a modified time designated
@@ -691,9 +730,9 @@ Debug.trace("this is an RDF property; checking RDF property local name", webdavR
 	@param destinationURI The URI to which the resource should be copied.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error copying the resource.
+	@exception ResourceIOException if there is an error copying the resource.
 	*/
-	public void copyResource(final URI resourceURI, final URI destinationURI) throws IOException
+	public void copyResource(final URI resourceURI, final URI destinationURI) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
@@ -702,6 +741,10 @@ Debug.trace("this is an RDF property; checking RDF property local name", webdavR
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			webdavResource.copy(getPrivateURI(destinationURI));	//copy the resource with an infinite depth, overwriting the destination resource if one exists
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 		finally
 		{
@@ -716,17 +759,26 @@ Debug.trace("this is an RDF property; checking RDF property local name", webdavR
 	@param resourceURI The reference URI of the resource to delete.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if the resource could not be deleted.
+	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.
+	@exception ResourceIOException if the resource could not be deleted.
 	*/
-	public void deleteResource(final URI resourceURI) throws IOException
+	public void deleteResource(final URI resourceURI) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
+		if(resourceURI.normalize().equals(getPublicRepositoryURI()))	//if they try to delete the root URI
+		{
+			throw new IllegalArgumentException("Cannot delete repository base URI "+resourceURI);
+		}
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			webdavResource.delete();	//delete the resource		
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 		finally
 		{
@@ -743,17 +795,26 @@ Debug.trace("this is an RDF property; checking RDF property local name", webdavR
 	@param destinationURI The URI to which the resource should be moved.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error moving the resource.
+	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.
+	@exception ResourceIOException if there is an error moving the resource.
 	*/
-	public void moveResource(final URI resourceURI, final URI destinationURI) throws IOException
+	public void moveResource(final URI resourceURI, final URI destinationURI) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
+		if(resourceURI.normalize().equals(getPublicRepositoryURI()))	//if they try to move the root URI
+		{
+			throw new IllegalArgumentException("Cannot move repository base URI "+resourceURI);
+		}
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			webdavResource.move(getPrivateURI(destinationURI));	//move the resource with an infinite depth, overwriting the destination resource if one exists
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 		finally
 		{
@@ -791,7 +852,7 @@ Debug.trace("this is an RDF property; checking RDF property local name", webdavR
 			final String propertyNamespace=propertyName.getNamespace();	//get the string version of the property namespace
 			final String propertyLocalName=propertyName.getLocalName();	//get the local name of the property
 			final WebDAVPropertyValue propertyValue=webdavProperty.getValue();	//get the value of the property
-			if(WEBDAV_NAMESPACE.equals(propertyNamespace))	//if this WebDAV property is not an RDF property, see if this property is in the WebDAV namespace
+			if(WEBDAV_NAMESPACE.equals(propertyNamespace))	//if this property is in the WebDAV namespace
 			{
 				if(DISPLAY_NAME_PROPERTY_NAME.equals(propertyLocalName) && propertyValue!=null)	//D:displayname
 				{
@@ -869,6 +930,10 @@ Debug.trace("this is an RDF property; checking RDF property local name", webdavR
 						Debug.warn(parseException);	//TODO improve error handling
 					}
 				}				
+			}
+			if(APACHE_WEBDAV_PROPERTY_NAMESPACE_URI.toString().equals(propertyNamespace))	//if this property is in the Apache WebDAV namespace
+			{
+				//ignore Apache WebDAV properties
 			}
 			else	//for non-WebDAV properties
 			{
@@ -972,8 +1037,40 @@ Debug.trace("this is an RDF property; checking RDF property local name", webdavR
 			addLabel(resource, label); //add the unescaped filename without an extension as a label
 		}
 */
-Debug.trace("just read resource from WebDAV:", RDFUtilities.toString(resource));	//TODO del
+//TODO del Debug.trace("just read resource from WebDAV:", RDFUtilities.toString(resource));	//TODO del
 		return resource;	//return the resource that respresents the file
+	}
+
+	/**Translates the given error specific to this repository type into a resource I/O exception.
+	This version makes the following translations:
+	<dl>
+		<dt>{@link HTTPNotFoundException}</dt> <dd>{@link ResourceNotFoundException}</dd>
+		<dt>{@link HTTPMovedTemporarilyException}</dt> <dd>{@link ResourceMovedTemporarilyException}</dd>
+		<dt>{@link HTTPMovedPermanentlyException}</dt> <dd>{@link ResourceMovedPermanentlyException}</dd>
+	</dl>
+	@param resourceURI The URI of the resource to which the exception is related.
+	@param throwable The error which should be translated to a resource I/O exception.
+	@return A resource I/O exception based upon the given throwable.
+	*/
+	protected ResourceIOException createResourceIOException(final URI resourceURI, final Throwable throwable) 
+	{
+		if(throwable instanceof HTTPNotFoundException)
+		{
+			return new ResourceNotFoundException(resourceURI, throwable);
+		}
+			//TODO check to see if the getPublicURI() throws an exception; the new location is somewhat out of our control, and may not be in the private repository namespace
+		else if(throwable instanceof HTTPMovedTemporarilyException)
+		{
+			return new ResourceMovedTemporarilyException(resourceURI, getPublicURI(((HTTPMovedTemporarilyException)throwable).getLocation()), throwable);	//get the new location and translate it into the public repository namespace, if possible
+		}
+		else if(throwable instanceof HTTPMovedPermanentlyException)
+		{
+			return new ResourceMovedPermanentlyException(resourceURI, getPublicURI(((HTTPMovedPermanentlyException)throwable).getLocation()), throwable);	//get the new location and translate it into the public repository namespace, if possible
+		}
+		else	//if this is not one of our specially-handled exceptions
+		{
+			return super.createResourceIOException(resourceURI, throwable);	//convert the exceptoin normally
+		}
 	}
 
 	/**Creates an output stream that updates the properties of a WebDAV resource after its contents are stored.
@@ -1025,9 +1122,9 @@ Debug.trace("just read resource from WebDAV:", RDFUtilities.toString(resource));
 	
 	  /**Called after the stream is successfully closed.
 		This version updates the WebDAV properties to reflect the given resource description.
-		@exception IOException if an I/O error occurs.
+		@exception ResourceIOException if an I/O error occurs.
 		*/
-	  protected void afterClose() throws IOException
+	  protected void afterClose() throws ResourceIOException
 	  {
 	  	try
 	  	{

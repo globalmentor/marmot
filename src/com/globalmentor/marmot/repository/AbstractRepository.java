@@ -8,6 +8,8 @@ import com.garretwilson.event.*;
 import static com.garretwilson.io.OutputStreamUtilities.*;
 import static com.garretwilson.lang.ByteConstants.*;
 import com.garretwilson.lang.ClassUtilities;
+import com.garretwilson.net.ResourceIOException;
+
 import static com.garretwilson.lang.ObjectUtilities.*;
 import static com.garretwilson.net.URIUtilities.*;
 import com.garretwilson.rdf.*;
@@ -62,7 +64,7 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 		*/
 		public void setPrivateRepositoryURI(final URI privateRepositoryURI)
 		{
-			this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI must not be null.");
+			this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI must not be null.").normalize();
 		}
 		
 		/**@return The base URI of the public URI namespace being managed; equivalent to {@link #getReferenceURI()}.*/
@@ -75,7 +77,7 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 		*/
 		public void setPublicRepositoryURI(final URI publicRepositoryURI)
 		{
-			setReferenceURI(checkInstance(publicRepositoryURI, "Public repository URI must not be null."));
+			setReferenceURI(checkInstance(publicRepositoryURI, "Public repository URI must not be null.").normalize());
 		}
 		
 		/**Translates a public URI in the repository to the equivalent private URI in the private URI namespace.
@@ -143,8 +145,8 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 	*/
 	public AbstractRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
 	{
-		super(checkInstance(publicRepositoryURI, "Public repository URI cannot be null."));	//construct the parent class with the public reference URI
-		this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI cannot be null.");
+		super(checkInstance(publicRepositoryURI, "Public repository URI cannot be null.").normalize());	//construct the parent class with the public reference URI
+		this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI cannot be null.").normalize();
 	}
 
 	/**@return Whether the repository has been opened for access.*/
@@ -194,9 +196,9 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 	@exception NullPointerException if the given resource URI is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if the resource could not be created.
+	@exception ResourceIOException if the resource could not be created.
 	*/
-	public OutputStream createResource(final URI resourceURI) throws IOException
+	public OutputStream createResource(final URI resourceURI) throws ResourceIOException
 	{
 		return createResource(resourceURI, new DefaultRDFResource());	//create the resource with a default description
 	}
@@ -210,9 +212,9 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 	@exception NullPointerException if the given resource URI and/or resource contents is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if the resource could not be created.
+	@exception ResourceIOException if the resource could not be created.
 	*/
-	public RDFResource createResource(final URI resourceURI, final byte[] resourceContents) throws IOException
+	public RDFResource createResource(final URI resourceURI, final byte[] resourceContents) throws ResourceIOException
 	{
 		return createResource(resourceURI, new DefaultRDFResource(), resourceContents);	//create the resource with a default description
 	}
@@ -223,9 +225,9 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 	@return A list of sub-resource descriptions directly under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access.
-	@exception IOException if there is an error accessing the repository.
+	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI) throws IOException
+	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
@@ -245,9 +247,9 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 	@param properties The properties to set.
 	@return The updated description of the resource.
 	@exception NullPointerException if the given resource URI and/or properties is <code>null</code>.
-	@exception IOException Thrown if the resource properties could not be updated.
+	@exception ResourceIOException Thrown if the resource properties could not be updated.
 	*/
-	public RDFResource setResourceProperties(final URI resourceURI, final RDFPropertyValuePair... properties) throws IOException	//TODO remove when all repositories implement
+	public RDFResource setResourceProperties(final URI resourceURI, final RDFPropertyValuePair... properties) throws ResourceIOException	//TODO remove when all repositories implement
 	{
 		throw new UnsupportedOperationException("Repository cannot yet set its resource properties");
 	}
@@ -263,40 +265,51 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 	@param resourceURI The URI of the resource to be copied.
 	@param destinationRepository The repository to which the resource should be copied, which may be this repository.
 	@param destinationURI The URI to which the resource should be copied.
-	@exception IOException if there is an error copying the resource.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access.
+	@exception ResourceIOException if there is an error copying the resource.
 	*/
-	public void copyResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws IOException
+	public void copyResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException
 	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		checkOpen();	//make sure the repository is open
 		if(destinationRepository==this)	//if the resource is being copied to this repository
 		{
 			copyResource(resourceURI, destinationURI);	//delegate to the internal copy method
 		}
 		else	//if the resource is being copied to another repository
 		{
-//TODO del Debug.trace("ready to create resource", destinationURI, "in destination repository", destinationRepository.getReferenceURI());
-Debug.trace("ready to create resource", destinationURI, "in destination repository", destinationRepository.getReferenceURI());
-				//TODO check for non-existent source resource
-			final InputStream inputStream=getResourceInputStream(resourceURI);	//get an input stream to the source resource
 			try
 			{
-Debug.trace("ready to create resource in destination");
-				final OutputStream outputStream=destinationRepository.createResource(destinationURI, getResourceDescription(resourceURI));	//create the destination resource with the same description as the source resource, getting an output stream for storing the contents
+	//TODO del Debug.trace("ready to create resource", destinationURI, "in destination repository", destinationRepository.getReferenceURI());
+	Debug.trace("ready to create resource", destinationURI, "in destination repository", destinationRepository.getReferenceURI());
+					//TODO check for non-existent source resource
+				final InputStream inputStream=getResourceInputStream(resourceURI);	//get an input stream to the source resource
 				try
 				{
-Debug.trace("ready to copy");
-					copy(inputStream, outputStream);	//copy the resource
+	Debug.trace("ready to create resource in destination");
+					final OutputStream outputStream=destinationRepository.createResource(destinationURI, getResourceDescription(resourceURI));	//create the destination resource with the same description as the source resource, getting an output stream for storing the contents
+					try
+					{
+	Debug.trace("ready to copy");
+						copy(inputStream, outputStream);	//copy the resource
+					}
+					finally
+					{
+	Debug.trace("closing copy output stream");
+						outputStream.close();	//always close the output stream
+					}
 				}
 				finally
 				{
-Debug.trace("closing copy output stream");
-					outputStream.close();	//always close the output stream
+					inputStream.close();	//always close the input stream
 				}
+				//TODO copy the properties
 			}
-			finally
+			catch(final IOException ioException)	//if an I/O exception occurs
 			{
-				inputStream.close();	//always close the input stream
+				throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 			}
-			//TODO copy the properties
 		}
 	}
 
@@ -307,19 +320,40 @@ Debug.trace("closing copy output stream");
 	@param resourceURI The URI of the resource to be moved.
 	@param destinationRepository The repository to which the resource should be moved, which may be this repository.
 	@param destinationURI The URI to which the resource should be moved.
-	@exception IOException if there is an error moving the resource.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.	
+	@exception ResourceIOException if there is an error moving the resource.
 	*/
-	public void moveResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws IOException
+	public void moveResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException
 	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		checkOpen();	//make sure the repository is open
 		if(destinationRepository==this)	//if the resource is being moved to this repository
 		{
 			moveResource(resourceURI, destinationURI);	//delegate to the internal move method
 		}
 		else	//if the resource is being moved to another repository
 		{
+			if(resourceURI.normalize().equals(getPublicRepositoryURI()))	//if they try to move the root URI
+			{
+				throw new IllegalArgumentException("Cannot move repository base URI "+resourceURI);
+			}
 			copyResource(resourceURI, destinationRepository, destinationURI);	//copy the resource to the other repository
 			deleteResource(resourceURI);	//delete the moved resource
 		}
+	}
+
+	/**Translates the given error specific to the this repository type into a resource I/O exception.
+	This version returns the given throwable if it is already a {@link ResourceIOException};
+	otherwise, it simply wraps the given throwable in a {@link ResourceIOException}.
+	@param resourceURI The URI of the resource to which the exception is related.
+	@param throwable The error which should be translated to a resource I/O exception.
+	@return A resource I/O exception based upon the given throwable.
+	*/
+	protected ResourceIOException createResourceIOException(final URI resourceURI, final Throwable throwable) 
+	{
+		return throwable instanceof ResourceIOException ? (ResourceIOException)throwable : new ResourceIOException(resourceURI, throwable);	//default to simple exception chaining with a new resource I/O exception, if the throwable isn't already a resourc I/O exception
 	}
 
 }
