@@ -614,6 +614,10 @@ Debug.trace("we have unique properties to set, count:", newPropertyURISet.size()
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			final List<WebDAVProperty> oldPropertyList=webdavResource.propFind();	//get the original properties of this resource
 Debug.trace("found existing properties, count:", oldPropertyList.size());
+
+
+//TODO make sure the new RDF property isn't something that should be converted into a WebDAV property
+
 				//determine if there are existing RDF properties that need to be removed
 Debug.trace("ready to remove existing matching RDF properties");
 			final Set<WebDAVPropertyName> removePropertyNames=new HashSet<WebDAVPropertyName>();	//create a set to find out how many properties we should remove
@@ -621,26 +625,29 @@ Debug.trace("ready to remove existing matching RDF properties");
 			{
 				final WebDAVPropertyName oldWebDAVPropertyName=oldWebDAVProperty.getName();	//get the property name
 Debug.trace("looking at old WebDAV property name", oldWebDAVPropertyName);
-				final String oldWebDAVPropertyLocalName=oldWebDAVPropertyName.getLocalName();	//get the property local name
-Debug.trace("looking at old WebDAV property local name", oldWebDAVPropertyLocalName);
-				final Matcher webdavRDFPropertyMatcher=WEBDAV_RDF_PROPERTY_LOCAL_NAME_PATTERN.matcher(oldWebDAVPropertyLocalName);	//see if this local name looks like an RDF property local name
-				if(webdavRDFPropertyMatcher.matches())	//if this local name is representing an RDF object
+				final String oldWebDAVPropertyNamespace=oldWebDAVPropertyName.getNamespace();	//get the property namespace
+				if(!WEBDAV_NAMESPACE.equals(oldWebDAVPropertyNamespace))	//ignore the WebDAV properties; they would cause problems with the namespace URI, anyway
 				{
-Debug.trace("this is an RDF property; checking RDF property local name", webdavRDFPropertyMatcher.group(1));
-					final String oldWebDAVPropertyNamespace=oldWebDAVPropertyName.getNamespace();	//get the property namespace
-					try
+					final String oldWebDAVPropertyLocalName=oldWebDAVPropertyName.getLocalName();	//get the property local name
+	Debug.trace("looking at old WebDAV property local name", oldWebDAVPropertyLocalName);
+					final Matcher webdavRDFPropertyMatcher=WEBDAV_RDF_PROPERTY_LOCAL_NAME_PATTERN.matcher(oldWebDAVPropertyLocalName);	//see if this local name looks like an RDF property local name
+					if(webdavRDFPropertyMatcher.matches())	//if this local name is representing an RDF object
 					{
-						final URI rdfPropertyURI=createReferenceURI(URI.create(oldWebDAVPropertyNamespace), webdavRDFPropertyMatcher.group(1));	//create what should be the RDF property URI by using the same namespace URI but the RDF version of the local name
-	Debug.trace("this is the existing RDF property in WebDAV:", rdfPropertyURI);
-						if(newPropertyURISet.contains(rdfPropertyURI))	//if this property is one of the new RDF properties we'll be setting
+	Debug.trace("this is an RDF property; checking RDF property local name", webdavRDFPropertyMatcher.group(1));
+						try
 						{
-	Debug.trace("we'll have to remove", oldWebDAVPropertyName);
-							removePropertyNames.add(oldWebDAVPropertyName);	//we'll be removing this existing property
+							final URI rdfPropertyURI=createReferenceURI(URI.create(oldWebDAVPropertyNamespace), webdavRDFPropertyMatcher.group(1));	//create what should be the RDF property URI by using the same namespace URI but the RDF version of the local name
+		Debug.trace("this is the existing RDF property in WebDAV:", rdfPropertyURI);
+							if(newPropertyURISet.contains(rdfPropertyURI))	//if this property is one of the new RDF properties we'll be setting
+							{
+		Debug.trace("we'll have to remove", oldWebDAVPropertyName);
+								removePropertyNames.add(oldWebDAVPropertyName);	//we'll be removing this existing property
+							}
 						}
-					}
-					catch(final IllegalArgumentException illegalArgumentException)	//if we can't turn the WebDAV namespace into an RDF namespace, we must have been wrong about the property being an RDF property to begin with (this is very, very unlikely)
-					{
-						Debug.warn(illegalArgumentException);						
+						catch(final IllegalArgumentException illegalArgumentException)	//if we can't turn the WebDAV namespace into an RDF namespace, we must have been wrong about the property being an RDF property to begin with (this is very, very unlikely)
+						{
+							Debug.warn(illegalArgumentException);						
+						}
 					}
 				}
 			}
@@ -649,7 +656,7 @@ Debug.trace("this is an RDF property; checking RDF property local name", webdavR
 			fill(propertyCounts, 0);	//fill the new property counts array with zero; when we get above zero we'll use this value when we create the the WebDAV property name
 			final RDFXMLGenerator rdfXMLGenerator=new RDFXMLGenerator();	//create an RDF XML generator
 			rdfXMLGenerator.setLiteralAttributeSerialization(false);	//serialize all literal property values as child elements rather than attributes
-//TODO del			rdfXMLGenerator.setCompactRDFListSerialization(false);	//serialize all RDF lists in long form
+//TODO bring back when tree bug is found			rdfXMLGenerator.setCompactRDFListSerialization(true);	//serialize all RDF lists in short form
 				//TODO decide what to do to take care of typed RDF literal values and xml:lang specifications
 			final Document rdfDocument=rdfXMLGenerator.createDocument(new RDF(), WebDAVXMLGenerator.createWebDAVDocumentBuilder().getDOMImplementation());	//create a new XML document for RDF
 			final Element resourceElement=rdfXMLGenerator.createResourceElement(rdfDocument, new DefaultRDFResource());	//create a dummy RDF resource to which we'll add property child elements
@@ -834,6 +841,7 @@ Debug.trace("this is an RDF property; checking RDF property local name", webdavR
 	*/
 	protected RDFResource createResourceDescription(final RDF rdf, final URI resourceURI, List<WebDAVProperty> propertyList)	
 	{
+Debug.trace("ready to create resource description");
 		final RDFResource resource=rdf.locateResource(resourceURI);	//create a resource to represent the WebDAV property list
 /*TODO fix
 		final RK resourceKit=getResourceKitManager().getResourceKit(this, resource);	//get a resource kit for this resource
@@ -849,6 +857,7 @@ Debug.trace("this is an RDF property; checking RDF property local name", webdavR
 		for(final WebDAVProperty webdavProperty:propertyList)	//look at each WebDAV property
 		{
 			final WebDAVPropertyName propertyName=webdavProperty.getName();	//get the property name
+Debug.trace("looking at WebDAV property name", propertyName);
 			final String propertyNamespace=propertyName.getNamespace();	//get the string version of the property namespace
 			final String propertyLocalName=propertyName.getLocalName();	//get the local name of the property
 			final WebDAVPropertyValue propertyValue=webdavProperty.getValue();	//get the value of the property
@@ -937,13 +946,16 @@ Debug.trace("this is an RDF property; checking RDF property local name", webdavR
 			}
 			else	//for non-WebDAV properties
 			{
+Debug.trace("this is a non WebDAV property");
 				final Matcher webdavRDFPropertyMatcher=WEBDAV_RDF_PROPERTY_LOCAL_NAME_PATTERN.matcher(propertyLocalName);	//see if this local name could be an RDF property local name
 				if(webdavRDFPropertyMatcher.matches() && propertyValue!=null)	//if this local name is representing an RDF object, and there is an actual value specified (RDF does not define a null value)
 				{
-					final URI rdfPropertyURI;	//the URI of the RDF property namespace
+Debug.trace("maybe it's an RDF property");
+					final URI rdfPropertyNamespaceURI;	//the URI of the RDF property namespace
 					try
 					{
-						rdfPropertyURI=URI.create(propertyNamespace);	//convert the property namespace to an RDF property URI
+						rdfPropertyNamespaceURI=URI.create(propertyNamespace);	//convert the property namespace to an RDF property URI
+Debug.trace("RDF property namespace URI:", rdfPropertyNamespaceURI);
 					}
 					catch(final IllegalArgumentException illegalArgumentException)	//if we can't turn the WebDAV namespace into an RDF namespace, we must have been wrong about the property being an RDF property to begin with
 					{
@@ -953,26 +965,36 @@ Debug.trace("this is an RDF property; checking RDF property local name", webdavR
 					final RDFObject rdfPropertyValue;	//we'll determine the RDF property value to use
 					if(propertyValue instanceof WebDAVLiteralPropertyValue)	//if the value is a literal, we'll use a plain literal RDF value with no language specified
 					{
-						resource.addProperty(rdfPropertyURI, rdfPropertyLocalName, new RDFPlainLiteral(((WebDAVLiteralPropertyValue)propertyValue).getText()));	//an an RDF plain literal property value to represent the value text
+Debug.trace("property value is a literal");
+						resource.addProperty(rdfPropertyNamespaceURI, rdfPropertyLocalName, new RDFPlainLiteral(((WebDAVLiteralPropertyValue)propertyValue).getText()));	//an an RDF plain literal property value to represent the value text
 					}
 					else if(propertyValue instanceof WebDAVDocumentFragmentPropertyValue)	//if the value is a document fragment
 					{
+Debug.trace("property value is a document fragment");
 						final DocumentFragment rdfPropertyValueDocumentFragment=((WebDAVDocumentFragmentPropertyValue)propertyValue).getDocumentFragment();	//get the document fragment representing the RDF property value
 						if(getChildNodeNot(rdfPropertyValueDocumentFragment, Node.TEXT_NODE)==null)	//if all child nodes are text nodes
 						{
-							resource.addProperty(rdfPropertyURI, rdfPropertyLocalName, new RDFPlainLiteral(getText(rdfPropertyValueDocumentFragment)));	//an an RDF plain literal property value to represent the value text of the document fragment
+Debug.trace("all child nodes are text nodes");
+							resource.addProperty(rdfPropertyNamespaceURI, rdfPropertyLocalName, new RDFPlainLiteral(getText(rdfPropertyValueDocumentFragment)));	//an an RDF plain literal property value to represent the value text of the document fragment
 						}
 						else	//if there is a document fragment that has non-text children
 						{
+Debug.trace("document fragment with non-text children");
 							try
 							{
 								final List<Element> childElements=getChildElements(rdfPropertyValueDocumentFragment);	//get the child elements of the document fragment
+Debug.trace("child element count:", childElements.size());
 								final Element propertyElement=childElements.size()==1 ? childElements.get(0) : null;	//get the first (and only) child element, but only if there's a single child element
-								if(propertyElement==null || !propertyNamespace.equals(propertyElement.getNamespaceURI()) || propertyLocalName.equals(propertyElement.getLocalName()))	//if there isn't a single child element, and it doesn't have the same namespace and local name as the WebDAV property
+Debug.trace("found property element", propertyElement);
+Debug.trace("WebDAV property namespace", propertyNamespace, "element namespace", propertyElement.getNamespaceURI());
+Debug.trace("WebDAV property local name", propertyLocalName, "element local name", propertyElement.getLocalName());
+								if(propertyElement==null || !propertyNamespace.equals(propertyElement.getNamespaceURI()) || !propertyLocalName.equals(propertyElement.getLocalName()))	//if there isn't a single child element, and it doesn't have the same namespace and local name as the WebDAV property
 								{
 									continue;	//skip processing of this resource; it's not an RDF property
 								}
+Debug.trace("single child element has same namespace and local name");
 								final Object rdfPropertyValueObject=rdfXMLProcessor.processProperty(resource, propertyElement, 0);	//process the contents of the RDF property XML element
+Debug.trace("parsed out object", rdfPropertyValueObject, "of type", rdfPropertyValueObject.getClass());
 /*TODO del when works
 								if(rdfPropertyValueObject instanceof RDFLiteral)	//if the property object is already an RDF literal
 								{
@@ -988,6 +1010,7 @@ Debug.trace("this is an RDF property; checking RDF property local name", webdavR
 								}
 */
 									//TODO incorporate the following logic into a RDFXMLProcessor and make these individual methods protected again 
+								rdfXMLProcessor.createResources();	//create all proxied resources in the statements we gathered
 								rdfXMLProcessor.processStatements();	//process all the RDF statements and assign resources to properties as needed; the subject resource should now have the property and value added
 								rdfXMLProcessor.reset();	//reset the RDF XML processor
 								rdfXMLProcessor.clearStatements();	//clear all the RDF statements so that that we won't re-create property/value settings the next time we use the processor
