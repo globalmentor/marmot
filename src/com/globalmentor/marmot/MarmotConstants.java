@@ -39,7 +39,7 @@ public class MarmotConstants
 
 		//XML/RDF constants
 
-	/**The recommended prefix to the Marmot vocabulary namespace.*/
+	/**The recommended prefix to the Marmot  namespace.*/
 	public final static String MARMOT_NAMESPACE_PREFIX="marmot";
 
 	/**The URI to the Marmot namespace.*/
