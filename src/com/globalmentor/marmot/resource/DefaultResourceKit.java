@@ -19,7 +19,7 @@ public class DefaultResourceKit<P extends Presentation> extends AbstractResource
 	*/
 	public DefaultResourceKit(final P presentation)
 	{
-		super(presentation, ICON_RESOURCE, new ContentType[]{});
+		super(presentation, GLYPH_RESOURCE, new ContentType[]{});
 	}
 
 }

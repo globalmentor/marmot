@@ -91,7 +91,7 @@ public class ImageResourceKit<P extends Presentation> extends AbstractResourceKi
 	*/
 	public ImageResourceKit(final P presentation)
 	{
-		super(presentation, ICON_IMAGE, new ContentType(IMAGE, GIF_SUBTYPE, null), new ContentType(IMAGE, JPEG_SUBTYPE, null), new ContentType(IMAGE, PNG_SUBTYPE, null));
+		super(presentation, GLYPH_IMAGE, new ContentType(IMAGE, GIF_SUBTYPE, null), new ContentType(IMAGE, JPEG_SUBTYPE, null), new ContentType(IMAGE, PNG_SUBTYPE, null));
 	}
 
 	/**Initializes a resource description, creating whatever properties are appropriate.

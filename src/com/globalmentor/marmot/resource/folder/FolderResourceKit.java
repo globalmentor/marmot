@@ -30,7 +30,7 @@ public class FolderResourceKit<P extends Presentation> extends AbstractResourceK
 	*/
 	public URI getOpenTreeNodeIconURI(final Repository repository, final RDFResource resource)
 	{
-		return ICON_FOLDER_OPEN;
+		return GLYPH_FOLDER_OPEN;
 	}
 
 	/**Presentation constructor.
@@ -39,6 +39,6 @@ public class FolderResourceKit<P extends Presentation> extends AbstractResourceK
 	*/
 	public FolderResourceKit(final P presentation)
 	{
-		super(presentation, ICON_FOLDER, createReferenceURI(FILE_ONTOLOGY_NAMESPACE_URI, FOLDER_TYPE_NAME));
+		super(presentation, GLYPH_FOLDER, createReferenceURI(FILE_ONTOLOGY_NAMESPACE_URI, FOLDER_TYPE_NAME));
 	}
 }
