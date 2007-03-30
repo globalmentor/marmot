@@ -19,11 +19,10 @@ import com.garretwilson.util.Debug;
 import static com.globalmentor.marmot.MarmotConstants.*;
 
 /**Abstract repository class the implements common features of a burrow.
-<p>Resource access methods should call {@link #checkResourceURI(URI)} as a security check to ensure the given URI is within the repository.
-<p>This implementation automatically adds an <code>rdf:type</code> property of <code>marmot:XXXRepository</code>, where "XXXRepository" is the local name of the repository class.</p>
+<p>Resource access methods should call {@link #checkResourceURI(URI)} as a security check to ensure the given URI is within the repository.</p>
 @author Garret Wilson
 */
-public abstract class AbstractRepository extends TypedRDFResource implements Repository
+public abstract class AbstractRepository extends DefaultRDFResource implements Repository
 {
 
 	/**The registered event listeners.*/
@@ -42,12 +41,6 @@ public abstract class AbstractRepository extends TypedRDFResource implements Rep
 			setPrivateRepositoryURI(uri);	//update the private repository URI to match
 		}
 	}
-
-	/**@return The namespace URI of the ontology defining the default type of this resource.*/
-	public URI getDefaultTypeNamespaceURI() {return MARMOT_NAMESPACE_URI;}
-
-	/**@return The local name of the default type of this resource.*/
-	public String getDefaultTypeName() {return ClassUtilities.getLocalName(getClass());}
 
 	/**Whether the repository has been opened for access.*/
 	private boolean open=false;
