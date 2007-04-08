@@ -21,10 +21,10 @@ public class MarmotConstants
 	public final static String MARMOT_TITLE="Marmot"+TRADE_MARK_SIGN_CHAR;
 
 	/**The application copyright.*/
-	public final static String MARMOT_COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2003-2005 GlobalMentor, Inc. All Rights Reserved.";	//G**i18n
+	public final static String MARMOT_COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2003-2007 GlobalMentor, Inc. All Rights Reserved.";	//G**i18n
 
 	/**The version of the application.*/
-	public final static String VERSION="Beta Version 0.42 build 20050129";
+	public final static String VERSION="Beta Version 0.5 build 2007-04-02";
 
 	/**The expiration date of the application.*/
 //TODO del	public final static Calendar EXPIRATION=new GregorianCalendar(2006, GregorianCalendar.JANUARY, 1);
@@ -83,6 +83,8 @@ public class MarmotConstants
 			//permissions
 	/**The principal may detect that the resource exists, such as when the resource is listed in the contents of a parent collection. The local name of <code>marmot:DiscoverPermission</code>.*/
 	public final static String DISCOVER_PERMISSION_TYPE_NAME="DiscoverPermission";
+	/**The principal may view general information about the resource. The local name of <code>marmot:BrowsePermission</code>.*/
+	public final static String BROWSE_PERMISSION_TYPE_NAME="BrowsePermission";
 	/**The principal may add annotations to the resource. The local name of <code>marmot:AnnotatePermission</code>.*/
 	public final static String ANNOTATE_PERMISSION_TYPE_NAME="AnnotatePermission";
 	/**The principal may add annotations to the resource. The local name of <code>marmot:PreviewPermission</code>.*/

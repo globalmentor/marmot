@@ -43,15 +43,24 @@ public interface Repository
 	If the repository is already open, no action occurs.
 	At a minimum the respository must have a public and a private URI specified, even though these may both be the same URI. 
 	@exception IllegalStateException if the settings of this repository are inadequate to open the repository.
-	@exception IOException if there is an error opening the repository.
+	@exception ResourceIOException if there is an error opening the repository.
 	*/
-	public void open() throws IOException;
+	public void open() throws ResourceIOException;
 
 	/**Closes the repository.
 	If the repository is already closed, no action occurs.
-	@exeption IOException if there is an error closing the repository.
+	@exeption ResourceIOException if there is an error closing the repository.
 	*/
-	public void close() throws IOException;
+	public void close() throws ResourceIOException;
+
+	/**Determines the URI of the parent resource of the given URI.
+	@param resourceURI The URI of the resource for which the parent resource URI should be returned.
+	@return The URI of the indicated resource's parent resource, or <code>null</code> if the given URI designates a resource with no parent.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access.
+	@exception ResourceIOException if there is an error accessing the repository.
+	*/
+	public URI getParentResourceURI(URI resourceURI) throws ResourceIOException;
 
 	/**Gets an input stream to the contents of the resource specified by the given URI.
 	@param resourceURI The URI of the resource to access.

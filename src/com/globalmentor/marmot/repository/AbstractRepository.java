@@ -7,10 +7,14 @@ import java.util.*;
 import com.garretwilson.event.*;
 import static com.garretwilson.io.OutputStreamUtilities.*;
 import static com.garretwilson.lang.ByteConstants.*;
+import static com.garretwilson.lang.CharSequenceUtilities.endsWith;
+
 import com.garretwilson.lang.ClassUtilities;
 import com.garretwilson.net.ResourceIOException;
+import com.garretwilson.net.URIConstants;
 
 import static com.garretwilson.lang.ObjectUtilities.*;
+import static com.garretwilson.net.URIConstants.PATH_SEPARATOR;
 import static com.garretwilson.net.URIUtilities.*;
 import com.garretwilson.rdf.*;
 import com.garretwilson.rdf.rdfs.RDFSUtilities;
@@ -94,14 +98,18 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	/**Checks to make sure the resource designated by the given resource URI is within this repository.
 	This version makes sure the given URI is a child of the resource reference URI.
 	@param resourceURI The URI of the resource to check.
+	@return The normalized form of the given resource. 
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception NullPointerException if the given resource URI is <code>null</code>.
 	*/
-	protected void checkResourceURI(final URI resourceURI)
+	protected URI checkResourceURI(URI resourceURI)
 	{
-		if(!isChild(getReferenceURI(), resourceURI))	//if the given resource URI does not designate a resource within this repository's URI namespace
+		resourceURI=checkInstance(resourceURI, "Resource URI cannot be null.").normalize();	//normalize the URI
+		if(!isChild(getReferenceURI(), resourceURI))	//if the given resource URI does not designate a resource within this repository's URI namespace (this will normalize the URI, but as we need to return a normalized form it's better to normalize first so that actual normalization changes won't have to be done twice)
 		{
 			throw new IllegalArgumentException(resourceURI+" does not designate a resource within the repository "+getReferenceURI());
-		}		
+		}
+		return resourceURI;	//return the normalized form of the resource URI
 	}
 
 	/**Checks to make sure that the repository is open.
@@ -149,9 +157,9 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	If the repository is already open, no action occurs.
 	At a minimum the respository must have a public and a private URI specified, even though these may both be the same URI. 
 	@exception IllegalStateException if the settings of this repository are inadequate to open the repository.
-	@exception IOException if there is an error opening the repository.
+	@exception ResourceIOException if there is an error opening the repository.
 	*/
-	public void open() throws IOException
+	public void open() throws ResourceIOException
 	{
 		if(!isOpen())	//if the repository isn't yet open TODO synchronize
 		{
@@ -169,9 +177,9 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 
 	/**Closes the repository.
 	If the repository is already closed, no action occurs.
-	@exeption IOException if there is an error closing the repository.
+	@exeption ResourceIOException if there is an error closing the repository.
 	*/
-	public void close() throws IOException
+	public void close() throws ResourceIOException
 	{
 		if(isOpen())	//if the repository is open TODO synchronize
 		{
@@ -227,11 +235,26 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 		return getChildResourceDescriptions(resourceURI, 1);	//get a list of child resource descriptions without going deeper than one level
 	}
 
-	
-	
-	
-	
-	
+	/**Determines the URI of the parent resource of the given URI.
+	If the given resource URI represents a collection this implementation returns the equivalent of resolving the path {@value URIConstants#PARENT_LEVEL_PATH_SEGMENT} to the URI. 
+	if the given resource URI does not represent a collection, this implementation returns the equivalent of resolving the path {@value URIConstants#CURRENT_LEVEL_PATH_SEGMENT} to the URI.
+	If the given resource represents this repository, this implementation returns <code>null</code>.	
+	@param resourceURI The URI of the resource for which the parent resource URI should be returned.
+	@return The URI of the indicated resource's parent resource, or <code>null</code> if the given URI designates a resource with no parent.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access.
+	@exception ResourceIOException if there is an error accessing the repository.
+	*/
+	public URI getParentResourceURI(URI resourceURI) throws ResourceIOException
+	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		checkOpen();	//make sure the repository is open
+		if(resourceURI.equals(getPublicRepositoryURI()))	//if the resource is the repository URI
+		{
+			return null;	//the repository level has no parent
+		}
+		return isCollection(resourceURI) ? getParentLevel(resourceURI) : getCurrentLevel(resourceURI);	//if resource is a collection, get the parent level; otherwise, get the current level
+	}
 	
 	/**Sets the properties of a given resource.
 	Any existing properties with the same URIs as the given given property/value pairs will be removed.

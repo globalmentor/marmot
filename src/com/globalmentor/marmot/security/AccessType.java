@@ -20,6 +20,7 @@ public enum AccessType
 	PRIVATE(createReferenceURI(MARMOT_NAMESPACE_URI, PRIVATE_ACCESS_TYPE_NAME)),
 	
 	PUBLIC_STEALTH(createReferenceURI(MARMOT_NAMESPACE_URI, PUBLIC_STEALTH_ACCESS_TYPE_NAME),
+			PermissionType.BROWSE,
 			PermissionType.ANNOTATE,
 			PermissionType.PREVIEW,
 			PermissionType.EXECUTE,
@@ -27,6 +28,7 @@ public enum AccessType
 	
 	PUBLIC_VIEW(createReferenceURI(MARMOT_NAMESPACE_URI, PUBLIC_VIEW_ACCESS_TYPE_NAME),
 			PermissionType.DISCOVER,
+			PermissionType.BROWSE,
 			PermissionType.ANNOTATE,
 			PermissionType.PREVIEW,
 			PermissionType.EXECUTE,
@@ -34,6 +36,7 @@ public enum AccessType
 	
 	PUBLIC_EDIT(createReferenceURI(MARMOT_NAMESPACE_URI, PUBLIC_EDIT_ACCESS_TYPE_NAME),
 			PermissionType.DISCOVER,
+			PermissionType.BROWSE,
 			PermissionType.ANNOTATE,
 			PermissionType.PREVIEW,
 			PermissionType.EXECUTE,
@@ -43,6 +46,7 @@ public enum AccessType
 	
 	PUBLIC(createReferenceURI(MARMOT_NAMESPACE_URI, PUBLIC_ACCESS_TYPE_NAME),
 			PermissionType.DISCOVER,
+			PermissionType.BROWSE,
 			PermissionType.ANNOTATE,
 			PermissionType.PREVIEW,
 			PermissionType.EXECUTE,
