@@ -137,6 +137,6 @@ public abstract class AbstractResourceKit<P extends Presentation> implements Res
 	private final P presentation;
 	
 		/**@return The presentation implementation for supported resources.*/
-		public P getPresentation() {throw new UnsupportedOperationException("Presentation not yet supported.");}
+		public P getPresentation() {return presentation;}
 
 }

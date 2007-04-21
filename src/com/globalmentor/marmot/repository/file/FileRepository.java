@@ -3,28 +3,24 @@ package com.globalmentor.marmot.repository.file;
 import java.io.*;
 import java.net.URI;
 import java.util.*;
+
 import static java.util.Collections.*;
 
 import javax.mail.internet.ContentType;
 
 import static com.garretwilson.io.FileConstants.*;
-import com.garretwilson.io.FileUtilities;
 import static com.garretwilson.io.FileUtilities.*;
 import static com.garretwilson.lang.CharSequenceUtilities.*;
 import static com.garretwilson.net.URIConstants.*;
 
-import com.garretwilson.net.ResourceIOException;
-import com.garretwilson.net.ResourceMovedPermanentlyException;
-import com.garretwilson.net.ResourceMovedTemporarilyException;
-import com.garretwilson.net.ResourceNotFoundException;
-import com.garretwilson.net.http.HTTPMovedPermanentlyException;
-import com.garretwilson.net.http.HTTPMovedTemporarilyException;
-import com.garretwilson.net.http.HTTPNotFoundException;
+import com.garretwilson.io.FileUtilities;
+import com.garretwilson.io.IO;
+import com.garretwilson.net.*;
 import com.garretwilson.rdf.*;
 import com.garretwilson.util.Debug;
 
+import static com.garretwilson.rdf.RDFUtilities.addType;
 import static com.garretwilson.rdf.dublincore.DCUtilities.*;
-import static com.garretwilson.rdf.rdfs.RDFSUtilities.*;
 import static com.garretwilson.rdf.xpackage.FileOntologyConstants.*;
 import static com.garretwilson.rdf.xpackage.FileOntologyUtilities.*;
 import static com.garretwilson.rdf.xpackage.MIMEOntologyUtilities.*;
@@ -48,6 +44,14 @@ public class FileRepository extends AbstractRepository
 	/**The extension used for directories to hold resource children.*/
 //TODO move if needed	protected final static String DIRECTORY_EXTENSION="@";	//TODO promote to parent file-based class
 
+	/**The name component of the Marmot description of a file resource.*/
+	public final static String MARMOT_DESCRIPTION_NAME="marmot.description";
+
+	/**The I/O implementation that writes and reads a resource with the same reference URI as its base URI.*/
+	protected final static RDFIO<RDFResource> descriptionIO=new NamedRDFResourceIO<RDFResource>(RDFResource.class, URI.create(""));
+
+		/**@return The I/O implementation that writes and reads a resource with the same reference URI as its base URI.*/
+		protected RDFIO<RDFResource> getDescriptionIO() {return descriptionIO;}
 
 	/**The file filter for listing files in a directory.*/
 	protected final static FileFilter FILE_FILTER=new FileFilter()
@@ -179,7 +183,14 @@ public class FileRepository extends AbstractRepository
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
 		final RDF rdf=new RDF();	//TODO use a common RDF data model
-		return createResourceDescription(rdf, new File(getPrivateURI(resourceURI)));	//create and return a description from a file created from the URI from the private namespace
+		try
+		{
+			return createResourceDescription(rdf, new File(getPrivateURI(resourceURI)));	//create and return a description from a file created from the URI from the private namespace
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+		}
 	}
 
 	/**Determines if the resource at the given URI exists.
@@ -249,7 +260,15 @@ public class FileRepository extends AbstractRepository
 				final File[] files=resourceDirectory.listFiles(FILE_FILTER);	//get a list of all files in the directory
 				for(final File file:files)	//for each file in the directory
 				{
-					final RDFResource resource=createResourceDescription(rdf, file);	//create a resource description for this file
+					final RDFResource resource;
+					try
+					{
+						resource=createResourceDescription(rdf, file);	//create a resource description for this file
+					}
+					catch(final IOException ioException)	//if an I/O exception occurs
+					{
+						throw createResourceIOException(getPublicURI(file.toURI()), ioException);	//translate the exception to a resource I/O exception and throw that, using a public URI to represent the file resource
+					}
 					final int newDepth=depth>0 ? depth-1 : depth;	//reduce the depth by one, unless we're using the unlimited depth value
 					final List<RDFResource> childResourceDescriptionList=getChildResourceDescriptions(resource.getReferenceURI(), newDepth);	//get a list of child descriptions for the resource we just created
 					final RDFListResource childrenListResource=RDFListResource.create(rdf, childResourceDescriptionList);	//create an RDF list of the children
@@ -471,28 +490,20 @@ public class FileRepository extends AbstractRepository
 
 	/**Creates a resource description to represent a single file.
 	@param rdf The RDF data model to use when creating this resource.
-	@param file The file for which a resource should be created.
+	@param resourceFile The file for which a resource should be created.
 	@return A resource description of the given file.
+	@exception IOException if there is an error creating the resource description.
 	*/
-	protected RDFResource createResourceDescription(final RDF rdf, final File file)	
+	protected RDFResource createResourceDescription(final RDF rdf, final File resourceFile) throws IOException
 	{
-		final URI resourceURI=getPublicURI(file.toURI());	//get a public URI to represent the file resource
-		final RDFResource resource=rdf.locateResource(resourceURI);	//create a resource to represent the file
-/*TODO del
-		final RK resourceKit=getResourceKitManager().getResourceKit(this, resource);	//get a resource kit for this resource
-		if(resourceKit!=null)	//if we found a resource kit for this resource
+		final RDFResource resource=loadResourceDescription(rdf, resourceFile);	//load the resource description, if there is one
+//TODO del if not needed		final URI resourceURI=getPublicURI(resourceFile.toURI());	//get a public URI to represent the file resource
+//TODO del if not needed		final RDFResource resource=rdf.createResource(resourceURI);	//create a resource to represent the file
+		final String filename=resourceFile.getName();	//get the name of the file
+		if(resourceFile.isDirectory())	//if this is a directory
 		{
-			resourceKit.initialize(this, rdf, resource);	//initialize the resource
-		}
-*/
-			//create a label G***maybe only do this if the resource kit has not added a label
-		final String filename=file.getName();	//get the name of the file
-		if(file.isDirectory())	//if this is a directory
-		{
-//TODO fix			final String label=FileUtilities.decodeFilename(filename);	//unescape any reserved characters in the filename
 			addType(resource, FILE_ONTOLOGY_NAMESPACE_URI, FOLDER_TYPE_NAME);	//add the file:folder type to indicate that this resource is a folder
-//TODO fix			addLabel(resource, label); //add the filename as a label
-			setModifiedTime(resource, new Date(file.lastModified()));	//set the modified time as the last modified date of the file			
+			setModifiedTime(resource, new Date(resourceFile.lastModified()));	//set the modified time as the last modified date of the file			
 		}
 		else	//if this file is not a directory
 		{
@@ -502,8 +513,8 @@ public class FileRepository extends AbstractRepository
 			addLabel(resource, label); //add the unescaped filename without an extension as a label
 */
 
-			setSize(resource, file.length());	//set the file length
-			setModifiedTime(resource, new Date(file.lastModified()));	//set the modified time as the last modified date of the file			
+			setSize(resource, resourceFile.length());	//set the file length
+			setModifiedTime(resource, new Date(resourceFile.lastModified()));	//set the modified time as the last modified date of the file			
 			final ContentType contentType=getMediaType(filename);	//try to find the content type from the filename
 			if(contentType!=null)	//if we know the content type
 			{
@@ -514,6 +525,42 @@ public class FileRepository extends AbstractRepository
 //TODO del Debug.trace("returning RDF:", RDFUtilities.toString(resource));
 		
 		return resource;	//return the resource that respresents the file
+	}
+
+
+	/**Determines the file that holds the description of the given resource file.
+	This version creates a separate destinct file beginning with the Unix hidden prefix, containing {@value #MARMOT_DESCRIPTION_NAME}, and ending with the RDF extension.
+	@param resourceFile The file of a resource.
+	@return A new file designating the location of the resource description.
+	*/
+	protected File getResourceDescriptionFile(final File resourceFile)
+	{
+		return changeName(resourceFile, addExtension(UNIX_HIDDEN_FILENAME_PREFIX+resourceFile.getName()+EXTENSION_SEPARATOR+MARMOT_DESCRIPTION_NAME, RDF_EXTENSION));	//return a file in the form ".file.marmot.description.rdf"
+	}
+
+	/**Loads a resource description for a single file.
+	@param rdf The RDF data model to use when creating this resource.
+	@param resourceFile The file of a resource.
+	@return A resource description of the given file.
+	@exception IOException if there is an error loading the resource description.
+	@see #getResourceDescriptionFile(File)
+	*/
+	protected RDFResource loadResourceDescription(final RDF rdf, final File resourceFile) throws IOException
+	{
+		final URI resourceURI=getPublicURI(resourceFile.toURI());	//get a public URI to represent the file resource
+		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the file for storing the description
+		final RDFResource resource;
+		if(resourceDescriptionFile.exists())	//if there is a description file
+		{
+			resource=FileUtilities.read(resourceDescriptionFile, rdf, descriptionIO);	//read the description using the given RDF instance
+			resource.setReferenceURI(resourceURI);	//make sure the resource has the correct reference URI
+			
+		}
+		else	//if there is no description file
+		{
+			resource=rdf.createResource(resourceURI); //create a default resource description
+		}
+		return resource;	//return the resource description
 	}
 
 	/**Translates the given error specific to this repository type into a resource I/O exception.
