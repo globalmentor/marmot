@@ -12,7 +12,7 @@ import com.garretwilson.net.ResourceIOException;
 import static com.garretwilson.net.URIConstants.*;
 import com.garretwilson.rdf.*;
 
-import static com.garretwilson.rdf.directory.vcard.Card.*;
+import static com.garretwilson.rdf.directory.vcard.VCard.*;
 
 import com.garretwilson.util.Debug;
 import com.globalmentor.marmot.MarmotConstants;
@@ -428,7 +428,7 @@ Debug.trace("ready to return allowed", allowed);
 			{
 				if(principal instanceof RDFResource)	//if the principal is an RDF resource
 				{
-					for(final RDFObject emailObject:((RDFResource)principal).getPropertyValues(CARD_NAMESPACE_URI, EMAIL_PROPERTY_NAME))	//for each email(s) designated
+					for(final RDFObject emailObject:((RDFResource)principal).getPropertyValues(VCARD_NAMESPACE_URI, EMAIL_PROPERTY_NAME))	//for each email(s) designated
 					{
 						if(emailObject instanceof RDFListResource)	//if the email is a list
 						{
