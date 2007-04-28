@@ -11,7 +11,9 @@ import com.garretwilson.net.Resource;
 import com.garretwilson.net.ResourceIOException;
 import static com.garretwilson.net.URIConstants.*;
 import com.garretwilson.rdf.*;
-import static com.garretwilson.rdf.directory.card.Card.*;
+
+import static com.garretwilson.rdf.directory.vcard.Card.*;
+
 import com.garretwilson.util.Debug;
 import com.globalmentor.marmot.MarmotConstants;
 import com.globalmentor.marmot.repository.Repository;
