@@ -256,20 +256,6 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 		return isCollection(resourceURI) ? getParentLevel(resourceURI) : getCurrentLevel(resourceURI);	//if resource is a collection, get the parent level; otherwise, get the current level
 	}
 	
-	/**Sets the properties of a given resource.
-	Any existing properties with the same URIs as the given given property/value pairs will be removed.
-	All other existing properties will be left unmodified. 
-	@param resourceURI The reference URI of the resource.
-	@param properties The properties to set.
-	@return The updated description of the resource.
-	@exception NullPointerException if the given resource URI and/or properties is <code>null</code>.
-	@exception ResourceIOException if the resource properties could not be updated.
-	*/
-	public RDFResource setResourceProperties(final URI resourceURI, final RDFPropertyValuePair... properties) throws ResourceIOException	//TODO remove when all repositories implement
-	{
-		throw new UnsupportedOperationException("Repository cannot yet set its resources' properties");
-	}
-	
 	/**Removes properties from a given resource.
 	Any existing properties with the same URIs as the given given property/value pairs will be removed.
 	All other existing properties will be left unmodified. 
@@ -310,21 +296,17 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 			try
 			{
 	//TODO del Debug.trace("ready to create resource", destinationURI, "in destination repository", destinationRepository.getReferenceURI());
-	Debug.trace("ready to create resource", destinationURI, "in destination repository", destinationRepository.getReferenceURI());
 					//TODO check for non-existent source resource
 				final InputStream inputStream=getResourceInputStream(resourceURI);	//get an input stream to the source resource
 				try
 				{
-	Debug.trace("ready to create resource in destination");
 					final OutputStream outputStream=destinationRepository.createResource(destinationURI, getResourceDescription(resourceURI));	//create the destination resource with the same description as the source resource, getting an output stream for storing the contents
 					try
 					{
-	Debug.trace("ready to copy");
 						copy(inputStream, outputStream);	//copy the resource
 					}
 					finally
 					{
-	Debug.trace("closing copy output stream");
 						outputStream.close();	//always close the output stream
 					}
 				}

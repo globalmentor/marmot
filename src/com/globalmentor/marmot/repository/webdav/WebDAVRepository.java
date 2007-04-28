@@ -596,10 +596,14 @@ public class WebDAVRepository extends AbstractRepository
 	@param properties The properties to set.
 	@return The updated description of the resource.
 	@exception NullPointerException if the given resource URI and/or properties is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access.
 	@exception ResourceIOException if the resource properties could not be updated.
 	*/
 	public RDFResource setResourceProperties(final URI resourceURI, final RDFPropertyValuePair... properties) throws ResourceIOException
 	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		checkOpen();	//make sure the repository is open
 		final Set<URI> newPropertyURISet=new HashSet<URI>();	//create a set to find out which properties we will be setting
 		for(final RDFPropertyValuePair property:properties)	//look at each property
 		{

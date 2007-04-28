@@ -17,14 +17,14 @@ import com.garretwilson.io.FileUtilities;
 import com.garretwilson.io.IO;
 import com.garretwilson.net.*;
 import com.garretwilson.rdf.*;
-import com.garretwilson.util.Debug;
-
 import static com.garretwilson.rdf.RDFUtilities.addType;
-import static com.garretwilson.rdf.dublincore.DCUtilities.*;
 import static com.garretwilson.rdf.xpackage.FileOntologyConstants.*;
 import static com.garretwilson.rdf.xpackage.FileOntologyUtilities.*;
+import static com.garretwilson.rdf.xpackage.MIMEOntologyConstants.*;
 import static com.garretwilson.rdf.xpackage.MIMEOntologyUtilities.*;
+import static com.garretwilson.rdf.dublincore.DCUtilities.*;
 import static com.garretwilson.rdf.xpackage.XPackageUtilities.*;
+import com.garretwilson.util.Debug;
 
 import com.globalmentor.marmot.repository.AbstractRepository;
 
@@ -45,7 +45,7 @@ public class FileRepository extends AbstractRepository
 //TODO move if needed	protected final static String DIRECTORY_EXTENSION="@";	//TODO promote to parent file-based class
 
 	/**The name component of the Marmot description of a file resource.*/
-	public final static String MARMOT_DESCRIPTION_NAME="marmot.description";
+	public final static String MARMOT_DESCRIPTION_NAME="marmot-description";
 
 	/**The I/O implementation that writes and reads a resource with the same reference URI as its base URI.*/
 	protected final static RDFIO<RDFResource> descriptionIO=new NamedRDFResourceIO<RDFResource>(RDFResource.class, URI.create(""));
@@ -427,8 +427,39 @@ public class FileRepository extends AbstractRepository
 		return setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
 	}
 
+	/**Sets the properties of a given resource.
+	Any existing properties with the same URIs as the given given property/value pairs will be removed.
+	All other existing properties will be left unmodified. 
+	@param resourceURI The reference URI of the resource.
+	@param properties The properties to set.
+	@return The updated description of the resource.
+	@exception NullPointerException if the given resource URI and/or properties is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access.
+	@exception ResourceIOException if the resource properties could not be updated.
+	*/
+	public RDFResource setResourceProperties(final URI resourceURI, final RDFPropertyValuePair... properties) throws ResourceIOException
+	{
+		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		checkOpen();	//make sure the repository is open
+		final Set<URI> newPropertyURISet=new HashSet<URI>();	//create a set to find out which properties we will be setting
+		for(final RDFPropertyValuePair property:properties)	//look at each property
+		{
+			newPropertyURISet.add(property.getName().getReferenceURI());	//add this property URI to our set
+		}		
+		final RDFResource resourceDescription=getResourceDescription(resourceURI);	//get a description of the resource
+		for(final URI propertyURI:newPropertyURISet)	//for each new property URI
+		{
+			resourceDescription.removeProperties(propertyURI);	//remove all properties with the given property URI
+		}
+		for(final RDFPropertyValuePair property:properties)	//for each property given
+		{
+			resourceDescription.addProperty(property.getName(), property.getValue());	//add this property to the description
+		}
+		return setResourceProperties(resourceURI, resourceDescription);	//set the properties using the given description
+	}
+
 	/**Sets the properties of a resource based upon the given description.
-	This implementation only supports the {@value FileOntologyConstants#MODIFIED_TIME_PROPERTY_URI} property, updating the file attribute to match, and ignores all other properties.
 	@param resourceURI The reference URI of the resource.
 	@param resourceDescription A description of the resource with the properties to set; the resource URI is ignored.
 	@param resourceFile The file to use in updating the resource properties.
@@ -443,13 +474,17 @@ public class FileRepository extends AbstractRepository
 		{
 			resourceFile.setLastModified(modifiedTime.getTime());	//update the last modified time TODO does this work for directories? should we check?
 		}
-/*TODO del when works
-		for(final RDFPropertyValuePair propertyValuePair:resourceDescription.getProperties())	//look at each property
+		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the resource description file
+		final RDFResource saveResourceDescription=new DefaultRDFResource(resourceDescription, resourceDescriptionFile.toURI());	//create a separate description we'll use for saving
+		saveResourceDescription.removeNamespaceProperties(MIME_ONTOLOGY_NAMESPACE_URI, FILE_ONTOLOGY_NAMESPACE_URI);	//remove all MIME and file-related properties, as they are live-update properties
+		try
 		{
-			if(MODIFIED_TIME_PROPERTY_URI.equals(propertyValuePair.getName()))	//if this is the 
-			
+			saveResourceDescription(saveResourceDescription, resourceFile);	//save the resource description
 		}
-*/
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+		}
 		return getResourceDescription(resourceURI);	//return the new resource description
 	}
 
@@ -486,6 +521,8 @@ public class FileRepository extends AbstractRepository
 			throw new IllegalArgumentException("Cannot move repository base URI "+resourceURI);
 		}
 		throw new UnsupportedOperationException();	//TODO implement
+		
+		//TODO move resource description if needed
 	}
 
 	/**Creates a resource description to represent a single file.
@@ -527,15 +564,15 @@ public class FileRepository extends AbstractRepository
 		return resource;	//return the resource that respresents the file
 	}
 
-
 	/**Determines the file that holds the description of the given resource file.
-	This version creates a separate destinct file beginning with the Unix hidden prefix, containing {@value #MARMOT_DESCRIPTION_NAME}, and ending with the RDF extension.
+	This version uses a separate destinct file beginning with the Unix hidden prefix,
+	containing {@value #MARMOT_DESCRIPTION_NAME},	and ending with the RDF extension.
 	@param resourceFile The file of a resource.
 	@return A new file designating the location of the resource description.
 	*/
 	protected File getResourceDescriptionFile(final File resourceFile)
 	{
-		return changeName(resourceFile, addExtension(UNIX_HIDDEN_FILENAME_PREFIX+resourceFile.getName()+EXTENSION_SEPARATOR+MARMOT_DESCRIPTION_NAME, RDF_EXTENSION));	//return a file in the form ".file.marmot.description.rdf"
+		return changeName(resourceFile, addExtension(UNIX_HIDDEN_FILENAME_PREFIX+resourceFile.getName()+EXTENSION_SEPARATOR+MARMOT_DESCRIPTION_NAME, RDF_EXTENSION));	//return a file in the form ".file.marmot-description.rdf"
 	}
 
 	/**Loads a resource description for a single file.
@@ -553,14 +590,26 @@ public class FileRepository extends AbstractRepository
 		if(resourceDescriptionFile.exists())	//if there is a description file
 		{
 			resource=FileUtilities.read(resourceDescriptionFile, rdf, descriptionIO);	//read the description using the given RDF instance
-			resource.setReferenceURI(resourceURI);	//make sure the resource has the correct reference URI
-			
+			resource.setReferenceURI(resourceURI);	//make sure the resource has the correct reference URI			
 		}
 		else	//if there is no description file
 		{
 			resource=rdf.createResource(resourceURI); //create a default resource description
 		}
 		return resource;	//return the resource description
+	}
+
+	/**Saves a resource description for a single file.
+	@param resourceDescription The resource description to save.
+	@param resourceFile The file of a resource.
+	@exception IOException if there is an error save the resource description.
+	@see #getResourceDescriptionFile(File)
+	*/
+	protected void saveResourceDescription(final RDFResource resourceDescription, final File resourceFile) throws IOException
+	{
+		final URI resourceURI=getPublicURI(resourceFile.toURI());	//get a public URI to represent the file resource
+		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the file for storing the description
+		FileUtilities.write(resourceDescriptionFile, resourceDescription, descriptionIO);	//write the description
 	}
 
 	/**Translates the given error specific to this repository type into a resource I/O exception.
