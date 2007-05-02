@@ -2,12 +2,16 @@ package com.globalmentor.marmot.resource;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.mail.internet.ContentType;
 
 import static com.garretwilson.lang.ObjectUtilities.*;
 import com.garretwilson.rdf.RDFResource;
+import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
+import com.globalmentor.marmot.security.PermissionType;
 
 /**Abstract implementation of a resource kit.
 @param <P> The type of presentation supported by this resource kit.
@@ -15,6 +19,17 @@ import com.globalmentor.marmot.repository.Repository;
 */
 public abstract class AbstractResourceKit<P extends Presentation> implements ResourceKit<P>
 {
+
+	/**The Marmot instance with which this resource kit is associated.*/
+	private MarmotSession<P, ? extends ResourceKit<P>> marmot=null;
+
+		/**@return The Marmot instance with which this resource kit is associated, or <code>null</code> if this resource kit has not yet been installed.*/
+		public MarmotSession<P, ? extends ResourceKit<P>> getMarmot() {return marmot;}
+
+		/**Sets the Marmot instance with which this resource kit is associated.
+		@param marmot The Marmot instance with which the resource kit should be assiated, or <code>null</code> if the resource kit is not installed.
+		*/
+		public void setMarmot(final MarmotSession<P, ? extends ResourceKit<P>> marmot) {this.marmot=marmot;}
 
 	/**A non-<code>null</code> array of the content types this resource kit supports.*/
 	private final ContentType[] supportedContentTypes;
@@ -33,7 +48,39 @@ public abstract class AbstractResourceKit<P extends Presentation> implements Res
 		@return A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
 		*/
 		public URI[] getSupportedResourceTypes() {return supportedResourceTypes;}
-	
+
+		/**The map of installed filters, keyed to filter IDs.*/
+//TODO del		private final Map<String, ResourceFilter> filterMap=new ConcurrentHashMap<String, ResourceFilter>();
+
+		/**Returns this resource kit's installed filter based upon its ID.
+		@param filterID The ID of the filter to return.
+		@return The resource filter identified by the given ID.
+		@exception IllegalArgumentException if there is no installed resource filter identified by the given ID.
+		*/
+/*TODO del
+		public ResourceFilter getFilter(final String filterID) throws IllegalArgumentException
+		{
+			final ResourceFilter resourceFilter=filterMap.get(filterID);	//get the filter, if any, keyed to the given ID
+			if(resourceFilter==null)	//if no such filter is installed
+			{
+				throw new IllegalArgumentException("No such filter installed: "+filterID);
+			}
+			return resourceFilter;	//return the filter we found
+		}
+*/
+
+		/**Installs a filter into the resource kit.
+		Any filter installed with the same ID will be removed.
+		@param filterID The ID to use in locating the filter.
+		@param filter The filter to install.
+		*/
+/*TODO del
+		protected void installFilter(final String filterID, final ResourceFilter filter)
+		{
+			filterMap.put(filterID, filter);	//store the filter in the map
+		}
+*/
+
 	/**Returns the URI of an open icon representing the given resource.
 	This version delegates to {@link #getLeafTreeNodeIconURI(Repository, RDFResource)}.
 	@param repository The repository in which the resource resides.
@@ -139,4 +186,30 @@ public abstract class AbstractResourceKit<P extends Presentation> implements Res
 		/**@return The presentation implementation for supported resources.*/
 		public P getPresentation() {return presentation;}
 
+	/**Determines whether the given permission is appropriate for accessing the identified aspect.
+	This prevents aspects from being accessed at lower permissions.
+	For example, a rogue user may attempt to retrieve a preview-permission aspect such as a high-resolution image
+	using a permission such as {@link PermissionType#EXECUTE} when a permission appropriate to the aspect, {@link PermissionType#PREVIEW},
+	is not allowed to the user.
+	This version recognizes no aspect IDs.
+	@param aspectID The serialized form of the ID of the aspect to be accessed.
+	@param permissionType The type of permission requested.
+	@return <code>true</code> if access to the given aspect is allowed using the given permission, else <code>false</code>.
+	@exception NullPointerException if the given aspect ID and/or permission type is <code>null</code>.
+	*/
+	public boolean isAspectAllowed(final String aspectID, final PermissionType permissionType)
+	{
+		throw new IllegalArgumentException(checkInstance(aspectID, "Aspect ID cannot be null."));
+	}
+
+	/**Returns the appropriate filters for accessing an identified aspect of the resource.
+	This version recognizes no aspect IDs.
+	@param aspectID The serialized form of the ID of the aspect to be accessed.
+	@exception NullPointerException if the given aspect ID is <code>null</code>.
+	@exception IllegalArgumentException if the given aspect ID does not represent a valid aspect.
+	*/
+	public ResourceFilter[] getAspectFilters(final String aspectID)
+	{
+		throw new IllegalArgumentException(checkInstance(aspectID, "Aspect ID cannot be null."));		
+	}
 }

@@ -95,6 +95,17 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 			return changeBase(privateURI, getPrivateRepositoryURI(), getReferenceURI());	//change the base of the URI from the private URI namespace to the public URI namespace
 		}
 
+	/**Whether the repository should automatically be opened when needed.*/
+	private boolean autoOpen=true;
+
+		/**@return Whether the repository should automatically be opened when needed.*/
+		public boolean isAutoOpen() {return autoOpen;}
+		
+		/**Sets whether the repository should automatically be opened when needed.
+		@param autoOpen Whether the repository should automatically be opened when needed.
+		*/
+		public void setAutoOpen(final boolean autoOpen) {this.autoOpen=autoOpen;}
+	
 	/**Checks to make sure the resource designated by the given resource URI is within this repository.
 	This version makes sure the given URI is a child of the resource reference URI.
 	@param resourceURI The URI of the resource to check.
@@ -113,13 +124,23 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	}
 
 	/**Checks to make sure that the repository is open.
-	@exception IllegalStateException if the repository is not open for access.
+	If the auto-open facility is turned on, the repository will be automatically opened if needed.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error opening the repository.
+	@see #isAutoOpen()
 	*/
-	protected void checkOpen()
+	protected void checkOpen() throws ResourceIOException
 	{
 		if(!isOpen())	//if the repository is not open
 		{
-			throw new IllegalArgumentException("Repository is not open.");
+			if(isAutoOpen())	//if we should open the repository automatically
+			{
+				open();	//open the repository
+			}
+			else	//if we shouldn't open the repository automatically
+			{
+				throw new IllegalStateException("Repository is not open.");				
+			}
 		}
 	}
 
@@ -196,7 +217,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	@return An output stream for storing the contents of the resource.
 	@exception NullPointerException if the given resource URI is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
 	public OutputStream createResource(final URI resourceURI) throws ResourceIOException
@@ -212,7 +233,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	@return A description of the resource that was created.
 	@exception NullPointerException if the given resource URI and/or resource contents is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
 	public RDFResource createResource(final URI resourceURI, final byte[] resourceContents) throws ResourceIOException
@@ -225,7 +246,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
 	@return A list of sub-resource descriptions directly under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
 	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI) throws ResourceIOException
@@ -242,7 +263,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	@param resourceURI The URI of the resource for which the parent resource URI should be returned.
 	@return The URI of the indicated resource's parent resource, or <code>null</code> if the given URI designates a resource with no parent.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
 	public URI getParentResourceURI(URI resourceURI) throws ResourceIOException
@@ -280,7 +301,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	@param destinationRepository The repository to which the resource should be copied, which may be this repository.
 	@param destinationURI The URI to which the resource should be copied.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error copying the resource.
 	*/
 	public void copyResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException
@@ -331,7 +352,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	@param destinationRepository The repository to which the resource should be moved, which may be this repository.
 	@param destinationURI The URI to which the resource should be moved.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.	
 	@exception ResourceIOException if there is an error moving the resource.
 	*/
@@ -366,4 +387,18 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 		return throwable instanceof ResourceIOException ? (ResourceIOException)throwable : new ResourceIOException(resourceURI, throwable);	//default to simple exception chaining with a new resource I/O exception, if the throwable isn't already a resourc I/O exception
 	}
 
+	/**Cleans up the object for garbage collection.
+	This version closes the repository.
+	*/
+	protected void finalize() throws Throwable
+	{
+		try
+		{
+			close();	//close the repository if it isn't already
+		}
+		finally
+		{
+			super.finalize();	//always call the parent version
+		}
+	}
 }

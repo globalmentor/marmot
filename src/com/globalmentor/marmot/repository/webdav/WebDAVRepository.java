@@ -29,11 +29,7 @@ import static com.garretwilson.rdf.xpackage.MIMEOntologyUtilities.*;
 
 import com.garretwilson.io.FileUtilities;
 import com.garretwilson.io.OutputStreamDecorator;
-import com.garretwilson.net.Resource;
-import com.garretwilson.net.ResourceIOException;
-import com.garretwilson.net.ResourceMovedPermanentlyException;
-import com.garretwilson.net.ResourceMovedTemporarilyException;
-import com.garretwilson.net.ResourceNotFoundException;
+import com.garretwilson.net.*;
 import com.garretwilson.net.http.*;
 import com.garretwilson.net.http.webdav.*;
 import com.garretwilson.rdf.*;
@@ -200,7 +196,7 @@ public class WebDAVRepository extends AbstractRepository
 	@param resourceURI The URI of the resource to access.
 	@return An input stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
 	*/
 	public InputStream getResourceInputStream(final URI resourceURI) throws ResourceIOException
@@ -231,7 +227,7 @@ public class WebDAVRepository extends AbstractRepository
 	@param resourceURI The URI of the resource to access.
 	@return An output stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the resource.
 	*/
 	public OutputStream getResourceOutputStream(final URI resourceURI) throws ResourceIOException
@@ -265,7 +261,7 @@ public class WebDAVRepository extends AbstractRepository
 	@param resourceURI The URI of the resource the description of which should be retrieved.
 	@return A description of the resource with the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
 	public RDFResource getResourceDescription(final URI resourceURI) throws ResourceIOException
@@ -297,7 +293,7 @@ public class WebDAVRepository extends AbstractRepository
 	@param resourceURI The URI of the resource to check.
 	@return <code>true</code> if the resource exists, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
 	public boolean resourceExists(final URI resourceURI) throws ResourceIOException
@@ -329,7 +325,7 @@ public class WebDAVRepository extends AbstractRepository
 	@param resourceURI The URI of the requested resource.
 	@return <code>true</code> if the resource is a collection, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
 	public boolean isCollection(final URI resourceURI) throws ResourceIOException
@@ -359,7 +355,7 @@ public class WebDAVRepository extends AbstractRepository
 	@param resourceURI The URI of the resource.
 	@return <code>true</code> if the specified resource has child resources.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
 	public boolean hasChildren(final URI resourceURI) throws ResourceIOException
@@ -399,7 +395,7 @@ public class WebDAVRepository extends AbstractRepository
 	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
 	@return A list of sub-resources descriptions directly under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
 	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws ResourceIOException
@@ -470,7 +466,7 @@ public class WebDAVRepository extends AbstractRepository
 	@return An output stream for storing the contents of the resource.
 	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
 	public OutputStream createResource(final URI resourceURI, final RDFResource resourceDescription) throws ResourceIOException
@@ -498,7 +494,7 @@ public class WebDAVRepository extends AbstractRepository
 	@return A description of the resource that was created.
 	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
 	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException
@@ -529,7 +525,7 @@ public class WebDAVRepository extends AbstractRepository
 	@param collectionURI The URI of the collection to be created.
 	@return A description of the collection that was created.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error creating the collection.
 	*/
 	public RDFResource createCollection(final URI collectionURI) throws ResourceIOException
@@ -563,7 +559,7 @@ public class WebDAVRepository extends AbstractRepository
 	@return The updated description of the resource.
 	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource properties could not be updated.
 	*/
 	public RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription) throws ResourceIOException
@@ -597,7 +593,7 @@ public class WebDAVRepository extends AbstractRepository
 	@return The updated description of the resource.
 	@exception NullPointerException if the given resource URI and/or properties is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource properties could not be updated.
 	*/
 	public RDFResource setResourceProperties(final URI resourceURI, final RDFPropertyValuePair... properties) throws ResourceIOException
@@ -771,7 +767,7 @@ public class WebDAVRepository extends AbstractRepository
 	@param resourceURI The URI of the resource to be copied.
 	@param destinationURI The URI to which the resource should be copied.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error copying the resource.
 	*/
 	public void copyResource(final URI resourceURI, final URI destinationURI) throws ResourceIOException
@@ -800,7 +796,7 @@ public class WebDAVRepository extends AbstractRepository
 	/**Deletes a resource.
 	@param resourceURI The reference URI of the resource to delete.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.
 	@exception ResourceIOException if the resource could not be deleted.
 	*/
@@ -836,7 +832,7 @@ public class WebDAVRepository extends AbstractRepository
 	@param resourceURI The URI of the resource to be moved.
 	@param destinationURI The URI to which the resource should be moved.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.
 	@exception ResourceIOException if there is an error moving the resource.
 	*/
@@ -1047,6 +1043,7 @@ public class WebDAVRepository extends AbstractRepository
 	/**Translates the given error specific to this repository type into a resource I/O exception.
 	This version makes the following translations:
 	<dl>
+		<dt>{@link HTTPForbiddenException}</dt> <dd>{@link ResourceForbiddenException}</dd>
 		<dt>{@link HTTPNotFoundException}</dt> <dd>{@link ResourceNotFoundException}</dd>
 		<dt>{@link HTTPMovedTemporarilyException}</dt> <dd>{@link ResourceMovedTemporarilyException}</dd>
 		<dt>{@link HTTPMovedPermanentlyException}</dt> <dd>{@link ResourceMovedPermanentlyException}</dd>
@@ -1057,7 +1054,11 @@ public class WebDAVRepository extends AbstractRepository
 	*/
 	protected ResourceIOException createResourceIOException(final URI resourceURI, final Throwable throwable) 
 	{
-		if(throwable instanceof HTTPNotFoundException)
+		if(throwable instanceof HTTPForbiddenException)
+		{
+			return new ResourceForbiddenException(resourceURI, throwable);
+		}
+		else if(throwable instanceof HTTPNotFoundException)
 		{
 			return new ResourceNotFoundException(resourceURI, throwable);
 		}
@@ -1072,7 +1073,7 @@ public class WebDAVRepository extends AbstractRepository
 		}
 		else	//if this is not one of our specially-handled exceptions
 		{
-			return super.createResourceIOException(resourceURI, throwable);	//convert the exceptoin normally
+			return super.createResourceIOException(resourceURI, throwable);	//convert the exception normally
 		}
 	}
 

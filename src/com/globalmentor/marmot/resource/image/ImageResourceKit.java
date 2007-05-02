@@ -8,13 +8,16 @@ import java.net.URI;
 
 import javax.mail.internet.ContentType;
 
+import net.marmox.resource.image.ImageScaleFilter;
+
+import static com.garretwilson.lang.EnumUtilities.*;
 import com.garretwilson.rdf.RDFResource;
 import static com.garretwilson.rdf.xpackage.XPackageUtilities.*;
+import static com.garretwilson.lang.ObjectUtilities.*;
 
 import com.globalmentor.marmot.repository.Repository;
-import com.globalmentor.marmot.resource.AbstractResourceKit;
-import com.globalmentor.marmot.resource.BurrowResourceKitManager;
-import com.globalmentor.marmot.resource.Presentation;
+import com.globalmentor.marmot.resource.*;
+import com.globalmentor.marmot.security.PermissionType;
 
 import static com.guiseframework.GuiseResourceConstants.*;
 import static com.guiseframework.theme.Theme.*;
@@ -31,6 +34,17 @@ import static com.guiseframework.theme.Theme.*;
 */
 public class ImageResourceKit<P extends Presentation> extends AbstractResourceKit<P>
 {
+
+	/**Available images aspects.*/
+	public enum ImageAspect
+	{
+		/**Dimensions appropriate for presenting as a preview.*/
+		PREVIEW,
+
+		/**Dimensions appropriate for presenting as a thumbnail.*/
+		THUMBNAIL;
+	};
+
 	/**The default file extension.*/
 //TODO del if not needed	protected final static String DEFAULT_EXTENSION=JPG_EXTENSION;
 
@@ -109,5 +123,34 @@ public class ImageResourceKit<P extends Presentation> extends AbstractResourceKi
 //TODO fix			setIcon(resource, iconURI);
 		}
 	}
-*/	
+*/
+
+	/**Determines whether the given permission is appropriate for accessing the identified aspect.
+	This prevents aspects from being accessed at lower permissions.
+	For example, a rogue user may attempt to retrieve a preview-permission aspect such as a high-resolution image
+	using a permission such as {@link PermissionType#EXECUTE} when a permission appropriate to the aspect, {@link PermissionType#PREVIEW},
+	is not allowed to the user.
+	@param aspectID The serialized form of the ID of the aspect to be accessed.
+	@param permissionType The type of permission requested.
+	@return <code>true</code> if access to the given aspect is allowed using the given permission, else <code>false</code>.
+	@exception IllegalArgumentException if the given aspect ID does not represent a valid aspect.
+	@exception NullPointerException if the given aspect ID and/or permission type is <code>null</code>.
+	*/
+	public boolean isAspectAllowed(final String aspectID, final PermissionType permissionType)
+	{
+		final ImageAspect imageAspect=getSerializedEnum(ImageAspect.class, aspectID);	//determine the image aspect from the ID to make sure it is non-null and valid
+		return checkInstance(permissionType, "Permission type cannot be null")==PermissionType.PREVIEW;	//all image aspects can only be used in preview mode
+}
+
+	/**Returns the appropriate filters for accessing an identified aspect of the resource.
+	@param aspectID The serialized form of the ID of the aspect to be accessed.
+	@exception NullPointerException if the given aspect ID is <code>null</code>.
+	@exception IllegalArgumentException if the given aspect ID does not represent a valid aspect.
+	*/
+	public ResourceFilter[] getAspectFilters(final String aspectID) throws IllegalArgumentException
+	{
+		final ImageAspect imageAspect=getSerializedEnum(ImageAspect.class, aspectID);	//determine the image aspect from the ID
+		return new ResourceFilter[]{new ImageScaleFilter(imageAspect)};	//return the correct image aspect filter
+	}
+
 }

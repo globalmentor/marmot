@@ -84,26 +84,36 @@ public abstract class AbstractMarmotSession<P extends Presentation, RK extends R
 		}
 	}
 
-	/**Registers a resource kit with the session. If the resource kit is already registered, no action occurs.
+	/**Registers a resource kit with the session.
 	@param resourceKit The resource kit to register.
+	@exception IllegalStateException if the resource kit is already installed.
 	*/
-	public void registerResourceKit(final RK resourceKit)
+	public void installResourceKit(final RK resourceKit)
 	{
-		if(resourceKits.add(resourceKit))	//add the resource kit; if it was not already in the set
+		if(resourceKit.getMarmot()!=null)	//if the resource kit is already installed
 		{
-			updateResourceKits();	//update the resource kits
+			throw new IllegalStateException("Resource kit already intalled.");
 		}
+		assert !resourceKits.contains(resourceKit) : "Marmot contains unassigned resource kit.";
+		resourceKit.setMarmot(this);	//tell the resource kit its owner
+		resourceKits.add(resourceKit);	//add the resource kit
+		updateResourceKits();	//update the resource kits
 	}
 
-	/**Unregisters a resource kit with the session. If the resource kit is not registered, no action is taken.
+	/**Unregisters a resource kit with the session.
 	@param resourceKit The resource kit to unregister.
+	@exception IllegalStateException if the resource kit is not installed in this session.
 	*/
-	public void unregisterResourceKit(final RK resourceKit)
+	public void uninstallResourceKit(final RK resourceKit)
 	{
-		if(resourceKits.remove(resourceKit))	//remove the resource kit from the set; if the resource kit was in the set
-		{ 
-			updateResourceKits();	//update the resource kits
+		if(resourceKit.getMarmot()!=this)	//if the resource kit is not installed
+		{
+			throw new IllegalStateException("Resource kit not intalled.");			
 		}
+		assert resourceKits.contains(resourceKit) : "Marmot does not contain assigned resource kit.";
+		resourceKits.remove(resourceKit);	//remove the resource kit
+		resourceKit.setMarmot(null);	//tell the resource kit it has no owner
+		updateResourceKits();	//update the resource kits		
 	}
 
 	/**@return Access to the registered resource kits.*/

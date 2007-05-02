@@ -17,15 +17,17 @@ public interface MarmotSession<P extends Presentation, RK extends ResourceKit<P>
 	/**@return The installed Marmot security manager.*/
 	public MarmotSecurityManager getSecurityManager();
 
-	/**Registers a resource kit with the session. If the resource kit is already registered, no action occurs.
+	/**Registers a resource kit with the session.
 	@param resourceKit The resource kit to register.
+	@exception IllegalStateException if the resource kit is already installed.
 	*/
-	public void registerResourceKit(final RK resourceKit);
+	public void installResourceKit(final RK resourceKit);
 
-	/**Unregisters a resource kit with the session. If the resource kit is not registered, no action is taken.
+	/**Unregisters a resource kit with the session.
 	@param resourceKit The resource kit to unregister.
+	@exception IllegalStateException if the resource kit is not installed in this session.
 	*/
-	public void unregisterResourceKit(final RK resourceKit);
+	public void uninstallResourceKit(final RK resourceKit);
 
 	/**Retrieves a resource kit appropriate for the given resource.
 	This method locates a resource kit in the following priority:
