@@ -6,15 +6,14 @@ import java.awt.image.renderable.ParameterBlock;
 import java.io.*;
 
 import javax.imageio.ImageIO;
+import javax.media.jai.InterpolationBicubic;
+import javax.media.jai.InterpolationBicubic2;
 import javax.media.jai.InterpolationNearest;
 import javax.media.jai.JAI;
 import javax.media.jai.PlanarImage;
 
-import static com.garretwilson.lang.ObjectUtilities.*;
-
 import static com.garretwilson.awt.geom.GeometryUtilities.*;
-
-import static com.garretwilson.io.OutputStreamUtilities.*;
+import static com.garretwilson.lang.ObjectUtilities.*;
 import com.garretwilson.net.ResourceIOException;
 import com.garretwilson.rdf.RDFResource;
 import com.garretwilson.util.Debug;
@@ -51,38 +50,39 @@ public class ImageScaleFilter implements ResourceFilter
 	*/
 	public RDFResource filter(final RDFResource resource, final InputStream inputStream, final OutputStream outputStream) throws IOException
 	{
-Debug.trace("ready to scale to aspect", imageAspect);
-		final Dimension scaledDimension;	//determined the scaled dimension
+//TODO del Debug.trace("ready to scale to aspect", imageAspect);
+		final Dimension aspectDimension;	//determine the aspect dimension
 		switch(getImageAspect())	//see what image aspect is called for
 		{
 			case PREVIEW:
-				scaledDimension=new Dimension(800, 600);	//TODO use constants
+				aspectDimension=new Dimension(800, 600);	//TODO use constants
 				break;
 			case THUMBNAIL:
-				scaledDimension=new Dimension(200, 200);	//TODO use constants
+				aspectDimension=new Dimension(200, 200);	//TODO use constants
 				break;
 			default:
 				throw new AssertionError("Unrecognized image aspect: "+getImageAspect());
 		}
 
-Debug.trace("aspect dimensions:", scaledDimension);
+//TODO del Debug.trace("aspect dimensions:", scaledDimension);
 
 		final BufferedImage bufferedImage=ImageIO.read(inputStream);	//read the image
 		final Dimension originalDimension=new Dimension(bufferedImage.getWidth(), bufferedImage.getHeight());	//find the original dimensions of the image
-Debug.trace("original image dimension", originalDimension);
-		if(originalDimension.width>scaledDimension.width || originalDimension.height>scaledDimension.height)	//if this image needs scaled
+//TODO del Debug.trace("original image dimension", originalDimension);
+		if(originalDimension.width>aspectDimension.width || originalDimension.height>aspectDimension.height)	//if this image needs scaled
 		{
-			final Dimension newDimension=constrain(originalDimension, scaledDimension);	//constrain the dimension to the scaled dimension
-Debug.trace("scaling to dimension", newDimension);
+			final Dimension newDimension=constrain(originalDimension, aspectDimension);	//constrain the dimension to the scaled dimension
+//TODO del Debug.trace("scaling to dimension", newDimension);
 			final ParameterBlock parameterBlock=new ParameterBlock();
 			parameterBlock.addSource(bufferedImage);
-Debug.trace("reduce X", originalDimension.getWidth()/newDimension.getWidth());
-			parameterBlock.add((float)(originalDimension.getWidth()/newDimension.getWidth()));
-Debug.trace("reduce Y", originalDimension.getHeight()/newDimension.getHeight());
-			parameterBlock.add((float)(originalDimension.getHeight()/newDimension.getHeight()));
+//TODO del Debug.trace("reduce X", newDimension.getWidth()/originalDimension.getWidth());
+			parameterBlock.add((float)(newDimension.getWidth()/originalDimension.getWidth()));
+//TODO del Debug.trace("reduce Y", newDimension.getHeight()/originalDimension.getHeight());
+			parameterBlock.add((float)(newDimension.getHeight()/originalDimension.getHeight()));
 			parameterBlock.add(0.0f);
 			parameterBlock.add(0.0f);
-			parameterBlock.add(new InterpolationNearest());
+//TODO del			parameterBlock.add(new InterpolationNearest());
+			parameterBlock.add(new InterpolationBicubic2(1));
 			final PlanarImage newImage=JAI.create("scale", parameterBlock);
 			ImageIO.write(newImage, "JPEG", outputStream);	//write the image out as a JPEG TODO use a constant
 		}
