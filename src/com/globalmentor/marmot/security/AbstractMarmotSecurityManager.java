@@ -139,7 +139,7 @@ Debug.trace("new allowed:", allowed);
 	@param repository The repository that contains the resource.
 	@param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
 	@param permissionTypeURI The type of permission requested, indicated by permission type URI.
-	@return A {@link Boolean} value indicating whether this permission was allowed or denied for this user, or <code>null</code> if no access rule was specified for this user.
+	@return A {@link Boolean} value indicating whether this permission was allowed or denied for this user, or <code>null</code> if no access rule was specified for this user or the resource does not exist.
 	@exception NullPointerException if the given owner, repository, resource type, and/or permission URI is <code>null</code>.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
@@ -150,67 +150,70 @@ Debug.trace("trying to get allowed for resource", resourceURI);
 		{
 			return true;	//allow the owner to do anything
 		}
-		final RDFResource resource=checkInstance(repository, "Repository cannot be null.").getResourceDescription(checkInstance(resourceURI, "Resource URI cannot be null."));
 		Boolean allowed=null;	//we don't know whether this permission is allowed or not
-		final RDFResource accessResource=asResource(resource.getPropertyValue(MARMOT_NAMESPACE_URI, ACCESS_PROPERTY_NAME));	//get the marmot:access property value, if any
-Debug.trace("got access resource:", accessResource);
-		if(accessResource!=null)	//if we have access permissions defined
+		if(checkInstance(repository, "Repository cannot be null.").resourceExists(checkInstance(resourceURI, "Resource URI cannot be null.")))	//see if the resource exists; if not, consider it to have inherited access
 		{
-			final RDFResource accessTypeResource=getType(accessResource);	//get the type of access
-			final URI accessTypeURI=accessTypeResource.getReferenceURI();	//get the access type URI
-Debug.trace("access type URI:", accessTypeURI);
-			if(accessTypeURI!=null)	//if we know the access type URI
+			final RDFResource resource=repository.getResourceDescription(resourceURI);
+			final RDFResource accessResource=asResource(resource.getPropertyValue(MARMOT_NAMESPACE_URI, ACCESS_PROPERTY_NAME));	//get the marmot:access property value, if any
+	Debug.trace("got access resource:", accessResource);
+			if(accessResource!=null)	//if we have access permissions defined
 			{
-				final AccessType accessType=AccessType.getAccessType(accessTypeURI);	//see what access type is indicated
-				if(accessType!=null)	//if we recognize the access type, it's a premade access type that applies to all users
+				final RDFResource accessTypeResource=getType(accessResource);	//get the type of access
+				final URI accessTypeURI=accessTypeResource.getReferenceURI();	//get the access type URI
+	Debug.trace("access type URI:", accessTypeURI);
+				if(accessTypeURI!=null)	//if we know the access type URI
 				{
-Debug.trace("access type:", accessType);
-					final PermissionType permissionType=PermissionType.getPermissionType(permissionTypeURI);	//see if there was a known permission type requested
-					if(permissionType!=null)	//if a known permission type was requested
+					final AccessType accessType=AccessType.getAccessType(accessTypeURI);	//see what access type is indicated
+					if(accessType!=null)	//if we recognize the access type, it's a premade access type that applies to all users
 					{
-Debug.trace("permission type:", permissionType);
-						allowed=Boolean.valueOf(accessType.getDefaultAllowedPermissionTypes().contains(permissionType));	//indicate whether this permission is allowed by default; either way, this user was specified
-Debug.trace("new allowed:", allowed);
+	Debug.trace("access type:", accessType);
+						final PermissionType permissionType=PermissionType.getPermissionType(permissionTypeURI);	//see if there was a known permission type requested
+						if(permissionType!=null)	//if a known permission type was requested
+						{
+	Debug.trace("permission type:", permissionType);
+							allowed=Boolean.valueOf(accessType.getDefaultAllowedPermissionTypes().contains(permissionType));	//indicate whether this permission is allowed by default; either way, this user was specified
+	Debug.trace("new allowed:", allowed);
+						}
 					}
 				}
-			}
-			else	//if we don't know the access type, it must be a custom access type; see what it says about users TODO verify that this is a custom access type
-			{
-				
-			}
-Debug.trace("now ready to check access rules");
-				//see if access rules change the given allowance, if any, that we have
-			final RDFListResource accessRules=asListResource(accessResource);	//get the list of access rules
-			if(accessRules!=null)	//if there are access rules
-			{
-Debug.trace("got access rules of size", accessRules.size());
-				for(final RDFResource accessRule:accessRules)	//for each access rule
+				else	//if we don't know the access type, it must be a custom access type; see what it says about users TODO verify that this is a custom access type
 				{
-					for(final RDFObject principalObject:accessRule.getPropertyValues(MARMOT_NAMESPACE_URI, PRINCIPAL_PROPERTY_NAME))	//look at all principals defined for this rule
+					
+				}
+	Debug.trace("now ready to check access rules");
+					//see if access rules change the given allowance, if any, that we have
+				final RDFListResource accessRules=asListResource(accessResource);	//get the list of access rules
+				if(accessRules!=null)	//if there are access rules
+				{
+	Debug.trace("got access rules of size", accessRules.size());
+					for(final RDFResource accessRule:accessRules)	//for each access rule
 					{
-						if(principalObject instanceof RDFResource)	//if a principal resource specified for this rule
+						for(final RDFObject principalObject:accessRule.getPropertyValues(MARMOT_NAMESPACE_URI, PRINCIPAL_PROPERTY_NAME))	//look at all principals defined for this rule
 						{
-							final URI principalURI=((RDFResource)principalObject).getReferenceURI();	//get the principal reference URI
-							if(principalURI!=null && isPrincipalMatch(principalURI, user))	//if the current user is matched
+							if(principalObject instanceof RDFResource)	//if a principal resource specified for this rule
 							{
-								if(allowed==null)	//if no allowance has been specified
+								final URI principalURI=((RDFResource)principalObject).getReferenceURI();	//get the principal reference URI
+								if(principalURI!=null && isPrincipalMatch(principalURI, user))	//if the current user is matched
 								{
-									allowed=Boolean.FALSE;	//assume the permission is not allowed
-								}
-									//allow
-								for(final RDFObject allowObject:accessRule.getPropertyValues(MARMOT_NAMESPACE_URI, ALLOW_TYPE_NAME))	//for each access rule property
-								{
-									if(allowObject instanceof RDFResource)	//if the permission is a resource
+									if(allowed==null)	//if no allowance has been specified
 									{
-										final RDFResource allowResource=(RDFResource)allowObject;	//get the permission as a resource
-										if(permissionTypeURI.equals(allowResource.getReferenceURI()))	//if this permission is allowed
+										allowed=Boolean.FALSE;	//assume the permission is not allowed
+									}
+										//allow
+									for(final RDFObject allowObject:accessRule.getPropertyValues(MARMOT_NAMESPACE_URI, ALLOW_TYPE_NAME))	//for each access rule property
+									{
+										if(allowObject instanceof RDFResource)	//if the permission is a resource
 										{
-											allowed=Boolean.TRUE;	//the permission was allowed
-											break;	//stop looking for an allowance
+											final RDFResource allowResource=(RDFResource)allowObject;	//get the permission as a resource
+											if(permissionTypeURI.equals(allowResource.getReferenceURI()))	//if this permission is allowed
+											{
+												allowed=Boolean.TRUE;	//the permission was allowed
+												break;	//stop looking for an allowance
+											}
 										}
 									}
+										//TODO check deny
 								}
-									//TODO check deny
 							}
 						}
 					}
