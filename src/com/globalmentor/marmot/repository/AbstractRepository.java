@@ -6,21 +6,14 @@ import java.util.*;
 
 import com.garretwilson.event.*;
 import static com.garretwilson.io.OutputStreamUtilities.*;
-import static com.garretwilson.lang.ByteConstants.*;
-import static com.garretwilson.lang.CharSequenceUtilities.endsWith;
 
-import com.garretwilson.lang.ClassUtilities;
 import com.garretwilson.net.ResourceIOException;
+import com.garretwilson.net.ResourceStateException;
 import com.garretwilson.net.URIConstants;
 
 import static com.garretwilson.lang.ObjectUtilities.*;
-import static com.garretwilson.net.URIConstants.PATH_SEPARATOR;
 import static com.garretwilson.net.URIUtilities.*;
 import com.garretwilson.rdf.*;
-import com.garretwilson.rdf.rdfs.RDFSUtilities;
-import com.garretwilson.util.Debug;
-
-import static com.globalmentor.marmot.MarmotConstants.*;
 
 /**Abstract repository class the implements common features of a burrow.
 <p>Resource access methods should call {@link #checkResourceURI(URI)} as a security check to ensure the given URI is within the repository.</p>
@@ -291,12 +284,23 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 		throw new UnsupportedOperationException("Repository cannot yet delete its resources' properties");		
 	}
 	
-	
+	/**Creates an infinitely deep copy of a resource to another URI in this repository.
+	Any resource at the destination URI will be replaced.
+	This version delegates to {@link Repository#copyResource(URI, URI, boolean)}.
+	@param resourceURI The URI of the resource to be copied.
+	@param destinationURI The URI to which the resource should be copied.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error copying the resource.
+	*/
+	public void copyResource(final URI resourceURI, final URI destinationURI) throws ResourceIOException
+	{
+		copyResource(resourceURI, destinationURI, true);	//copy the resource, overwriting any resource at the destination
+	}
 	
 	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository.
 	Any resource at the destination URI will be replaced.
-	This version delegates to {@link #copyResource(URI, URI)} if the given repository is this repository.
-	Otherwise, this version performs a default copy operation.
+	This version delegates to {@link #copyResource(URI, Repository, URI, boolean)}.
 	@param resourceURI The URI of the resource to be copied.
 	@param destinationRepository The repository to which the resource should be copied, which may be this repository.
 	@param destinationURI The URI to which the resource should be copied.
@@ -306,11 +310,29 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	*/
 	public void copyResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException
 	{
+		copyResource(resourceURI, destinationRepository, destinationURI, true);	//copy the resource, overwriting any resource at the destination
+	}
+	
+	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository, overwriting any resource at the destionation only if requested.
+	This version delegates to {@link Repository#copyResource(URI, URI, boolean)} if the given repository is this repository.
+	Otherwise, this version performs a default copy operation.
+	@param resourceURI The URI of the resource to be copied.
+	@param destinationRepository The repository to which the resource should be copied, which may be this repository.
+	@param destinationURI The URI to which the resource should be copied.
+	@param overwrite <code>true</code> if any existing resource at the destination should be overwritten,
+		or <code>false</code> if an existing resource at the destination should cause an exception to be thrown.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error copying the resource.
+	@exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	*/
+	public void copyResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite) throws ResourceIOException
+	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
 		if(destinationRepository==this)	//if the resource is being copied to this repository
 		{
-			copyResource(resourceURI, destinationURI);	//delegate to the internal copy method
+			copyResource(resourceURI, destinationURI, overwrite);	//delegate to the internal copy method
 		}
 		else	//if the resource is being copied to another repository
 		{
@@ -321,6 +343,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 				final InputStream inputStream=getResourceInputStream(resourceURI);	//get an input stream to the source resource
 				try
 				{
+						//TODO create an overwrite-aware createResource() method
 					final OutputStream outputStream=destinationRepository.createResource(destinationURI, getResourceDescription(resourceURI));	//create the destination resource with the same description as the source resource, getting an output stream for storing the contents
 					try
 					{
@@ -344,10 +367,24 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 		}
 	}
 
+	/**Moves a resource to another URI in this repository.
+	Any resource at the destination URI will be replaced.
+	This version delegates to {@link Repository#moveResource(URI, URI, boolean)}.
+	@param resourceURI The URI of the resource to be moved.
+	@param destinationURI The URI to which the resource should be moved.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.
+	@exception ResourceIOException if there is an error moving the resource.
+	*/
+	public void moveResource(final URI resourceURI, final URI destinationURI) throws ResourceIOException
+	{
+		moveResource(resourceURI, destinationURI, true);	//move the resource, overwriting any resource at the destination
+	}
+
 	/**Moves a resource to the specified URI in the specified repository.
 	Any resource at the destination URI will be replaced.
-	This version delegates to {@link #moveResource(URI, URI)} if the given repository is this repository.
-	Otherwise, this version delegates to {@link #copyResource(URI, Repository, URI)} and then delegates to {@link #deleteRepository(URI)}.
+	This version delegates to {@link #moveResource(URI, Repository, URI, boolean)}.
 	@param resourceURI The URI of the resource to be moved.
 	@param destinationRepository The repository to which the resource should be moved, which may be this repository.
 	@param destinationURI The URI to which the resource should be moved.
@@ -358,11 +395,30 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	*/
 	public void moveResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException
 	{
+		moveResource(resourceURI, destinationRepository, destinationURI, true);	//move the resource, overwriting any resource at the destination
+	}
+	
+	/**Moves a resource to the specified URI in the specified repository, overwriting any resource at the destionation only if requested.
+	This version delegates to {@link Repository#moveResource(URI, URI, boolean)} if the given repository is this repository.
+	Otherwise, this version delegates to {@link Repository#copyResource(URI, Repository, URI, boolean)} and then delegates to {@link Repository#deleteRepository(URI)}.
+	@param resourceURI The URI of the resource to be moved.
+	@param destinationRepository The repository to which the resource should be moved, which may be this repository.
+	@param destinationURI The URI to which the resource should be moved.
+	@param overwrite <code>true</code> if any existing resource at the destination should be overwritten,
+		or <code>false</code> if an existing resource at the destination should cause an exception to be thrown.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.	
+	@exception ResourceIOException if there is an error moving the resource.
+	@exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	*/
+	public void moveResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite) throws ResourceIOException
+	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
 		if(destinationRepository==this)	//if the resource is being moved to this repository
 		{
-			moveResource(resourceURI, destinationURI);	//delegate to the internal move method
+			moveResource(resourceURI, destinationURI, overwrite);	//delegate to the internal move method
 		}
 		else	//if the resource is being moved to another repository
 		{
@@ -370,7 +426,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 			{
 				throw new IllegalArgumentException("Cannot move repository base URI "+resourceURI);
 			}
-			copyResource(resourceURI, destinationRepository, destinationURI);	//copy the resource to the other repository
+			copyResource(resourceURI, destinationRepository, destinationURI, overwrite);	//copy the resource to the other repository
 			deleteResource(resourceURI);	//delete the moved resource
 		}
 	}

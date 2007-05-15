@@ -5,6 +5,7 @@ import java.net.URI;
 import java.util.List;
 
 import com.garretwilson.net.ResourceIOException;
+import com.garretwilson.net.ResourceStateException;
 import com.garretwilson.rdf.RDFPropertyValuePair;
 import com.garretwilson.rdf.RDFResource;
 
@@ -252,6 +253,19 @@ public interface Repository
 	*/
 	public void copyResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException;
 
+	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository, overwriting any resource at the destionation only if requested.
+	@param resourceURI The URI of the resource to be copied.
+	@param destinationRepository The repository to which the resource should be copied, which may be this repository.
+	@param destinationURI The URI to which the resource should be copied.
+	@param overwrite <code>true</code> if any existing resource at the destination should be overwritten,
+		or <code>false</code> if an existing resource at the destination should cause an exception to be thrown.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error copying the resource.
+	@exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	*/
+	public void copyResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite) throws ResourceIOException;
+
 	/**Creates an infinitely deep copy of a resource to another URI in this repository.
 	Any resource at the destination URI will be replaced.
 	@param resourceURI The URI of the resource to be copied.
@@ -261,6 +275,18 @@ public interface Repository
 	@exception ResourceIOException if there is an error copying the resource.
 	*/
 	public void copyResource(final URI resourceURI, final URI destinationURI) throws ResourceIOException;
+
+	/**Creates an infinitely deep copy of a resource to another URI in this repository, overwriting any resource at the destionation only if requested. 
+	@param resourceURI The URI of the resource to be copied.
+	@param destinationURI The URI to which the resource should be copied.
+	@param overwrite <code>true</code> if any existing resource at the destination should be overwritten,
+		or <code>false</code> if an existing resource at the destination should cause an exception to be thrown.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error copying the resource.
+	@exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	*/
+	public void copyResource(final URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException;
 
 	/**Moves a resource to the specified URI in the specified repository.
 	Any resource at the destination URI will be replaced.
@@ -274,15 +300,42 @@ public interface Repository
 	*/
 	public void moveResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException;
 
+	/**Moves a resource to the specified URI in the specified repository, overwriting any resource at the destionation only if requested.
+	@param resourceURI The URI of the resource to be moved.
+	@param destinationRepository The repository to which the resource should be moved, which may be this repository.
+	@param destinationURI The URI to which the resource should be moved.
+	@param overwrite <code>true</code> if any existing resource at the destination should be overwritten,
+		or <code>false</code> if an existing resource at the destination should cause an exception to be thrown.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.	
+	@exception ResourceIOException if there is an error moving the resource.
+	@exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	*/
+	public void moveResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite) throws ResourceIOException;
+
 	/**Moves a resource to another URI in this repository.
 	Any resource at the destination URI will be replaced.
 	@param resourceURI The URI of the resource to be moved.
 	@param destinationURI The URI to which the resource should be moved.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.	
+	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.
 	@exception ResourceIOException if there is an error moving the resource.
 	*/
 	public void moveResource(final URI resourceURI, final URI destinationURI) throws ResourceIOException;
+
+	/**Moves a resource to another URI in this repository, overwriting any resource at the destionation only if requested.
+	@param resourceURI The URI of the resource to be moved.
+	@param destinationURI The URI to which the resource should be moved.
+	@param overwrite <code>true</code> if any existing resource at the destination should be overwritten,
+		or <code>false</code> if an existing resource at the destination should cause an exception to be thrown.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.
+	@exception ResourceIOException if there is an error moving the resource.
+	@exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	*/
+	public void moveResource(final URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException;
 
 }
