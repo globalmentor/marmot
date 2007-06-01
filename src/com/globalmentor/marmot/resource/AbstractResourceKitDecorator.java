@@ -5,64 +5,60 @@ import java.net.URI;
 
 import javax.mail.internet.ContentType;
 
-import com.garretwilson.rdf.*;
+import static com.garretwilson.lang.ObjectUtilities.*;
+import com.garretwilson.rdf.RDFResource;
 
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.PermissionType;
 
-/**Support for working with a resource in a repository.
+/**A resource kit that decorates another resource kit.
 @author Garret Wilson
 */
-public interface ResourceKit
+public abstract class AbstractResourceKitDecorator implements ResourceKit
 {
 
-	/**An empty array of extensions.*/
-//TODO del if not needed	public final static String[] NO_EXTENSIONS=new String[] {};
+	/**The decorated resource kit.*/
+	private final ResourceKit resourceKit;
 
-	/**An empty array of content types.*/
-	public final static ContentType[] NO_CONTENT_TYPES=new ContentType[] {};
+		/**@return The decorated resource kit.*/
+		protected ResourceKit getResourceKit() {return resourceKit;}
 
-	/**An empty array of resource type URIs.*/
-	public final static URI[] NO_RESOURCE_TYPES=new URI[] {};
-
-	/**Returns the default file extensions used for the resource URI.
-	@return The default file extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
+	/**Decorated resource kit constructor.
+	@param resourceKit The resource kit to decorate.
+	@exception NullPointerException if the given resource kit is <code>null</code>.
 	*/
-//TODO del if not needed	public String getDefaultExtension();
+	public AbstractResourceKitDecorator(final ResourceKit resourceKit)
+	{
+		this.resourceKit=checkInstance(resourceKit, "Resource kit cannot be null.");
+	}
+		
+	/**@return The Marmot instance with which this resource kit is associated, or <code>null</code> if this resource kit has not yet been installed.*/
+	public MarmotSession<?> getMarmotSession() {return getResourceKit().getMarmotSession();}
 
-	/**Returns the file extensions supported for the resource URI.
-	@return A non-<code>null</code> array of the extensions this resource kit supports.
+	/**Sets the Marmot instance with which this resource kit is associated.
+	@param marmot The Marmot instance with which the resource kit should be associated, or <code>null</code> if the resource kit is not installed.
 	*/
-//TODO del if not needed	public String[] getSupportedExtensions();
-
-	/**@return The Marmot session with which this resource kit is associated, or <code>null</code> if this resource kit has not yet been installed.*/
-	public MarmotSession<?> getMarmotSession();
-
-	/**Sets the Marmot session with which this resource kit is associated.
-	@param marmotSession The Marmot session with which the resource kit should be associated, or <code>null</code> if the resource kit is not installed.
-	@exception IllegalStateException if this resource kit has already been installed in another Marmot session.
-	*/
-	public void setMarmotSession(final MarmotSession<?> marmotSession);
+	public void setMarmotSession(final MarmotSession<?> marmot) {getResourceKit().setMarmotSession(marmot);}
 
 	/**Returns the content types supported.
 	This is the primary method of determining which resource kit to use for a given resource.
 	@return A non-<code>null</code> array of the content types this resource kit supports.
 	*/
-	public ContentType[] getSupportedContentTypes();
+	public ContentType[] getSupportedContentTypes() {return getResourceKit().getSupportedContentTypes();}
 
 	/**Returns the resource types supported.
 	This is the secondary method of determining which resource kit to use for a given resource.
 	@return A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
 	*/
-	public URI[] getSupportedResourceTypes();
+	public URI[] getSupportedResourceTypes() {return getResourceKit().getSupportedResourceTypes();}
 	
 	/**Initializes a resource description, creating whatever properties are appropriate.
 	@param repository The repository to use to access the resource content, if needed.
 	@param resource The resource description to initialize.
 	@exception IOException if there is an error accessing the repository.
 	*/
-	public void initializeResourceDescription(final Repository repository, final RDFResource resource) throws IOException;
+	public void initializeResourceDescription(final Repository repository, final RDFResource resource) throws IOException {getResourceKit().initializeResourceDescription(repository, resource);}
 
 	/**Returns this resource kit's installed filter based upon its ID.
 	@param filterID The ID of the filter to return.
@@ -92,7 +88,7 @@ public interface ResourceKit
 	@return <code>true</code> if access to the given aspect is allowed using the given permission, else <code>false</code>.
 	@exception NullPointerException if the given aspect ID and/or permission type is <code>null</code>.
 	*/
-	public boolean isAspectAllowed(final String aspectID, final PermissionType permissionType);
+	public boolean isAspectAllowed(final String aspectID, final PermissionType permissionType) {return getResourceKit().isAspectAllowed(aspectID, permissionType);}
 
 	/**Returns the permissions that 
 	This prevents aspects from being accessed at lower permissions.
@@ -110,6 +106,6 @@ public interface ResourceKit
 	@exception NullPointerException if the given aspect ID is <code>null</code>.
 	@exception IllegalArgumentException if the given aspect ID does not represent a valid aspect.
 	*/
-	public ResourceFilter[] getAspectFilters(final String aspectID);
+	public ResourceFilter[] getAspectFilters(final String aspectID) {return getResourceKit().getAspectFilters(aspectID);}
 
 }

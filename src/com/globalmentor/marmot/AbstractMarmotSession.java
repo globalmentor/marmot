@@ -2,26 +2,23 @@ package com.globalmentor.marmot;
 
 import java.net.*;
 import java.util.*;
-import static java.util.Collections.*;
 import java.util.concurrent.*;
 
 import javax.mail.internet.ContentType;
+
 import com.garretwilson.rdf.*;
 import com.garretwilson.rdf.xpackage.*;
-import com.garretwilson.util.CollectionMap;
-import com.garretwilson.util.CopyOnWriteArrayListConcurrentHashMap;
-import com.garretwilson.util.CollectionMap;
-import com.globalmentor.marmot.repository.Repository;
-import com.globalmentor.marmot.resource.Presentation;
-import com.globalmentor.marmot.resource.ResourceKit;
+import com.garretwilson.util.*;
+
+import com.globalmentor.marmot.repository.*;
+import com.globalmentor.marmot.resource.*;
 import com.globalmentor.marmot.security.*;
 
 /**A Marmot session with installed resource kits.
-@param <P> The type of presentation supported by this session.
 @param <RK> The type of resource kits supported by this session.
 @author Garret Wilson
 */
-public abstract class AbstractMarmotSession<P extends Presentation, RK extends ResourceKit<P>> implements MarmotSession<P, RK>
+public abstract class AbstractMarmotSession<RK extends ResourceKit> implements MarmotSession<RK>
 {
 
 	/**The installed Marmot security manager.*/
@@ -41,24 +38,20 @@ public abstract class AbstractMarmotSession<P extends Presentation, RK extends R
 	/**The map of resource kit lists, keyed to supported resource type URIs.*/
 	private CollectionMap<URI, RK, List<RK>> resourceTypeResourceKitsMap=new CopyOnWriteArrayListConcurrentHashMap<URI, RK>();
 
-	/**The default resource kit to use if a specific resource kit cannot be found, or <code>null</code> if there is no default resource kit..*/
-	private final RK defaultResourceKit;
+	/**The default resource kit to use if a specific resource kit cannot be found, or <code>null</code> if there is no default resource kit.*/
+	private RK defaultResourceKit=null;
 
-		/**@return The default resource kit to use if a specific resource kit cannot be found, or <code>null</code> if there is no default resource kit..*/
-		protected RK getDefaultResourceKit() {return defaultResourceKit;}
+		/**@return The default resource kit to use if a specific resource kit cannot be found, or <code>null</code> if there is no default resource kit.*/
+		public RK getDefaultResourceKit() {return defaultResourceKit;}
+
+		/**Sets the default resource kit.
+		@param defaultResourceKit The default resource kit if a specific resource kit cannot be found, or <code>null</code> if there is no default resource kit.
+		*/
+		protected void setDefaultResourceKit(final RK defaultResourceKit) {this.defaultResourceKit=defaultResourceKit;}
 
 	/**Default constructor.*/
 	public AbstractMarmotSession()
 	{
-		this(null);	//construct the resource kit manager with no default resource kit
-	}
-
-	/**Default resource kit constructor.
-	@param defaultResourceKit The default resource kit if a specific resource kit cannot be found, or <code>null</code> if there is no default resource kit.
-	*/
-	public AbstractMarmotSession(final RK defaultResourceKit)
-	{
-		this.defaultResourceKit=defaultResourceKit;	//save the default resource kit
 	}
 
 	/**Updates the resource kit maps based upon the currently installed resources.
@@ -90,29 +83,49 @@ public abstract class AbstractMarmotSession<P extends Presentation, RK extends R
 	*/
 	public void installResourceKit(final RK resourceKit)
 	{
-		if(resourceKit.getMarmot()!=null)	//if the resource kit is already installed
+		installResourceKit(resourceKit, false);	//install the resource kit, but not as the default resource kit
+	}
+
+	/**Registers a resource kit with the session, specifying if the resource kit should be considered the default resource kit.
+	If this resource kit is specified as the default, it will replace any resource kit previously specified as the default.
+	@param resourceKit The resource kit to register.
+	@param isDefault Whether the resource kit should be the default.
+	@exception IllegalStateException if the resource kit is already installed.
+	*/
+	public void installResourceKit(final RK resourceKit, final boolean isDefault)
+	{
+		if(resourceKit.getMarmotSession()!=null)	//if the resource kit is already installed
 		{
 			throw new IllegalStateException("Resource kit already intalled.");
 		}
 		assert !resourceKits.contains(resourceKit) : "Marmot contains unassigned resource kit.";
-		resourceKit.setMarmot(this);	//tell the resource kit its owner
+		resourceKit.setMarmotSession(this);	//tell the resource kit its owner
 		resourceKits.add(resourceKit);	//add the resource kit
+		if(isDefault)	//if this resource kit should be the default
+		{
+			setDefaultResourceKit(resourceKit);	//set the resource kit as the default
+		}
 		updateResourceKits();	//update the resource kits
 	}
 
 	/**Unregisters a resource kit with the session.
+	If this resource kit was previously set as the default, there will no longer be a default resource kit. 
 	@param resourceKit The resource kit to unregister.
 	@exception IllegalStateException if the resource kit is not installed in this session.
 	*/
 	public void uninstallResourceKit(final RK resourceKit)
 	{
-		if(resourceKit.getMarmot()!=this)	//if the resource kit is not installed
+		if(resourceKit.getMarmotSession()!=this)	//if the resource kit is not installed
 		{
 			throw new IllegalStateException("Resource kit not intalled.");			
 		}
 		assert resourceKits.contains(resourceKit) : "Marmot does not contain assigned resource kit.";
+		if(getDefaultResourceKit()==resourceKit)	//if this is our default resource kit
+		{
+			setDefaultResourceKit(null);	//show that we have no default resource kit
+		}
 		resourceKits.remove(resourceKit);	//remove the resource kit
-		resourceKit.setMarmot(null);	//tell the resource kit it has no owner
+		resourceKit.setMarmotSession(null);	//tell the resource kit it has no owner
 		updateResourceKits();	//update the resource kits		
 	}
 

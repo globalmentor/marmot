@@ -1,26 +1,16 @@
 package com.globalmentor.marmot.resource.image;
 
 import static com.garretwilson.io.ContentTypeConstants.*;
-import static com.garretwilson.io.FileConstants.*;
-
-import java.io.IOException;
-import java.net.URI;
 
 import javax.mail.internet.ContentType;
 
 import net.marmox.resource.image.ImageScaleFilter;
 
 import static com.garretwilson.lang.EnumUtilities.*;
-import com.garretwilson.rdf.RDFResource;
-import static com.garretwilson.rdf.xpackage.XPackageUtilities.*;
 import static com.garretwilson.lang.ObjectUtilities.*;
 
-import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.*;
 import com.globalmentor.marmot.security.PermissionType;
-
-import static com.guiseframework.GuiseResourceConstants.*;
-import static com.guiseframework.theme.Theme.*;
 
 /**Resource kit for handling images.
 <p>Supported media types:</p>
@@ -29,10 +19,9 @@ import static com.guiseframework.theme.Theme.*;
 	<li><code>image/jpeg</code></li>
 	<li><code>image/png</code></li>
 </ul>
-@param <P> The type of presentation supported by this resource kit.
 @author Garret Wilson
 */
-public class ImageResourceKit<P extends Presentation> extends AbstractResourceKit<P>
+public class ImageResourceKit extends AbstractResourceKit
 {
 
 	/**Available images aspects.*/
@@ -99,13 +88,10 @@ public class ImageResourceKit<P extends Presentation> extends AbstractResourceKi
 	}
 */
 
-	/**Presentation constructor.
-	@param presentation The presentation implementation for supported resources.
-	@exception NullPointerException if the given presentation is <code>null</code>.
-	*/
-	public ImageResourceKit(final P presentation)
+	/**Default constructor.*/
+	public ImageResourceKit()
 	{
-		super(presentation, GLYPH_IMAGE, new ContentType(IMAGE, GIF_SUBTYPE, null), new ContentType(IMAGE, JPEG_SUBTYPE, null), new ContentType(IMAGE, PNG_SUBTYPE, null));
+		super(new ContentType(IMAGE, GIF_SUBTYPE, null), new ContentType(IMAGE, JPEG_SUBTYPE, null), new ContentType(IMAGE, PNG_SUBTYPE, null));
 	}
 
 	/**Initializes a resource description, creating whatever properties are appropriate.

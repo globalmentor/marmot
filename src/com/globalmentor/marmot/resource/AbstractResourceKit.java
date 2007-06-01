@@ -2,34 +2,49 @@ package com.globalmentor.marmot.resource;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.mail.internet.ContentType;
 
 import static com.garretwilson.lang.ObjectUtilities.*;
+
+import com.garretwilson.lang.ObjectUtilities;
 import com.garretwilson.rdf.RDFResource;
+
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.PermissionType;
 
 /**Abstract implementation of a resource kit.
-@param <P> The type of presentation supported by this resource kit.
 @author Garret Wilson
 */
-public abstract class AbstractResourceKit<P extends Presentation> implements ResourceKit<P>
+public abstract class AbstractResourceKit implements ResourceKit
 {
 
-	/**The Marmot instance with which this resource kit is associated.*/
-	private MarmotSession<P, ? extends ResourceKit<P>> marmot=null;
+	/**The Marmot session with which this resource kit is associated.*/
+	private MarmotSession<?> marmotSession=null;
 
-		/**@return The Marmot instance with which this resource kit is associated, or <code>null</code> if this resource kit has not yet been installed.*/
-		public MarmotSession<P, ? extends ResourceKit<P>> getMarmot() {return marmot;}
+		/**@return The Marmot session with which this resource kit is associated, or <code>null</code> if this resource kit has not yet been installed.*/
+		public MarmotSession<?> getMarmotSession() {return marmotSession;}
 
-		/**Sets the Marmot instance with which this resource kit is associated.
-		@param marmot The Marmot instance with which the resource kit should be assiated, or <code>null</code> if the resource kit is not installed.
+		/**Sets the Marmot session with which this resource kit is associated.
+		@param marmotSession The Marmot session with which the resource kit should be associated, or <code>null</code> if the resource kit is not installed.
+		@exception IllegalStateException if this resource kit has already been installed in another Marmot session.
 		*/
-		public void setMarmot(final MarmotSession<P, ? extends ResourceKit<P>> marmot) {this.marmot=marmot;}
+		public void setMarmotSession(final MarmotSession<?> marmotSession)
+		{
+			final MarmotSession<?> oldMarmotSession=this.marmotSession;	//get the current Marmot session
+			if(marmotSession!=null)	//if this resource kit is being installed
+			{
+				if(oldMarmotSession!=null && oldMarmotSession!=this)	//if we're already installed in another session
+				{
+					throw new IllegalStateException("Resource kit already installed in session "+oldMarmotSession);
+				}
+			}
+			if(oldMarmotSession!=marmotSession)	//if the value is really changing (compare identity, because for sessions the instance matters)
+			{
+				this.marmotSession=marmotSession;	//change the value
+			}
+		}
 
 	/**A non-<code>null</code> array of the content types this resource kit supports.*/
 	private final ContentType[] supportedContentTypes;
@@ -81,91 +96,32 @@ public abstract class AbstractResourceKit<P extends Presentation> implements Res
 		}
 */
 
-	/**Returns the URI of an open icon representing the given resource.
-	This version delegates to {@link #getLeafTreeNodeIconURI(Repository, RDFResource)}.
-	@param repository The repository in which the resource resides.
-	@param resource The resource for which an icon should be returned.
-	@return The URI of an icon to display for an open tree node for this resource, or <code>null</code> if no icon URI is available.
-	*/
-	public URI getOpenTreeNodeIconURI(final Repository repository, final RDFResource resource)
-	{
-		return getLeafTreeNodeIconURI(repository, resource);
-	}
-
-	/**Returns the URI of a closed icon representing the given resource.
-	This version delegates to {@link #getLeafTreeNodeIconURI(Repository, RDFResource)}.
-	@param repository The repository in which the resource resides.
-	@param resource The resource for which an icon should be returned.
-	@return The URI of an icon to display for a closed tree node for this resource, or <code>null</code> if no icon URI is available.
-	*/
-	public URI getClosedTreeNodeIconURI(final Repository repository, final RDFResource resource)
-	{
-		return getLeafTreeNodeIconURI(repository, resource);
-	}
-
-	/**Returns the URI of a leaf icon representing the given resource.
-	This version delegates to {@link #getIconURI(Repository, RDFResource)}.
-	@param repository The repository in which the resource resides.
-	@param resource The resource for which an icon should be returned.
-	@return The URI of an icon to display for a leaf node for this resource, or <code>null</code> if no icon URI is available.
-	*/
-	public URI getLeafTreeNodeIconURI(final Repository repository, final RDFResource resource)
-	{
-		return getIconURI(repository, resource);
-	}
-
-	/**Returns the URI of a general icon representing the given resource.
-	This version delegates to {@link #getIconURI()}.
-	@param repository The repository in which the resource resides.
-	@param resource The resource for which an icon should be returned.
-	@return The URI of a general icon representing the given resource, or <code>null</code> if no icon URI is available.
-	*/
-	public URI getIconURI(final Repository repository, final RDFResource resource)
-	{
-		return getIconURI();
-	}
-
-	/**The URI of a general icon representing this resource kit, or <code>null</code> if no icon URI is available.*/
-	private final URI iconURI;
-	
-	/**Returns the URI of a general icon representing this resource kit.
-	@return The URI of a general icon representing this resource kit, or <code>null</code> if no icon URI is available.
-	*/
-	public URI getIconURI() {return iconURI;}
-
-	/**Presentation, icon, and content types constructor.
-	@param presentation The presentation support for this resource kit.
-	@param iconURI The URI of a general icon representing this resource kit, or <code>null</code> if no icon URI is available.
+	/**Content types constructor.
 	@param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
-	@exception NullPointerException if the presentation, icon URI and/or the supported content types array is <code>null</code>.
+	@exception NullPointerException if the supported content types array is <code>null</code>.
 	*/
-	public AbstractResourceKit(final P presentation, final URI iconURI, final ContentType... supportedContentTypes)
+	public AbstractResourceKit(final ContentType... supportedContentTypes)
 	{
-		this(presentation, iconURI, supportedContentTypes, new URI[]{});	//construct the class with no supported resource types
+		this(supportedContentTypes, new URI[]{});	//construct the class with no supported resource types
 	}
 
-	/**Presentation, icon, and resource types constructor.
-	@param presentation The presentation support for this resource kit.
-	@param iconURI The URI of a general icon representing this resource kit, or <code>null</code> if no icon URI is available.
+	/**Resource types constructor.
 	@param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
-	@exception NullPointerException if the presentation, icon URI and/or the supported resource types array is <code>null</code>.
+	@exception NullPointerException if the supported resource types array is <code>null</code>.
 	*/
-	public AbstractResourceKit(final P presentation, final URI iconURI, final URI... supportedResourceTypes)
+	public AbstractResourceKit(final URI... supportedResourceTypes)
 	{
-		this(presentation, iconURI, new ContentType[]{}, supportedResourceTypes);	//construct the class with no supported content types
+		this(new ContentType[]{}, supportedResourceTypes);	//construct the class with no supported content types
 	}
 
-	/**Presentation, icon, content types, and resource types constructor.
+	/**Content types and resource types constructor.
 	@param presentation The presentation support for this resource kit.
-	@param iconURI The URI of a general icon representing this resource kit, or <code>null</code> if no icon URI is available.
 	@param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
 	@param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
-	@exception NullPointerException if the presentation, icon URI, the supported content types array, and/or the supported resource types array is <code>null</code>.
+	@exception NullPointerException if the supported content types array and/or the supported resource types array is <code>null</code>.
 	*/
-	public AbstractResourceKit(final P presentation, final URI iconURI, final ContentType[] supportedContentTypes, final URI[] supportedResourceTypes)
+	public AbstractResourceKit(final ContentType[] supportedContentTypes, final URI[] supportedResourceTypes)
 	{
-		this.presentation=checkInstance(presentation, "Presentation cannot be null.");
-		this.iconURI=checkInstance(iconURI, "Icon URI cannot be null.");
 		this.supportedContentTypes=checkInstance(supportedContentTypes, "Supported content types array cannot be null.");
 		this.supportedResourceTypes=checkInstance(supportedResourceTypes, "Supported resource types array cannot be null.");		
 	}
@@ -179,12 +135,6 @@ public abstract class AbstractResourceKit<P extends Presentation> implements Res
 	public void initializeResourceDescription(final Repository repository, final RDFResource resource) throws IOException
 	{
 	}
-
-	/**The presentation implementation for supported resources.*/
-	private final P presentation;
-	
-		/**@return The presentation implementation for supported resources.*/
-		public P getPresentation() {return presentation;}
 
 	/**Determines whether the given permission is appropriate for accessing the identified aspect.
 	This prevents aspects from being accessed at lower permissions.
