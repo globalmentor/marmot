@@ -25,6 +25,7 @@ import static com.garretwilson.net.http.webdav.WebDAVUtilities.*;
 import static com.garretwilson.rdf.dublincore.DCUtilities.*;
 import static com.garretwilson.rdf.xpackage.FileOntologyConstants.*;
 import static com.garretwilson.rdf.xpackage.FileOntologyUtilities.*;
+import static com.garretwilson.rdf.xpackage.MIMEOntologyConstants.*;
 import static com.garretwilson.rdf.xpackage.MIMEOntologyUtilities.*;
 
 import com.garretwilson.io.FileUtilities;
@@ -1036,6 +1037,10 @@ public class WebDAVRepository extends AbstractRepository
 				}
 				
 			}
+		}
+		if(isCollection)	//if this is a collection
+		{
+			resource.removeProperties(MIME_ONTOLOGY_NAMESPACE_URI, CONTENT_TYPE_PROPERTY_NAME);	//remove any content type properties (Apache mod_dav adds a "httpd/unix-directory" pseudo MIME type for collections, for example)
 		}
 		
 			//TODO fix filename encoding/decoding---there's no way to know what operating system the server is using
