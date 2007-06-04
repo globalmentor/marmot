@@ -145,7 +145,7 @@ Debug.trace("new allowed:", allowed);
 	*/
 	protected Boolean getAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final URI permissionTypeURI) throws ResourceIOException
 	{
-Debug.trace("trying to get allowed for resource", resourceURI);
+//Debug.trace("trying to get allowed for resource", resourceURI);
 		if(checkInstance(owner, "Owner cannot be null.").equals(user))	//if the user is the owner
 		{
 			return true;	//allow the owner to do anything
@@ -155,24 +155,24 @@ Debug.trace("trying to get allowed for resource", resourceURI);
 		{
 			final RDFResource resource=repository.getResourceDescription(resourceURI);
 			final RDFResource accessResource=asResource(resource.getPropertyValue(MARMOT_NAMESPACE_URI, ACCESS_PROPERTY_NAME));	//get the marmot:access property value, if any
-	Debug.trace("got access resource:", accessResource);
+//	Debug.trace("got access resource:", accessResource);
 			if(accessResource!=null)	//if we have access permissions defined
 			{
 				final RDFResource accessTypeResource=getType(accessResource);	//get the type of access
 				final URI accessTypeURI=accessTypeResource.getReferenceURI();	//get the access type URI
-	Debug.trace("access type URI:", accessTypeURI);
+//	Debug.trace("access type URI:", accessTypeURI);
 				if(accessTypeURI!=null)	//if we know the access type URI
 				{
 					final AccessType accessType=AccessType.getAccessType(accessTypeURI);	//see what access type is indicated
 					if(accessType!=null)	//if we recognize the access type, it's a premade access type that applies to all users
 					{
-	Debug.trace("access type:", accessType);
+//	Debug.trace("access type:", accessType);
 						final PermissionType permissionType=PermissionType.getPermissionType(permissionTypeURI);	//see if there was a known permission type requested
 						if(permissionType!=null)	//if a known permission type was requested
 						{
-	Debug.trace("permission type:", permissionType);
+//	Debug.trace("permission type:", permissionType);
 							allowed=Boolean.valueOf(accessType.getDefaultAllowedPermissionTypes().contains(permissionType));	//indicate whether this permission is allowed by default; either way, this user was specified
-	Debug.trace("new allowed:", allowed);
+//	Debug.trace("new allowed:", allowed);
 						}
 					}
 				}
@@ -180,12 +180,12 @@ Debug.trace("trying to get allowed for resource", resourceURI);
 				{
 					
 				}
-	Debug.trace("now ready to check access rules");
+//	Debug.trace("now ready to check access rules");
 					//see if access rules change the given allowance, if any, that we have
 				final RDFListResource accessRules=asListResource(accessResource);	//get the list of access rules
 				if(accessRules!=null)	//if there are access rules
 				{
-	Debug.trace("got access rules of size", accessRules.size());
+//	Debug.trace("got access rules of size", accessRules.size());
 					for(final RDFResource accessRule:accessRules)	//for each access rule
 					{
 						for(final RDFObject principalObject:accessRule.getPropertyValues(MARMOT_NAMESPACE_URI, PRINCIPAL_PROPERTY_NAME))	//look at all principals defined for this rule
@@ -220,7 +220,7 @@ Debug.trace("trying to get allowed for resource", resourceURI);
 				}
 			}
 		}
-Debug.trace("ready to return allowed", allowed);
+//Debug.trace("ready to return allowed", allowed);
 		return allowed;	//return the allowance we found, if any
 	}
 
