@@ -99,6 +99,8 @@ public class MarmotConstants
 	public final static String MODIFY_PROPERTIES_PERMISSION_TYPE_NAME="ModifyPropertiesPermission";
 	/**The principal may change the permissions describing how other principals access the resource. The local name of <code>marmot:ModifyAccessPermission</code>.*/
 	public final static String MODIFY_ACCESS_PERMISSION_TYPE_NAME="ModifyAccessPermission";
+	/**The principal may rename the resource. The local name of <code>marmot:RenamePermission</code>.*/
+	public final static String RENAME_PERMISSION_TYPE_NAME="RenamePermission";
 	/**The principal may remove the resource, including collections. The local name of <code>marmot:DeletePermission</code>.*/
 	public final static String DELETE_PERMISSION_TYPE_NAME="DeletePermission";
 

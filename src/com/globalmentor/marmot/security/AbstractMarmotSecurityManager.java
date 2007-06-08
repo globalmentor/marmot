@@ -32,6 +32,8 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 	protected final static URI DELETE_PERMISSION_TYPE_URI=createReferenceURI(MARMOT_NAMESPACE_URI, DELETE_PERMISSION_TYPE_NAME);
 	/**The URI for the discover permission type.*/
 	protected final static URI DISCOVER_PERMISSION_TYPE_URI=createReferenceURI(MARMOT_NAMESPACE_URI, DISCOVER_PERMISSION_TYPE_NAME);
+	/**The URI for the rename permission type.*/
+	protected final static URI RENAME_PERMISSION_TYPE_URI=createReferenceURI(MARMOT_NAMESPACE_URI, RENAME_PERMISSION_TYPE_NAME);
 	/**The URI for the write permission type.*/
 	protected final static URI WRITE_PERMISSION_TYPE_URI=createReferenceURI(MARMOT_NAMESPACE_URI, WRITE_PERMISSION_TYPE_NAME);
 
@@ -53,7 +55,8 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 
 	/**Determines whether a given user has permission to perform some action in relation to a given repository and resource.
 	This method is additive; if a superclass doesn't find a permission, a subclass may be able to add the permission.
-	This implementation allows all permissions if the user is the owner.
+	Deleting and renaming the resource repository is never allowed.
+	This implementation allows all permissions in all other circumstances if the user is the owner.
 	@param owner The principal that owns the repository.
 	@param repository The repository that contains the resource.
 	@param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
@@ -64,6 +67,14 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 	*/
 	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final URI permissionTypeURI) throws ResourceIOException
 	{
+		if(repository.getPublicRepositoryURI().equals(resourceURI))	//if this is the repository URI
+		{
+			if(DELETE_PERMISSION_TYPE_URI.equals(permissionTypeURI) || RENAME_PERMISSION_TYPE_URI.equals(permissionTypeURI))	//if they are asking to delete or rename the repository
+			{
+				return false;	//the repository cannot be deleted or renamed
+			}
+			//TODO add rename permission check
+		}
 		final Boolean allowed=getAllowed(owner, repository, resourceURI, user, permissionTypeURI);	//get the allowance, if any
 		if(allowed!=null)	//if a permission was explicitly specified
 		{

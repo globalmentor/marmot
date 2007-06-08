@@ -42,6 +42,7 @@ public enum AccessType
 			PermissionType.EXECUTE,
 			PermissionType.READ,
 			PermissionType.MODIFY_PROPERTIES,
+			PermissionType.RENAME,
 			PermissionType.WRITE),
 	
 	PUBLIC(createReferenceURI(MARMOT_NAMESPACE_URI, PUBLIC_ACCESS_TYPE_NAME),
@@ -54,6 +55,7 @@ public enum AccessType
 			PermissionType.MODIFY_PROPERTIES,
 			PermissionType.MODIFY_ACCESS,
 			PermissionType.WRITE,
+			PermissionType.RENAME,
 			PermissionType.DELETE),
 	
 	CUSTOM(createReferenceURI(MARMOT_NAMESPACE_URI, CUSTOM_ACCESS_TYPE_NAME));
