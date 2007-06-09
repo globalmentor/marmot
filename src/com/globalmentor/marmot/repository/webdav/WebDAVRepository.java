@@ -401,7 +401,6 @@ public class WebDAVRepository extends AbstractRepository
 	*/
 	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws ResourceIOException
 	{
-//	TODO del Debug.traceStack("!!!!!!!!getting child resource descriptions for resource", resourceURI);
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
 		if(depth!=0)	//a depth of zero means don't get child resources
@@ -423,14 +422,11 @@ public class WebDAVRepository extends AbstractRepository
 				final RDF rdf=new RDF();	//create a new RDF data model
 				final List<NameValuePair<URI, List<WebDAVProperty>>> propertyLists=webdavResource.propFind(webdavDepth);	//get the properties of the resources
 				final List<RDFResource> childResourceList=new ArrayList<RDFResource>(propertyLists.size());	//create a list of child resources no larger than the number of WebDAV resource property lists
-	//		TODO del Debug.trace("looking at children");
 				for(final NameValuePair<URI, List<WebDAVProperty>> propertyList:propertyLists)	//look at each property list
 				{
 					final URI childResourcePrivateURI=propertyList.getName();
-	//			TODO del Debug.trace("looking at child", childResourceURI);
 					if(!privateResourceURI.equals(childResourcePrivateURI))	//if this property list is *not* for this resource
 					{
-	//				TODO del Debug.trace("creating resource for child", childResourceURI);
 						childResourceList.add(createResourceDescription(rdf, getPublicURI(childResourcePrivateURI), propertyList.getValue()));	//create a resource from this URI and property lists
 					}
 				}
