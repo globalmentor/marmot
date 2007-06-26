@@ -58,7 +58,7 @@ public class ImageScaleFilter implements ResourceFilter
 				aspectDimension=new Dimension(800, 600);	//TODO use constants
 				break;
 			case THUMBNAIL:
-				aspectDimension=new Dimension(200, 200);	//TODO use constants
+				aspectDimension=new Dimension(200, Integer.MAX_VALUE);	//allow the image to be as large as it wants TODO use constants
 				break;
 			default:
 				throw new AssertionError("Unrecognized image aspect: "+getImageAspect());
