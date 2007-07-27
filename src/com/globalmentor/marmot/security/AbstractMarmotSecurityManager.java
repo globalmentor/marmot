@@ -197,9 +197,10 @@ Debug.trace("new allowed:", allowed);
 				if(accessRules!=null)	//if there are access rules
 				{
 //	Debug.trace("got access rules of size", accessRules.size());
-					for(final RDFResource accessRule:accessRules)	//for each access rule
+					for(final RDFObject accessRule:accessRules)	//for each access rule
 					{
-						for(final RDFObject principalObject:accessRule.getPropertyValues(MARMOT_NAMESPACE_URI, PRINCIPAL_PROPERTY_NAME))	//look at all principals defined for this rule
+							//TODO fix cast; RDFLiteral will probably eventually be subordinated to RDFResource
+						for(final RDFObject principalObject:((RDFResource)accessRule).getPropertyValues(MARMOT_NAMESPACE_URI, PRINCIPAL_PROPERTY_NAME))	//look at all principals defined for this rule
 						{
 							if(principalObject instanceof RDFResource)	//if a principal resource specified for this rule
 							{
@@ -211,7 +212,7 @@ Debug.trace("new allowed:", allowed);
 										allowed=Boolean.FALSE;	//assume the permission is not allowed
 									}
 										//allow
-									for(final RDFObject allowObject:accessRule.getPropertyValues(MARMOT_NAMESPACE_URI, ALLOW_TYPE_NAME))	//for each access rule property
+									for(final RDFObject allowObject:((RDFResource)accessRule).getPropertyValues(MARMOT_NAMESPACE_URI, ALLOW_TYPE_NAME))	//for each access rule property
 									{
 										if(allowObject instanceof RDFResource)	//if the permission is a resource
 										{
@@ -446,9 +447,9 @@ Debug.trace("new allowed:", allowed);
 					{
 						if(emailObject instanceof RDFListResource)	//if the email is a list
 						{
-							for(final RDFResource emailResource:(RDFListResource)emailObject)	//for each email
+							for(final RDFObject emailResource:(RDFListResource)emailObject)	//for each email
 							{
-								if(uri.equals(emailResource.getReferenceURI()))	//if this email has the same mailto: URI
+								if(uri.equals(((RDFResource)emailResource).getReferenceURI()))	//if this email has the same mailto: URI
 								{
 									return true;	//we found a matching email
 								}
