@@ -2,9 +2,11 @@ package com.globalmentor.marmot.resource;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Set;
 
 import javax.mail.internet.ContentType;
 
+import com.garretwilson.net.ResourceIOException;
 import com.garretwilson.rdf.*;
 
 import com.globalmentor.marmot.MarmotSession;
@@ -16,6 +18,15 @@ import com.globalmentor.marmot.security.PermissionType;
 */
 public interface ResourceKit
 {
+
+	/**Capabilities a resource kit has in relation to resources.
+	@author Garret Wilson
+	*/
+	public enum Capability
+	{
+		/**The ability to create a resource.*/
+		CREATE;
+	}
 
 	/**An empty array of extensions.*/
 //TODO del if not needed	public final static String[] NO_EXTENSIONS=new String[] {};
@@ -56,7 +67,12 @@ public interface ResourceKit
 	@return A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
 	*/
 	public URI[] getSupportedResourceTypes();
-	
+
+	/**Returns the capabilities of this resource kit.
+	@return The capabilities provided by this resource kit.
+	*/
+	public Set<Capability> getCapabilities();
+
 	/**Initializes a resource description, creating whatever properties are appropriate.
 	@param repository The repository to use to access the resource content, if needed.
 	@param resource The resource description to initialize.
@@ -82,6 +98,16 @@ public interface ResourceKit
 	*/
 //TODO fix	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType permissionType) throws ResourceIOException;
 
+	/**Creates a new resource with the appropriate default contents for this resource type.
+	If a resource already exists at the given URI it will be replaced.
+	@param resourceURI The reference URI to use to identify the resource.
+	@return A description of the resource that was created.
+	@exception NullPointerException if the given resource URI is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if the resource could not be created.
+	*/
+	public RDFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException;
+	
 	/**Determines whether the given permission is appropriate for accessing the identified aspect.
 	This prevents aspects from being accessed at lower permissions.
 	For example, a rogue user may attempt to retrieve a preview-permission aspect such as a high-resolution image

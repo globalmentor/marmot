@@ -2,6 +2,7 @@ package com.globalmentor.marmot;
 
 import java.net.*;
 import java.util.*;
+import static java.util.Collections.*;
 import java.util.concurrent.*;
 
 import javax.mail.internet.ContentType;
@@ -29,7 +30,10 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 
 	/**The set of resource kits.*/
 	private Set<RK> resourceKits=new CopyOnWriteArraySet<RK>();
-	
+
+		/**@return The available resource kits.*/
+		public Iterable<RK> getResourceKits() {return unmodifiableSet(resourceKits);} 
+
 	//TODO should we use set maps instead of list maps here?
 	
 	/**The map of resource kit lists, keyed to supported content type base types.*/

@@ -17,16 +17,29 @@ public enum AccessType
 
 	INHERITED(null),
 
-	PRIVATE(createReferenceURI(MARMOT_NAMESPACE_URI, PRIVATE_ACCESS_TYPE_NAME)),
-	
-	PUBLIC_STEALTH(createReferenceURI(MARMOT_NAMESPACE_URI, PUBLIC_STEALTH_ACCESS_TYPE_NAME),
+	NONE(createReferenceURI(MARMOT_NAMESPACE_URI, NO_ACCESS_TYPE_NAME)),
+
+	STEALTH(createReferenceURI(MARMOT_NAMESPACE_URI, STEALTH_ACCESS_TYPE_NAME),
 			PermissionType.BROWSE,
 			PermissionType.ANNOTATE,
 			PermissionType.PREVIEW,
 			PermissionType.EXECUTE,
 			PermissionType.READ),
-	
-	PUBLIC_VIEW(createReferenceURI(MARMOT_NAMESPACE_URI, PUBLIC_VIEW_ACCESS_TYPE_NAME),
+
+	PREVIEW(createReferenceURI(MARMOT_NAMESPACE_URI, PREVIEW_ACCESS_TYPE_NAME),
+			PermissionType.DISCOVER,
+			PermissionType.BROWSE,
+			PermissionType.ANNOTATE,
+			PermissionType.PREVIEW),
+
+	USE(createReferenceURI(MARMOT_NAMESPACE_URI, USE_ACCESS_TYPE_NAME),
+			PermissionType.DISCOVER,
+			PermissionType.BROWSE,
+			PermissionType.ANNOTATE,
+			PermissionType.PREVIEW,
+			PermissionType.EXECUTE),
+
+	RETRIEVE(createReferenceURI(MARMOT_NAMESPACE_URI, RETRIEVE_ACCESS_TYPE_NAME),
 			PermissionType.DISCOVER,
 			PermissionType.BROWSE,
 			PermissionType.ANNOTATE,
@@ -34,7 +47,7 @@ public enum AccessType
 			PermissionType.EXECUTE,
 			PermissionType.READ),
 	
-	PUBLIC_EDIT(createReferenceURI(MARMOT_NAMESPACE_URI, PUBLIC_EDIT_ACCESS_TYPE_NAME),
+	EDIT(createReferenceURI(MARMOT_NAMESPACE_URI, EDIT_ACCESS_TYPE_NAME),
 			PermissionType.DISCOVER,
 			PermissionType.BROWSE,
 			PermissionType.ANNOTATE,
@@ -43,9 +56,10 @@ public enum AccessType
 			PermissionType.READ,
 			PermissionType.MODIFY_PROPERTIES,
 			PermissionType.RENAME,
-			PermissionType.WRITE),
+			PermissionType.ADD,
+			PermissionType.SUBTRACT),
 	
-	PUBLIC(createReferenceURI(MARMOT_NAMESPACE_URI, PUBLIC_ACCESS_TYPE_NAME),
+	FULL(createReferenceURI(MARMOT_NAMESPACE_URI, FULL_ACCESS_TYPE_NAME),
 			PermissionType.DISCOVER,
 			PermissionType.BROWSE,
 			PermissionType.ANNOTATE,
@@ -54,8 +68,9 @@ public enum AccessType
 			PermissionType.READ,
 			PermissionType.MODIFY_PROPERTIES,
 			PermissionType.MODIFY_ACCESS,
-			PermissionType.WRITE,
 			PermissionType.RENAME,
+			PermissionType.ADD,
+			PermissionType.SUBTRACT,
 			PermissionType.DELETE),
 	
 	CUSTOM(createReferenceURI(MARMOT_NAMESPACE_URI, CUSTOM_ACCESS_TYPE_NAME));

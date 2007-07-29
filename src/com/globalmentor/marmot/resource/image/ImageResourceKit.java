@@ -91,7 +91,7 @@ public class ImageResourceKit extends AbstractResourceKit
 	/**Default constructor.*/
 	public ImageResourceKit()
 	{
-		super(new ContentType(IMAGE, GIF_SUBTYPE, null), new ContentType(IMAGE, JPEG_SUBTYPE, null), new ContentType(IMAGE, PNG_SUBTYPE, null));
+		super(new ContentType[]{new ContentType(IMAGE, GIF_SUBTYPE, null), new ContentType(IMAGE, JPEG_SUBTYPE, null), new ContentType(IMAGE, PNG_SUBTYPE, null)});
 	}
 
 	/**Initializes a resource description, creating whatever properties are appropriate.

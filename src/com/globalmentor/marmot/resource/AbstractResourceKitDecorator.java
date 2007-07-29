@@ -2,14 +2,18 @@ package com.globalmentor.marmot.resource;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Set;
 
 import javax.mail.internet.ContentType;
 
 import static com.garretwilson.lang.ObjectUtilities.*;
+
+import com.garretwilson.net.ResourceIOException;
 import com.garretwilson.rdf.RDFResource;
 
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
+import com.globalmentor.marmot.resource.ResourceKit.Capability;
 import com.globalmentor.marmot.security.PermissionType;
 
 /**A resource kit that decorates another resource kit.
@@ -52,13 +56,28 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit
 	@return A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
 	*/
 	public URI[] getSupportedResourceTypes() {return getResourceKit().getSupportedResourceTypes();}
-	
+
+	/**Returns the capabilities of this resource kit.
+	@return The capabilities provided by this resource kit.
+	*/
+	public Set<Capability> getCapabilities() {return getResourceKit().getCapabilities();}
+
 	/**Initializes a resource description, creating whatever properties are appropriate.
 	@param repository The repository to use to access the resource content, if needed.
 	@param resource The resource description to initialize.
 	@exception IOException if there is an error accessing the repository.
 	*/
 	public void initializeResourceDescription(final Repository repository, final RDFResource resource) throws IOException {getResourceKit().initializeResourceDescription(repository, resource);}
+
+	/**Creates a new resource with the appropriate default contents for this resource type.
+	If a resource already exists at the given URI it will be replaced.
+	@param resourceURI The reference URI to use to identify the resource.
+	@return A description of the resource that was created.
+	@exception NullPointerException if the given resource URI is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if the resource could not be created.
+	*/
+	public RDFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException {return getResourceKit().createResource(repository, resourceURI);}
 
 	/**Returns this resource kit's installed filter based upon its ID.
 	@param filterID The ID of the filter to return.

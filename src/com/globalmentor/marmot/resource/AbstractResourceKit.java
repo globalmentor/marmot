@@ -2,12 +2,15 @@ package com.globalmentor.marmot.resource;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.*;
+import static java.util.Collections.*;
 
 import javax.mail.internet.ContentType;
 
 import static com.garretwilson.lang.ObjectUtilities.*;
 
-import com.garretwilson.lang.ObjectUtilities;
+import static com.garretwilson.lang.EnumUtilities.*;
+import com.garretwilson.net.ResourceIOException;
 import com.garretwilson.rdf.RDFResource;
 
 import com.globalmentor.marmot.MarmotSession;
@@ -56,7 +59,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 		public ContentType[] getSupportedContentTypes() {return supportedContentTypes;}
 
 	/**A non-<code>null</code> array of the URIs for the resource types this resource kit supports.*/
-	private URI[] supportedResourceTypes;
+	private final URI[] supportedResourceTypes;
 	
 		/**Returns the resource types supported.
 		This is the secondary method of determining which resource kit to use for a given resource.
@@ -64,68 +67,68 @@ public abstract class AbstractResourceKit implements ResourceKit
 		*/
 		public URI[] getSupportedResourceTypes() {return supportedResourceTypes;}
 
-		/**The map of installed filters, keyed to filter IDs.*/
-//TODO del		private final Map<String, ResourceFilter> filterMap=new ConcurrentHashMap<String, ResourceFilter>();
-
-		/**Returns this resource kit's installed filter based upon its ID.
-		@param filterID The ID of the filter to return.
-		@return The resource filter identified by the given ID.
-		@exception IllegalArgumentException if there is no installed resource filter identified by the given ID.
+	/**The capabilities provided by this resource kit.*/
+	private final Set<Capability> capabilities;
+	
+		/**Returns the capabilities of this resource kit.
+		@return The capabilities provided by this resource kit.
 		*/
-/*TODO del
-		public ResourceFilter getFilter(final String filterID) throws IllegalArgumentException
-		{
-			final ResourceFilter resourceFilter=filterMap.get(filterID);	//get the filter, if any, keyed to the given ID
-			if(resourceFilter==null)	//if no such filter is installed
-			{
-				throw new IllegalArgumentException("No such filter installed: "+filterID);
-			}
-			return resourceFilter;	//return the filter we found
-		}
-*/
+		public Set<Capability> getCapabilities() {return capabilities;}
 
-		/**Installs a filter into the resource kit.
-		Any filter installed with the same ID will be removed.
-		@param filterID The ID to use in locating the filter.
-		@param filter The filter to install.
-		*/
-/*TODO del
-		protected void installFilter(final String filterID, final ResourceFilter filter)
-		{
-			filterMap.put(filterID, filter);	//store the filter in the map
-		}
-*/
-
-	/**Content types constructor.
-	@param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
-	@exception NullPointerException if the supported content types array is <code>null</code>.
+	/**Content types and capabilities constructor.
+	@param supportedContentType The content type supported by this resource kit.
+	@param capabilities The capabilities provided by this resource kit.
+	@exception NullPointerException if the supported content type and/or capabilities is <code>null</code>.
 	*/
-	public AbstractResourceKit(final ContentType... supportedContentTypes)
+	public AbstractResourceKit(final ContentType supportedContentType, final Capability... capabilities)
 	{
-		this(supportedContentTypes, new URI[]{});	//construct the class with no supported resource types
+		this(new ContentType[]{checkInstance(supportedContentType, "Supported content type cannot be null.")}, capabilities);
 	}
 
-	/**Resource types constructor.
-	@param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
-	@exception NullPointerException if the supported resource types array is <code>null</code>.
+	/**Content types and capabilities constructor.
+	@param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
+	@param capabilities The capabilities provided by this resource kit.
+	@exception NullPointerException if the supported content types array and/or capabilities is <code>null</code>.
 	*/
-	public AbstractResourceKit(final URI... supportedResourceTypes)
+	public AbstractResourceKit(final ContentType[] supportedContentTypes, final Capability... capabilities)
 	{
-		this(new ContentType[]{}, supportedResourceTypes);	//construct the class with no supported content types
+		this(supportedContentTypes, new URI[]{}, capabilities);	//construct the class with no supported resource types
+	}
+
+	/**Resource type and capabilities constructor.
+	@param supportedResourceType The URI for the resource type this resource kit supports.
+	@param capabilities The capabilities provided by this resource kit.
+	@exception NullPointerException if the supported resource types and/or capabilities is <code>null</code>.
+	*/
+	public AbstractResourceKit(final URI supportedResourceType, final Capability... capabilities)
+	{
+		this(new URI[]{checkInstance(supportedResourceType, "Supported resource type cannot be null.")}, capabilities);
+	}
+
+	/**Resource types and capabilities constructor.
+	@param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
+	@param capabilities The capabilities provided by this resource kit.
+	@exception NullPointerException if the supported resource types array and/or capabilities is <code>null</code>.
+	*/
+	public AbstractResourceKit(final URI[] supportedResourceTypes, final Capability... capabilities)
+	{
+		this(new ContentType[]{}, supportedResourceTypes, capabilities);	//construct the class with no supported content types
 	}
 
 	/**Content types and resource types constructor.
 	@param presentation The presentation support for this resource kit.
 	@param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
 	@param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
+	@param capabilities The capabilities provided by this resource kit.
 	@exception NullPointerException if the supported content types array and/or the supported resource types array is <code>null</code>.
 	*/
-	public AbstractResourceKit(final ContentType[] supportedContentTypes, final URI[] supportedResourceTypes)
+	public AbstractResourceKit(final ContentType[] supportedContentTypes, final URI[] supportedResourceTypes, final Capability... capabilities)
 	{
 		this.supportedContentTypes=checkInstance(supportedContentTypes, "Supported content types array cannot be null.");
-		this.supportedResourceTypes=checkInstance(supportedResourceTypes, "Supported resource types array cannot be null.");		
+		this.supportedResourceTypes=checkInstance(supportedResourceTypes, "Supported resource types array cannot be null.");
+		this.capabilities=unmodifiableSet(createEnumSet(Capability.class, capabilities));
 	}
-	
+
 	/**Initializes a resource description, creating whatever properties are appropriate.
 	This version does nothing.
 	@param repository The repository to use to access the resource content, if needed.
@@ -134,6 +137,20 @@ public abstract class AbstractResourceKit implements ResourceKit
 	*/
 	public void initializeResourceDescription(final Repository repository, final RDFResource resource) throws IOException
 	{
+	}
+
+	/**Creates a new resource with the appropriate default contents for this resource type.
+	If a resource already exists at the given URI it will be replaced.
+	This version creates a default resource with content of zero bytes.
+	@param resourceURI The reference URI to use to identify the resource.
+	@return A description of the resource that was created.
+	@exception NullPointerException if the given resource URI is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if the resource could not be created.
+	*/
+	public RDFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException
+	{
+		return repository.createResource(resourceURI, new byte[]{});	//create a new empty resource
 	}
 
 	/**Determines whether the given permission is appropriate for accessing the identified aspect.

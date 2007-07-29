@@ -5,7 +5,6 @@ import java.net.*;
 import static com.garretwilson.net.URIConstants.*;
 import static com.garretwilson.net.URIUtilities.*;
 
-import static com.garretwilson.rdf.RDFUtilities.*;
 import static com.garretwilson.text.CharacterConstants.*;
 
 /**Constant values used by Marmot.
@@ -57,18 +56,22 @@ public class MarmotConstants
 	/**A rule specifying access permissions for zero or more principals. The local name of <code>marmot:AccessRule</code>.*/
 	public final static String ACCESS_RULE_TYPE_NAME="AccessRule";
 				//access types
-	/**Customizable access for specific principals. The local name of <code>marmot:CustomAccess</code>.*/
+	/**Customizable access for specific principals.*/
 	public final static String CUSTOM_ACCESS_TYPE_NAME="CustomAccess";
-	/**Predefined access type allowing no principals access. The local name of <code>marmot:PrivateAccess</code>.*/
-	public final static String PRIVATE_ACCESS_TYPE_NAME="PrivateAccess";
-	/**Predefined access type allowing all principals read permission. The local name of <code>marmot:PublicStealthAccess</code>.*/
-	public final static String PUBLIC_STEALTH_ACCESS_TYPE_NAME="PublicStealthAccess";
-	/**Predefined access type allowing all principals discover and read permissions. The local name of <code>marmot:PublicViewAccess</code>.*/
-	public final static String PUBLIC_VIEW_ACCESS_TYPE_NAME="PublicViewAccess";
-	/**Predefined access type allowing all principals discover, read, and write permissions. The local name of <code>marmot:PublicEditAccess</code>.*/
-	public final static String PUBLIC_EDIT_ACCESS_TYPE_NAME="PublicEditAccess";
-	/**Predefined access type allowing all principals discover, read, write, and delete permissions. The local name of <code>marmot:PublicAccess</code>.*/
-	public final static String PUBLIC_ACCESS_TYPE_NAME="PublicAccess";
+	/**Predefined access type allowing no access.*/
+	public final static String NO_ACCESS_TYPE_NAME="NoAccess";
+	/**Predefined access type allowing preview and execute permissions without discovery.*/
+	public final static String STEALTH_ACCESS_TYPE_NAME="StealthAccess";
+	/**Predefined access type allowing read and execute permissions of only a subset of the resource contents.*/
+	public final static String PREVIEW_ACCESS_TYPE_NAME="PreviewAccess";
+	/**Predefined access type preview and execute permissions but not read permissions.*/
+	public final static String USE_ACCESS_TYPE_NAME="UseAccess";
+	/**Predefined access type allowing discover and read permissions.*/
+	public final static String RETRIEVE_ACCESS_TYPE_NAME="RetrieveAccess";
+	/**Predefined access type allowing discover, read, and write permissions.*/
+	public final static String EDIT_ACCESS_TYPE_NAME="EditAccess";
+	/**Predefined access type allowing discover, read, write, and delete permissions.*/
+	public final static String FULL_ACCESS_TYPE_NAME="FullAccess";
 
 			//operators
 	/**Allow a permission. The local name of <code>marmot:allow</code>.*/
@@ -93,14 +96,16 @@ public class MarmotConstants
 	public final static String EXECUTE_PERMISSION_TYPE_NAME="ExecutePermission";
 	/**The principal may read the literal contents of the resource, including child listings for collections. The local name of <code>marmot:ReadPermission</code>.*/
 	public final static String READ_PERMISSION_TYPE_NAME="ReadPermission";
-	/**The principal may set the literal contents of the resource, including adding and removing children in collections, but may not delete the resource. The local name of <code>marmot:WritePermission</code>.*/
-	public final static String WRITE_PERMISSION_TYPE_NAME="WritePermission";
 	/**The principal may change, add, and remove resource properties. The local name of <code>marmot:ModifyPropertiesPermission</code>.*/
 	public final static String MODIFY_PROPERTIES_PERMISSION_TYPE_NAME="ModifyPropertiesPermission";
 	/**The principal may change the permissions describing how other principals access the resource. The local name of <code>marmot:ModifyAccessPermission</code>.*/
 	public final static String MODIFY_ACCESS_PERMISSION_TYPE_NAME="ModifyAccessPermission";
 	/**The principal may rename the resource. The local name of <code>marmot:RenamePermission</code>.*/
 	public final static String RENAME_PERMISSION_TYPE_NAME="RenamePermission";
+	/**The principal may add to the contents of the resource, including adding children in collections, but may not be able to remove contents. The local name of <code>marmot:AddPermission</code>.*/
+	public final static String ADD_PERMISSION_TYPE_NAME="AddPermission";
+	/**The principal may subtract from the contents of the resource, including removing children in collections, but may not be able to add contents. The local name of <code>marmot:SubtractPermission</code>.*/
+	public final static String SUBTRACT_PERMISSION_TYPE_NAME="SubtractPermission";
 	/**The principal may remove the resource, including collections. The local name of <code>marmot:DeletePermission</code>.*/
 	public final static String DELETE_PERMISSION_TYPE_NAME="DeletePermission";
 

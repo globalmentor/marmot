@@ -39,6 +39,9 @@ public interface MarmotSession<RK extends ResourceKit>
 	/**@return The default resource kit to use if a specific resource kit cannot be found, or <code>null</code> if there is no default resource kit.*/
 	public RK getDefaultResourceKit();
 
+	/**@return The available resource kits.*/
+	public Iterable<RK> getResourceKits(); 
+
 	/**Retrieves a resource kit appropriate for the given resource.
 	This method locates a resource kit in the following priority:
 	<ol>

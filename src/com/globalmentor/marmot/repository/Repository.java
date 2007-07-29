@@ -146,6 +146,8 @@ public interface Repository
 	@param resourceURI The reference URI to use to identify the resource.
 	@return An output stream for storing the contents of the resource.
 	@exception NullPointerException if the given resource URI is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
 	public OutputStream createResource(final URI resourceURI) throws ResourceIOException;

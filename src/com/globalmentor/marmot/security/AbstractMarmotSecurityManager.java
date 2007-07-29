@@ -34,8 +34,6 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 	protected final static URI DISCOVER_PERMISSION_TYPE_URI=createReferenceURI(MARMOT_NAMESPACE_URI, DISCOVER_PERMISSION_TYPE_NAME);
 	/**The URI for the rename permission type.*/
 	protected final static URI RENAME_PERMISSION_TYPE_URI=createReferenceURI(MARMOT_NAMESPACE_URI, RENAME_PERMISSION_TYPE_NAME);
-	/**The URI for the write permission type.*/
-	protected final static URI WRITE_PERMISSION_TYPE_URI=createReferenceURI(MARMOT_NAMESPACE_URI, WRITE_PERMISSION_TYPE_NAME);
 
 	/**Determines whether a given user has permission to perform some action in relation to a given repository and resource.
 	This method is additive; if a superclass doesn't find a permission, a subclass may be able to add the permission.
@@ -92,9 +90,9 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 			{
 				return isAllowed(owner, repository, parentResourceURI, user, PermissionType.BROWSE);	//see if a parent has browse permission
 			}
-			else if(DELETE_PERMISSION_TYPE_URI.equals(permissionTypeURI))	//if they specified one of the write-imputed permissions
+			else if(DELETE_PERMISSION_TYPE_URI.equals(permissionTypeURI))	//if they specified one of the subtract-imputed permissions
 			{
-				return isAllowed(owner, repository, parentResourceURI, user, PermissionType.WRITE);	//see if a parent has write permission
+				return isAllowed(owner, repository, parentResourceURI, user, PermissionType.SUBTRACT);	//see if a parent has write permission
 			}
 		}
 		return false;	//if there is no parent, inherited access defaults to false		
