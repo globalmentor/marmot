@@ -269,7 +269,7 @@ public class WebDAVRepository extends AbstractRepository
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		final RDF rdf=new RDF();	//G***use a common RDF data model
+		final RDF rdf=createRDF();	//create a new RDF data model
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
@@ -419,7 +419,7 @@ public class WebDAVRepository extends AbstractRepository
 				{
 					throw new IllegalArgumentException(Integer.toString(depth));	//TODO later convert the depth by using infinity and checking the result
 				}
-				final RDF rdf=new RDF();	//create a new RDF data model
+				final RDF rdf=createRDF();	//create a new RDF data model
 				final List<NameValuePair<URI, List<WebDAVProperty>>> propertyLists=webdavResource.propFind(webdavDepth);	//get the properties of the resources
 				final List<RDFResource> childResourceList=new ArrayList<RDFResource>(propertyLists.size());	//create a list of child resources no larger than the number of WebDAV resource property lists
 				for(final NameValuePair<URI, List<WebDAVProperty>> propertyList:propertyLists)	//look at each property list
@@ -615,7 +615,7 @@ public class WebDAVRepository extends AbstractRepository
 			rdfXMLGenerator.setLiteralAttributeSerialization(false);	//serialize all literal property values as child elements rather than attributes
 			rdfXMLGenerator.setCompactRDFListSerialization(true);	//serialize all RDF lists in short form
 				//TODO decide what to do to take care of typed RDF literal values and xml:lang specifications
-			final Document rdfDocument=rdfXMLGenerator.createDocument(new RDF(), WebDAVXMLGenerator.createWebDAVDocumentBuilder().getDOMImplementation());	//create a new XML document for RDF
+			final Document rdfDocument=rdfXMLGenerator.createDocument(createRDF(), WebDAVXMLGenerator.createWebDAVDocumentBuilder().getDOMImplementation());	//create a new XML document for RDF
 			final Element resourceElement=rdfXMLGenerator.createResourceElement(rdfDocument, new DefaultRDFResource());	//create a dummy RDF resource to which we'll add property child elements
 			final Set<WebDAVProperty> setProperties=new HashSet<WebDAVProperty>();	//create a set of properties to set
 			for(final RDFPropertyValuePair rdfProperty:properties)	//for each property to set
@@ -885,7 +885,6 @@ public class WebDAVRepository extends AbstractRepository
 		final String filename=getFileName(resourceURI);	//get the filename
 		boolean isCollection=false;	//we'll detect if this is a collection base upon the properties
 		final RDFXMLProcessor rdfXMLProcessor=new RDFXMLProcessor(rdf);	//create a new processor for analyzing any RDF contained in RDF property values, using the existing RDF instance
-//TODO del; not needed with Apache mod_dav patch		rdfXMLProcessor.setRDFAttributeNamespaceRequirement(RDFXMLProcessor.NamespaceRequirement.ANY);	//recognize RDF attributes in any namespace to compensate for buggy WebDAV implementations such as Apache httpd 2.2.3 mod_dav (we should have serialized all literal property values as child elements rather than attributes, so this shouldn't hurt us)
 		for(final WebDAVProperty webdavProperty:propertyList)	//look at each WebDAV property
 		{
 			final WebDAVPropertyName propertyName=webdavProperty.getName();	//get the property name

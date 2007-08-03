@@ -45,43 +45,69 @@ public class MarmotConstants
 	public final static URI MARMOT_NAMESPACE_URI=URI.create("http://globalmentor.com/namespaces/marmot#");
 	
 		//Marmot property names
-	/**Specifies the access rules and permissions. The local name of <code>marmot:access</code>.*/
+	/**Specifies the access rules and permissions.*/
 	public final static String ACCESS_PROPERTY_NAME="access";
-	/**Specifies the rules list of an access specification. The local name of <code>marmot:rules</code>.*/
-	public final static String RULES_PROPERTY_NAME="rules";
+	/**Specifies the level of access.*/
+	public final static String ACCESS_LEVEL_PROPERTY_NAME="accessLevel";
+	/**Specifies the list of access rules.*/
+	public final static String ACCESS_RULES_PROPERTY_NAME="accessRules";
 	/**Specifies a principal by URI. Used in various contexts. The local name of <code>marmot:principal</code>.*/
 	public final static String PRINCIPAL_PROPERTY_NAME="principal";
+	/**Specifies the rules list of an access specification. The local name of <code>marmot:rules</code>.*/
+	public final static String RULES_PROPERTY_NAME="rules";
+	/**Specifies resource security.*/
+	public final static String SECURITY_PROPERTY_NAME="security";
+	/**Specifies the selector to select one or more resources.*/
+	public final static String SELECT_PROPERTY_NAME="select";
 
 		//Marmot type names
-	/**A rule specifying access permissions for zero or more principals. The local name of <code>marmot:AccessRule</code>.*/
+	/**A rule specifying access permissions for zero or more principals.*/
 	public final static String ACCESS_RULE_TYPE_NAME="AccessRule";
-				//access types
-	/**Customizable access for specific principals.*/
-	public final static String CUSTOM_ACCESS_TYPE_NAME="CustomAccess";
-	/**Predefined access type allowing no access.*/
-	public final static String NO_ACCESS_TYPE_NAME="NoAccess";
-	/**Predefined access type allowing preview and execute permissions without discovery.*/
-	public final static String STEALTH_ACCESS_TYPE_NAME="StealthAccess";
-	/**Predefined access type allowing read and execute permissions of only a subset of the resource contents.*/
-	public final static String PREVIEW_ACCESS_TYPE_NAME="PreviewAccess";
-	/**Predefined access type preview and execute permissions but not read permissions.*/
-	public final static String USE_ACCESS_TYPE_NAME="UseAccess";
-	/**Predefined access type allowing discover and read permissions.*/
-	public final static String RETRIEVE_ACCESS_TYPE_NAME="RetrieveAccess";
-	/**Predefined access type allowing discover, read, and write permissions.*/
-	public final static String EDIT_ACCESS_TYPE_NAME="EditAccess";
-	/**Predefined access type allowing discover, read, write, and delete permissions.*/
-	public final static String FULL_ACCESS_TYPE_NAME="FullAccess";
+	/**A class of principals including any principal.*/
+//TODO del	public final static String ANY_PRINCIPAL_TYPE_NAME="AnyPrincipal";
 
-			//operators
-	/**Allow a permission. The local name of <code>marmot:allow</code>.*/
-	public final static String ALLOW_TYPE_NAME="allow";
-	/**Allow all permissions except a permission. The local name of <code>marmot:allowExcept</code>.*/
-	public final static String ALLOW_EXCEPT_TYPE_NAME="allowExcept";
-	/**Deny a permission. The local name of <code>marmot:deny</code>.*/
-	public final static String DENY_TYPE_NAME="deny";
-	/**Deny all permissions except a permission. The local name of <code>marmot:denyExcept</code>.*/
-	public final static String DENY_EXCEPT_TYPE_NAME="denyExcept";
+			//selector types
+	/**A selector selecting a resource by a property value.*/
+	public final static String PROPERTY_SELECTOR_TYPE_NAME="PropertySelector";
+	/**A selector selecting the union of other selectors.*/
+	public final static String UNION_SELECTOR_TYPE_NAME="UnionSelector";
+	/**A selector selecting all resources.*/
+	public final static String UNIVERSAL_SELECTOR_TYPE_NAME="UniversalSelector";
+	/**A selector selecting a resource by its URI.*/
+	public final static String URI_SELECTOR_TYPE_NAME="URISelector";
+			//selector properties
+	/**Specifies the URI of a URI selector.*/
+	public final static String SELECT_URI_PROPERTY_NAME="selectURI";
+	/**Specifies the property of a property selector.*/
+	public final static String SELECT_PROPERTY_PROPERTY_NAME="selectProperty";
+	/**Specifies the value of a property selector.*/
+	public final static String SELECT_VALUE_PROPERTY_NAME="selectValue";
+			
+				//access levels
+	/**Predefined access level type specifying inherited access.*/
+	public final static String INHERITED_ACCESS_LEVEL_TYPE_NAME="InheritedAccessLevel";
+	/**Predefined access level type allowing custom access.*/
+	public final static String CUSTOM_ACCESS_LEVEL_TYPE_NAME="CustomAccessLevel";
+	/**Predefined access level type allowing no access.*/
+	public final static String PRIVATE_ACCESS_LEVEL_TYPE_NAME="PrivateAccessLevel";
+	/**Predefined access level type allowing preview and execute permissions without discovery.*/
+	public final static String STEALTH_ACCESS_LEVEL_TYPE_NAME="StealthAccessLevel";
+	/**Predefined access level type allowing read and execute permissions of only a subset of the resource contents.*/
+	public final static String PREVIEW_ACCESS_LEVEL_TYPE_NAME="PreviewAccessLevel";
+	/**Predefined access level type preview and execute permissions but not read permissions.*/
+	public final static String USE_ACCESS_LEVEL_TYPE_NAME="UseAccessLevel";
+	/**Predefined access level type allowing discover and read permissions.*/
+	public final static String RETRIEVE_ACCESS_LEVEL_TYPE_NAME="RetrieveAccessLevel";
+	/**Predefined access level type allowing discover, read, and write permissions.*/
+	public final static String EDIT_ACCESS_LEVEL_TYPE_NAME="EditAccessLevel";
+	/**Predefined access level type allowing discover, read, write, and delete permissions.*/
+	public final static String FULL_ACCESS_LEVEL_TYPE_NAME="FullAccessLevel";
+
+			//permission operators
+	/**Allows a permission.*/
+	public final static String ALLOW_PROPERTY_NAME="allow";
+	/**Denies a permission.*/
+	public final static String DENY_PROPERTY_NAME="deny";
 	
 			//permissions
 	/**The principal may detect that the resource exists, such as when the resource is listed in the contents of a parent collection. The local name of <code>marmot:DiscoverPermission</code>.*/
@@ -98,8 +124,8 @@ public class MarmotConstants
 	public final static String READ_PERMISSION_TYPE_NAME="ReadPermission";
 	/**The principal may change, add, and remove resource properties. The local name of <code>marmot:ModifyPropertiesPermission</code>.*/
 	public final static String MODIFY_PROPERTIES_PERMISSION_TYPE_NAME="ModifyPropertiesPermission";
-	/**The principal may change the permissions describing how other principals access the resource. The local name of <code>marmot:ModifyAccessPermission</code>.*/
-	public final static String MODIFY_ACCESS_PERMISSION_TYPE_NAME="ModifyAccessPermission";
+	/**The principal may change the permissions describing the security of the resource, including how other principals access the resource. The local name of <code>marmot:ModifyAccessPermission</code>.*/
+	public final static String MODIFY_SECURITY_PERMISSION_TYPE_NAME="ModifySecurityPermission";
 	/**The principal may rename the resource. The local name of <code>marmot:RenamePermission</code>.*/
 	public final static String RENAME_PERMISSION_TYPE_NAME="RenamePermission";
 	/**The principal may add to the contents of the resource, including adding children in collections, but may not be able to remove contents. The local name of <code>marmot:AddPermission</code>.*/

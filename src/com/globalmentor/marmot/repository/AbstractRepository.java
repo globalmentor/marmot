@@ -14,6 +14,9 @@ import com.garretwilson.net.URIConstants;
 import static com.garretwilson.lang.ObjectUtilities.*;
 import static com.garretwilson.net.URIUtilities.*;
 import com.garretwilson.rdf.*;
+import com.globalmentor.marmot.MarmotConstants;
+
+import static com.globalmentor.marmot.MarmotConstants.*;
 
 /**Abstract repository class the implements common features of a burrow.
 <p>Resource access methods should call {@link #checkResourceURI(URI)} as a security check to ensure the given URI is within the repository.</p>
@@ -21,6 +24,9 @@ import com.garretwilson.rdf.*;
 */
 public abstract class AbstractRepository extends DefaultRDFResource implements Repository
 {
+
+	/**The resource factory for resources in the Marmot namespace.*/
+	protected final static RDFResourceFactory MARMOT_RESOURCE_FACTORY=new DefaultRDFResourceFactory(MarmotConstants.class.getPackage());	//TODO change this to Marmot.class eventually, when Marmot isn't the application
 
 	/**The registered event listeners.*/
 	protected final EventListenerManager eventListenerManager=new EventListenerManager();
@@ -162,6 +168,17 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	{
 		super(checkInstance(publicRepositoryURI, "Public repository URI cannot be null.").normalize());	//construct the parent class with the public reference URI
 		this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI cannot be null.").normalize();
+	}
+
+	/**Creates a default empty RDF data model.
+	The correct resource factories will be installed to create appropriate classes in the Marmot namespace.
+	@return A new default RDF data model.
+	*/
+	protected RDF createRDF()
+	{
+		final RDF rdf=new RDF();	//create a new RDF data model
+		rdf.registerResourceFactory(MARMOT_NAMESPACE_URI, MARMOT_RESOURCE_FACTORY);	//register the Marmot resource factory with the data model
+		return rdf;	//return the new data model
 	}
 
 	/**@return Whether the repository has been opened for access.*/

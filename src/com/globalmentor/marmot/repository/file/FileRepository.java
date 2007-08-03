@@ -182,7 +182,7 @@ public class FileRepository extends AbstractRepository
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		final RDF rdf=new RDF();	//TODO use a common RDF data model
+		final RDF rdf=createRDF();	//create a new RDF data model
 		try
 		{
 			return createResourceDescription(rdf, new File(getPrivateURI(resourceURI)));	//create and return a description from a file created from the URI from the private namespace
@@ -256,7 +256,7 @@ public class FileRepository extends AbstractRepository
 			final List<RDFResource> resourceList=new ArrayList<RDFResource>();	//create a list to hold the files that are not directories	
 			if(resourceDirectory.isDirectory())	//if there is a directory for this resource
 			{
-				final RDF rdf=new RDF();	//create a new RDF data model
+				final RDF rdf=createRDF();	//create a new RDF data model
 				final File[] files=resourceDirectory.listFiles(FILE_FILTER);	//get a list of all files in the directory
 				for(final File file:files)	//for each file in the directory
 				{
@@ -342,7 +342,7 @@ public class FileRepository extends AbstractRepository
 				outputStream.close();	//always close the output stream
 			}
 			//TODO update the description
-			return createResourceDescription(new RDF(), resourceFile);	//create and return a description of the new file
+			return createResourceDescription(createRDF(), resourceFile);	//create and return a description of the new file
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -365,7 +365,7 @@ public class FileRepository extends AbstractRepository
 		{
 			final File directoryFile=new File(getPrivateURI(collectionURI));	//create a file object for the resource
 			mkdir(directoryFile);	//create the directory
-			return createResourceDescription(new RDF(), directoryFile);	//create and return a description of the new directory
+			return createResourceDescription(createRDF(), directoryFile);	//create and return a description of the new directory
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{

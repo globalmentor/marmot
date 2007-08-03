@@ -27,7 +27,7 @@ public enum PermissionType
 
 	MODIFY_PROPERTIES(createReferenceURI(MARMOT_NAMESPACE_URI, MODIFY_PROPERTIES_PERMISSION_TYPE_NAME)),
 
-	MODIFY_ACCESS(createReferenceURI(MARMOT_NAMESPACE_URI, MODIFY_ACCESS_PERMISSION_TYPE_NAME)),
+	MODIFY_SECURITY(createReferenceURI(MARMOT_NAMESPACE_URI, MODIFY_SECURITY_PERMISSION_TYPE_NAME)),
 
 	RENAME(createReferenceURI(MARMOT_NAMESPACE_URI, RENAME_PERMISSION_TYPE_NAME)),
 
@@ -55,9 +55,11 @@ public enum PermissionType
 	/**The lazily-created map of permission types keyed to type URIs.*/
 	private static Map<URI, PermissionType> typeURIPermissionTypeMap=null;
 
-	/**Retrieves an access type from the type URI.
+	/**Retrieves an permission type from the type URI.
 	@param permissionTypeURI The permission type URI.
-	@return The access type with the given type URI, or <code>null</code> if there is no access type with the given type URI.
+	@return The permission type with the given type URI.
+	@exception NullPointerException if the given permission type URI is <code>null</code>.
+	@exception IllegalArgumentException if the given permission type URI is not recognized.
 	*/
 	public static PermissionType getPermissionType(final URI permissionTypeURI)
 	{
@@ -66,10 +68,15 @@ public enum PermissionType
 			final Map<URI, PermissionType> newTypeURIPermissionTypeMap=new HashMap<URI, PermissionType>();	//create a new map
 			for(final PermissionType PermissionType:values())	//for each value
 			{
-				newTypeURIPermissionTypeMap.put(PermissionType.getTypeURI(), PermissionType);	//store this access type in the map keyed to the type URI
+				newTypeURIPermissionTypeMap.put(PermissionType.getTypeURI(), PermissionType);	//store this permission type in the map keyed to the type URI
 			}
 			typeURIPermissionTypeMap=newTypeURIPermissionTypeMap;	//update the static map with the one we created and initialized
 		}
-		return typeURIPermissionTypeMap.get(permissionTypeURI);	//look up the access type from the type URI
+		final PermissionType permissionType=typeURIPermissionTypeMap.get(checkInstance(permissionTypeURI, "Permission type URI cannot be null."));	//look up the permission type from the type URI
+		if(permissionType==null)	//if we don't know the permission type from the type URI
+		{
+			throw new IllegalArgumentException("Unrecognized permission type URI: "+permissionTypeURI);
+		}
+		return permissionType;	//return the permission type
 	}
 }

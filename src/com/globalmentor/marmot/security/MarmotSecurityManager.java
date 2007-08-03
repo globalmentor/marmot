@@ -44,6 +44,6 @@ public interface MarmotSecurityManager
 	@exception NullPointerException if the given owner, repository, resource type, and/or permission URI is <code>null</code>.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final URI permissionTypeURI) throws ResourceIOException;
+//TODO del if nto needed	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final URI permissionTypeURI) throws ResourceIOException;
 
 }
