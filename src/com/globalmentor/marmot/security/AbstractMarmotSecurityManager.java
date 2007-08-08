@@ -46,6 +46,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 	*/
 	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType permissionType) throws ResourceIOException
 	{
+//Debug.trace("getting allowed for permission", permissionType, "for user", user!=null ? user.getName() : "(none)");
 		if(repository.getPublicRepositoryURI().equals(resourceURI))	//if this is the repository URI
 		{
 			if(permissionType==PermissionType.DELETE || permissionType==PermissionType.RENAME)	//if they are asking to delete or rename the repository
@@ -109,8 +110,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 	*/
 	protected Set<PermissionType> getAllowedPermissionTypes(final Repository repository, final URI resourceURI, final Principal user) throws ResourceIOException
 	{
-//Debug.trace("trying to get allowed for resource", resourceURI);
-//		Boolean allowed=null;	//we don't know whether this permission is allowed or not
+//Debug.trace("trying to get allowed permissions for resource", resourceURI, "with user", user!=null ? user.getName() : "(none)");
 		if(checkInstance(repository, "Repository cannot be null.").resourceExists(checkInstance(resourceURI, "Resource URI cannot be null.")))	//see if the resource exists; if not, consider it to have inherited access
 		{
 			final RDFResource resource=repository.getResourceDescription(resourceURI);	//get the resource description
@@ -118,20 +118,22 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 			if(security!=null)	//if we have security information defined
 			{
 				final Access access=security.getAccess();	//get the marmot:access property value, if any
-	//	Debug.trace("got access resource:", accessResource);
+//Debug.trace("got access resource:", RDFUtilities.toString(access));
 				if(access!=null)	//if we have access defined
 				{
 					final RDFListResource accessRules=access.getAccessRules();	//get the list of access rules
 					if(accessRules!=null)	//if there are access rules
 					{
-	//	Debug.trace("got access rules of size", accessRules.size());
+//Debug.trace("got access rules of size", accessRules.size());
 						for(final RDFObject accessRuleObject:accessRules)	//for each access rule
 						{
 							final AccessRule accessRule=(AccessRule)accessRuleObject;	//TODO fix cast; RDFLiteral will probably eventually be subordinated to RDFResource
 							final Selector selector=accessRule.getSelect();	//get the selector, if any
+//Debug.trace("trying selector", RDFUtilities.toString(selector));
 							if(selector!=null && (user==null || user instanceof RDFResource) && selector.selects((RDFResource)user))	//if this access rule's selector applies to this user
 							{
 								final AccessLevel accessLevel=accessRule.getAccessLevel();	//get the access level
+//Debug.trace("this selector matches; access level is", accessLevel);
 								if(accessLevel!=null)	//if there is an access level
 								{
 									final AccessLevelType accessLevelType=accessLevel.getAccessLevelType();	//get the access level type
@@ -158,6 +160,10 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 									{
 										return accessLevelType.getDefaultAllowedPermissionTypes();	//return the default permission types of this access level
 									}
+								}
+								else	//if there is no access level defined, deny all permissions
+								{
+									return EnumSet.noneOf(PermissionType.class);	//there are no permissions, because there is no access level
 								}
 							}
 						}
