@@ -13,7 +13,6 @@ import com.garretwilson.rdf.RDFResource;
 
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
-import com.globalmentor.marmot.resource.ResourceKit.Capability;
 import com.globalmentor.marmot.security.PermissionType;
 
 /**A resource kit that decorates another resource kit.
@@ -68,6 +67,19 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit
 	@exception IOException if there is an error accessing the repository.
 	*/
 	public void initializeResourceDescription(final Repository repository, final RDFResource resource) throws IOException {getResourceKit().initializeResourceDescription(repository, resource);}
+
+	/**Returns the URI of a child resource with the given simple name within a parent resource.
+	This is normally the simple name resolved against the parent resource URI, although a resource kit for collections may append an ending path separator.
+	The simple name will be encoded before being used to construct the URI.
+	This default version resolves the name against the parent resource URI.
+	@param repository The repository that contains the resource.
+	@param parentResourceURI The URI to of the parent resource.
+	@param resourceName The unencoded simple name of the child resource.
+	@return The URI of the child resource
+	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	*/
+	public URI getChildResourceURI(final Repository repository, final URI parentResourceURI, final String resourceName) {return getResourceKit().getChildResourceURI(repository, parentResourceURI, resourceName);}
 
 	/**Creates a new resource with the appropriate default contents for this resource type.
 	If a resource already exists at the given URI it will be replaced.

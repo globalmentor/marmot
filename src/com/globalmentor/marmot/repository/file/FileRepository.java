@@ -12,6 +12,7 @@ import static com.garretwilson.io.FileConstants.*;
 import static com.garretwilson.io.FileUtilities.*;
 import static com.garretwilson.lang.CharSequenceUtilities.*;
 import static com.garretwilson.net.URIConstants.*;
+import static com.garretwilson.net.URIUtilities.*;
 
 import com.garretwilson.io.FileUtilities;
 import com.garretwilson.io.IO;
@@ -204,7 +205,9 @@ public class FileRepository extends AbstractRepository
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		return new File(getPrivateURI(resourceURI)).exists();	//see if the file of the private URI exists
+		final boolean isCollectionURI=isCollectionURI(resourceURI);	//see if the URI specifies a collection
+		final File file=new File(getPrivateURI(resourceURI));	//get the file this 
+		return file.exists() && (isCollectionURI || !file.isDirectory());	//see if the file of the private URI exists; don't allow a non-collection URI to find a non-directory URI, though (file systems usually don't allow both a file and a directory of the same name, so they allow the ending-slash form to be optional)
 	}
 
 	/**Determines if the resource at a given URI is a collection.
@@ -220,7 +223,7 @@ public class FileRepository extends AbstractRepository
   {
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		return new File(getPrivateURI(resourceURI)).isDirectory();	//see if the file of the private URI is a directory
+		return isCollectionURI(resourceURI) && new File(getPrivateURI(resourceURI)).isDirectory();	//see if the file of the private URI is a directory; don't allow a non-collection URI to find a non-directory URI, though (file systems usually don't allow both a file and a directory of the same name, so they allow the ending-slash form to be optional)
   }
 
 	/**Determines whether the resource represented by the given URI has children.
@@ -235,7 +238,7 @@ public class FileRepository extends AbstractRepository
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
 		final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
-		return resourceFile.isDirectory() && resourceFile.listFiles(FILE_FILTER).length>0;	//see if this is a directory and there is more than one file in this directory
+		return isCollectionURI(resourceURI) && resourceFile.isDirectory() && resourceFile.listFiles(FILE_FILTER).length>0;	//see if this is a directory and there is more than one file in this directory
 	}
 
 	/**Retrieves child resources of the resource at the given URI.
@@ -254,7 +257,7 @@ public class FileRepository extends AbstractRepository
 		{
 			final File resourceDirectory=new File(getPrivateURI(resourceURI));	//create a file object for the resource
 			final List<RDFResource> resourceList=new ArrayList<RDFResource>();	//create a list to hold the files that are not directories	
-			if(resourceDirectory.isDirectory())	//if there is a directory for this resource
+			if(isCollectionURI(resourceURI) && resourceDirectory.isDirectory())	//if there is a directory for this resource
 			{
 				final RDF rdf=createRDF();	//create a new RDF data model
 				final File[] files=resourceDirectory.listFiles(FILE_FILTER);	//get a list of all files in the directory
@@ -359,6 +362,7 @@ public class FileRepository extends AbstractRepository
 	*/
 	public RDFResource createCollection(final URI collectionURI) throws ResourceIOException
 	{
+			//TODO do we want to check to make sure this is a collection URI?
 		checkResourceURI(collectionURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
 		try
@@ -391,16 +395,16 @@ public class FileRepository extends AbstractRepository
 				throw new IllegalArgumentException("Cannot delete repository base URI "+resourceURI);
 			}
 			final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
+			/*TODO del any associated directories
 			if(resourceFile.isFile())	//if this is a file and not a directory
 			{
-	/*TODO del any associated directories
 				final File directory=getResourceDirectory(resourceURI);	//get the directory to use for the URI
 				if(directory.exists())	//if a directory exists for this resource
 				{
 					FileUtilities.delete(directory, true);	//recursively delete the directory						
 				}
-	*/
 			}
+	*/
 			delete(resourceFile, true);	//recursively delete the file or directory
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs

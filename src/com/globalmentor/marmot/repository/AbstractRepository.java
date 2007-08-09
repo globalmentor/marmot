@@ -265,10 +265,26 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 		checkOpen();	//make sure the repository is open
 		return getChildResourceDescriptions(resourceURI, 1);	//get a list of child resource descriptions without going deeper than one level
 	}
+	
+	/**Determines the URI of the collection resource of the given URI; either the given resource URI if the resource represents a collection, or the parent resource if not.
+	If the given resource URI is a collection URI this method returns the given resource URI. 
+	If the given resource URI is not a collection URI, this implementation returns the equivalent of resolving the path {@value URIConstants#CURRENT_LEVEL_PATH_SEGMENT} to the URI.
+	@param resourceURI The URI of the resource for which the collection resource URI should be returned.
+	@return The URI of the indicated resource's deepest collection resource, or <code>null</code> if the given URI designates a non-collection resource with no collection parent.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error accessing the repository.
+	*/
+	public URI getCollectionURI(URI resourceURI) throws ResourceIOException
+	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		checkOpen();	//make sure the repository is open
+		return isCollectionURI(resourceURI) ? resourceURI : getCurrentLevel(resourceURI);	//if URI is a collection URI, return the URI; otherwise, get the current level
+	}
 
 	/**Determines the URI of the parent resource of the given URI.
-	If the given resource URI represents a collection this implementation returns the equivalent of resolving the path {@value URIConstants#PARENT_LEVEL_PATH_SEGMENT} to the URI. 
-	if the given resource URI does not represent a collection, this implementation returns the equivalent of resolving the path {@value URIConstants#CURRENT_LEVEL_PATH_SEGMENT} to the URI.
+	If the given resource URI is a collection URI this implementation returns the equivalent of resolving the path {@value URIConstants#PARENT_LEVEL_PATH_SEGMENT} to the URI. 
+	if the given resource URI is not a collection URI, this implementation returns the equivalent of resolving the path {@value URIConstants#CURRENT_LEVEL_PATH_SEGMENT} to the URI.
 	If the given resource represents this repository, this implementation returns <code>null</code>.	
 	@param resourceURI The URI of the resource for which the parent resource URI should be returned.
 	@return The URI of the indicated resource's parent resource, or <code>null</code> if the given URI designates a resource with no parent.
@@ -284,7 +300,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 		{
 			return null;	//the repository level has no parent
 		}
-		return isCollection(resourceURI) ? getParentLevel(resourceURI) : getCurrentLevel(resourceURI);	//if resource is a collection, get the parent level; otherwise, get the current level
+		return isCollectionURI(resourceURI) ? getParentLevel(resourceURI) : getCurrentLevel(resourceURI);	//if resource is a collection URI, get the parent level; otherwise, get the current level
 	}
 	
 	/**Removes properties from a given resource.

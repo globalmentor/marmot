@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.garretwilson.net.ResourceIOException;
 import com.garretwilson.net.ResourceStateException;
+import com.garretwilson.net.URIConstants;
 import com.garretwilson.rdf.RDFPropertyValuePair;
 import com.garretwilson.rdf.RDFResource;
 
@@ -53,6 +54,15 @@ public interface Repository
 	@exeption ResourceIOException if there is an error closing the repository.
 	*/
 	public void close() throws ResourceIOException;
+
+	/**Determines the URI of the collection resource of the given URI; either the given resource URI if the resource represents a collection, or the parent resource if not.
+	@param resourceURI The URI of the resource for which the collection resource URI should be returned.
+	@return The URI of the indicated resource's deepest collection resource, or <code>null</code> if the given URI designates a non-collection resource with no collection parent.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error accessing the repository.
+	*/
+	public URI getCollectionURI(URI resourceURI) throws ResourceIOException;
 
 	/**Determines the URI of the parent resource of the given URI.
 	@param resourceURI The URI of the resource for which the parent resource URI should be returned.
