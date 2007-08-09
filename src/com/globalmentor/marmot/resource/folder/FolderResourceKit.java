@@ -3,8 +3,9 @@ package com.globalmentor.marmot.resource.folder;
 import java.net.URI;
 
 import static com.garretwilson.net.URIConstants.*;
-import static com.garretwilson.net.URIUtilities.*;
 import com.garretwilson.net.ResourceIOException;
+import com.garretwilson.net.URIPath;
+
 import static com.garretwilson.rdf.RDFUtilities.*;
 import static com.garretwilson.rdf.xpackage.FileOntologyConstants.*;
 
@@ -42,7 +43,7 @@ public class FolderResourceKit extends AbstractResourceKit
 	public URI getChildResourceURI(final Repository repository, final URI parentResourceURI, final String resourceName)
 	{
 		//TODO fix IllegalArgumentException by checking to ensure that the parent resource is within the repository
-		return parentResourceURI.resolve(encode(resourceName)+PATH_SEPARATOR);	//encode the resource name, append a path separator, and resolve it against the parent resource URI
+		return parentResourceURI.resolve(URIPath.encodeSegment(resourceName)+PATH_SEPARATOR);	//encode the resource name, append a path separator, and resolve it against the parent resource URI
 	}
 
 	/**Creates a new resource with the appropriate default contents for this resource type.

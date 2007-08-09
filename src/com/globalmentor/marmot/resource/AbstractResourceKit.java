@@ -11,6 +11,8 @@ import static com.garretwilson.lang.ObjectUtilities.*;
 
 import static com.garretwilson.lang.EnumUtilities.*;
 import com.garretwilson.net.ResourceIOException;
+import com.garretwilson.net.URIPath;
+
 import static com.garretwilson.net.URIUtilities.*;
 import com.garretwilson.rdf.RDFResource;
 
@@ -154,7 +156,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	public URI getChildResourceURI(final Repository repository, final URI parentResourceURI, final String resourceName)
 	{
 		//TODO fix IllegalArgumentException by checking to ensure that the parent resource is within the repository
-		return parentResourceURI.resolve(encode(resourceName));	//encode the resource name and resolve it against the parent resource URI
+		return parentResourceURI.resolve(URIPath.encodeSegment(resourceName));	//encode the resource name and resolve it against the parent resource URI
 	}
 	
 	/**Creates a new resource with the appropriate default contents for this resource type.
