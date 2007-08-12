@@ -5,10 +5,10 @@ import java.net.URI;
 import java.util.Date;
 
 import com.garretwilson.rdf.RDFResource;
-import static com.garretwilson.rdf.xpackage.FileOntologyUtilities.*;
 
 import static com.garretwilson.rdf.dublincore.DCUtilities.*;
 import com.garretwilson.util.Debug;
+import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.repository.Repository;
 
 /**Marmot synchronization client.
@@ -180,8 +180,8 @@ Debug.trace("both existed; we did what we needed to do; nothing more should happ
 			}
 			final RDFResource sourceResource=sourceRepository.getResourceDescription(sourceResourceURI);	//get a description of the source resource
 			final RDFResource destinationResource=destinationRepository.getResourceDescription(destinationResourceURI);	//get a description of the destination resource
-			final long sourceSize=getSize(sourceResource);	//get the size of the source
-			final long destinationSize=getSize(destinationResource);	//get the size of the destination
+			final long sourceSize=Marmot.getSize(sourceResource);	//get the size of the source
+			final long destinationSize=Marmot.getSize(destinationResource);	//get the size of the destination
 				//size
 			if(sourceSize<0 || sourceSize!=destinationSize)	//if the sizes don't match, or we don't know one of the sizes
 			{

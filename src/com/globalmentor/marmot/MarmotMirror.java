@@ -10,7 +10,6 @@ import com.garretwilson.net.http.HTTPClient;
 import com.garretwilson.rdf.RDFResource;
 import com.garretwilson.rdf.dublincore.*;
 import com.garretwilson.rdf.version.*;
-import static com.garretwilson.rdf.xpackage.FileOntologyUtilities.*;
 
 import static com.garretwilson.text.CharacterConstants.*;
 import static com.garretwilson.util.CommandLineArgumentUtilities.*;

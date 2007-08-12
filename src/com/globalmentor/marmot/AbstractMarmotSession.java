@@ -193,7 +193,7 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 	{
 		RK resourceKit=null;
 			//step 1: try to match a resource kit by content type
-		final ContentType contentType=MIMEOntologyUtilities.getMediaType(resource); //get the content type of the resource
+		final ContentType contentType=Marmot.getMediaType(resource); //get the content type of the resource
 		if(contentType!=null)	//if we know the content type of the resource
 		{
 			resourceKit=getResourceKit(contentType);	//see if we have a resource kit registered for this media type

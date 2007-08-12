@@ -19,14 +19,11 @@ import com.garretwilson.io.IO;
 import com.garretwilson.net.*;
 import com.garretwilson.rdf.*;
 import static com.garretwilson.rdf.RDFUtilities.addType;
-import static com.garretwilson.rdf.xpackage.FileOntologyConstants.*;
-import static com.garretwilson.rdf.xpackage.FileOntologyUtilities.*;
-import static com.garretwilson.rdf.xpackage.MIMEOntologyConstants.*;
-import static com.garretwilson.rdf.xpackage.MIMEOntologyUtilities.*;
 import static com.garretwilson.rdf.dublincore.DCUtilities.*;
 import static com.garretwilson.rdf.xpackage.XPackageUtilities.*;
 import com.garretwilson.util.Debug;
 
+import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.repository.AbstractRepository;
 
 /**Repository stored in a filesystem.
@@ -473,14 +470,15 @@ public class FileRepository extends AbstractRepository
 	*/
 	protected RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription, final File resourceFile) throws ResourceIOException
 	{
-		final Date modifiedTime=getModifiedTime(resourceDescription);	//get the modified time designation, if there is one
+		final Date modifiedTime=Marmot.getModifiedTime(resourceDescription);	//get the modified time designation, if there is one
 		if(modifiedTime!=null)	//if there is a modified time designated
 		{
 			resourceFile.setLastModified(modifiedTime.getTime());	//update the last modified time TODO does this work for directories? should we check?
 		}
 		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the resource description file
 		final RDFResource saveResourceDescription=new DefaultRDFResource(resourceDescription, resourceDescriptionFile.toURI());	//create a separate description we'll use for saving
-		saveResourceDescription.removeNamespaceProperties(MIME_ONTOLOGY_NAMESPACE_URI, FILE_ONTOLOGY_NAMESPACE_URI);	//remove all MIME and file-related properties, as they are live-update properties
+		
+//TODO important: remove the file-related and MIME-related live properties
 		try
 		{
 			saveResourceDescription(saveResourceDescription, resourceFile);	//save the resource description
@@ -547,8 +545,8 @@ public class FileRepository extends AbstractRepository
 		final String filename=resourceFile.getName();	//get the name of the file
 		if(resourceFile.isDirectory())	//if this is a directory
 		{
-			addType(resource, FILE_ONTOLOGY_NAMESPACE_URI, FOLDER_TYPE_NAME);	//add the file:folder type to indicate that this resource is a folder
-			setModifiedTime(resource, new Date(resourceFile.lastModified()));	//set the modified time as the last modified date of the file			
+			addType(resource, Marmot.MARMOT_NAMESPACE_URI, Marmot.COLLECTION_CLASS_NAME);	//add the file:folder type to indicate that this resource is a folder
+			Marmot.setModifiedTime(resource, new Date(resourceFile.lastModified()));	//set the modified time as the last modified date of the file			
 		}
 		else	//if this file is not a directory
 		{
@@ -558,12 +556,12 @@ public class FileRepository extends AbstractRepository
 			addLabel(resource, label); //add the unescaped filename without an extension as a label
 */
 
-			setSize(resource, resourceFile.length());	//set the file length
-			setModifiedTime(resource, new Date(resourceFile.lastModified()));	//set the modified time as the last modified date of the file			
+			Marmot.setSize(resource, resourceFile.length());	//set the file length
+			Marmot.setModifiedTime(resource, new Date(resourceFile.lastModified()));	//set the modified time as the last modified date of the file			
 			final ContentType contentType=getMediaType(filename);	//try to find the content type from the filename
 			if(contentType!=null)	//if we know the content type
 			{
-				setContentType(resource, contentType);	//set the content type property
+				Marmot.setContentType(resource, contentType);	//set the content type property
 			}
 		}
 

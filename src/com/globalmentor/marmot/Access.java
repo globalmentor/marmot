@@ -5,7 +5,7 @@ import java.util.Collection;
 
 import com.garretwilson.rdf.RDFListResource;
 
-import static com.globalmentor.marmot.MarmotConstants.*;
+import static com.globalmentor.marmot.Marmot.*;
 
 /**Specifies access for a resource.
 @author Garret Wilson

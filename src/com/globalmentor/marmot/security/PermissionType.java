@@ -6,7 +6,7 @@ import java.util.*;
 import static com.garretwilson.lang.ObjectUtilities.*;
 import static com.garretwilson.rdf.RDFUtilities.*;
 
-import static com.globalmentor.marmot.MarmotConstants.*;
+import static com.globalmentor.marmot.Marmot.*;
 
 /**The predefined permissions as an enum for working with permissions as a group.
 @author Garret Wilson

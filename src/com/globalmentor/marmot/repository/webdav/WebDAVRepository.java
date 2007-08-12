@@ -23,10 +23,6 @@ import static com.garretwilson.net.http.webdav.ApacheWebDAVConstants.*;
 import static com.garretwilson.net.http.webdav.WebDAVConstants.*;
 import static com.garretwilson.net.http.webdav.WebDAVUtilities.*;
 import static com.garretwilson.rdf.dublincore.DCUtilities.*;
-import static com.garretwilson.rdf.xpackage.FileOntologyConstants.*;
-import static com.garretwilson.rdf.xpackage.FileOntologyUtilities.*;
-import static com.garretwilson.rdf.xpackage.MIMEOntologyConstants.*;
-import static com.garretwilson.rdf.xpackage.MIMEOntologyUtilities.*;
 
 import com.garretwilson.io.FileUtilities;
 import com.garretwilson.io.OutputStreamDecorator;
@@ -43,6 +39,7 @@ import com.garretwilson.text.W3CDateFormat;
 import com.garretwilson.util.Debug;
 import static com.garretwilson.util.LocaleUtilities.*;
 import com.garretwilson.util.NameValuePair;
+import static com.globalmentor.marmot.Marmot.*;
 import com.globalmentor.marmot.repository.AbstractRepository;
 
 /**Repository accessed via WebDAV.
@@ -920,7 +917,7 @@ public class WebDAVRepository extends AbstractRepository
 						if(valueElements.size()==1 && COLLECTION_TYPE.equals(createQualifiedName(valueElements.get(0)).getReferenceURI()))	//if there is one child element with a reference URI of D:collection
 						{
 							isCollection=true;	//show that this is a collection
-							addType(resource, FILE_ONTOLOGY_NAMESPACE_URI, FOLDER_TYPE_NAME);	//add the file:folder type to indicate that this resource is a folder
+							addType(resource, MARMOT_NAMESPACE_URI, COLLECTION_CLASS_NAME);	//add the marmot:Collection type to indicate that this resource is a folder
 						}
 					}
 				}
@@ -1035,7 +1032,7 @@ public class WebDAVRepository extends AbstractRepository
 		}
 		if(isCollection)	//if this is a collection
 		{
-			resource.removeProperties(MIME_ONTOLOGY_NAMESPACE_URI, CONTENT_TYPE_PROPERTY_NAME);	//remove any content type properties (Apache mod_dav adds a "httpd/unix-directory" pseudo MIME type for collections, for example)
+			resource.removeProperties(MARMOT_NAMESPACE_URI, CONTENT_TYPE_PROPERTY_NAME);	//remove any content type properties (Apache mod_dav adds a "httpd/unix-directory" pseudo MIME type for collections, for example)
 		}
 		
 			//TODO fix filename encoding/decoding---there's no way to know what operating system the server is using

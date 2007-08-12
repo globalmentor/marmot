@@ -7,7 +7,7 @@ import static com.garretwilson.lang.EnumUtilities.*;
 import static com.garretwilson.lang.ObjectUtilities.*;
 import static com.garretwilson.rdf.RDFUtilities.*;
 
-import static com.globalmentor.marmot.MarmotConstants.*;
+import static com.globalmentor.marmot.Marmot.*;
 
 /**The predefined access levels as an enum for working with access levels as a group.
 @author Garret Wilson

@@ -7,9 +7,9 @@ import com.garretwilson.net.ResourceIOException;
 import com.garretwilson.net.URIPath;
 
 import static com.garretwilson.rdf.RDFUtilities.*;
-import static com.garretwilson.rdf.xpackage.FileOntologyConstants.*;
 
 import com.garretwilson.rdf.RDFResource;
+import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.AbstractResourceKit;
 
@@ -26,7 +26,7 @@ public class FolderResourceKit extends AbstractResourceKit
 	/**Default constructor.*/
 	public FolderResourceKit()
 	{
-		super(createReferenceURI(FILE_ONTOLOGY_NAMESPACE_URI, FOLDER_TYPE_NAME), Capability.CREATE);
+		super(createReferenceURI(Marmot.MARMOT_NAMESPACE_URI, Marmot.COLLECTION_CLASS_NAME), Capability.CREATE);
 	}
 
 	/**Returns the URI of a child resource with the given simple name within a parent resource.

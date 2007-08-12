@@ -14,9 +14,9 @@ import com.garretwilson.net.URIConstants;
 import static com.garretwilson.lang.ObjectUtilities.*;
 import static com.garretwilson.net.URIUtilities.*;
 import com.garretwilson.rdf.*;
-import com.globalmentor.marmot.MarmotConstants;
+import com.globalmentor.marmot.Marmot;
 
-import static com.globalmentor.marmot.MarmotConstants.*;
+import static com.globalmentor.marmot.Marmot.*;
 
 /**Abstract repository class the implements common features of a burrow.
 <p>Resource access methods should call {@link #checkResourceURI(URI)} as a security check to ensure the given URI is within the repository.</p>
@@ -26,7 +26,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 {
 
 	/**The resource factory for resources in the Marmot namespace.*/
-	protected final static RDFResourceFactory MARMOT_RESOURCE_FACTORY=new DefaultRDFResourceFactory(MarmotConstants.class.getPackage());	//TODO change this to Marmot.class eventually, when Marmot isn't the application
+	protected final static RDFResourceFactory MARMOT_RESOURCE_FACTORY=new DefaultRDFResourceFactory(Marmot.class.getPackage());	//TODO change this to Marmot.class eventually, when Marmot isn't the application
 
 	/**The registered event listeners.*/
 	protected final EventListenerManager eventListenerManager=new EventListenerManager();

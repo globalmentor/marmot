@@ -7,7 +7,7 @@ import java.util.Set;
 
 import static com.garretwilson.lang.ObjectUtilities.*;
 import static com.garretwilson.rdf.RDFUtilities.*;
-import static com.globalmentor.marmot.MarmotConstants.*;
+import static com.globalmentor.marmot.Marmot.*;
 
 import com.garretwilson.net.ResourceIOException;
 import com.garretwilson.rdf.*;

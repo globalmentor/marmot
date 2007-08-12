@@ -4,7 +4,7 @@ import java.net.URI;
 
 import com.globalmentor.marmot.security.AccessLevelType;
 
-import static com.globalmentor.marmot.MarmotConstants.*;
+import static com.globalmentor.marmot.Marmot.*;
 
 /**Specifies a rule for access to a resource.
 @author Garret Wilson

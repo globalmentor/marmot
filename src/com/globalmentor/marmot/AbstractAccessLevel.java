@@ -5,7 +5,7 @@ import java.util.Set;
 
 import static com.garretwilson.rdf.RDFUtilities.*;
 
-import static com.globalmentor.marmot.MarmotConstants.*;
+import static com.globalmentor.marmot.Marmot.*;
 
 import com.globalmentor.marmot.security.AccessLevelType;
 import com.globalmentor.marmot.security.PermissionType;
