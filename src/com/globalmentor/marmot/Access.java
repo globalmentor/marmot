@@ -29,20 +29,20 @@ public class Access extends AbstractMarmotResource
 
 	/**@return This access description's access rules.
 	@exception ClassCastException if the value of <code>marmot:accessRules</code> is not an {@link RDFListResource}.*/
-	public RDFListResource getAccessRules()	//TODO do something better to allow the list resource to be generically correct
+	public RDFListResource<AccessRule> getAccessRules()
 	{
-		return (RDFListResource)getPropertyValue(MARMOT_NAMESPACE_URI, ACCESS_RULES_PROPERTY_NAME);	//return the marmot:accessRules
+		return (RDFListResource<AccessRule>)getPropertyValue(MARMOT_NAMESPACE_URI, ACCESS_RULES_PROPERTY_NAME);	//return the marmot:accessRules property
 	}
 
 	/**Sets the access rules.
 	@param accessRules The access rules to set.
 	@return The access rule list used as the set value.
 	*/
-	public RDFListResource setAccessRules(final Collection<AccessRule> accessRules)
+	public RDFListResource<AccessRule> setAccessRules(final Collection<AccessRule> accessRules)
 	{
-		final RDFListResource accessRuleList=new RDFListResource();	//create a new RDF list resource
+		final RDFListResource<AccessRule> accessRuleList=new RDFListResource<AccessRule>();	//create a new RDF list resource
 		accessRuleList.addAll(accessRules);	//add all the access rules to the list
-		setProperty(MARMOT_NAMESPACE_URI, ACCESS_RULES_PROPERTY_NAME, accessRuleList);	//set the marmot:accessRules
+		setProperty(MARMOT_NAMESPACE_URI, ACCESS_RULES_PROPERTY_NAME, accessRuleList);	//set the marmot:accessRules property
 		return accessRuleList;	//return the access rule list used
 	}
 	

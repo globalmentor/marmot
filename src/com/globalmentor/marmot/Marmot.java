@@ -8,6 +8,7 @@ import javax.mail.internet.ContentType;
 import javax.mail.internet.ParseException;
 
 import com.garretwilson.io.FileUtilities;
+import static com.garretwilson.io.ContentTypeUtilities.*;
 import com.garretwilson.net.URIUtilities;
 import com.garretwilson.rdf.*;
 import com.garretwilson.rdf.dublincore.DCUtilities;
@@ -43,7 +44,7 @@ public class Marmot
 
 	/**The URI to the Marmot namespace.*/
 	public final static URI MARMOT_NAMESPACE_URI=URI.create("http://globalmentor.com/namespaces/marmot#");
-	
+
 		//Marmot property names
 	/**Specifies the access rules and permissions.*/
 	public final static String ACCESS_PROPERTY_NAME="access";
@@ -60,11 +61,9 @@ public class Marmot
 	/**Specifies the selector to select one or more resources.*/
 	public final static String SELECT_PROPERTY_NAME="select";
 
-		//Marmot type names
+		//Marmot class names
 	/**A rule specifying access permissions for zero or more principals.*/
 	public final static String ACCESS_RULE_TYPE_NAME="AccessRule";
-	/**A class of principals including any principal.*/
-//TODO del	public final static String ANY_PRINCIPAL_TYPE_NAME="AnyPrincipal";
 
 			//selector types
 	/**A selector selecting a resource by a property value.*/
@@ -140,6 +139,8 @@ public class Marmot
 	public final static String ACCESSED_TIME_PROPERTY_NAME="accessedTime";
 	/**The time when a resource was created.*/
 	public final static String CREATED_TIME_PROPERTY_NAME="createdTime";
+	/**The actual content type of a resource.*/
+	public final static String CONTENT_PROPERTY_NAME="content";
 	/**The MIME content type of a resource.*/
 	public final static String CONTENT_TYPE_PROPERTY_NAME="contentType";
 	/**The time when a resource was last modified.*/
@@ -184,7 +185,7 @@ public class Marmot
 		return isType(resource, MARMOT_NAMESPACE_URI, COLLECTION_CLASS_NAME);
 	}
 
-	/**Determines the file name specified by the given resource.
+	/**Determines the <code>marmot:name</code> specified by the given resource.
 	@param resource The resource for which a name should be returned.
 	@return The name of the resource, or <code>null</code> if the name could not be determined.
 	*/ 
@@ -193,7 +194,7 @@ public class Marmot
 		final RDFLiteral nameLiteral=asInstance(resource.getPropertyValue(MARMOT_NAMESPACE_URI, NAME_PROPERTY_NAME), RDFLiteral.class);
 		return nameLiteral!=null ? nameLiteral.getLexicalForm() : null;	//return the name, or null if we couldn't find the name
 	}
-	/**Replaces all <code>file:name</code> properties of the resource with a new property with the given value.
+	/**Sets the <code>marmot:name</code> property of the resource with a new property with the given value.
 	@param resource The resource for which the name properties should be replaced.
 	@param value The new name value.
 	*/
@@ -201,6 +202,7 @@ public class Marmot
 	{
 		return resource.setProperty(MARMOT_NAMESPACE_URI, NAME_PROPERTY_NAME, name); //replace all name properties with a literal name value
 	}
+
 	/**Determines the file size specified by the given resource.
 	@param resource The resource for which a size should be returned.
 	@return The size of the resource, or <code>-1</code> if the size could not be
@@ -212,6 +214,7 @@ public class Marmot
 		final IntegerLiteral sizeLiteral=asInstance(resource.getPropertyValue(MARMOT_NAMESPACE_URI, SIZE_PROPERTY_NAME), IntegerLiteral.class);
 		return sizeLiteral!=null ? sizeLiteral.getValue().longValue() : -1;	//return the size, or -1 if we couldn't find the size
 	}
+
 	/**Replaces all <code>file:size</code> properties of the resource with a new
 		property with the given value.
 	@param resource The resource for which the size properties should be replaced.
@@ -261,6 +264,26 @@ public class Marmot
 	{
 		return setDate(resource, MARMOT_NAMESPACE_URI, MODIFIED_TIME_PROPERTY_NAME, date);
 	}
+
+	/**Returns the literal <code>marmot:content</code> of the resource.
+	@param resource The resource for which the content type should be returned.
+	@return This resource's content declaration, or <code>null</code> if the resource has no <code>marmot:content</code> property specified
+	@exception ClassCastException if the value of the content property is not a {@link RDFLiteral}.
+	*/
+	public static RDFLiteral getContent(final RDFResource resource) throws ClassCastException
+	{
+		return (RDFLiteral)resource.getPropertyValue(MARMOT_NAMESPACE_URI, CONTENT_PROPERTY_NAME);	//return the marmot:content value
+	}
+
+	/**Sets this resource's content declaration.
+	@param resource The resource for which the content properties should be replaced.
+	@param content This resource's content declaration, or <code>null</code> if the resource should have no <code>marmot:content</code> property.
+	*/
+	public static void setContent(final RDFResource resource, final RDFLiteral content)
+	{
+		resource.setProperty(MARMOT_NAMESPACE_URI, CONTENT_PROPERTY_NAME, content);	//set the marmot:content property
+	}
+
 	/**Adds a <code>mime:contentType</code> property to the resource.
 	@param resource The resource to which a property should be added.
 	@param mediaType The object that specifies the content type.
@@ -273,76 +296,88 @@ public class Marmot
 	}
 
 	/**Attempts to determine the media type of the given resource. The media type
-			is determined in this order:
-			<ol>
-			  <li>The <code>mime:contentType</code> property, if present, is
-					checked.</li>
-				<li>The extension of the <code>xpackage:location</code> property
-					<code>href</code>, if present, is checked.</li>
-				<li>The extension, if any, of the resource URI is checked.</li>
-			</ol>
-		@param resource The resource of which the media type should be determined.
-		@return The media type of the resource, or <code>null</code> if the media
-			type could not be determined.
-		@see XPackageUtilities#getLocationHRef
-		*/
-		public static ContentType getMediaType(final RDFResource resource)
-		{
-			ContentType mediaType=null; //start out assuming we won't find the media type
-			final RDFObject mediaTypeObject=resource.getPropertyValue(MARMOT_NAMESPACE_URI, CONTENT_TYPE_PROPERTY_NAME); //return the contentType property
-			if(mediaTypeObject!=null) //if there was a content type
-			{
-				try
-				{
-					final String mediaTypeString=((RDFLiteral)mediaTypeObject).getLexicalForm(); //get the media type string
-					mediaType=new ContentType(mediaTypeString); //create a media type from the string
-				}
-				catch(ParseException parseException)	//if there is an error parsing the content type
-				{
-					throw new AssertionError(parseException);	//TODO fix better
-				}
-				catch(ClassCastException classCastException)
-				{
-					Debug.warn(classCastException); //if there was an error getting the media type, continue but create a warning
-				}
-			}
-			if(mediaType==null) //if we couldn't find the media type from the contentType property
-			{
-				try
-				{
-	//G***del Debug.trace("getting location href"); //G***del
-					final String href=XPackageUtilities.getLocationHRef(resource);  //get the location of the resource
-	//G***del Debug.trace("location href: ", href); //G***del
-					if(href!=null)  //if this resource has a location
-					{
-						mediaType=FileUtilities.getMediaType(new File(href)); //get the media type of the file
-					}
-				}
-				catch(ClassCastException classCastException)
-				{
-					Debug.warn(classCastException); //if there was an error retrieving the location href, continue but create a warning
-				}
-			}
-			if(mediaType==null) //try to find the media type from the URI
-			{
-				final URI referenceURI=resource.getReferenceURI();	//get the reference URI
-				if(referenceURI!=null)	//if there is a reference URI
-				{
-					
-					mediaType=URIUtilities.getMediaType(referenceURI);	//get the media type of the resource reference URI
-				}
-			}
-			return mediaType; //return whatever media type we found, if any
-		}
-	/**Replaces all <code>mime:contentType</code> properties of the resource with a new
-		property with the given value.
-	@param resource The resource for which the content type properties should be replaced.
-	@param mediaType The object that specifies the content type.
+		is determined in this order:
+		<ol>
+		  <li>The <code>mime:contentType</code> property, if present, is
+				checked.</li>
+			<li>The extension of the <code>xpackage:location</code> property
+				<code>href</code>, if present, is checked.</li>
+			<li>The extension, if any, of the resource URI is checked.</li>
+		</ol>
+	@param resource The resource of which the media type should be determined.
+	@return The media type of the resource, or <code>null</code> if the media
+		type could not be determined.
+	@see XPackageUtilities#getLocationHRef
 	*/
-	public static void setContentType(final RDFResource resource, final ContentType mediaType)
+	public static ContentType getMediaType(final RDFResource resource)
+	{
+		ContentType mediaType=null; //start out assuming we won't find the media type
+		final RDFObject mediaTypeObject=resource.getPropertyValue(MARMOT_NAMESPACE_URI, CONTENT_TYPE_PROPERTY_NAME); //return the contentType property
+		if(mediaTypeObject!=null) //if there was a content type
+		{
+			try
+			{
+				final String mediaTypeString=((RDFLiteral)mediaTypeObject).getLexicalForm(); //get the media type string
+				mediaType=new ContentType(mediaTypeString); //create a media type from the string
+			}
+			catch(ParseException parseException)	//if there is an error parsing the content type
+			{
+				throw new AssertionError(parseException);	//TODO fix better
+			}
+			catch(ClassCastException classCastException)
+			{
+				Debug.warn(classCastException); //if there was an error getting the media type, continue but create a warning
+			}
+		}
+		if(mediaType==null) //if we couldn't find the media type from the contentType property
+		{
+			try
+			{
+//G***del Debug.trace("getting location href"); //G***del
+				final String href=XPackageUtilities.getLocationHRef(resource);  //get the location of the resource
+//G***del Debug.trace("location href: ", href); //G***del
+				if(href!=null)  //if this resource has a location
+				{
+					mediaType=FileUtilities.getMediaType(new File(href)); //get the media type of the file
+				}
+			}
+			catch(ClassCastException classCastException)
+			{
+				Debug.warn(classCastException); //if there was an error retrieving the location href, continue but create a warning
+			}
+		}
+		if(mediaType==null) //try to find the media type from the URI
+		{
+			final URI referenceURI=resource.getReferenceURI();	//get the reference URI
+			if(referenceURI!=null)	//if there is a reference URI
+			{
+				
+				mediaType=URIUtilities.getMediaType(referenceURI);	//get the media type of the resource reference URI
+			}
+		}
+		return mediaType; //return whatever media type we found, if any
+	}
+
+	/**Returns the declared content type of the resource.
+	@param resource The resource for which the content type should be returned.
+	@return This rule's content type declaration, or <code>null</code> if this rule has no <code>marmot:contentType</code> property specified
+	@exception ClassCastException if the value of the content property is not a {@link RDFLiteral}.
+	@exception IllegalArgumentException Thrown if the string is not a syntactically correct content type.
+	*/
+	public static ContentType getContentType(final RDFResource resource) throws ClassCastException
+	{
+		final RDFLiteral contentTypeLiteral=(RDFLiteral)resource.getPropertyValue(MARMOT_NAMESPACE_URI, CONTENT_TYPE_PROPERTY_NAME);	//get the marmot:contentType value, if any
+		return contentTypeLiteral!=null ? createContentType(contentTypeLiteral.getLexicalForm()) : null;	//if there was a content type string, return the content type for it
+	}
+
+	/**Replaces all <code>marmot:contentType</code> properties of the resource with a new property with the given value.
+	@param resource The resource for which the content type properties should be replaced.
+	@param contentType The object that specifies the content type.
+	*/
+	public static void setContentType(final RDFResource resource, final ContentType contentType)
 	{
 			//replace all the the content type properties with a literal value of the string version of the content type
-		resource.setProperty(MARMOT_NAMESPACE_URI, CONTENT_TYPE_PROPERTY_NAME, new RDFPlainLiteral(mediaType.toString()));
+		resource.setProperty(MARMOT_NAMESPACE_URI, CONTENT_TYPE_PROPERTY_NAME, new RDFPlainLiteral(contentType.toString()));
 	}
 
 }

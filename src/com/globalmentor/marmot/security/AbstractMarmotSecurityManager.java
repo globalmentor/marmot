@@ -121,13 +121,12 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 //Debug.trace("got access resource:", RDFUtilities.toString(access));
 				if(access!=null)	//if we have access defined
 				{
-					final RDFListResource accessRules=access.getAccessRules();	//get the list of access rules
+					final RDFListResource<AccessRule> accessRules=access.getAccessRules();	//get the list of access rules
 					if(accessRules!=null)	//if there are access rules
 					{
 //Debug.trace("got access rules of size", accessRules.size());
-						for(final RDFObject accessRuleObject:accessRules)	//for each access rule
+						for(final AccessRule accessRule:accessRules)	//for each access rule
 						{
-							final AccessRule accessRule=(AccessRule)accessRuleObject;	//TODO fix cast; RDFLiteral will probably eventually be subordinated to RDFResource
 							final Selector selector=accessRule.getSelect();	//get the selector, if any
 //Debug.trace("trying selector", RDFUtilities.toString(selector));
 							if(selector!=null && (user==null || user instanceof RDFResource) && selector.selects((RDFResource)user))	//if this access rule's selector applies to this user
