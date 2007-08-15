@@ -338,7 +338,7 @@ public class Marmot
 //G***del Debug.trace("location href: ", href); //G***del
 				if(href!=null)  //if this resource has a location
 				{
-					mediaType=FileUtilities.getMediaType(new File(href)); //get the media type of the file
+					mediaType=FileUtilities.getContentType(new File(href)); //get the media type of the file
 				}
 			}
 			catch(ClassCastException classCastException)
@@ -352,7 +352,7 @@ public class Marmot
 			if(referenceURI!=null)	//if there is a reference URI
 			{
 				
-				mediaType=URIUtilities.getMediaType(referenceURI);	//get the media type of the resource reference URI
+				mediaType=URIUtilities.getContentType(referenceURI);	//get the media type of the resource reference URI
 			}
 		}
 		return mediaType; //return whatever media type we found, if any

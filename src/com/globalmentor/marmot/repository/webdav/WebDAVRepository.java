@@ -24,7 +24,6 @@ import static com.garretwilson.net.http.webdav.WebDAVConstants.*;
 import static com.garretwilson.net.http.webdav.WebDAVUtilities.*;
 import static com.garretwilson.rdf.dublincore.DCUtilities.*;
 
-import com.garretwilson.io.FileUtilities;
 import com.garretwilson.io.OutputStreamDecorator;
 import com.garretwilson.net.*;
 import com.garretwilson.net.http.*;
@@ -879,7 +878,6 @@ public class WebDAVRepository extends AbstractRepository
 		}
 */
 			//create a label G***maybe only do this if the resource kit has not added a label
-		final String filename=getFileName(resourceURI);	//get the filename
 		boolean isCollection=false;	//we'll detect if this is a collection base upon the properties
 		final RDFXMLProcessor rdfXMLProcessor=new RDFXMLProcessor(rdf);	//create a new processor for analyzing any RDF contained in RDF property values, using the existing RDF instance
 		for(final WebDAVProperty webdavProperty:propertyList)	//look at each WebDAV property
@@ -1034,7 +1032,15 @@ public class WebDAVRepository extends AbstractRepository
 		{
 			resource.removeProperties(MARMOT_NAMESPACE_URI, CONTENT_TYPE_PROPERTY_NAME);	//remove any content type properties (Apache mod_dav adds a "httpd/unix-directory" pseudo MIME type for collections, for example)
 		}
-		
+			//try to find a content type if none was specified
+		if(getContentType(resource)==null)	//if no content was determined
+		{
+			final ContentType contentType=getExtensionContentType(getNameExtension(getName(resourceURI)));	//get the registered content type for the resource's extension
+			if(contentType!=null)	//if there is a registered content type for the resource's extension
+			{
+				setContentType(resource, contentType);	//set the content type property
+			}
+		}
 			//TODO fix filename encoding/decoding---there's no way to know what operating system the server is using
 		
 			//TODO encode in UTF-8

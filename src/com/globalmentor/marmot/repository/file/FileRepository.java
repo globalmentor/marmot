@@ -13,17 +13,16 @@ import static com.garretwilson.io.FileUtilities.*;
 import static com.garretwilson.lang.CharSequenceUtilities.*;
 import static com.garretwilson.net.URIConstants.*;
 import static com.garretwilson.net.URIUtilities.*;
+import com.garretwilson.util.Debug;
 
-import com.garretwilson.io.FileUtilities;
-import com.garretwilson.io.IO;
+import com.garretwilson.io.*;
 import com.garretwilson.net.*;
 import com.garretwilson.rdf.*;
 import static com.garretwilson.rdf.RDFUtilities.addType;
 import static com.garretwilson.rdf.dublincore.DCUtilities.*;
 import static com.garretwilson.rdf.xpackage.XPackageUtilities.*;
-import com.garretwilson.util.Debug;
 
-import com.globalmentor.marmot.Marmot;
+import static com.globalmentor.marmot.Marmot.*;
 import com.globalmentor.marmot.repository.AbstractRepository;
 
 /**Repository stored in a filesystem.
@@ -260,20 +259,23 @@ public class FileRepository extends AbstractRepository
 				final File[] files=resourceDirectory.listFiles(FILE_FILTER);	//get a list of all files in the directory
 				for(final File file:files)	//for each file in the directory
 				{
-					final RDFResource resource;
+					final RDFResource childResource;
 					try
 					{
-						resource=createResourceDescription(rdf, file);	//create a resource description for this file
+						childResource=createResourceDescription(rdf, file);	//create a resource description for this file
 					}
 					catch(final IOException ioException)	//if an I/O exception occurs
 					{
 						throw createResourceIOException(getPublicURI(file.toURI()), ioException);	//translate the exception to a resource I/O exception and throw that, using a public URI to represent the file resource
 					}
 					final int newDepth=depth>0 ? depth-1 : depth;	//reduce the depth by one, unless we're using the unlimited depth value
-					final List<RDFResource> childResourceDescriptionList=getChildResourceDescriptions(resource.getReferenceURI(), newDepth);	//get a list of child descriptions for the resource we just created
-					final RDFListResource childrenListResource=RDFListResource.create(rdf, childResourceDescriptionList);	//create an RDF list of the children
-					setManifest(resource, childrenListResource);	//add the children as the manifest of the folder resource
-					resourceList.add(resource);	//add the resource to our list
+					if(file.isDirectory() && depth!=0)	//if this file is a directory and we haven't reached the bottom
+					{
+						final List<RDFResource> childResourceDescriptionList=getChildResourceDescriptions(childResource.getReferenceURI(), newDepth);	//get a list of child descriptions for the resource we just created
+						final RDFListResource<RDFResource> childrenListResource=RDFListResource.create(rdf, childResourceDescriptionList);	//create an RDF list of the children
+						setManifest(childResource, childrenListResource);	//add the children as the manifest of the folder resource
+					}
+					resourceList.add(childResource);	//add the resource to our list
 				}
 			}
 			return resourceList;	//return the list of resources we constructed
@@ -470,7 +472,7 @@ public class FileRepository extends AbstractRepository
 	*/
 	protected RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription, final File resourceFile) throws ResourceIOException
 	{
-		final Date modifiedTime=Marmot.getModifiedTime(resourceDescription);	//get the modified time designation, if there is one
+		final Date modifiedTime=getModifiedTime(resourceDescription);	//get the modified time designation, if there is one
 		if(modifiedTime!=null)	//if there is a modified time designated
 		{
 			resourceFile.setLastModified(modifiedTime.getTime());	//update the last modified time TODO does this work for directories? should we check?
@@ -545,8 +547,8 @@ public class FileRepository extends AbstractRepository
 		final String filename=resourceFile.getName();	//get the name of the file
 		if(resourceFile.isDirectory())	//if this is a directory
 		{
-			addType(resource, Marmot.MARMOT_NAMESPACE_URI, Marmot.COLLECTION_CLASS_NAME);	//add the file:folder type to indicate that this resource is a folder
-			Marmot.setModifiedTime(resource, new Date(resourceFile.lastModified()));	//set the modified time as the last modified date of the file			
+			addType(resource, MARMOT_NAMESPACE_URI, COLLECTION_CLASS_NAME);	//add the file:folder type to indicate that this resource is a folder
+			setModifiedTime(resource, new Date(resourceFile.lastModified()));	//set the modified time as the last modified date of the file			
 		}
 		else	//if this file is not a directory
 		{
@@ -555,13 +557,17 @@ public class FileRepository extends AbstractRepository
 			final String label=FileUtilities.removeExtension(FileUtilities.decodeFilename(filename));
 			addLabel(resource, label); //add the unescaped filename without an extension as a label
 */
-
-			Marmot.setSize(resource, resourceFile.length());	//set the file length
-			Marmot.setModifiedTime(resource, new Date(resourceFile.lastModified()));	//set the modified time as the last modified date of the file			
-			final ContentType contentType=getMediaType(filename);	//try to find the content type from the filename
-			if(contentType!=null)	//if we know the content type
+			setSize(resource, resourceFile.length());	//set the file length
+			setModifiedTime(resource, new Date(resourceFile.lastModified()));	//set the modified time as the last modified date of the file			
+			
+			//try to find a content type if none was specified
+			if(getContentType(resource)==null)	//if no content was determined
 			{
-				Marmot.setContentType(resource, contentType);	//set the content type property
+				final ContentType contentType=getExtensionContentType(getNameExtension(getName(resource.getReferenceURI())));	//get the registered content type for the resource's extension
+				if(contentType!=null)	//if there is a registered content type for the resource's extension
+				{
+					setContentType(resource, contentType);	//set the content type property
+				}
 			}
 		}
 

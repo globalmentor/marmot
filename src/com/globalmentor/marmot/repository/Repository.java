@@ -1,8 +1,12 @@
 package com.globalmentor.marmot.repository;
 
+import static com.garretwilson.lang.ObjectUtilities.checkInstance;
+
 import java.io.*;
 import java.net.URI;
 import java.util.List;
+
+import javax.mail.internet.ContentType;
 
 import com.garretwilson.net.ResourceIOException;
 import com.garretwilson.net.ResourceStateException;
@@ -54,6 +58,20 @@ public interface Repository
 	@exeption ResourceIOException if there is an error closing the repository.
 	*/
 	public void close() throws ResourceIOException;
+
+	/**Associates the given content type with the given extension, without regard to case.
+	@param extension The URI name extension with which the content type should be associated, or <code>null</code> if the content type should be associated with resources that have no extension.
+	@param contentType The content type to associate with the given extension.
+	@return The content type previously registered with the given extension, or <code>null</code> if no content type was previously registered.
+	@exception NullPointerException if the given content type is <code>null</code>.
+	*/
+	public ContentType registerExtensionContentType(final String extension, final ContentType contentType);
+
+	/**Returns the content type assciated with the given extension, without regard to case.
+	@param extension The URI name extension with which the content type is associated, or <code>null</code> if the content type is associated with resources that have no extension.
+	@return The content type associated with the given extension, or <code>null</code> if there is no content type associated with the given extension.
+	*/
+	public ContentType getExtensionContentType(final String extension);
 
 	/**Determines the URI of the collection resource of the given URI; either the given resource URI if the resource represents a collection, or the parent resource if not.
 	@param resourceURI The URI of the resource for which the collection resource URI should be returned.

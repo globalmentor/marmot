@@ -4,12 +4,12 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-import com.garretwilson.event.*;
-import static com.garretwilson.io.OutputStreamUtilities.*;
+import javax.mail.internet.ContentType;
 
-import com.garretwilson.net.ResourceIOException;
-import com.garretwilson.net.ResourceStateException;
-import com.garretwilson.net.URIConstants;
+import com.garretwilson.event.*;
+import static com.garretwilson.io.FileUtilities.*;
+import static com.garretwilson.io.OutputStreamUtilities.*;
+import com.garretwilson.net.*;
 
 import static com.garretwilson.lang.ObjectUtilities.*;
 import static com.garretwilson.net.URIUtilities.*;
@@ -26,7 +26,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 {
 
 	/**The resource factory for resources in the Marmot namespace.*/
-	protected final static RDFResourceFactory MARMOT_RESOURCE_FACTORY=new DefaultRDFResourceFactory(Marmot.class.getPackage());	//TODO change this to Marmot.class eventually, when Marmot isn't the application
+	protected final static RDFResourceFactory MARMOT_RESOURCE_FACTORY=new DefaultRDFResourceFactory(Marmot.class.getPackage());
 
 	/**The registered event listeners.*/
 	protected final EventListenerManager eventListenerManager=new EventListenerManager();
@@ -141,6 +141,29 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 				throw new IllegalStateException("Repository is not open.");				
 			}
 		}
+	}
+
+	/**The map of content types mapped to lowercase URI name extensions.*/
+	private final Map<String, ContentType> extensionContentTypeMap=new HashMap<String, ContentType>(FILE_EXTENSION_CONTENT_TYPE_MAP);
+
+	/**Associates the given content type with the given extension, without regard to case.
+	@param extension The URI name extension with which the content type should be associated, or <code>null</code> if the content type should be associated with resources that have no extension.
+	@param contentType The content type to associate with the given extension.
+	@return The content type previously registered with the given extension, or <code>null</code> if no content type was previously registered.
+	@exception NullPointerException if the given content type is <code>null</code>.
+	*/
+	public ContentType registerExtensionContentType(final String extension, final ContentType contentType)
+	{
+		return extensionContentTypeMap.put(extension!=null ? extension.toLowerCase() : null, checkInstance(contentType, "Content type cannot be null."));
+	}
+
+	/**Returns the content type assciated with the given extension, without regard to case.
+	@param extension The URI name extension with which the content type is associated, or <code>null</code> if the content type is associated with resources that have no extension.
+	@return The content type associated with the given extension, or <code>null</code> if there is no content type associated with the given extension.
+	*/
+	public ContentType getExtensionContentType(final String extension)
+	{
+		return extensionContentTypeMap.get(extension!=null ? extension.toLowerCase() : null);	//return the content type, if any, associated with the given extension
 	}
 
 	/**Default constructor with no settings.
