@@ -56,7 +56,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 		}
 		if(checkInstance(owner, "Owner cannot be null.").equals(user))	//if the user is the owner
 		{
-			return Boolean.TRUE;	//allow the owner to do anything
+			return true;	//allow the owner to do anything
 		}
 		return getAllowedPermissionTypes(repository, resourceURI, user).contains(permissionType);	//see if the allowed permission types contain the requested permission
 	}
@@ -108,7 +108,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	protected Set<PermissionType> getAllowedPermissionTypes(final Repository repository, final URI resourceURI, final Principal user) throws ResourceIOException
+	public Set<PermissionType> getAllowedPermissionTypes(final Repository repository, final URI resourceURI, final Principal user) throws ResourceIOException
 	{
 //Debug.trace("trying to get allowed permissions for resource", resourceURI, "with user", user!=null ? user.getName() : "(none)");
 		if(checkInstance(repository, "Repository cannot be null.").resourceExists(checkInstance(resourceURI, "Resource URI cannot be null.")))	//see if the resource exists; if not, consider it to have inherited access

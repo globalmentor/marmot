@@ -23,6 +23,8 @@ import static com.garretwilson.rdf.dublincore.DCUtilities.*;
 import static com.garretwilson.rdf.xpackage.XPackageUtilities.*;
 
 import static com.globalmentor.marmot.Marmot.*;
+
+import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.repository.AbstractRepository;
 
 /**Repository stored in a filesystem.
@@ -273,7 +275,7 @@ public class FileRepository extends AbstractRepository
 					{
 						final List<RDFResource> childResourceDescriptionList=getChildResourceDescriptions(childResource.getReferenceURI(), newDepth);	//get a list of child descriptions for the resource we just created
 						final RDFListResource<RDFResource> childrenListResource=RDFListResource.create(rdf, childResourceDescriptionList);	//create an RDF list of the children
-						setManifest(childResource, childrenListResource);	//add the children as the manifest of the folder resource
+						Marmot.setContents(childResource, childrenListResource);	//add the children as the manifest of the folder resource
 					}
 					resourceList.add(childResource);	//add the resource to our list
 				}

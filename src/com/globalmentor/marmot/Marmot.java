@@ -22,6 +22,7 @@ import static com.garretwilson.lang.ObjectUtilities.*;
 import static com.garretwilson.net.URIConstants.*;
 import static com.garretwilson.net.URIUtilities.*;
 import static com.garretwilson.rdf.RDFUtilities.*;
+import static com.garretwilson.rdf.xpackage.XPackageConstants.XPACKAGE_NAMESPACE_URI;
 
 /**Constant values and utilities used by Marmot.
 @author Garret Wilson
@@ -139,10 +140,12 @@ public class Marmot
 	public final static String ACCESSED_TIME_PROPERTY_NAME="accessedTime";
 	/**The time when a resource was created.*/
 	public final static String CREATED_TIME_PROPERTY_NAME="createdTime";
-	/**The actual content type of a resource.*/
+	/**The actual content of a resource.*/
 	public final static String CONTENT_PROPERTY_NAME="content";
 	/**The MIME content type of a resource.*/
 	public final static String CONTENT_TYPE_PROPERTY_NAME="contentType";
+	/**The list of child resources contained by a resource such as a collection or package.*/
+	public final static String CONTENTS_PROPERTY_NAME="contents";
 	/**The time when a resource was last modified.*/
 	public final static String MODIFIED_TIME_PROPERTY_NAME="modifiedTime";
 	/**The name of a resource, which may differ from that indicated by the URI, if any.*/
@@ -378,6 +381,25 @@ public class Marmot
 	{
 			//replace all the the content type properties with a literal value of the string version of the content type
 		resource.setProperty(MARMOT_NAMESPACE_URI, CONTENT_TYPE_PROPERTY_NAME, new RDFPlainLiteral(contentType.toString()));
+	}
+
+	/**Retrieves the list of child resources of the resource.
+	@param resource The resource the contents of which will be returned.
+	@return The contents of the resource, or <code>null</code> if no contents property exists.
+	@exception ClassCastException if the value of the contents property is not a {@link RDFListResource}. 
+	*/
+	public static RDFListResource<RDFResource> getContents(final RDFResource resource)
+	{
+		return (RDFListResource<RDFResource>)resource.getPropertyValue(MARMOT_NAMESPACE_URI, CONTENTS_PROPERTY_NAME); //return the contents, if any
+	}
+
+	/**Set the contents property of the resource.
+	@param resource The resource for which the list of contents should be set.
+	@param contents The list of contents, or <code>null</code> if there should be no contents.
+	*/
+	public static void setContents(final RDFResource resource, final RDFListResource<RDFResource> contents)
+	{
+		resource.setProperty(XPACKAGE_NAMESPACE_URI, CONTENTS_PROPERTY_NAME, contents);	//set the contents of the resource
 	}
 
 }
