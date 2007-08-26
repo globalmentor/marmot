@@ -278,6 +278,15 @@ public class Marmot
 		return (RDFLiteral)resource.getPropertyValue(MARMOT_NAMESPACE_URI, CONTENT_PROPERTY_NAME);	//return the marmot:content value
 	}
 
+	/**Sets this resource's content declaration with a text string.
+	@param resource The resource for which the content properties should be replaced.
+	@param content This resource's content declaration, or <code>null</code> if the resource should have no <code>marmot:content</code> property.
+	*/
+	public static void setContent(final RDFResource resource, final String content)
+	{
+		resource.setProperty(MARMOT_NAMESPACE_URI, CONTENT_PROPERTY_NAME, content);	//set the marmot:content property
+	}
+
 	/**Sets this resource's content declaration.
 	@param resource The resource for which the content properties should be replaced.
 	@param content This resource's content declaration, or <code>null</code> if the resource should have no <code>marmot:content</code> property.
@@ -399,7 +408,7 @@ public class Marmot
 	*/
 	public static void setContents(final RDFResource resource, final RDFListResource<RDFResource> contents)
 	{
-		resource.setProperty(XPACKAGE_NAMESPACE_URI, CONTENTS_PROPERTY_NAME, contents);	//set the contents of the resource
+		resource.setProperty(MARMOT_NAMESPACE_URI, CONTENTS_PROPERTY_NAME, contents);	//set the contents of the resource
 	}
 
 }
