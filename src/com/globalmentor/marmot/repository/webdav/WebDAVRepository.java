@@ -1032,13 +1032,16 @@ public class WebDAVRepository extends AbstractRepository
 		{
 			resource.removeProperties(MARMOT_NAMESPACE_URI, CONTENT_TYPE_PROPERTY_NAME);	//remove any content type properties (Apache mod_dav adds a "httpd/unix-directory" pseudo MIME type for collections, for example)
 		}
-			//try to find a content type if none was specified
-		if(getContentType(resource)==null)	//if no content was determined
+		else	//if this is not a collection, try to get the content type of the resource
 		{
-			final ContentType contentType=getExtensionContentType(getNameExtension(getName(resourceURI)));	//get the registered content type for the resource's extension
-			if(contentType!=null)	//if there is a registered content type for the resource's extension
+				//try to find a content type if none was specified
+			if(getContentType(resource)==null)	//if no content was determined
 			{
-				setContentType(resource, contentType);	//set the content type property
+				final ContentType contentType=getExtensionContentType(getNameExtension(getName(resourceURI)));	//get the registered content type for the resource's extension
+				if(contentType!=null)	//if there is a registered content type for the resource's extension
+				{
+					setContentType(resource, contentType);	//set the content type property
+				}
 			}
 		}
 			//TODO fix filename encoding/decoding---there's no way to know what operating system the server is using

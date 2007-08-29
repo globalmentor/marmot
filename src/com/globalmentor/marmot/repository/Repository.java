@@ -1,18 +1,13 @@
 package com.globalmentor.marmot.repository;
 
-import static com.garretwilson.lang.ObjectUtilities.checkInstance;
-
 import java.io.*;
 import java.net.URI;
 import java.util.List;
 
 import javax.mail.internet.ContentType;
 
-import com.garretwilson.net.ResourceIOException;
-import com.garretwilson.net.ResourceStateException;
-import com.garretwilson.net.URIConstants;
-import com.garretwilson.rdf.RDFPropertyValuePair;
-import com.garretwilson.rdf.RDFResource;
+import com.garretwilson.net.*;
+import com.garretwilson.rdf.*;
 
 /**A Marmot information store.
 @author Garret Wilson
