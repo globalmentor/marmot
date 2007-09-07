@@ -63,8 +63,8 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 			this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI must not be null.").normalize();
 		}
 		
-		/**@return The base URI of the public URI namespace being managed; equivalent to {@link #getReferenceURI()}.*/
-		public URI getPublicRepositoryURI() {return getReferenceURI();}
+		/**@return The base URI of the public URI namespace being managed; equivalent to {@link #getURI()}.*/
+		public URI getPublicRepositoryURI() {return getURI();}
 	
 		/**Sets the base URI of the public URI namespace being managed, reference URI of the repository.
 		If there currently is no private repository URI, it will be updated to match the given public repository URI.
@@ -82,7 +82,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 		*/
 		protected URI getPrivateURI(final URI publicURI)
 		{
-			return changeBase(publicURI, getReferenceURI(), getPrivateRepositoryURI());	//change the base of the URI from the public URI namespace to the private URI namespace
+			return changeBase(publicURI, getURI(), getPrivateRepositoryURI());	//change the base of the URI from the public URI namespace to the private URI namespace
 		}
 
 		/**Translates a private URI to the equivalent public URI in the public repository URI namespace.
@@ -91,7 +91,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 		*/
 		protected URI getPublicURI(final URI privateURI)
 		{
-			return changeBase(privateURI, getPrivateRepositoryURI(), getReferenceURI());	//change the base of the URI from the private URI namespace to the public URI namespace
+			return changeBase(privateURI, getPrivateRepositoryURI(), getURI());	//change the base of the URI from the private URI namespace to the public URI namespace
 		}
 
 	/**Whether the repository should automatically be opened when needed.*/
@@ -115,9 +115,9 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	protected URI checkResourceURI(URI resourceURI)
 	{
 		resourceURI=checkInstance(resourceURI, "Resource URI cannot be null.").normalize();	//normalize the URI
-		if(!isChild(getReferenceURI(), resourceURI))	//if the given resource URI does not designate a resource within this repository's URI namespace (this will normalize the URI, but as we need to return a normalized form it's better to normalize first so that actual normalization changes won't have to be done twice)
+		if(!isChild(getURI(), resourceURI))	//if the given resource URI does not designate a resource within this repository's URI namespace (this will normalize the URI, but as we need to return a normalized form it's better to normalize first so that actual normalization changes won't have to be done twice)
 		{
-			throw new IllegalArgumentException(resourceURI+" does not designate a resource within the repository "+getReferenceURI());
+			throw new IllegalArgumentException(resourceURI+" does not designate a resource within the repository "+getURI());
 		}
 		return resourceURI;	//return the normalized form of the resource URI
 	}

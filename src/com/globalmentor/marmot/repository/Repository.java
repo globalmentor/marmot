@@ -16,7 +16,7 @@ public interface Repository
 {
 
 	/**@return The URI identifying the location of this repository.*/
-	public URI getReferenceURI();
+	public URI getURI();
 
 	/**@return The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository.*/
 	public URI getPrivateRepositoryURI();
@@ -27,7 +27,7 @@ public interface Repository
 	*/
 	public void setPrivateRepositoryURI(final URI privateRepositoryURI);
 	
-	/**@return The base URI of the public URI namespace being managed; equivalent to {@link #getReferenceURI()}.*/
+	/**@return The base URI of the public URI namespace being managed; equivalent to {@link #getURI()}.*/
 	public URI getPublicRepositoryURI();
 
 	/**Sets the base URI of the public URI namespace being managed, reference URI of the repository.

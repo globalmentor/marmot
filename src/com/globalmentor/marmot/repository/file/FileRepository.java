@@ -274,7 +274,7 @@ public class FileRepository extends AbstractRepository
 					final int newDepth=depth>0 ? depth-1 : depth;	//reduce the depth by one, unless we're using the unlimited depth value
 					if(file.isDirectory() && depth!=0)	//if this file is a directory and we haven't reached the bottom
 					{
-						final List<RDFResource> childResourceDescriptionList=getChildResourceDescriptions(childResource.getReferenceURI(), newDepth);	//get a list of child descriptions for the resource we just created
+						final List<RDFResource> childResourceDescriptionList=getChildResourceDescriptions(childResource.getURI(), newDepth);	//get a list of child descriptions for the resource we just created
 						final RDFListResource<RDFResource> childrenListResource=RDFListResource.create(rdf, childResourceDescriptionList);	//create an RDF list of the children
 						Marmot.setContents(childResource, childrenListResource);	//add the children as the manifest of the folder resource
 					}
@@ -451,7 +451,7 @@ public class FileRepository extends AbstractRepository
 		final Set<URI> newPropertyURISet=new HashSet<URI>();	//create a set to find out which properties we will be setting
 		for(final RDFPropertyValuePair property:properties)	//look at each property
 		{
-			newPropertyURISet.add(property.getName().getReferenceURI());	//add this property URI to our set
+			newPropertyURISet.add(property.getName().getURI());	//add this property URI to our set
 		}		
 		final RDFResource resourceDescription=getResourceDescription(resourceURI);	//get a description of the resource
 		for(final URI propertyURI:newPropertyURISet)	//for each new property URI
@@ -566,7 +566,7 @@ public class FileRepository extends AbstractRepository
 			//try to find a content type if none was specified
 			if(getContentType(resource)==null)	//if no content was determined
 			{
-				final ContentType contentType=getExtensionContentType(getNameExtension(getName(resource.getReferenceURI())));	//get the registered content type for the resource's extension
+				final ContentType contentType=getExtensionContentType(getNameExtension(getName(resource.getURI())));	//get the registered content type for the resource's extension
 				if(contentType!=null)	//if there is a registered content type for the resource's extension
 				{
 					setContentType(resource, contentType);	//set the content type property

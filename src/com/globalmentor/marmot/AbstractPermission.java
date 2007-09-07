@@ -31,6 +31,6 @@ public abstract class AbstractPermission extends AbstractMarmotResource implemen
 	public AbstractPermission(final URI referenceURI)
 	{
 		super(referenceURI);  //construct the parent class
-		this.permissionType=PermissionType.getPermissionType(getType(this).getReferenceURI());	//determine the permission type
+		this.permissionType=PermissionType.getPermissionType(getType(this).getURI());	//determine the permission type
 	}
 }

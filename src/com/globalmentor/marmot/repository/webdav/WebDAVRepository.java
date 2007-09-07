@@ -596,7 +596,7 @@ public class WebDAVRepository extends AbstractRepository
 		final Set<URI> newPropertyURISet=new HashSet<URI>();	//create a set to find out which properties we will be setting
 		for(final RDFPropertyValuePair property:properties)	//look at each property
 		{
-			newPropertyURISet.add(property.getName().getReferenceURI());	//add this property URI to our set
+			newPropertyURISet.add(property.getName().getURI());	//add this property URI to our set
 		}
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
@@ -617,7 +617,7 @@ public class WebDAVRepository extends AbstractRepository
 			for(final RDFPropertyValuePair rdfProperty:properties)	//for each property to set
 			{
 				rdfXMLGenerator.reset();	//reset the RDF XML generator so that any previously serialized RDF resources (which were property values, for example) won't be serialized by reference
-				final URI rdfPropertyURI=rdfProperty.getName().getReferenceURI();	//get the URI of the RDF property
+				final URI rdfPropertyURI=rdfProperty.getName().getURI();	//get the URI of the RDF property
 				final int propertyIndex=newPropertyURIList.indexOf(rdfPropertyURI);	//get the index of this property so we can determine the count
 				assert propertyIndex>=0 : "Known RDF property unexpectedly not found in list.";
 				final int propertyCount=propertyCounts[propertyIndex]++;	//find the current property count of this property, and update the property count for next time
@@ -912,7 +912,7 @@ public class WebDAVRepository extends AbstractRepository
 					if(propertyValue instanceof WebDAVDocumentFragmentPropertyValue)	//if the WebDAV property represents a document fragment
 					{
 						final List<Element> valueElements=getChildElements(((WebDAVDocumentFragmentPropertyValue)propertyValue).getDocumentFragment());	//get the child elements of the document fragment
-						if(valueElements.size()==1 && COLLECTION_TYPE.equals(createQualifiedName(valueElements.get(0)).getReferenceURI()))	//if there is one child element with a reference URI of D:collection
+						if(valueElements.size()==1 && COLLECTION_TYPE.equals(createQualifiedName(valueElements.get(0)).getURI()))	//if there is one child element with a reference URI of D:collection
 						{
 							isCollection=true;	//show that this is a collection
 							addType(resource, MARMOT_NAMESPACE_URI, COLLECTION_CLASS_NAME);	//add the marmot:Collection type to indicate that this resource is a folder

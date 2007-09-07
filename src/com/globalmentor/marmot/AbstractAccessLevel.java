@@ -35,7 +35,7 @@ public abstract class AbstractAccessLevel extends AbstractMarmotResource impleme
 	public AbstractAccessLevel(final URI referenceURI)
 	{
 		super(referenceURI);  //construct the parent class
-		this.accessLevelType=AccessLevelType.getAccessLevelType(getType(this).getReferenceURI());	//determine the access level type
+		this.accessLevelType=AccessLevelType.getAccessLevelType(getType(this).getURI());	//determine the access level type
 	}
 
 	/**@return This access level's allowed permissions.*/

@@ -208,7 +208,7 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 				if(rdfObject instanceof RDFResource)	//if this is a type resource, as we expect
 				{
 					final RDFResource typeResource=(RDFResource)rdfObject;	//cast the object to an RDF resource
-					resourceKit=getResourceKit(typeResource.getReferenceURI());	//see if we have a resource kit registered for this resource type URI
+					resourceKit=getResourceKit(typeResource.getURI());	//see if we have a resource kit registered for this resource type URI
 				}
 			}
 		}

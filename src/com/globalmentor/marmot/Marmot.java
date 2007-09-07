@@ -176,7 +176,7 @@ public class Marmot
 		{
 			labelLiteral=DCUtilities.getTitle(resource);	//see if there is a dc:title property
 		}
-		return labelLiteral!=null ? labelLiteral.getLexicalForm() : URIUtilities.getName(resource.getReferenceURI());	//if there is a label, return it; otherwise, return the name of the resource
+		return labelLiteral!=null ? labelLiteral.getLexicalForm() : URIUtilities.getName(resource.getURI());	//if there is a label, return it; otherwise, return the name of the resource
 	}
 
 	/**Determines if the given resource is a collection.
@@ -360,7 +360,7 @@ public class Marmot
 		}
 		if(mediaType==null) //try to find the media type from the URI
 		{
-			final URI referenceURI=resource.getReferenceURI();	//get the reference URI
+			final URI referenceURI=resource.getURI();	//get the reference URI
 			if(referenceURI!=null)	//if there is a reference URI
 			{
 				
