@@ -2,19 +2,15 @@ package com.globalmentor.marmot.security;
 
 import java.net.URI;
 import java.security.Principal;
-import java.util.EnumSet;
-import java.util.Set;
+import java.util.*;
 
 import static com.garretwilson.lang.ObjectUtilities.*;
-import static com.garretwilson.rdf.RDFUtilities.*;
-import static com.globalmentor.marmot.Marmot.*;
-
 import com.garretwilson.net.ResourceIOException;
-import com.garretwilson.rdf.*;
+import com.garretwilson.urf.*;
+import com.garretwilson.urf.select.*;
 
-import com.garretwilson.util.Debug;
-import com.globalmentor.marmot.*;
 import com.globalmentor.marmot.repository.Repository;
+import static com.globalmentor.marmot.security.MarmotSecurity.*;
 
 /**Abstract implementation of a security manager for Marmot.
 @author Garret Wilson
@@ -23,15 +19,6 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 {
 
 //TODO fix	@return <code>true</code> if the given user has the requested permission in relation to a resource in a repository, or <code>false</code> if the user has no such permission.
-
-	/**The URI for the property selector type.*/
-	protected final static URI PROPERTY_SELECTOR_TYPE_URI=createReferenceURI(MARMOT_NAMESPACE_URI, PROPERTY_SELECTOR_TYPE_NAME);
-	/**The URI for the union selector type.*/
-	protected final static URI UNION_SELECTOR_TYPE_URI=createReferenceURI(MARMOT_NAMESPACE_URI, UNION_SELECTOR_TYPE_NAME);
-	/**The URI for the universal selector type.*/
-	protected final static URI UNIVERSAL_SELECTOR_TYPE_URI=createReferenceURI(MARMOT_NAMESPACE_URI, UNIVERSAL_SELECTOR_TYPE_NAME);
-	/**The URI for the URI selector type.*/
-	protected final static URI URI_SELECTOR_TYPE_URI=createReferenceURI(MARMOT_NAMESPACE_URI, URI_SELECTOR_TYPE_NAME);
 
 	/**Determines whether a given user has permission to perform some action in relation to a given repository and resource.
 	This method is additive; if a superclass doesn't find a permission, a subclass may be able to add the permission.
@@ -113,23 +100,23 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 //Debug.trace("trying to get allowed permissions for resource", resourceURI, "with user", user!=null ? user.getName() : "(none)");
 		if(checkInstance(repository, "Repository cannot be null.").resourceExists(checkInstance(resourceURI, "Resource URI cannot be null.")))	//see if the resource exists; if not, consider it to have inherited access
 		{
-			final RDFResource resource=repository.getResourceDescription(resourceURI);	//get the resource description
-			final Security security=(Security)resource.getPropertyValue(MARMOT_NAMESPACE_URI, SECURITY_PROPERTY_NAME);	//get the marmot:security property value, if any
+			final URFResource resource=repository.getResourceDescription(resourceURI);	//get the resource description
+			final Security security=asInstance(resource.getPropertyValue(SECURITY_PROPERTY_URI), Security.class);	//get the security.security property value, if any
 			if(security!=null)	//if we have security information defined
 			{
-				final Access access=security.getAccess();	//get the marmot:access property value, if any
+				final Access access=security.getAccess();	//get the security.access property value, if any
 //Debug.trace("got access resource:", RDFUtilities.toString(access));
 				if(access!=null)	//if we have access defined
 				{
-					final RDFListResource<AccessRule> accessRules=access.getAccessRules();	//get the list of access rules
+					final URFListResource<AccessRule> accessRules=access.getAccessRules();	//get the list of access rules
 					if(accessRules!=null)	//if there are access rules
 					{
 //Debug.trace("got access rules of size", accessRules.size());
 						for(final AccessRule accessRule:accessRules)	//for each access rule
 						{
-							final Selector selector=accessRule.getSelect();	//get the selector, if any
+							final Selector selector=accessRule.getSelector();	//get the selector, if any
 //Debug.trace("trying selector", RDFUtilities.toString(selector));
-							if(selector!=null && (user==null || user instanceof RDFResource) && selector.selects((RDFResource)user))	//if this access rule's selector applies to this user
+							if(selector!=null && selector.selects(user))	//if this access rule's selector applies to this user
 							{
 								final AccessLevel accessLevel=accessRule.getAccessLevel();	//get the access level
 //Debug.trace("this selector matches; access level is", accessLevel);

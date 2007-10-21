@@ -4,47 +4,46 @@ import java.net.URI;
 import java.util.*;
 
 import static com.garretwilson.lang.ObjectUtilities.*;
-import static com.garretwilson.rdf.RDFUtilities.*;
 
-import static com.globalmentor.marmot.Marmot.*;
+import static com.globalmentor.marmot.security.MarmotSecurity.*;
 
 /**The predefined permissions as an enum for working with permissions as a group.
 @author Garret Wilson
 */
 public enum PermissionType
 {
-	DISCOVER(createReferenceURI(MARMOT_NAMESPACE_URI, DISCOVER_PERMISSION_TYPE_NAME)),
+	DISCOVER(DISCOVER_PERMISSION_CLASS_URI),
 
-	BROWSE(createReferenceURI(MARMOT_NAMESPACE_URI, BROWSE_PERMISSION_TYPE_NAME)),
+	BROWSE(BROWSE_PERMISSION_CLASS_URI),
 
-	ANNOTATE(createReferenceURI(MARMOT_NAMESPACE_URI, ANNOTATE_PERMISSION_TYPE_NAME)),
+	ANNOTATE(ANNOTATE_PERMISSION_CLASS_URI),
 	
-	PREVIEW(createReferenceURI(MARMOT_NAMESPACE_URI, PREVIEW_PERMISSION_TYPE_NAME)),
+	PREVIEW(PREVIEW_PERMISSION_CLASS_URI),
 	
-	EXECUTE(createReferenceURI(MARMOT_NAMESPACE_URI, EXECUTE_PERMISSION_TYPE_NAME)),
+	EXECUTE(EXECUTE_PERMISSION_CLASS_URI),
 	
-	READ(createReferenceURI(MARMOT_NAMESPACE_URI, READ_PERMISSION_TYPE_NAME)),
+	READ(READ_PERMISSION_CLASS_URI),
 
-	MODIFY_PROPERTIES(createReferenceURI(MARMOT_NAMESPACE_URI, MODIFY_PROPERTIES_PERMISSION_TYPE_NAME)),
+	MODIFY_PROPERTIES(MODIFY_PROPERTIES_PERMISSION_CLASS_URI),
 
-	MODIFY_SECURITY(createReferenceURI(MARMOT_NAMESPACE_URI, MODIFY_SECURITY_PERMISSION_TYPE_NAME)),
+	MODIFY_SECURITY(MODIFY_SECURITY_PERMISSION_CLASS_URI),
 
-	RENAME(createReferenceURI(MARMOT_NAMESPACE_URI, RENAME_PERMISSION_TYPE_NAME)),
+	RENAME(RENAME_PERMISSION_CLASS_URI),
 
-	ADD(createReferenceURI(MARMOT_NAMESPACE_URI, ADD_PERMISSION_TYPE_NAME)),
+	ADD(ADD_PERMISSION_CLASS_URI),
 
-	SUBTRACT(createReferenceURI(MARMOT_NAMESPACE_URI, SUBTRACT_PERMISSION_TYPE_NAME)),
+	SUBTRACT(SUBTRACT_PERMISSION_CLASS_URI),
 
-	DELETE(createReferenceURI(MARMOT_NAMESPACE_URI, DELETE_PERMISSION_TYPE_NAME));
+	DELETE(DELETE_PERMISSION_CLASS_URI);
 
-	/**The URI indicating the RDF type of this permission type.*/
+	/**The URI indicating the URF type of this permission type.*/
 	private final URI typeURI;
 
-		/**@return The URI indicating the RDF type of this permission type.*/
+		/**@return The URI indicating the URF type of this permission type.*/
 		public URI getTypeURI() {return typeURI;}
 
 	/**Type URI constructor.
-	@param typeURI The URI indicating the RDF type of this permission type.
+	@param typeURI The URI indicating the URF type of this permission type.
 	@exception NullPointerException if the given type URI is <code>null</code>.
 	*/
 	private PermissionType(final URI typeURI)
@@ -63,7 +62,7 @@ public enum PermissionType
 	*/
 	public static PermissionType getPermissionType(final URI permissionTypeURI)
 	{
-		if(typeURIPermissionTypeMap==null)	//if we haven't created the map yet (race conditions here are benign---at the worst it will result in the map initially being created multiple times
+		if(typeURIPermissionTypeMap==null)	//if we haven't created the map yet (race conditions here are benign---at the worst it will result in the map initially being created multiple times)
 		{
 			final Map<URI, PermissionType> newTypeURIPermissionTypeMap=new HashMap<URI, PermissionType>();	//create a new map
 			for(final PermissionType PermissionType:values())	//for each value

@@ -5,9 +5,8 @@ import java.util.*;
 
 import static com.garretwilson.lang.EnumUtilities.*;
 import static com.garretwilson.lang.ObjectUtilities.*;
-import static com.garretwilson.rdf.RDFUtilities.*;
 
-import static com.globalmentor.marmot.Marmot.*;
+import static com.globalmentor.marmot.security.MarmotSecurity.*;
 
 /**The predefined access levels as an enum for working with access levels as a group.
 @author Garret Wilson
@@ -15,31 +14,31 @@ import static com.globalmentor.marmot.Marmot.*;
 public enum AccessLevelType
 {
 
-	INHERITED(createReferenceURI(MARMOT_NAMESPACE_URI, INHERITED_ACCESS_LEVEL_TYPE_NAME)),
+	INHERITED(INHERITED_ACCESS_LEVEL_CLASS_URI),
 
-	PRIVATE(createReferenceURI(MARMOT_NAMESPACE_URI, PRIVATE_ACCESS_LEVEL_TYPE_NAME)),
+	PRIVATE(PRIVATE_ACCESS_LEVEL_CLASS_URI),
 
-	STEALTH(createReferenceURI(MARMOT_NAMESPACE_URI, STEALTH_ACCESS_LEVEL_TYPE_NAME),
+	STEALTH(STEALTH_ACCESS_LEVEL_CLASS_URI,
 			PermissionType.BROWSE,
 			PermissionType.ANNOTATE,
 			PermissionType.PREVIEW,
 			PermissionType.EXECUTE,
 			PermissionType.READ),
 
-	PREVIEW(createReferenceURI(MARMOT_NAMESPACE_URI, PREVIEW_ACCESS_LEVEL_TYPE_NAME),
+	PREVIEW(PREVIEW_ACCESS_LEVEL_CLASS_URI,
 			PermissionType.DISCOVER,
 			PermissionType.BROWSE,
 			PermissionType.ANNOTATE,
 			PermissionType.PREVIEW),
 
-	USE(createReferenceURI(MARMOT_NAMESPACE_URI, USE_ACCESS_LEVEL_TYPE_NAME),
+	USE(USE_ACCESS_LEVEL_CLASS_URI,
 			PermissionType.DISCOVER,
 			PermissionType.BROWSE,
 			PermissionType.ANNOTATE,
 			PermissionType.PREVIEW,
 			PermissionType.EXECUTE),
 
-	RETRIEVE(createReferenceURI(MARMOT_NAMESPACE_URI, RETRIEVE_ACCESS_LEVEL_TYPE_NAME),
+	RETRIEVE(RETRIEVE_ACCESS_LEVEL_CLASS_URI,
 			PermissionType.DISCOVER,
 			PermissionType.BROWSE,
 			PermissionType.ANNOTATE,
@@ -47,7 +46,7 @@ public enum AccessLevelType
 			PermissionType.EXECUTE,
 			PermissionType.READ),
 	
-	EDIT(createReferenceURI(MARMOT_NAMESPACE_URI, EDIT_ACCESS_LEVEL_TYPE_NAME),
+	EDIT(EDIT_ACCESS_LEVEL_CLASS_URI,
 			PermissionType.DISCOVER,
 			PermissionType.BROWSE,
 			PermissionType.ANNOTATE,
@@ -59,7 +58,7 @@ public enum AccessLevelType
 			PermissionType.ADD,
 			PermissionType.SUBTRACT),
 	
-	FULL(createReferenceURI(MARMOT_NAMESPACE_URI, FULL_ACCESS_LEVEL_TYPE_NAME),
+	FULL(FULL_ACCESS_LEVEL_CLASS_URI,
 			PermissionType.DISCOVER,
 			PermissionType.BROWSE,
 			PermissionType.ANNOTATE,
@@ -73,12 +72,12 @@ public enum AccessLevelType
 			PermissionType.SUBTRACT,
 			PermissionType.DELETE),
 
-	CUSTOM(createReferenceURI(MARMOT_NAMESPACE_URI, CUSTOM_ACCESS_LEVEL_TYPE_NAME));
+	CUSTOM(CUSTOM_ACCESS_LEVEL_CLASS_URI);
 
-	/**The URI indicating the RDF type of this access level.*/
+	/**The URI indicating the URF type of this access level.*/
 	private final URI typeURI;
 
-		/**@return The URI indicating the RDF type of this access level.*/
+		/**@return The URI indicating the URF type of this access level.*/
 		public URI getTypeURI() {return typeURI;}
 
 	/**The default permission types allowed for this access level.*/
@@ -88,7 +87,7 @@ public enum AccessLevelType
 		public Set<PermissionType> getDefaultAllowedPermissionTypes() {return defaultAllowedPermissionTypes;}
 
 	/**Type URI constructor.
-	@param typeURI The URI indicating the RDF type of this access level.
+	@param typeURI The URI indicating the URF type of this access level.
 	@exception NullPointerException if the given type URI is <code>null</code>.
 	*/
 	private AccessLevelType(final URI typeURI, final PermissionType... permissionTypes)
