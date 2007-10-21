@@ -3,7 +3,7 @@ package com.globalmentor.marmot.resource;
 import java.io.*;
 
 import com.garretwilson.net.ResourceIOException;
-import com.garretwilson.rdf.RDFResource;
+import com.garretwilson.urf.URFResource;
 
 /**An object that can filter resource descriptions and content.
 @author Garret Wilson
@@ -18,5 +18,5 @@ public interface ResourceFilter
 	@return The new description of the filtered resource content.
 	@exception ResourceIOException if there is an error filtering the resource.
 	*/
-	public RDFResource filter(final RDFResource description, final InputStream inputStream, final OutputStream outputStream) throws IOException;
+	public URFResource filter(final URFResource description, final InputStream inputStream, final OutputStream outputStream) throws IOException;
 }

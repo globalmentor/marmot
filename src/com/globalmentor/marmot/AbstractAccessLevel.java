@@ -3,17 +3,14 @@ package com.globalmentor.marmot;
 import java.net.URI;
 import java.util.Set;
 
-import static com.garretwilson.rdf.RDFUtilities.*;
+import com.globalmentor.marmot.security.*;
 
-import static com.globalmentor.marmot.Marmot.*;
-
-import com.globalmentor.marmot.security.AccessLevelType;
-import com.globalmentor.marmot.security.PermissionType;
+import static com.globalmentor.marmot.security.MarmotSecurity.*;
 
 /**An abstract implementation of an access level.
 @author Garret Wilson
 */
-public abstract class AbstractAccessLevel extends AbstractMarmotResource implements AccessLevel
+public abstract class AbstractAccessLevel extends AbstractMarmotSecurityResource implements AccessLevel
 {
 
 	/**The access level type this access level represents.*/
@@ -25,35 +22,40 @@ public abstract class AbstractAccessLevel extends AbstractMarmotResource impleme
 	/**Default constructor.*/
 	public AbstractAccessLevel()
 	{
-		this(null);	//construct the class with no reference URI
+		this(null);	//construct the class with no URI
 	}
 
-	/**Reference URI constructor.
-	@param referenceURI The reference URI for the new resource.
+	/**URI constructor.
+	@param uri The URI for the new resource.
 	@exception IllegalArgumentException if this class does not correspond to an existing {@link AccessLevelType}.
 	*/
-	public AbstractAccessLevel(final URI referenceURI)
+	public AbstractAccessLevel(final URI uri)
 	{
-		super(referenceURI);  //construct the parent class
-		this.accessLevelType=AccessLevelType.getAccessLevelType(getType(this).getURI());	//determine the access level type
+		super(uri);  //construct the parent class
+		this.accessLevelType=AccessLevelType.getAccessLevelType(getTypeURI());	//determine the access level type
 	}
 
-	/**@return This access level's allowed permissions.*/
+	/**Returns this access level's allowed permissions.
+	@return This access level's allowed permissions.
+	@see MarmotSecurity#ALLOW_PROPERTY_URI
+	*/
 	public Iterable<Permission> getAllows()
 	{
-		return getPropertyValues(MARMOT_NAMESPACE_URI, ALLOW_PROPERTY_NAME, Permission.class);	//return the marmot:allow values
+		return getPropertyValues(ALLOW_PROPERTY_URI, Permission.class);	//return the allow values
 	}
 
 	/**Adds a particular permission as allowed.
 	@param permission The permission to be allowed.
+	@see MarmotSecurity#ALLOW_PROPERTY_URI
 	*/
 	public void addAllow(final Permission permission)
 	{
-		addProperty(MARMOT_NAMESPACE_URI, ALLOW_PROPERTY_NAME, permission);	//add the marmot:allow property value
+		addPropertyValue(ALLOW_PROPERTY_URI, permission);	//add the allow property value
 	}
 
 	/**Adds a particular permission as allowed.
 	@param permissionType The type of permission to be allowed.
+	@see MarmotSecurity#ALLOW_PROPERTY_URI
 	*/
 	public void addAllow(final PermissionType permissionType)
 	{
@@ -62,10 +64,11 @@ public abstract class AbstractAccessLevel extends AbstractMarmotResource impleme
 
 	/**Sets the allowed permissions to those specified.
 	@param permissions The permissions that should be allowed.
+	@see MarmotSecurity#ALLOW_PROPERTY_URI
 	*/
 	public void setAllowedPermissions(final Set<Permission> permissions)
 	{
-		removeProperties(MARMOT_NAMESPACE_URI, ALLOW_PROPERTY_NAME);	//remove all the "allow" properties
+		removeProperties(ALLOW_PROPERTY_URI);	//remove all the allow properties
 		for(final Permission permission:permissions)	//for each permission
 		{
 			addAllow(permission);	//allow this permission
@@ -74,32 +77,38 @@ public abstract class AbstractAccessLevel extends AbstractMarmotResource impleme
 
 	/**Sets the allowed permissions to those specified.
 	@param permissionTypes The permission types that should be allowed.
+	@see MarmotSecurity#ALLOW_PROPERTY_URI
 	*/
 	public void setAllowedPermissionTypes(final Set<PermissionType> permissionTypes)
 	{
-		removeProperties(MARMOT_NAMESPACE_URI, ALLOW_PROPERTY_NAME);	//remove all the "allow" properties
+		removeProperties(ALLOW_PROPERTY_URI);	//remove all the allow properties
 		for(final PermissionType permissionType:permissionTypes)	//for each permission
 		{
 			addAllow(createPermission(permissionType));	//create a permission and allow it
 		}
 	}
 
-	/**@return This access level's denied permissions.*/
+	/**Returns this access level's denied permissions.
+	@return This access level's denied permissions.
+	@see MarmotSecurity#DENY_PROPERTY_URI
+	*/
 	public Iterable<Permission> getDenies()
 	{
-		return getPropertyValues(MARMOT_NAMESPACE_URI, DENY_PROPERTY_NAME, Permission.class);	//return the marmot:deny values
+		return getPropertyValues(DENY_PROPERTY_URI, Permission.class);	//return the deny values
 	}
 
 	/**Adds a particular permission as denied.
 	@param permission The permission to be denied.
+	@see MarmotSecurity#DENY_PROPERTY_URI
 	*/
 	public void addDeny(final Permission permission)
 	{
-		addProperty(MARMOT_NAMESPACE_URI, DENY_PROPERTY_NAME, permission);	//add the marmot:deny property value
+		addPropertyValue(DENY_PROPERTY_URI, permission);	//add the deny property value
 	}
 
 	/**Adds a particular permission as denied.
 	@param permissionType The type of permission to be denied.
+	@see MarmotSecurity#DENY_PROPERTY_URI
 	*/
 	public void addDeny(final PermissionType permissionType)
 	{
@@ -108,10 +117,11 @@ public abstract class AbstractAccessLevel extends AbstractMarmotResource impleme
 
 	/**Sets the denied permissions to those specified.
 	@param permissions The permissions that should be denied.
+	@see MarmotSecurity#DENY_PROPERTY_URI
 	*/
 	public void setDeniedPermissions(final Set<Permission> permissions)
 	{
-		removeProperties(MARMOT_NAMESPACE_URI, DENY_PROPERTY_NAME);	//remove all the "deny" properties
+		removeProperties(DENY_PROPERTY_URI);	//remove all the deny properties
 		for(final Permission permission:permissions)	//for each permission
 		{
 			addDeny(permission);	//deny this permission
@@ -120,10 +130,11 @@ public abstract class AbstractAccessLevel extends AbstractMarmotResource impleme
 
 	/**Sets the denied permissions to those specified.
 	@param permissionTypes The permission types that should be denied.
+	@see MarmotSecurity#DENY_PROPERTY_URI
 	*/
 	public void setDeniedPermissionTypes(final Set<PermissionType> permissionTypes)
 	{
-		removeProperties(MARMOT_NAMESPACE_URI, DENY_PROPERTY_NAME);	//remove all the "deny" properties
+		removeProperties(DENY_PROPERTY_URI);	//remove all the deny properties
 		for(final PermissionType permissionType:permissionTypes)	//for each permission
 		{
 			addDeny(createPermission(permissionType));	//create a permission and deny it

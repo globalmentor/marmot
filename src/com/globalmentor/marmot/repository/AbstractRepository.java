@@ -6,39 +6,37 @@ import java.util.*;
 
 import javax.mail.internet.ContentType;
 
-import com.garretwilson.event.*;
 import static com.garretwilson.io.FileUtilities.*;
 import static com.garretwilson.io.OutputStreamUtilities.*;
-import com.garretwilson.net.*;
-
 import static com.garretwilson.lang.ObjectUtilities.*;
+import com.garretwilson.net.*;
 import static com.garretwilson.net.URIUtilities.*;
-import com.garretwilson.rdf.*;
-import com.globalmentor.marmot.Marmot;
+import com.garretwilson.urf.*;
 
-import static com.globalmentor.marmot.Marmot.*;
+import com.globalmentor.marmot.security.MarmotSecurity;
+import static com.globalmentor.marmot.security.MarmotSecurity.*;
 
-/**Abstract repository class the implements common features of a burrow.
+/**Abstract implementation of a repository class with typical features.
 <p>Resource access methods should call {@link #checkResourceURI(URI)} as a security check to ensure the given URI is within the repository.</p>
 @author Garret Wilson
 */
-public abstract class AbstractRepository extends DefaultRDFResource implements Repository
+public abstract class AbstractRepository extends DefaultURFResource implements Repository
 {
 
-	/**The resource factory for resources in the Marmot namespace.*/
-	protected final static RDFResourceFactory MARMOT_RESOURCE_FACTORY=new DefaultRDFResourceFactory(Marmot.class.getPackage());
+	/**The resource factory for resources in the Marmot security namespace.*/
+	protected final static URFResourceFactory MARMOT_SECURITY_RESOURCE_FACTORY=new JavaURFResourceFactory(MarmotSecurity.class.getPackage());
 
 	/**The registered event listeners.*/
-	protected final EventListenerManager eventListenerManager=new EventListenerManager();
+//TODO bring back when needed	protected final EventListenerManager eventListenerManager=new EventListenerManager();
 
-	/**Sets the reference URI of the resource.
+	/**Sets the URI.
 	If there currently is no private repository URI, it will be updated to match the given public repository URI.
-	@param uri The new reference URI, or <code>null</code> if the identifier is not known.
+	@param uri The new URI, or <code>null</code> if there is no URI.
 	*/
-	public void setReferenceURI(final URI uri)
+	protected void setURI(final URI uri)
 	{
-			//TODO check for the reference URI being set to null
-		super.setReferenceURI(uri);	//set the refeference URI normally
+			//TODO check for the URI being set to null
+		super.setURI(uri);	//set the URI normally
 		if(getPrivateRepositoryURI()==null)	//if there is no private repository URI
 		{
 			setPrivateRepositoryURI(uri);	//update the private repository URI to match
@@ -62,10 +60,10 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 		{
 			this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI must not be null.").normalize();
 		}
-		
+
 		/**@return The base URI of the public URI namespace being managed; equivalent to {@link #getURI()}.*/
 		public URI getPublicRepositoryURI() {return getURI();}
-	
+
 		/**Sets the base URI of the public URI namespace being managed, reference URI of the repository.
 		If there currently is no private repository URI, it will be updated to match the given public repository URI.
 		@param publicRepositoryURI The base URI of the public URI namespace being managed.
@@ -73,9 +71,9 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 		*/
 		public void setPublicRepositoryURI(final URI publicRepositoryURI)
 		{
-			setReferenceURI(checkInstance(publicRepositoryURI, "Public repository URI must not be null.").normalize());
+			setURI(checkInstance(publicRepositoryURI, "Public repository URI must not be null.").normalize());
 		}
-		
+
 		/**Translates a public URI in the repository to the equivalent private URI in the private URI namespace.
 		@param publicURI The URI in the public URI namesapce.
 		@return A URI equivalent to the public URI in the private URI namespace.
@@ -99,16 +97,16 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 
 		/**@return Whether the repository should automatically be opened when needed.*/
 		public boolean isAutoOpen() {return autoOpen;}
-		
+
 		/**Sets whether the repository should automatically be opened when needed.
 		@param autoOpen Whether the repository should automatically be opened when needed.
 		*/
 		public void setAutoOpen(final boolean autoOpen) {this.autoOpen=autoOpen;}
-	
+
 	/**Checks to make sure the resource designated by the given resource URI is within this repository.
 	This version makes sure the given URI is a child of the resource reference URI.
 	@param resourceURI The URI of the resource to check.
-	@return The normalized form of the given resource. 
+	@return The normalized form of the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception NullPointerException if the given resource URI is <code>null</code>.
 	*/
@@ -138,7 +136,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 			}
 			else	//if we shouldn't open the repository automatically
 			{
-				throw new IllegalStateException("Repository is not open.");				
+				throw new IllegalStateException("Repository is not open.");
 			}
 		}
 	}
@@ -172,7 +170,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	public AbstractRepository()
 	{
 	}
-	
+
 	/**URI contructor with no separate private URI namespace.
 	@param repositoryURI The URI identifying the location of this repository.
 	@exception NullPointerException if the given respository URI is <code>null</code>.
@@ -193,15 +191,15 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 		this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI cannot be null.").normalize();
 	}
 
-	/**Creates a default empty RDF data model.
+	/**Creates a default empty URF data model.
 	The correct resource factories will be installed to create appropriate classes in the Marmot namespace.
-	@return A new default RDF data model.
+	@return A new default URF data model.
 	*/
-	protected RDF createRDF()
+	protected URF createURF()
 	{
-		final RDF rdf=new RDF();	//create a new RDF data model
-		rdf.registerResourceFactory(MARMOT_NAMESPACE_URI, MARMOT_RESOURCE_FACTORY);	//register the Marmot resource factory with the data model
-		return rdf;	//return the new data model
+		final URF urf=new URF();	//create a new URF data model
+		urf.registerResourceFactory(MARMOT_SECURITY_NAMESPACE_URI, MARMOT_SECURITY_RESOURCE_FACTORY);	//register the Marmot resource factory with the data model
+		return urf;	//return the new data model
 	}
 
 	/**@return Whether the repository has been opened for access.*/
@@ -209,7 +207,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 
 	/**Opens the repository for access.
 	If the repository is already open, no action occurs.
-	At a minimum the respository must have a public and a private URI specified, even though these may both be the same URI. 
+	At a minimum the respository must have a public and a private URI specified, even though these may both be the same URI.
 	@exception IllegalStateException if the settings of this repository are inadequate to open the repository.
 	@exception ResourceIOException if there is an error opening the repository.
 	*/
@@ -245,7 +243,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	If a resource already exists at the given URI it will be replaced.
 	The returned output stream should always be closed.
 	If a resource with no contents is desired, {@link #createResource(URI, byte[])} with zero bytes is better suited for this task.
-	This implementation delegates to {@link #createResource(URI, RDFResource)} with a default description.
+	This implementation delegates to {@link #createResource(URI, URFResource)} with a default description.
 	@param resourceURI The reference URI to use to identify the resource.
 	@return An output stream for storing the contents of the resource.
 	@exception NullPointerException if the given resource URI is <code>null</code>.
@@ -255,12 +253,12 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	*/
 	public OutputStream createResource(final URI resourceURI) throws ResourceIOException
 	{
-		return createResource(resourceURI, new DefaultRDFResource());	//create the resource with a default description
+		return createResource(resourceURI, new DefaultURFResource());	//create the resource with a default description
 	}
 
 	/**Creates a new resource with a default description and contents.
 	If a resource already exists at the given URI it will be replaced.
-	This implementation delegates to {@link #createResource(URI, RDFResource, byte[])} with a default description.
+	This implementation delegates to {@link #createResource(URI, URFResource, byte[])} with a default description.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceContents The contents to store in the resource.
 	@return A description of the resource that was created.
@@ -269,9 +267,9 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public RDFResource createResource(final URI resourceURI, final byte[] resourceContents) throws ResourceIOException
+	public URFResource createResource(final URI resourceURI, final byte[] resourceContents) throws ResourceIOException
 	{
-		return createResource(resourceURI, new DefaultRDFResource(), resourceContents);	//create the resource with a default description
+		return createResource(resourceURI, new DefaultURFResource(), resourceContents);	//create the resource with a default description
 	}
 
 	/**Retrieves immediate child resources of the resource at the given URI.
@@ -282,15 +280,15 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI) throws ResourceIOException
+	public List<URFResource> getChildResourceDescriptions(final URI resourceURI) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
 		return getChildResourceDescriptions(resourceURI, 1);	//get a list of child resource descriptions without going deeper than one level
 	}
-	
+
 	/**Determines the URI of the collection resource of the given URI; either the given resource URI if the resource represents a collection, or the parent resource if not.
-	If the given resource URI is a collection URI this method returns the given resource URI. 
+	If the given resource URI is a collection URI this method returns the given resource URI.
 	If the given resource URI is not a collection URI, this implementation returns the equivalent of resolving the path {@value URIConstants#CURRENT_LEVEL_PATH_SEGMENT} to the URI.
 	@param resourceURI The URI of the resource for which the collection resource URI should be returned.
 	@return The URI of the indicated resource's deepest collection resource, or <code>null</code> if the given URI designates a non-collection resource with no collection parent.
@@ -306,9 +304,9 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	}
 
 	/**Determines the URI of the parent resource of the given URI.
-	If the given resource URI is a collection URI this implementation returns the equivalent of resolving the path {@value URIConstants#PARENT_LEVEL_PATH_SEGMENT} to the URI. 
+	If the given resource URI is a collection URI this implementation returns the equivalent of resolving the path {@value URIConstants#PARENT_LEVEL_PATH_SEGMENT} to the URI.
 	if the given resource URI is not a collection URI, this implementation returns the equivalent of resolving the path {@value URIConstants#CURRENT_LEVEL_PATH_SEGMENT} to the URI.
-	If the given resource represents this repository, this implementation returns <code>null</code>.	
+	If the given resource represents this repository, this implementation returns <code>null</code>.
 	@param resourceURI The URI of the resource for which the parent resource URI should be returned.
 	@return The URI of the indicated resource's parent resource, or <code>null</code> if the given URI designates a resource with no parent.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -325,21 +323,21 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 		}
 		return isCollectionURI(resourceURI) ? getParentLevel(resourceURI) : getCurrentLevel(resourceURI);	//if resource is a collection URI, get the parent level; otherwise, get the current level
 	}
-	
+
 	/**Removes properties from a given resource.
 	Any existing properties with the same URIs as the given given property/value pairs will be removed.
-	All other existing properties will be left unmodified. 
+	All other existing properties will be left unmodified.
 	@param resourceURI The reference URI of the resource.
 	@param propertyURIs The properties to remove.
 	@return The updated description of the resource.
 	@exception NullPointerException if the given resource URI and/or property URIs is <code>null</code>.
 	@exception ResourceIOException if the resource properties could not be updated.
 	*/
-	public RDFResource removeResourceProperties(final URI resourceURI, final URI... propertyURIs) throws ResourceIOException
+	public URFResource removeResourceProperties(final URI resourceURI, final URI... propertyURIs) throws ResourceIOException
 	{
-		throw new UnsupportedOperationException("Repository cannot yet delete its resources' properties");		
+		throw new UnsupportedOperationException("Repository cannot yet delete its resources' properties");
 	}
-	
+
 	/**Creates an infinitely deep copy of a resource to another URI in this repository.
 	Any resource at the destination URI will be replaced.
 	This version delegates to {@link Repository#copyResource(URI, URI, boolean)}.
@@ -353,7 +351,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	{
 		copyResource(resourceURI, destinationURI, true);	//copy the resource, overwriting any resource at the destination
 	}
-	
+
 	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository.
 	Any resource at the destination URI will be replaced.
 	This version delegates to {@link #copyResource(URI, Repository, URI, boolean)}.
@@ -368,7 +366,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	{
 		copyResource(resourceURI, destinationRepository, destinationURI, true);	//copy the resource, overwriting any resource at the destination
 	}
-	
+
 	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository, overwriting any resource at the destionation only if requested.
 	This version delegates to {@link Repository#copyResource(URI, URI, boolean)} if the given repository is this repository.
 	Otherwise, this version performs a default copy operation.
@@ -446,14 +444,14 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	@param destinationURI The URI to which the resource should be moved.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.	
+	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.
 	@exception ResourceIOException if there is an error moving the resource.
 	*/
 	public void moveResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException
 	{
 		moveResource(resourceURI, destinationRepository, destinationURI, true);	//move the resource, overwriting any resource at the destination
 	}
-	
+
 	/**Moves a resource to the specified URI in the specified repository, overwriting any resource at the destionation only if requested.
 	This version delegates to {@link Repository#moveResource(URI, URI, boolean)} if the given repository is this repository.
 	Otherwise, this version delegates to {@link Repository#copyResource(URI, Repository, URI, boolean)} and then delegates to {@link Repository#deleteRepository(URI)}.
@@ -464,7 +462,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 		or <code>false</code> if an existing resource at the destination should cause an exception to be thrown.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.	
+	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.
 	@exception ResourceIOException if there is an error moving the resource.
 	@exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
 	*/
@@ -494,7 +492,7 @@ public abstract class AbstractRepository extends DefaultRDFResource implements R
 	@param throwable The error which should be translated to a resource I/O exception.
 	@return A resource I/O exception based upon the given throwable.
 	*/
-	protected ResourceIOException createResourceIOException(final URI resourceURI, final Throwable throwable) 
+	protected ResourceIOException createResourceIOException(final URI resourceURI, final Throwable throwable)
 	{
 		return throwable instanceof ResourceIOException ? (ResourceIOException)throwable : new ResourceIOException(resourceURI, throwable);	//default to simple exception chaining with a new resource I/O exception, if the throwable isn't already a resourc I/O exception
 	}

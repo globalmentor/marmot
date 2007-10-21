@@ -7,7 +7,7 @@ import java.util.Set;
 import javax.mail.internet.ContentType;
 
 import com.garretwilson.net.ResourceIOException;
-import com.garretwilson.rdf.*;
+import com.garretwilson.urf.URFResource;
 
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
@@ -78,7 +78,7 @@ public interface ResourceKit
 	@param resource The resource description to initialize.
 	@exception IOException if there is an error accessing the repository.
 	*/
-	public void initializeResourceDescription(final Repository repository, final RDFResource resource) throws IOException;
+	public void initializeResourceDescription(final Repository repository, final URFResource resource) throws IOException;
 
 	/**Returns this resource kit's installed filter based upon its ID.
 	@param filterID The ID of the filter to return.
@@ -119,7 +119,7 @@ public interface ResourceKit
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public RDFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException;
+	public URFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException;
 	
 	/**Determines whether the given permission is appropriate for accessing the identified aspect.
 	This prevents aspects from being accessed at lower permissions.

@@ -4,11 +4,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Date;
 
-import com.garretwilson.rdf.RDFResource;
+import com.garretwilson.urf.URFResource;
+import static com.garretwilson.urf.content.Content.*;
 
-import static com.garretwilson.rdf.dublincore.DCUtilities.*;
 import com.garretwilson.util.Debug;
-import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.repository.Repository;
 
 /**Marmot synchronization client.
@@ -178,18 +177,18 @@ Debug.trace("both existed; we did what we needed to do; nothing more should happ
 			{
 				return false;	//one resource is a collection; the other is a normal resource
 			}
-			final RDFResource sourceResource=sourceRepository.getResourceDescription(sourceResourceURI);	//get a description of the source resource
-			final RDFResource destinationResource=destinationRepository.getResourceDescription(destinationResourceURI);	//get a description of the destination resource
-			final long sourceSize=Marmot.getSize(sourceResource);	//get the size of the source
-			final long destinationSize=Marmot.getSize(destinationResource);	//get the size of the destination
+			final URFResource sourceResource=sourceRepository.getResourceDescription(sourceResourceURI);	//get a description of the source resource
+			final URFResource destinationResource=destinationRepository.getResourceDescription(destinationResourceURI);	//get a description of the destination resource
+			final long sourceSize=getContentLength(sourceResource);	//get the size of the source
+			final long destinationSize=getContentLength(destinationResource);	//get the size of the destination
 				//size
 			if(sourceSize<0 || sourceSize!=destinationSize)	//if the sizes don't match, or we don't know one of the sizes
 			{
 				return false;	//there is a size discrepancy
 			}
 				//date
-			final Date sourceDate=getDate(sourceResource);	//get the date of the source
-			final Date destinationDate=getDate(destinationResource);	//get the date of the destination
+			final Date sourceDate=getModified(sourceResource);	//get the date of the source
+			final Date destinationDate=getModified(destinationResource);	//get the date of the destination
 			if(sourceDate==null || sourceDate!=destinationDate)	//if the dates don't match or if there is no date
 			{
 				return false;	//there is a date discrepancy
@@ -254,10 +253,10 @@ Debug.trace("finished backing up through repository");
 				break;
 			case SYNCHRONIZE:	//synchronization will do nothing if a date is not availale for one of the resources or if the dates are the same
 				{
-					final RDFResource sourceResource=sourceRepository.getResourceDescription(sourceResourceURI);	//get a description of the source resource
-					final RDFResource destinationResource=destinationRepository.getResourceDescription(destinationResourceURI);	//get a description of the destination resource
-					final Date sourceDate=getDate(sourceResource);	//get the date of the source
-					final Date destinationDate=getDate(destinationResource);	//get the date of the destination
+					final URFResource sourceResource=sourceRepository.getResourceDescription(sourceResourceURI);	//get a description of the source resource
+					final URFResource destinationResource=destinationRepository.getResourceDescription(destinationResourceURI);	//get a description of the destination resource
+					final Date sourceDate=getModified(sourceResource);	//get the date of the source
+					final Date destinationDate=getModified(destinationResource);	//get the date of the destination
 					if(sourceDate!=null && destinationDate!=null)	//if we have dates for the resources
 					{
 						final int dateComparison=sourceDate.compareTo(destinationDate);	//compare the dates

@@ -1,6 +1,7 @@
 package com.globalmentor.marmot;
 
-import com.garretwilson.rdf.RDFResource;
+import com.garretwilson.urf.URFResource;
+
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.ResourceKit;
 import com.globalmentor.marmot.security.MarmotSecurityManager;
@@ -53,6 +54,6 @@ public interface MarmotSession<RK extends ResourceKit>
 	@param resource The resource for which a resource kit should be returned.
 	@return A resource kit to handle the given resource.
 	*/
-	public RK getResourceKit(final Repository repository, final RDFResource resource);
+	public RK getResourceKit(final Repository repository, final URFResource resource);
 	
 }

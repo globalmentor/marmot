@@ -3,6 +3,7 @@ package com.globalmentor.marmot.security;
 import java.net.URI;
 import java.util.Collection;
 
+import static com.garretwilson.lang.ClassUtilities.*;
 import com.garretwilson.urf.*;
 import static com.garretwilson.urf.URF.*;
 
@@ -11,13 +12,13 @@ import static com.globalmentor.marmot.security.MarmotSecurity.*;
 /**Specifies access for a resource.
 @author Garret Wilson
 */
-public class Access extends AbstractMarmotSecurityResource
+public class Access extends URFListResource<AccessRule>
 {
 
 	/**Default constructor.*/
 	public Access()
 	{
-		this(null);	//construct the class with no reference URI
+		this((URI)null);	//construct the class with no reference URI
 	}
 
 	/**Reference URI constructor.
@@ -25,25 +26,29 @@ public class Access extends AbstractMarmotSecurityResource
 	*/
 	public Access(final URI referenceURI)
 	{
-		super(referenceURI);  //construct the parent class
+		super(referenceURI, createResourceURI(MARMOT_SECURITY_NAMESPACE_URI, getLocalName(Access.class)));  //construct the parent class, using a type based upon the name of this class
 	}
 
-	/**Returns this access description's access rules.
-	@return This access description's access rules, or <code>null</code> if there is no access rules property or the value is not an {@link URFListResource}.
-	@see MarmotSecurity#ACCESS_RULES_PROPERTY_URI
+	/**Collection constructor with no URI.
+	The elements of the specified collection will be added to this list in the order they are returned by the collection's iterator.
+	@param collection The collection whose elements are to be placed into this list.
+	@exception NullPointerException if the specified collection is <code>null</code>.
 	*/
-	public URFListResource<AccessRule> getAccessRules()
+	public Access(final Collection<? extends AccessRule> collection)
 	{
-		return asListInstance(getPropertyValue(ACCESS_RULES_PROPERTY_URI));	//return the security:accessRules property
+		this(null, collection);	//construct the class with no URI
 	}
 
-	/**Sets the access rules.
-	@param accessRules The access rules to set.
-	@see MarmotSecurity#ACCESS_RULES_PROPERTY_URI
+	/**URI and collection constructor.
+	The elements of the specified collection will be added to this list in the order they are returned by the collection's iterator.
+	@param uri The URI for the resource, or <code>null</code> if the resource should have no URI.
+	@param collection The collection whose elements are to be placed into this list.
+	@exception NullPointerException if the specified collection is <code>null</code>.
 	*/
-	public void setAccessRules(final Collection<AccessRule> accessRules)
+	public Access(final URI uri, final Collection<? extends AccessRule> collection)
 	{
-		setPropertyValue(ACCESS_RULES_PROPERTY_URI, URFListResource.toListResource(accessRules));	//set the security:accessRules property
+		this(uri);	//construct the class with the URI
+		addAll(collection);	//add all the collection elements to the list
 	}
-	
+
 }

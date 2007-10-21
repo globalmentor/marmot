@@ -29,7 +29,7 @@ public class MarmotSecurity
 	/**Specifies the rules list of an access specification.*/
 	public final static URI RULES_PROPERTY_URI=createResourceURI(MARMOT_SECURITY_NAMESPACE_URI, "rules");
 	/**Specifies resource security.*/
-	public final static URI SECURITY_PROPERTY_URI=createResourceURI(MARMOT_SECURITY_NAMESPACE_URI, "security");
+//TODO del if not needed	public final static URI SECURITY_PROPERTY_URI=createResourceURI(MARMOT_SECURITY_NAMESPACE_URI, "security");
 				//access levels
 	/**Predefined access level type specifying inherited access.*/
 	public final static URI INHERITED_ACCESS_LEVEL_CLASS_URI=createResourceURI(MARMOT_SECURITY_NAMESPACE_URI, "InheritedAccessLevel");

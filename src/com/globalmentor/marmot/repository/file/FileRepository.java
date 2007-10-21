@@ -18,18 +18,16 @@ import com.garretwilson.util.Debug;
 
 import com.garretwilson.io.*;
 import com.garretwilson.net.*;
-import com.garretwilson.rdf.*;
-import static com.garretwilson.rdf.RDFUtilities.addType;
-import static com.garretwilson.rdf.dublincore.DCUtilities.*;
-import static com.garretwilson.rdf.xpackage.XPackageUtilities.*;
+import com.garretwilson.urf.*;
+import static com.garretwilson.urf.URF.*;
+import static com.garretwilson.urf.content.Content.*;
 
-import static com.globalmentor.marmot.Marmot.*;
-
-import com.globalmentor.marmot.Marmot;
+//TODO del import com.globalmentor.marmot.Marmot;
+//TODO del import static com.globalmentor.marmot.Marmot.*;
 import com.globalmentor.marmot.repository.AbstractRepository;
 
 /**Repository stored in a filesystem.
-<p>This repository recognizes the XPackage resource type <code>file:folder</code>
+<p>This repository recognizes the URF type <code>urf.List</code>
 	and creates a directory for each such resource. Directories will be created
 	transparently for other resources with other types and media types as needed
 	to store child resources.</p>
@@ -48,10 +46,10 @@ public class FileRepository extends AbstractRepository
 	public final static String MARMOT_DESCRIPTION_NAME="marmot-description";
 
 	/**The I/O implementation that writes and reads a resource with the same reference URI as its base URI.*/
-	protected final static RDFIO<RDFResource> descriptionIO=new NamedRDFResourceIO<RDFResource>(RDFResource.class, URI.create(""));
+	protected final static URFIO<URFResource> descriptionIO=new URFResourceTURFIO<URFResource>(URFResource.class, URI.create(""));
 
 		/**@return The I/O implementation that writes and reads a resource with the same reference URI as its base URI.*/
-		protected RDFIO<RDFResource> getDescriptionIO() {return descriptionIO;}
+		protected URFIO<URFResource> getDescriptionIO() {return descriptionIO;}
 
 	/**The file filter for listing files in a directory.*/
 	protected final static FileFilter FILE_FILTER=new FileFilter()
@@ -178,14 +176,14 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public RDFResource getResourceDescription(final URI resourceURI) throws ResourceIOException
+	public URFResource getResourceDescription(final URI resourceURI) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
-		final RDF rdf=createRDF();	//create a new RDF data model
+		final URF urf=createURF();	//create a new URF data model
 		try
 		{
-			return createResourceDescription(rdf, new File(getPrivateURI(resourceURI)));	//create and return a description from a file created from the URI from the private namespace
+			return createResourceDescription(urf, new File(getPrivateURI(resourceURI)));	//create and return a description from a file created from the URI from the private namespace
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -248,24 +246,24 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws ResourceIOException
+	public List<URFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
 		if(depth!=0)	//a depth of zero means don't get child resources
 		{
 			final File resourceDirectory=new File(getPrivateURI(resourceURI));	//create a file object for the resource
-			final List<RDFResource> resourceList=new ArrayList<RDFResource>();	//create a list to hold the files that are not directories	
+			final List<URFResource> resourceList=new ArrayList<URFResource>();	//create a list to hold the files that are not directories	
 			if(isCollectionURI(resourceURI) && resourceDirectory.isDirectory())	//if there is a directory for this resource
 			{
-				final RDF rdf=createRDF();	//create a new RDF data model
+				final URF urf=createURF();	//create a new URF data model
 				final File[] files=resourceDirectory.listFiles(FILE_FILTER);	//get a list of all files in the directory
 				for(final File file:files)	//for each file in the directory
 				{
-					final RDFResource childResource;
+					final URFResource childResource;
 					try
 					{
-						childResource=createResourceDescription(rdf, file);	//create a resource description for this file
+						childResource=createResourceDescription(urf, file);	//create a resource description for this file
 					}
 					catch(final IOException ioException)	//if an I/O exception occurs
 					{
@@ -274,9 +272,9 @@ public class FileRepository extends AbstractRepository
 					final int newDepth=depth>0 ? depth-1 : depth;	//reduce the depth by one, unless we're using the unlimited depth value
 					if(file.isDirectory() && depth!=0)	//if this file is a directory and we haven't reached the bottom
 					{
-						final List<RDFResource> childResourceDescriptionList=getChildResourceDescriptions(childResource.getURI(), newDepth);	//get a list of child descriptions for the resource we just created
-						final RDFListResource<RDFResource> childrenListResource=RDFListResource.create(rdf, childResourceDescriptionList);	//create an RDF list of the children
-						Marmot.setContents(childResource, childrenListResource);	//add the children as the manifest of the folder resource
+						final List<URFResource> childResourceDescriptionList=getChildResourceDescriptions(childResource.getURI(), newDepth);	//get a list of child descriptions for the resource we just created
+						final URFListResource<URFResource> childrenListResource=new URFListResource<URFResource>(childResourceDescriptionList);	//create an URF list of the children
+						setContents(childResource, childrenListResource);	//add the children as the contents of the resource
 					}
 					resourceList.add(childResource);	//add the resource to our list
 				}
@@ -292,7 +290,7 @@ public class FileRepository extends AbstractRepository
 	/**Creates a new resource with the given description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
 	The returned output stream should always be closed.
-	If a resource with no contents is desired, {@link #createResource(URI, RDFResource, byte[])} with zero bytes is better suited for this task.
+	If a resource with no contents is desired, {@link #createResource(URI, URFResource, byte[])} with zero bytes is better suited for this task.
 	This implementation updates resource properties before storing the contents of the resource.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
@@ -302,7 +300,7 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public OutputStream createResource(final URI resourceURI, final RDFResource resourceDescription) throws ResourceIOException
+	public OutputStream createResource(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
@@ -330,7 +328,7 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException
+	public URFResource createResource(final URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
@@ -347,7 +345,7 @@ public class FileRepository extends AbstractRepository
 				outputStream.close();	//always close the output stream
 			}
 			//TODO update the description
-			return createResourceDescription(createRDF(), resourceFile);	//create and return a description of the new file
+			return createResourceDescription(createURF(), resourceFile);	//create and return a description of the new file
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -362,7 +360,7 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error creating the collection.
 	*/
-	public RDFResource createCollection(final URI collectionURI) throws ResourceIOException
+	public URFResource createCollection(final URI collectionURI) throws ResourceIOException
 	{
 			//TODO do we want to check to make sure this is a collection URI?
 		checkResourceURI(collectionURI);	//makes sure the resource URI is valid
@@ -371,7 +369,7 @@ public class FileRepository extends AbstractRepository
 		{
 			final File directoryFile=new File(getPrivateURI(collectionURI));	//create a file object for the resource
 			mkdir(directoryFile);	//create the directory
-			return createResourceDescription(createRDF(), directoryFile);	//create and return a description of the new directory
+			return createResourceDescription(createURF(), directoryFile);	//create and return a description of the new directory
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -416,7 +414,7 @@ public class FileRepository extends AbstractRepository
 	}
 
 	/**Sets the properties of a resource based upon the given description.
-	This version delegates to {@link #setResourceProperties(URI, RDFResource, File)}.
+	This version delegates to {@link #setResourceProperties(URI, URFResource, File)}.
 	@param resourceURI The reference URI of the resource.
 	@param resourceDescription A description of the resource with the properties to set; the resource URI is ignored.
 	@return The updated description of the resource.
@@ -425,7 +423,7 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException Thrown if the resource properties could not be updated.
 	*/
-	public RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription) throws ResourceIOException
+	public URFResource setResourceProperties(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
@@ -444,23 +442,23 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource properties could not be updated.
 	*/
-	public RDFResource setResourceProperties(final URI resourceURI, final RDFPropertyValuePair... properties) throws ResourceIOException
+	public URFResource setResourceProperties(final URI resourceURI, final URFProperty... properties) throws ResourceIOException
 	{
 		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
 		checkOpen();	//make sure the repository is open
 		final Set<URI> newPropertyURISet=new HashSet<URI>();	//create a set to find out which properties we will be setting
-		for(final RDFPropertyValuePair property:properties)	//look at each property
+		for(final URFProperty property:properties)	//look at each property
 		{
-			newPropertyURISet.add(property.getName().getURI());	//add this property URI to our set
+			newPropertyURISet.add(property.getPropertyURI());	//add this property URI to our set
 		}		
-		final RDFResource resourceDescription=getResourceDescription(resourceURI);	//get a description of the resource
+		final URFResource resourceDescription=getResourceDescription(resourceURI);	//get a description of the resource
 		for(final URI propertyURI:newPropertyURISet)	//for each new property URI
 		{
 			resourceDescription.removeProperties(propertyURI);	//remove all properties with the given property URI
 		}
-		for(final RDFPropertyValuePair property:properties)	//for each property given
+		for(final URFProperty property:properties)	//for each property given
 		{
-			resourceDescription.addProperty(property.getName(), property.getValue());	//add this property to the description
+			resourceDescription.addPropertyValue(property.getPropertyURI(), property.getValue());	//add this property value to the description TODO use addProperty() method when it exists
 		}
 		return setResourceProperties(resourceURI, resourceDescription);	//set the properties using the given description
 	}
@@ -473,15 +471,15 @@ public class FileRepository extends AbstractRepository
 	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
 	@exception ResourceIOException Thrown if the resource properties could not be updated.
 	*/
-	protected RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription, final File resourceFile) throws ResourceIOException
+	protected URFResource setResourceProperties(final URI resourceURI, final URFResource resourceDescription, final File resourceFile) throws ResourceIOException
 	{
-		final Date modifiedTime=getModifiedTime(resourceDescription);	//get the modified time designation, if there is one
+		final URFDateTime modifiedTime=getModified(resourceDescription);	//get the modified time designation, if there is one
 		if(modifiedTime!=null)	//if there is a modified time designated
 		{
 			resourceFile.setLastModified(modifiedTime.getTime());	//update the last modified time TODO does this work for directories? should we check?
 		}
 		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the resource description file
-		final RDFResource saveResourceDescription=new DefaultRDFResource(resourceDescription, resourceDescriptionFile.toURI());	//create a separate description we'll use for saving
+		final URFResource saveResourceDescription=new DefaultURFResource(resourceDescription, resourceDescriptionFile.toURI());	//create a separate description we'll use for saving
 		
 //TODO important: remove the file-related and MIME-related live properties
 		try
@@ -537,21 +535,21 @@ public class FileRepository extends AbstractRepository
 	}
 
 	/**Creates a resource description to represent a single file.
-	@param rdf The RDF data model to use when creating this resource.
+	@param urf The URF data model to use when creating this resource.
 	@param resourceFile The file for which a resource should be created.
 	@return A resource description of the given file.
 	@exception IOException if there is an error creating the resource description.
 	*/
-	protected RDFResource createResourceDescription(final RDF rdf, final File resourceFile) throws IOException
+	protected URFResource createResourceDescription(final URF urf, final File resourceFile) throws IOException
 	{
-		final RDFResource resource=loadResourceDescription(rdf, resourceFile);	//load the resource description, if there is one
+		final URFResource resource=loadResourceDescription(urf, resourceFile);	//load the resource description, if there is one
 //TODO del if not needed		final URI resourceURI=getPublicURI(resourceFile.toURI());	//get a public URI to represent the file resource
 //TODO del if not needed		final RDFResource resource=rdf.createResource(resourceURI);	//create a resource to represent the file
 		final String filename=resourceFile.getName();	//get the name of the file
 		if(resourceFile.isDirectory())	//if this is a directory
 		{
-			addType(resource, MARMOT_NAMESPACE_URI, COLLECTION_CLASS_NAME);	//add the file:folder type to indicate that this resource is a folder
-			setModifiedTime(resource, new Date(resourceFile.lastModified()));	//set the modified time as the last modified date of the file			
+			resource.addTypeURI(LIST_CLASS_URI);	//add the urf:List type to indicate that this resource is a folder
+			setModified(resource, new URFDateTime(resourceFile.lastModified()));	//set the modified timestamp as the last modified date of the file			
 		}
 		else	//if this file is not a directory
 		{
@@ -560,13 +558,12 @@ public class FileRepository extends AbstractRepository
 			final String label=FileUtilities.removeExtension(FileUtilities.decodeFilename(filename));
 			addLabel(resource, label); //add the unescaped filename without an extension as a label
 */
-			setSize(resource, resourceFile.length());	//set the file length
-			setModifiedTime(resource, new Date(resourceFile.lastModified()));	//set the modified time as the last modified date of the file			
-			
+			setContentLength(resource, resourceFile.length());	//set the file length
+			setModified(resource, new URFDateTime(resourceFile.lastModified()));	//set the modified time as the last modified date of the file			
 			//try to find a content type if none was specified
 			if(getContentType(resource)==null)	//if no content was determined
 			{
-				final ContentType contentType=getExtensionContentType(getNameExtension(getName(resource.getURI())));	//get the registered content type for the resource's extension
+				final ContentType contentType=getExtensionContentType(getNameExtension(URIUtilities.getName(resource.getURI())));	//get the registered content type for the resource's extension
 				if(contentType!=null)	//if there is a registered content type for the resource's extension
 				{
 					setContentType(resource, contentType);	//set the content type property
@@ -581,35 +578,35 @@ public class FileRepository extends AbstractRepository
 
 	/**Determines the file that holds the description of the given resource file.
 	This version uses a separate destinct file beginning with the Unix hidden prefix,
-	containing {@value #MARMOT_DESCRIPTION_NAME},	and ending with the RDF extension.
+	containing {@value #MARMOT_DESCRIPTION_NAME},	and ending with the extension for TURF files.
 	@param resourceFile The file of a resource.
 	@return A new file designating the location of the resource description.
 	*/
 	protected File getResourceDescriptionFile(final File resourceFile)
 	{
-		return changeName(resourceFile, addExtension(UNIX_HIDDEN_FILENAME_PREFIX+resourceFile.getName()+EXTENSION_SEPARATOR+MARMOT_DESCRIPTION_NAME, RDF_EXTENSION));	//return a file in the form ".file.marmot-description.rdf"
+		return changeName(resourceFile, addExtension(UNIX_HIDDEN_FILENAME_PREFIX+resourceFile.getName()+EXTENSION_SEPARATOR+MARMOT_DESCRIPTION_NAME, TURF_EXTENSION));	//return a file in the form ".file.marmot-description.turf"
 	}
 
 	/**Loads a resource description for a single file.
-	@param rdf The RDF data model to use when creating this resource.
+	@param urf The URF data model to use when creating this resource.
 	@param resourceFile The file of a resource.
 	@return A resource description of the given file.
 	@exception IOException if there is an error loading the resource description.
 	@see #getResourceDescriptionFile(File)
 	*/
-	protected RDFResource loadResourceDescription(final RDF rdf, final File resourceFile) throws IOException
+	protected URFResource loadResourceDescription(final URF urf, final File resourceFile) throws IOException
 	{
 		final URI resourceURI=getPublicURI(resourceFile.toURI());	//get a public URI to represent the file resource
 		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the file for storing the description
-		final RDFResource resource;
+		final URFResource resource;
 		if(resourceDescriptionFile.exists())	//if there is a description file
 		{
-			resource=FileUtilities.read(resourceDescriptionFile, rdf, descriptionIO);	//read the description using the given RDF instance
-			resource.setReferenceURI(resourceURI);	//make sure the resource has the correct reference URI			
+			resource=FileUtilities.read(resourceDescriptionFile, urf, descriptionIO);	//read the description using the given URF instance
+//TODO important: fix			resource.setURI(resourceURI);	//make sure the resource has the correct reference URI			
 		}
 		else	//if there is no description file
 		{
-			resource=rdf.createResource(resourceURI); //create a default resource description
+			resource=urf.createResource(resourceURI); //create a default resource description
 		}
 		return resource;	//return the resource description
 	}
@@ -620,7 +617,7 @@ public class FileRepository extends AbstractRepository
 	@exception IOException if there is an error save the resource description.
 	@see #getResourceDescriptionFile(File)
 	*/
-	protected void saveResourceDescription(final RDFResource resourceDescription, final File resourceFile) throws IOException
+	protected void saveResourceDescription(final URFResource resourceDescription, final File resourceFile) throws IOException
 	{
 		final URI resourceURI=getPublicURI(resourceFile.toURI());	//get a public URI to represent the file resource
 		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the file for storing the description

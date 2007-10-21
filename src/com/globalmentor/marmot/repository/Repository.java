@@ -7,7 +7,7 @@ import java.util.List;
 import javax.mail.internet.ContentType;
 
 import com.garretwilson.net.*;
-import com.garretwilson.rdf.*;
+import com.garretwilson.urf.*;
 
 /**A Marmot information store.
 @author Garret Wilson
@@ -112,7 +112,7 @@ public interface Repository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public RDFResource getResourceDescription(final URI resourceURI) throws ResourceIOException;
+	public URFResource getResourceDescription(final URI resourceURI) throws ResourceIOException;
 
 	/**Determines if the resource at the given URI exists.
 	@param resourceURI The URI of the resource to check.
@@ -150,7 +150,7 @@ public interface Repository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI) throws ResourceIOException;
+	public List<URFResource> getChildResourceDescriptions(final URI resourceURI) throws ResourceIOException;
 
 	/**Retrieves child resources of the resource at the given URI.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
@@ -160,7 +160,7 @@ public interface Repository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<RDFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws ResourceIOException;
+	public List<URFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws ResourceIOException;
 
 	/**Creates a new resource with a default description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
@@ -178,7 +178,7 @@ public interface Repository
 	/**Creates a new resource with the given description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
 	The returned output stream should always be closed.
-	If a resource with no contents is desired, {@link #createResource(URI, RDFResource, byte[])} with zero bytes is better suited for this task.
+	If a resource with no contents is desired, {@link #createResource(URI, URFResource, byte[])} with zero bytes is better suited for this task.
 	It is unspecified whether the resource description will be updated before or after the resource contents are stored.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
@@ -188,7 +188,7 @@ public interface Repository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public OutputStream createResource(final URI resourceURI, final RDFResource resourceDescription) throws ResourceIOException;
+	public OutputStream createResource(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException;
 
 	/**Creates a new resource with a default description and contents.
 	If a resource already exists at the given URI it will be replaced.
@@ -200,7 +200,7 @@ public interface Repository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public RDFResource createResource(final URI resourceURI, final byte[] resourceContents) throws ResourceIOException;
+	public URFResource createResource(final URI resourceURI, final byte[] resourceContents) throws ResourceIOException;
 
 	/**Creates a new resource with the given description and contents.
 	If a resource already exists at the given URI it will be replaced.
@@ -213,7 +213,7 @@ public interface Repository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public RDFResource createResource(final URI resourceURI, final RDFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException;
+	public URFResource createResource(final URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException;
 
 	/**Creates a collection in the repository.
 	@param collectionURI The URI of the collection to be created.
@@ -223,7 +223,7 @@ public interface Repository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error creating the collection.
 	*/
-	public RDFResource createCollection(final URI collectionURI) throws ResourceIOException;
+	public URFResource createCollection(final URI collectionURI) throws ResourceIOException;
 
 	/**Deletes a resource.
 	@param resourceURI The reference URI of the resource to delete.
@@ -243,7 +243,7 @@ public interface Repository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource properties could not be updated.
 	*/
-	public RDFResource setResourceProperties(final URI resourceURI, final RDFResource resourceDescription) throws ResourceIOException;
+	public URFResource setResourceProperties(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException;
 
 	/**Sets the properties of a given resource.
 	Any existing properties with the same URIs as the given given property/value pairs will be removed.
@@ -254,7 +254,7 @@ public interface Repository
 	@exception NullPointerException if the given resource URI and/or properties is <code>null</code>.
 	@exception ResourceIOException if the resource properties could not be updated.
 	*/
-	public RDFResource setResourceProperties(final URI resourceURI, final RDFPropertyValuePair... properties) throws ResourceIOException;
+	public URFResource setResourceProperties(final URI resourceURI, final URFProperty... properties) throws ResourceIOException;
 
 	/**Removes properties from a given resource.
 	Any existing properties with the same URIs as the given given property/value pairs will be removed.
@@ -265,7 +265,7 @@ public interface Repository
 	@exception NullPointerException if the given resource URI and/or property URIs is <code>null</code>.
 	@exception ResourceIOException if the resource properties could not be updated.
 	*/
-	public RDFResource removeResourceProperties(final URI resourceURI, final URI... propertyURIs) throws ResourceIOException;
+	public URFResource removeResourceProperties(final URI resourceURI, final URI... propertyURIs) throws ResourceIOException;
 
 	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository.
 	Any resource at the destination URI will be replaced.

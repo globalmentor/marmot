@@ -12,9 +12,7 @@ import static com.garretwilson.lang.ObjectUtilities.*;
 import static com.garretwilson.lang.EnumUtilities.*;
 import com.garretwilson.net.ResourceIOException;
 import com.garretwilson.net.URIPath;
-
-import static com.garretwilson.net.URIUtilities.*;
-import com.garretwilson.rdf.RDFResource;
+import com.garretwilson.urf.URFResource;
 
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
@@ -138,7 +136,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	@param resource The resource description to initialize.
 	@exception IOException if there is an error accessing the repository.
 	*/
-	public void initializeResourceDescription(final Repository repository, final RDFResource resource) throws IOException
+	public void initializeResourceDescription(final Repository repository, final URFResource resource) throws IOException
 	{
 	}
 
@@ -169,7 +167,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public RDFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException
+	public URFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException
 	{
 		return repository.createResource(resourceURI, new byte[]{});	//create a new empty resource
 	}

@@ -7,8 +7,8 @@ import java.util.concurrent.*;
 
 import javax.mail.internet.ContentType;
 
-import com.garretwilson.rdf.*;
-import com.garretwilson.rdf.xpackage.*;
+import com.garretwilson.urf.*;
+import static com.garretwilson.urf.content.Content.*;
 import com.garretwilson.util.*;
 
 import com.globalmentor.marmot.repository.*;
@@ -189,11 +189,11 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 	@param resource The resource for which a resource kit should be returned.
 	@return A resource kit to handle the given resource.
 	*/
-	public RK getResourceKit(final Repository repository, final RDFResource resource)
+	public RK getResourceKit(final Repository repository, final URFResource resource)
 	{
 		RK resourceKit=null;
 			//step 1: try to match a resource kit by content type
-		final ContentType contentType=Marmot.getMediaType(resource); //get the content type of the resource
+		final ContentType contentType=getContentType(resource); //get the content type of the resource
 		if(contentType!=null)	//if we know the content type of the resource
 		{
 			resourceKit=getResourceKit(contentType);	//see if we have a resource kit registered for this media type
@@ -201,14 +201,13 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 			//step 2: try to match a resource kit by resource type
 		if(resourceKit==null)	//if we haven't yet found a resource kit, try to match a resource by resource type
 		{
-			final Iterator<RDFObject> typeIterator=RDFUtilities.getTypes(resource).iterator();	//get an iterator to all the types of this resource
+			final Iterator<URFResource> typeIterator=resource.getTypes().iterator();	//get an iterator to all the types of this resource
 			while(resourceKit==null && typeIterator.hasNext())	//while there are more types and we haven't yet found a resource kit
 			{
-				final RDFObject rdfObject=typeIterator.next();	//get the next type
-				if(rdfObject instanceof RDFResource)	//if this is a type resource, as we expect
+				final URI typeURI=typeIterator.next().getURI();	//get the URI of the next type
+				if(typeURI!=null)	//if there is a type URI
 				{
-					final RDFResource typeResource=(RDFResource)rdfObject;	//cast the object to an RDF resource
-					resourceKit=getResourceKit(typeResource.getURI());	//see if we have a resource kit registered for this resource type URI
+					resourceKit=getResourceKit(typeURI);	//see if we have a resource kit registered for this resource type URI
 				}
 			}
 		}

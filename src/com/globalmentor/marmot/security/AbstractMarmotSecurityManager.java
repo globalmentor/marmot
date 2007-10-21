@@ -101,57 +101,47 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 		if(checkInstance(repository, "Repository cannot be null.").resourceExists(checkInstance(resourceURI, "Resource URI cannot be null.")))	//see if the resource exists; if not, consider it to have inherited access
 		{
 			final URFResource resource=repository.getResourceDescription(resourceURI);	//get the resource description
-			final Security security=asInstance(resource.getPropertyValue(SECURITY_PROPERTY_URI), Security.class);	//get the security.security property value, if any
-			if(security!=null)	//if we have security information defined
+			final Access access=asInstance(resource.getPropertyValue(ACCESS_PROPERTY_URI), Access.class);	//get the security.access property value, if any
+			if(access!=null)	//if we have access defined
 			{
-				final Access access=security.getAccess();	//get the security.access property value, if any
-//Debug.trace("got access resource:", RDFUtilities.toString(access));
-				if(access!=null)	//if we have access defined
+				for(final AccessRule accessRule:access)	//for each access rule
 				{
-					final URFListResource<AccessRule> accessRules=access.getAccessRules();	//get the list of access rules
-					if(accessRules!=null)	//if there are access rules
-					{
-//Debug.trace("got access rules of size", accessRules.size());
-						for(final AccessRule accessRule:accessRules)	//for each access rule
-						{
-							final Selector selector=accessRule.getSelector();	//get the selector, if any
+					final Selector selector=accessRule.getSelector();	//get the selector, if any
 //Debug.trace("trying selector", RDFUtilities.toString(selector));
-							if(selector!=null && selector.selects(user))	//if this access rule's selector applies to this user
-							{
-								final AccessLevel accessLevel=accessRule.getAccessLevel();	//get the access level
+					if(selector!=null && selector.selects(user))	//if this access rule's selector applies to this user
+					{
+						final AccessLevel accessLevel=accessRule.getAccessLevel();	//get the access level
 //Debug.trace("this selector matches; access level is", accessLevel);
-								if(accessLevel!=null)	//if there is an access level
-								{
-									final AccessLevelType accessLevelType=accessLevel.getAccessLevelType();	//get the access level type
-									if(accessLevelType==AccessLevelType.INHERITED)	//if this principal specifically should get inherited access
-									{
-										break;	//stop looking for other access rules and get the inherited access
-									}
-									else if(accessLevelType==AccessLevelType.CUSTOM)	//if this is a custom access level
-									{
-										final Set<PermissionType> permissionTypes=EnumSet.noneOf(PermissionType.class);	//create a set of permission types
-											//allow
-										for(final Permission allowPermission:accessLevel.getAllows())	//for each allowed permission
-										{
-											permissionTypes.add(allowPermission.getPermissionType());	//add this permission type
-										}
-											//deny
-										for(final Permission denyPermission:accessLevel.getAllows())	//for each denied permission
-										{
-											permissionTypes.add(denyPermission.getPermissionType());	//remove this permission type
-										}
-										return permissionTypes;	//return the custom permission types
-									}
-									else	//for all other access levels
-									{
-										return accessLevelType.getDefaultAllowedPermissionTypes();	//return the default permission types of this access level
-									}
-								}
-								else	//if there is no access level defined, deny all permissions
-								{
-									return EnumSet.noneOf(PermissionType.class);	//there are no permissions, because there is no access level
-								}
+						if(accessLevel!=null)	//if there is an access level
+						{
+							final AccessLevelType accessLevelType=accessLevel.getAccessLevelType();	//get the access level type
+							if(accessLevelType==AccessLevelType.INHERITED)	//if this principal specifically should get inherited access
+							{
+								break;	//stop looking for other access rules and get the inherited access
 							}
+							else if(accessLevelType==AccessLevelType.CUSTOM)	//if this is a custom access level
+							{
+								final Set<PermissionType> permissionTypes=EnumSet.noneOf(PermissionType.class);	//create a set of permission types
+									//allow
+								for(final Permission allowPermission:accessLevel.getAllows())	//for each allowed permission
+								{
+									permissionTypes.add(allowPermission.getPermissionType());	//add this permission type
+								}
+									//deny
+								for(final Permission denyPermission:accessLevel.getAllows())	//for each denied permission
+								{
+									permissionTypes.add(denyPermission.getPermissionType());	//remove this permission type
+								}
+								return permissionTypes;	//return the custom permission types
+							}
+							else	//for all other access levels
+							{
+								return accessLevelType.getDefaultAllowedPermissionTypes();	//return the default permission types of this access level
+							}
+						}
+						else	//if there is no access level defined, deny all permissions
+						{
+							return EnumSet.noneOf(PermissionType.class);	//there are no permissions, because there is no access level
 						}
 					}
 				}

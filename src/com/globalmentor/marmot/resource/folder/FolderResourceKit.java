@@ -5,18 +5,16 @@ import java.net.URI;
 import static com.garretwilson.net.URIConstants.*;
 import com.garretwilson.net.ResourceIOException;
 import com.garretwilson.net.URIPath;
+import com.garretwilson.urf.*;
+import static com.garretwilson.urf.URF.*;
 
-import static com.garretwilson.rdf.RDFUtilities.*;
-
-import com.garretwilson.rdf.RDFResource;
-import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.AbstractResourceKit;
 
 /**Resource kit for handling folder resources that have no content but can contain children.
-<p>Supported RDF resource types:</p>
+<p>Supported URF resource types:</p>
 <ul>
-<li><code>file:Folder</code></li>
+<li>{@value URF#LIST_CLASS_URI}</li>
 </ul>
 @author Garret Wilson
 */
@@ -26,7 +24,7 @@ public class FolderResourceKit extends AbstractResourceKit
 	/**Default constructor.*/
 	public FolderResourceKit()
 	{
-		super(createReferenceURI(Marmot.MARMOT_NAMESPACE_URI, Marmot.COLLECTION_CLASS_NAME), Capability.CREATE);
+		super(LIST_CLASS_URI, Capability.CREATE);
 	}
 
 	/**Returns the URI of a child resource with the given simple name within a parent resource.
@@ -56,7 +54,7 @@ public class FolderResourceKit extends AbstractResourceKit
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public RDFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException
+	public URFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException
 	{
 		return repository.createCollection(resourceURI);	//create a new collection
 	}

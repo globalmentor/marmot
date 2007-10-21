@@ -15,7 +15,7 @@ import javax.media.jai.PlanarImage;
 import static com.garretwilson.awt.geom.GeometryUtilities.*;
 import static com.garretwilson.lang.ObjectUtilities.*;
 import com.garretwilson.net.ResourceIOException;
-import com.garretwilson.rdf.RDFResource;
+import com.garretwilson.urf.URFResource;
 import com.garretwilson.util.Debug;
 import com.globalmentor.marmot.resource.ResourceFilter;
 import com.globalmentor.marmot.resource.image.ImageResourceKit.ImageAspect;
@@ -48,7 +48,7 @@ public class ImageScaleFilter implements ResourceFilter
 	@return The new description of the filtered resource content.
 	@exception ResourceIOException if there is an error filtering the resource.
 	*/
-	public RDFResource filter(final RDFResource resource, final InputStream inputStream, final OutputStream outputStream) throws IOException
+	public URFResource filter(final URFResource resource, final InputStream inputStream, final OutputStream outputStream) throws IOException
 	{
 //TODO del Debug.trace("ready to scale to aspect", imageAspect);
 		final Dimension aspectDimension;	//determine the aspect dimension

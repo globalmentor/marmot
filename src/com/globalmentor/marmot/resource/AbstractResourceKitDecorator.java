@@ -9,7 +9,7 @@ import javax.mail.internet.ContentType;
 import static com.garretwilson.lang.ObjectUtilities.*;
 
 import com.garretwilson.net.ResourceIOException;
-import com.garretwilson.rdf.RDFResource;
+import com.garretwilson.urf.URFResource;
 
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
@@ -66,7 +66,7 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit
 	@param resource The resource description to initialize.
 	@exception IOException if there is an error accessing the repository.
 	*/
-	public void initializeResourceDescription(final Repository repository, final RDFResource resource) throws IOException {getResourceKit().initializeResourceDescription(repository, resource);}
+	public void initializeResourceDescription(final Repository repository, final URFResource resource) throws IOException {getResourceKit().initializeResourceDescription(repository, resource);}
 
 	/**Returns the URI of a child resource with the given simple name within a parent resource.
 	This is normally the simple name resolved against the parent resource URI, although a resource kit for collections may append an ending path separator.
@@ -89,7 +89,7 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public RDFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException {return getResourceKit().createResource(repository, resourceURI);}
+	public URFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException {return getResourceKit().createResource(repository, resourceURI);}
 
 	/**Returns this resource kit's installed filter based upon its ID.
 	@param filterID The ID of the filter to return.
