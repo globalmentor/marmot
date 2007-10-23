@@ -75,6 +75,7 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 				}
 				for(final URI resourceType:resourceKit.getSupportedResourceTypes())	//for each resource type this resource kit supports
 				{
+Debug.trace("registering resource type", resourceType, "with kit", resourceKit);
 					resourceTypeResourceKitsMap.addItem(resourceType, resourceKit);	//add this resource kit to the map			
 				}
 			}

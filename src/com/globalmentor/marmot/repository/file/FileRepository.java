@@ -598,17 +598,23 @@ public class FileRepository extends AbstractRepository
 	{
 		final URI resourceURI=getPublicURI(resourceFile.toURI());	//get a public URI to represent the file resource
 		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the file for storing the description
-		final URFResource resource;
-		if(resourceDescriptionFile.exists())	//if there is a description file
+		try
 		{
-			resource=FileUtilities.read(resourceDescriptionFile, urf, descriptionIO);	//read the description using the given URF instance
-//TODO important: fix			resource.setURI(resourceURI);	//make sure the resource has the correct reference URI			
+			final URFResource resource;
+			if(resourceDescriptionFile.exists())	//if there is a description file
+			{
+				resource=FileUtilities.read(resourceDescriptionFile, urf, resourceURI, descriptionIO);	//read the description using the given URF instance, using the resource URI as the base URI
+			}
+			else	//if there is no description file
+			{
+				resource=urf.createResource(resourceURI); //create a default resource description
+			}
+			return resource;	//return the resource description
 		}
-		else	//if there is no description file
+		catch(final IOException ioException)	//if an error occurs
 		{
-			resource=urf.createResource(resourceURI); //create a default resource description
+			throw new IOException("Error reading resource description from "+resourceDescriptionFile, ioException);
 		}
-		return resource;	//return the resource description
 	}
 
 	/**Saves a resource description for a single file.
@@ -621,7 +627,14 @@ public class FileRepository extends AbstractRepository
 	{
 		final URI resourceURI=getPublicURI(resourceFile.toURI());	//get a public URI to represent the file resource
 		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the file for storing the description
-		FileUtilities.write(resourceDescriptionFile, resourceDescription, descriptionIO);	//write the description
+		try
+		{
+			FileUtilities.write(resourceDescriptionFile, resourceURI, resourceDescription, descriptionIO);	//write the description, using the resource URI as the base URI
+		}
+		catch(final IOException ioException)	//if an error occurs
+		{
+			throw new IOException("Error writing resource description to "+resourceDescriptionFile, ioException);
+		}
 	}
 
 	/**Translates the given error specific to this repository type into a resource I/O exception.
