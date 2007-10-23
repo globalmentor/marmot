@@ -56,7 +56,6 @@ public class WebDAVRepository extends AbstractRepository
 	as a local name, because WebDAV requires that each property have a separate namespace and local name.</p>
 	@param urfPropertyURI The URI of the URF property to represent.
 	@return A WebDAV property name to use in representing an URF property with the given URF property URI.
-	@exception IllegalArgumentException if the given property count is less than zero.
 	*/
 	protected static WebDAVPropertyName createWebDAVURFPropertyName(final URI urfPropertyURI)
 	{
@@ -105,7 +104,8 @@ public class WebDAVRepository extends AbstractRepository
 			final URI webdavPropertyNamespaceURI=new URI(webdavPropertyNamespace);	//get the property namespace URI
 			final String webdavPropertyLocalName=webdavPropertyName.getLocalName();	//get the property local name
 				//if the local name is just a token local name, the namespace is the real URF property URI
-			return URF_TOKEN_LOCAL_NAME.equals(webdavPropertyLocalName) ? webdavPropertyNamespaceURI : createResourceURI(webdavPropertyNamespaceURI, webdavPropertyLocalName);
+//TODO del when works			return URF_TOKEN_LOCAL_NAME.equals(webdavPropertyLocalName) ? webdavPropertyNamespaceURI : createResourceURI(webdavPropertyNamespaceURI, webdavPropertyLocalName);
+			return URF_TOKEN_LOCAL_NAME.equals(webdavPropertyLocalName) ? webdavPropertyNamespaceURI : webdavPropertyName.getURI();
 		}
 		catch(final URISyntaxException uriSyntaxException)	//if the namespace is not a valid URI, this is not a valid URF property
 		{
@@ -893,14 +893,15 @@ public class WebDAVRepository extends AbstractRepository
 				}				
 				else if(CREATION_DATE_PROPERTY_NAME.equals(propertyLocalName) && propertyValue!=null)	//D:creationdate
 				{
+					final String creationDateString=propertyValue.getText();	//get the D:creationdate string
 					try
 					{
-						final URFDateTime creationDate=URFDateTime.valueOf(propertyValue.getText().trim());	//parse the creation date; the WebDAV D:creationdate property uses the ISO 8601 style just as does URFDateTime
+						final URFDateTime creationDate=URFDateTime.valueOfTimestamp(creationDateString);	//parse the creation date; the WebDAV D:creationdate property uses the RFC 3339 Internet timestamp ISO 8601 profile
 						setCreated(resource, creationDate);	//set the created date time as the creation date of the WebDAV resource			
 					}
 					catch(final IllegalArgumentException illegalArgumentException)	//if the creation date does not have the correct syntax
 					{
-						throw new DataException("Illegal WebDAV "+CREATION_DATE_PROPERTY_NAME+" value.", illegalArgumentException);
+						throw new DataException("Illegal WebDAV "+CREATION_DATE_PROPERTY_NAME+" value: "+creationDateString, illegalArgumentException);
 					}
 				}				
 				else if(RESOURCE_TYPE_PROPERTY_NAME.equals(propertyLocalName) && propertyValue!=null)	//D:resourcetype
@@ -922,21 +923,23 @@ public class WebDAVRepository extends AbstractRepository
 				}				
 				else if(GET_CONTENT_LENGTH_PROPERTY_NAME.equals(propertyLocalName) && propertyValue!=null)	//D:getcontentlength
 				{
+					final String contentLengthString=propertyValue.getText().trim();	//get the content length string
 					try
 					{
-						final long contentLength=Long.parseLong(propertyValue.getText().trim());	//parse the content length
+						final long contentLength=Long.parseLong(contentLengthString);	//parse the content length
 						setContentLength(resource, contentLength);	//set the content length to  the content length of the WebDAV resource			
 					}
 					catch(final NumberFormatException numberFormatException)	//if the content length is not a valid value
 					{
-						throw new DataException("Illegal WebDAV "+GET_CONTENT_LENGTH_PROPERTY_NAME+" value.", numberFormatException);
+						throw new DataException("Illegal WebDAV "+GET_CONTENT_LENGTH_PROPERTY_NAME+" value: "+contentLengthString, numberFormatException);
 					}
 				}				
 				else if(GET_CONTENT_TYPE_PROPERTY_NAME.equals(propertyLocalName) && propertyValue!=null)	//D:getcontenttype
 				{
+					final String contentTypeString=propertyValue.getText().trim();	//get the content type string
 					try
 					{
-						final ContentType contentType=new ContentType(propertyValue.getText().trim());	//create a content type object from the text of the element TODO check for errors
+						final ContentType contentType=new ContentType(contentTypeString);	//create a content type object from the text of the element
 						if(contentType!=null)	//if we know the content type
 						{
 							setContentType(resource, contentType);	//set the content type property
@@ -944,20 +947,21 @@ public class WebDAVRepository extends AbstractRepository
 					}
 					catch(final javax.mail.internet.ParseException parseException)	//if the content type is not a correct MIME type
 					{
-						throw new DataException("Illegal WebDAV "+GET_CONTENT_TYPE_PROPERTY_NAME+" value.", parseException);
+						throw new DataException("Illegal WebDAV "+GET_CONTENT_TYPE_PROPERTY_NAME+" value: "+contentTypeString, parseException);
 					}
 				}
 				else if(GET_LAST_MODIFIED_PROPERTY_NAME.equals(propertyLocalName) && propertyValue!=null)	//D:getlastmodified
 				{
+					final String lastModifiedDateString=propertyValue.getText().trim();	//get the last modified date string
 					try
 					{
 						final DateFormat httpDateFormat=new HTTPDateFormat(HTTPDateFormat.Style.RFC1123);	//create an HTTP date formatter; the WebDAV D:getlastmodified property prefers the RFC 1123 style, as does HTTP
-						final URFDateTime lastModifiedDate=new URFDateTime(httpDateFormat.parse(propertyValue.getText().trim()));	//parse the date
+						final URFDateTime lastModifiedDate=new URFDateTime(httpDateFormat.parse(lastModifiedDateString));	//parse the date
 						setModified(resource, lastModifiedDate);	//set the modified date time as the last modified date of the WebDAV resource			
 					}
 					catch(final java.text.ParseException parseException)	//if the last modified time is not the correct type
 					{
-						throw new DataException("Illegal WebDAV "+GET_LAST_MODIFIED_PROPERTY_NAME+" value.", parseException);
+						throw new DataException("Illegal WebDAV "+GET_LAST_MODIFIED_PROPERTY_NAME+" value: "+lastModifiedDateString, parseException);
 					}
 				}				
 			}
