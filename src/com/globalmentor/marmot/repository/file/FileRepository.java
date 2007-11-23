@@ -25,6 +25,7 @@ import static com.garretwilson.urf.content.Content.*;
 //TODO del import com.globalmentor.marmot.Marmot;
 //TODO del import static com.globalmentor.marmot.Marmot.*;
 import com.globalmentor.marmot.repository.AbstractRepository;
+import com.globalmentor.marmot.security.MarmotSecurity;
 
 /**Repository stored in a filesystem.
 <p>This repository recognizes the URF type <code>urf.List</code>
@@ -46,10 +47,17 @@ public class FileRepository extends AbstractRepository
 	public final static String MARMOT_DESCRIPTION_NAME="marmot-description";
 
 	/**The I/O implementation that writes and reads a resource with the same reference URI as its base URI.*/
-	protected final static URFIO<URFResource> descriptionIO=new URFResourceTURFIO<URFResource>(URFResource.class, URI.create(""));
+	protected final static URFIO<URFResource> descriptionIO;
 
 		/**@return The I/O implementation that writes and reads a resource with the same reference URI as its base URI.*/
 		protected URFIO<URFResource> getDescriptionIO() {return descriptionIO;}
+
+	static
+	{
+		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO=new URFResourceTURFIO<URFResource>(URFResource.class, URI.create(""));	//create new description I/O
+		urfResourceDescriptionIO.addNamespaceURI(MarmotSecurity.MARMOT_SECURITY_NAMESPACE_URI);	//tell the I/O about the security namespace
+		descriptionIO=urfResourceDescriptionIO;	//save the description I/O we constructed
+	}
 
 	/**The file filter for listing files in a directory.*/
 	protected final static FileFilter FILE_FILTER=new FileFilter()
@@ -479,7 +487,7 @@ public class FileRepository extends AbstractRepository
 			resourceFile.setLastModified(modifiedTime.getTime());	//update the last modified time TODO does this work for directories? should we check?
 		}
 		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the resource description file
-		final URFResource saveResourceDescription=new DefaultURFResource(resourceDescription, resourceDescriptionFile.toURI());	//create a separate description we'll use for saving
+		final URFResource saveResourceDescription=new DefaultURFResource(resourceDescription);	//create a separate description we'll use for saving
 		
 //TODO important: remove the file-related and MIME-related live properties
 		try

@@ -630,7 +630,6 @@ public class WebDAVRepository extends AbstractRepository
 
 			for(final URFProperty urfProperty:properties)	//for each property to set
 			{
-				turfGenerator.reset();	//reset the TURF generator so that any previously serialized URF resources (which were property values, for example) won't be serialized by reference
 				final URI urfPropertyURI=urfProperty.getPropertyURI();	//get the URI of the URF property
 				final WebDAVPropertyName webdavPropertyName=createWebDAVURFPropertyName(urfPropertyURI);	//create a WebDAV property name from the URF property URI
 				final String webdavPropertyStringValue;	//we'll determine the WebDAV property string value to use
