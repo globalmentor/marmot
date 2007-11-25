@@ -32,8 +32,8 @@ import org.w3c.dom.*;
 
 /**Repository accessed via WebDAV.
 <p>This repository recognizes the URF type <code>urf.List</code> and creates a collection for each such resource.</p>
-<p>URF properties are stored as normal WebDAV properties, except that the value consists of a TURF container "^URF[]"
-within which one or more URF resources values of the property are stored.</p>
+<p>URF properties are stored as normal WebDAV properties, except that the value is a TURF interchange document beginning with the TURF signature {@value TURF#TURF_SIGNATURE},
+and within the instance are one or more URF resources values of the property are stored.</p>
 	<p>If an URF property has no namespace, a WebDAV property name is formed using the URF property URI as the namespace and the string {@value #URF_TOKEN_LOCAL_NAME}
 	as a local name, because WebDAV requires that each property have a separate namespace and local name.</p>
 <p>String property values with no subproperties or scoped properties should be stored as the literal contents of the string,
@@ -79,7 +79,7 @@ public class WebDAVRepository extends AbstractRepository
 			}
 			else	//if there is no URF namespace
 			{
-				webDAVPropertyNamespace=urfPropertyNamespaceURI.toString();	//use the string form of the property URI as the namespace
+				webDAVPropertyNamespace=urfPropertyURI.toString();	//use the string form of the property URI as the namespace
 				webDAVPropertyLocalName=URF_TOKEN_LOCAL_NAME;	//create a fake local name; we have to have some WebDAV property to correspond to the URF property, and there are no other options at this point				
 			}
 		}

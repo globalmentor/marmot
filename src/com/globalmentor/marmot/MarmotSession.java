@@ -4,6 +4,7 @@ import com.garretwilson.urf.URFResource;
 
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.ResourceKit;
+import com.globalmentor.marmot.resource.ResourceKit.Capability;
 import com.globalmentor.marmot.security.MarmotSecurityManager;
 
 /**Marmot session information.
@@ -31,7 +32,7 @@ public interface MarmotSession<RK extends ResourceKit>
 	public void installResourceKit(final RK resourceKit, final boolean isDefault);
 
 	/**Unregisters a resource kit with the session.
-	If this resource kit was previously set as the default, there will no longer be a default resource kit. 
+	If this resource kit was previously set as the default, there will no longer be a default resource kit.
 	@param resourceKit The resource kit to unregister.
 	@exception IllegalStateException if the resource kit is not installed in this session.
 	*/
@@ -41,7 +42,16 @@ public interface MarmotSession<RK extends ResourceKit>
 	public RK getDefaultResourceKit();
 
 	/**@return The available resource kits.*/
-	public Iterable<RK> getResourceKits(); 
+	public Iterable<RK> getResourceKits();
+
+	/**Determines if there exists  resource kit appropriate for the given resource supporting the given capabilities.
+	@param repository The repository in which the resource resides.
+	@param resource The resource for which a resource kit should be returned.
+	@param capabilities The capabilities required for the resource kit.
+	@return <code>true</code> if there exists a resource kit to handle the given resource with the given capabilities, if any, in relation to the resource.
+	@see #getResourceKit(Repository, URFResource, Capability...)
+	*/
+	public boolean hasResourceKit(final Repository repository, final URFResource resource, final Capability... capabilities);
 
 	/**Retrieves a resource kit appropriate for the given resource.
 	This method locates a resource kit in the following priority:
@@ -52,8 +62,10 @@ public interface MarmotSession<RK extends ResourceKit>
 	</ol>
 	@param repository The repository in which the resource resides.
 	@param resource The resource for which a resource kit should be returned.
-	@return A resource kit to handle the given resource.
+	@param capabilities The capabilities required for the resource kit.
+	@return A resource kit to handle the given resource with the given capabilities, if any, in relation to the resource;
+		or <code>null</code> if there is no registered resource kit with the given capabilities in relation to the resource.
 	*/
-	public RK getResourceKit(final Repository repository, final URFResource resource);
-	
+	public RK getResourceKit(final Repository repository, final URFResource resource, final Capability... capabilities);
+
 }

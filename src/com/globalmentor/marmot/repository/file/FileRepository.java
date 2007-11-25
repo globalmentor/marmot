@@ -56,6 +56,7 @@ public class FileRepository extends AbstractRepository
 	{
 		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO=new URFResourceTURFIO<URFResource>(URFResource.class, URI.create(""));	//create new description I/O
 		urfResourceDescriptionIO.addNamespaceURI(MarmotSecurity.MARMOT_SECURITY_NAMESPACE_URI);	//tell the I/O about the security namespace
+		urfResourceDescriptionIO.setFormatted(false);	//turn off formatting
 		descriptionIO=urfResourceDescriptionIO;	//save the description I/O we constructed
 	}
 

@@ -25,7 +25,10 @@ public interface ResourceKit
 	public enum Capability
 	{
 		/**The ability to create a resource.*/
-		CREATE;
+		CREATE,
+
+		/**The ability to edit a resource.*/
+		EDIT;
 	}
 
 	/**An empty array of extensions.*/
@@ -72,6 +75,12 @@ public interface ResourceKit
 	@return The capabilities provided by this resource kit.
 	*/
 	public Set<Capability> getCapabilities();
+
+	/**Determines if the resource kit has all the given capabilities.
+	@param capabilities The capabilities to check.
+	@return <code>true</code> if the resource kit has all the given capabilities, if any.
+	*/
+	public boolean hasCapabilities(final Capability... capabilities);
 
 	/**Initializes a resource description, creating whatever properties are appropriate.
 	@param repository The repository to use to access the resource content, if needed.

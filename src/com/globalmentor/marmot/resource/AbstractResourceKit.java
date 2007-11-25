@@ -76,6 +76,23 @@ public abstract class AbstractResourceKit implements ResourceKit
 		*/
 		public Set<Capability> getCapabilities() {return capabilities;}
 
+		/**Determines if the resource kit has all the given capabilities.
+		@param capabilities The capabilities to check.
+		@return <code>true</code> if the resource kit has all the given capabilities, if any.
+		*/
+		public boolean hasCapabilities(final Capability... capabilities)
+		{
+
+			for(final Capability capability:capabilities)	//for each given capability
+			{
+				if(!this.capabilities.contains(capability))	///if this capability isn't present
+				{
+					return false;	//there is a capability not had
+				}
+			}
+			return true;	//this resource kit has all the given capabilities, if any
+		}
+
 	/**Content types and capabilities constructor.
 	@param supportedContentType The content type supported by this resource kit.
 	@param capabilities The capabilities provided by this resource kit.

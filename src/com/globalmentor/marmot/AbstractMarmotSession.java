@@ -8,11 +8,13 @@ import java.util.concurrent.*;
 import javax.mail.internet.ContentType;
 
 import com.garretwilson.urf.*;
+
 import static com.garretwilson.urf.content.Content.*;
 import com.garretwilson.util.*;
 
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.marmot.resource.*;
+import com.globalmentor.marmot.resource.ResourceKit.Capability;
 import com.globalmentor.marmot.security.*;
 
 /**A Marmot session with installed resource kits.
@@ -133,50 +135,17 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 		updateResourceKits();	//update the resource kits		
 	}
 
-	/**@return Access to the registered resource kits.*/
-/*TODO del if not needed
-	public Iterable<ResourceKit> getResourceKits()
-	{
-		return unmodifiableSet(resourceKits);	//return a read-only set of registered resource kits
-	}
-*/
-
-	/**Returns an iterator to all resource kits that have the specified capabiliites. 
-	@param capabilities The requisite capabilities, one or more
-		<code>ResourceKit.XXX_CAPABILITY</code> constants logically ORed together.
-	@return A read-only iterator of the registered resource kits with the
-		specified capabilities.
-	*/
-/*TODO fix
-	public Iterator<RK> getCapableResourceKitIterator(final long capabilities)
-	{
-		final List<RK> capableResourceKitList=new ArrayList<RK>(resourceKitSet.size());	//create a list that can hold the maximum number of resources we would need
-		for(RK resourceKit:resourceKitSet)	//look at all the resource kits
-		{
-			if(resourceKit.isCapable(capabilities))	//if this resource kit has the requisite capabilities
-				capableResourceKitList.add(resourceKit);	//add this resource kit to our list of capable resource kits	
-		}			
-		return Collections.unmodifiableList(capableResourceKitList).iterator();	//get an iterator to the capable resource kits
-	}
-*/
-
-	/**Retrieves a resource kit with the requested capabilities appropriate for
-		the given resource.
-	@param burrow The burrow from which the resource would be retrieved.
+	/**Determines if there exists  resource kit appropriate for the given resource supporting the given capabilities.
+	@param repository The repository in which the resource resides.
 	@param resource The resource for which a resource kit should be returned.
-	@param capabilities The requisite capabilities, one or more
-		<code>ResourceKit.XXX_CAPABILITY</code> constants logically ORed together.
-	@return A resource kit to handle the given resource, or <code>null</code>
-		if no appropriate resource kit is registered.
+	@param capabilities The capabilities required for the resource kit.
+	@return <code>true</code> if there exists a resource kit to handle the given resource with the given capabilities, if any, in relation to the resource.
+	@see #getResourceKit(Repository, URFResource, Capability...)
 	*/
-/*TODO fix
-	public RK getResourceKit(final OldBurrow burrow, final RDFResource resource, final long capabilities)	//TODO search for all relevant resource kits and use the capable one; move code from getResourceKit(Burrow, RDFResource) to here
+	public boolean hasResourceKit(final Repository repository, final URFResource resource, final Capability... capabilities)
 	{
-		final RK resourceKit=getResourceKit(burrow, resource);	//get a resource kit registered for the given resource
-			//return the resource kit if there is one and it has the requested capabilities for this resource
-		return resourceKit!=null && resourceKit.isCapable(capabilities, burrow, resource) ? resourceKit : null;
+		return getResourceKit(repository, resource, capabilities)!=null;	//determine if getting a resource kit would result in a resource kit
 	}
-*/
 
 	/**Retrieves a resource kit appropriate for the given resource.
 	This method locates a resource kit in the following priority:
@@ -187,16 +156,18 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 	</ol>
 	@param repository The repository in which the resource resides.
 	@param resource The resource for which a resource kit should be returned.
-	@return A resource kit to handle the given resource.
+	@param capabilities The capabilities required for the resource kit.
+	@return A resource kit to handle the given resource with the given capabilities, if any, in relation to the resource;
+		or <code>null</code> if there is no registered resource kit with the given capabilities in relation to the resource.
 	*/
-	public RK getResourceKit(final Repository repository, final URFResource resource)
+	public RK getResourceKit(final Repository repository, final URFResource resource, final Capability... capabilities)
 	{
 		RK resourceKit=null;
 			//step 1: try to match a resource kit by content type
 		final ContentType contentType=getContentType(resource); //get the content type of the resource
 		if(contentType!=null)	//if we know the content type of the resource
 		{
-			resourceKit=getResourceKit(contentType);	//see if we have a resource kit registered for this media type
+			resourceKit=getResourceKit(contentType, capabilities);	//see if we have a resource kit registered for this media type and capabilities
 		}
 			//step 2: try to match a resource kit by resource type
 		if(resourceKit==null)	//if we haven't yet found a resource kit, try to match a resource by resource type
@@ -207,7 +178,7 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 				final URI typeURI=typeIterator.next().getURI();	//get the URI of the next type
 				if(typeURI!=null)	//if there is a type URI
 				{
-					resourceKit=getResourceKit(typeURI);	//see if we have a resource kit registered for this resource type URI
+					resourceKit=getResourceKit(typeURI, capabilities);	//see if we have a resource kit registered for this resource type URI and capabilities
 				}
 			}
 		}
@@ -229,7 +200,11 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 */
 		if(resourceKit==null)	//if we have exhausted all attempts to get a matching resource kit
 		{
-			resourceKit=getDefaultResourceKit();	//use the default resource kit, if there is one
+			final RK defaultResourceKit=getDefaultResourceKit();	//use the default resource kit, if there is one
+			if(defaultResourceKit!=null && defaultResourceKit.hasCapabilities(capabilities))	//if there is a default resource kit that has the requested capabilities
+			{
+				resourceKit=defaultResourceKit;	//use the default resource kit
+			}
 		}
 		return resourceKit;	//return whatever resource kit we found, if any
 	}
@@ -260,20 +235,24 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 
 	/**Retrieves a resource kit appropriate for the given resource based upon its type URI.
 	@param typeURI The URI of the resource type.
+	@param capabilities The capabilities required for the resource kit.
 	@return A resource kit to handle the given resource type, or <code>null</code> if no appropriate resource kit is registered.
 	*/
-	protected RK getResourceKit(final URI typeURI)
+	protected RK getResourceKit(final URI typeURI, final Capability... capabilities)
 	{	
-		return resourceTypeResourceKitsMap.getItem(typeURI);	//see if we have a resource kit registered for this resource type URI
+		final RK resourceKit=resourceTypeResourceKitsMap.getItem(typeURI);	//get the resource kit, if any, registered for this resource type URI
+		return resourceKit!=null && resourceKit.hasCapabilities(capabilities) ? resourceKit : null;	//return the resource kit if it has the given capabilities
 	}
 
 	/**Retrieves a resource kit appropriate for the given resource based upon its MIME content type.
 	@param contentType The type of content the resource contains.
-	@return A resource kit to handle the given content type, or <code>null</code> if no appropriate resource kit is registered.
+	@param capabilities The capabilities required for the resource kit.
+	@return A resource kit with the requested capabilities to handle the given content type, or <code>null</code> if no appropriate resource kit is registered.
 	*/
-	protected RK getResourceKit(final ContentType contentType)
+	protected RK getResourceKit(final ContentType contentType, final Capability... capabilities)
 	{
-		return contentTypeResourceKitsMap.getItem(contentType.getBaseType());	//see if we have a resource kit registered for this content type
+		final RK resourceKit=contentTypeResourceKitsMap.getItem(contentType.getBaseType());	//get the resource kit, if any, registered for this content type
+		return resourceKit!=null && resourceKit.hasCapabilities(capabilities) ? resourceKit : null;	//return the resource kit if it has the given capabilities
 	}
 
 }
