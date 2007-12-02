@@ -83,7 +83,7 @@ public class WebDAVRepository extends AbstractRepository
 				webDAVPropertyLocalName=URF_TOKEN_LOCAL_NAME;	//create a fake local name; we have to have some WebDAV property to correspond to the URF property, and there are no other options at this point				
 			}
 		}
-		return new WebDAVPropertyName(webDAVPropertyNamespace, webDAVPropertyNamespace);	//create and return a new WebDAV property name from the components we determined
+		return new WebDAVPropertyName(webDAVPropertyNamespace, webDAVPropertyLocalName);	//create and return a new WebDAV property name from the components we determined
 	}
 
 	/**Determines the URF property to represent the given WebDAV property if possible.
@@ -984,7 +984,7 @@ public class WebDAVRepository extends AbstractRepository
 							turfProcessor.clearAssertions();	//clear all the URF assertions so that that we won't re-create property/value settings the next time we use the processor
 							try
 							{
-								final List<URFResource> urfPropertyValues=turfProcessor.processResources(stringReader, resource.getURI());	//process the values
+								final List<URFResource> urfPropertyValues=turfProcessor.process(stringReader, resource.getURI());	//process the values
 								for(final URFResource urfPropertyValue:urfPropertyValues)	//for each value resource
 								{
 									resource.addPropertyValue(urfPropertyURI, urfPropertyValue);	//add this property value to the resource
