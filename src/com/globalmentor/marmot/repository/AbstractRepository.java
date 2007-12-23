@@ -6,7 +6,7 @@ import java.util.*;
 
 import javax.mail.internet.ContentType;
 
-import static com.garretwilson.io.FileUtilities.*;
+import static com.garretwilson.io.Files.*;
 import static com.garretwilson.io.OutputStreamUtilities.*;
 import static com.garretwilson.lang.ObjectUtilities.*;
 import com.garretwilson.net.*;
@@ -25,6 +25,12 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 
 	/**The resource factory for resources in the Marmot security namespace.*/
 	protected final static URFResourceFactory MARMOT_SECURITY_RESOURCE_FACTORY=new JavaURFResourceFactory(MarmotSecurity.class.getPackage());
+
+	/**The I/O implementation that writes and reads a resource with the same reference URI as its base URI.*/
+	private final URFIO<URFResource> descriptionIO;
+
+		/**@return The I/O implementation that writes and reads a resource with the same reference URI as its base URI.*/
+		protected URFIO<URFResource> getDescriptionIO() {return descriptionIO;}
 
 	/**The registered event listeners.*/
 //TODO bring back when needed	protected final EventListenerManager eventListenerManager=new EventListenerManager();
@@ -167,9 +173,11 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	/**Default constructor with no settings.
 	Settings must be configured before repository is opened.
 	*/
+/*TODO del when not needed
 	public AbstractRepository()
 	{
 	}
+*/
 
 	/**URI contructor with no separate private URI namespace.
 	@param repositoryURI The URI identifying the location of this repository.
@@ -181,14 +189,30 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	}
 
 	/**Public repository URI and private repository URI contructor.
+	A {@link URFResourceTURFIO} description I/O is created and initialized.
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
 	@exception NullPointerException if one of the given respository URIs is <code>null</code>.
 	*/
 	public AbstractRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
 	{
+		this(publicRepositoryURI, privateRepositoryURI, new URFResourceTURFIO<URFResource>(URFResource.class, URI.create("")));	//create a default resource description I/O using TURF
+		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO=(URFResourceTURFIO<URFResource>)getDescriptionIO();	//get the description I/O we created
+		urfResourceDescriptionIO.addNamespaceURI(MarmotSecurity.MARMOT_SECURITY_NAMESPACE_URI);	//tell the I/O about the security namespace
+//TODO del		urfResourceDescriptionIO.setFormatted(false);	//turn off formatting
+	}
+
+	/**Public repository URI and private repository URI contructor.
+	@param publicRepositoryURI The URI identifying the location of this repository.
+	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
+	@param descriptionIO The I/O implementation that writes and reads a resource with the same reference URI as its base URI.
+	@exception NullPointerException if one of the given respository URIs and/or the description I/O is <code>null</code>.
+	*/
+	public AbstractRepository(final URI publicRepositoryURI, final URI privateRepositoryURI, final URFIO<URFResource> descriptionIO)
+	{
 		super(checkInstance(publicRepositoryURI, "Public repository URI cannot be null.").normalize());	//construct the parent class with the public reference URI
 		this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI cannot be null.").normalize();
+		this.descriptionIO=checkInstance(descriptionIO, "Description I/O cannot be null.");	//save the description I/O
 	}
 
 	/**Creates a default empty URF data model.

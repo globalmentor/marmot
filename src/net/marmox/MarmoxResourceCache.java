@@ -4,7 +4,7 @@ import java.io.*;
 import java.net.URI;
 import java.util.Date;
 
-import static com.garretwilson.io.FileUtilities.*;
+import static com.garretwilson.io.Files.*;
 import com.garretwilson.net.ResourceNotFoundException;
 
 import static com.garretwilson.lang.ObjectUtilities.checkInstance;

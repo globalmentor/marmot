@@ -9,7 +9,7 @@ import static java.util.Collections.*;
 import javax.mail.internet.ContentType;
 
 import static com.garretwilson.io.FileConstants.*;
-import static com.garretwilson.io.FileUtilities.*;
+import static com.garretwilson.io.Files.*;
 import static com.garretwilson.lang.CharSequenceUtilities.*;
 import static com.garretwilson.net.URIConstants.*;
 import static com.garretwilson.net.URIUtilities.*;
@@ -19,6 +19,7 @@ import com.garretwilson.util.Debug;
 import com.garretwilson.io.*;
 import com.garretwilson.net.*;
 import com.garretwilson.urf.*;
+
 import static com.garretwilson.urf.URF.*;
 import static com.garretwilson.urf.content.Content.*;
 
@@ -46,20 +47,6 @@ public class FileRepository extends AbstractRepository
 	/**The name component of the Marmot description of a file resource.*/
 	public final static String MARMOT_DESCRIPTION_NAME="marmot-description";
 
-	/**The I/O implementation that writes and reads a resource with the same reference URI as its base URI.*/
-	protected final static URFIO<URFResource> descriptionIO;
-
-		/**@return The I/O implementation that writes and reads a resource with the same reference URI as its base URI.*/
-		protected URFIO<URFResource> getDescriptionIO() {return descriptionIO;}
-
-	static
-	{
-		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO=new URFResourceTURFIO<URFResource>(URFResource.class, URI.create(""));	//create new description I/O
-		urfResourceDescriptionIO.addNamespaceURI(MarmotSecurity.MARMOT_SECURITY_NAMESPACE_URI);	//tell the I/O about the security namespace
-		urfResourceDescriptionIO.setFormatted(false);	//turn off formatting
-		descriptionIO=urfResourceDescriptionIO;	//save the description I/O we constructed
-	}
-
 	/**The file filter for listing files in a directory.*/
 	protected final static FileFilter FILE_FILTER=new FileFilter()
 			{
@@ -80,9 +67,11 @@ public class FileRepository extends AbstractRepository
 	/**Default constructor with no settings.
 	Settings must be configured before repository is opened.
 	*/
+/*TODO del if not needed
 	public FileRepository()
 	{
 	}
+*/
 
 	/**File contructor with no separate private URI namespace.
 	@param repositoryDirectory The file identifying the directory of this repository.
@@ -128,6 +117,8 @@ public class FileRepository extends AbstractRepository
 		{
 			throw new IllegalArgumentException(privateRepositoryURI+" does not use the "+FILE_SCHEME+" URI scheme.");
 		}
+		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO=(URFResourceTURFIO<URFResource>)getDescriptionIO();	//get the description I/O
+		urfResourceDescriptionIO.setFormatted(true);	//turn on formatting
 	}
 	
 	/**Gets an input stream to the contents of the resource specified by the given URI.
@@ -612,7 +603,7 @@ public class FileRepository extends AbstractRepository
 			final URFResource resource;
 			if(resourceDescriptionFile.exists())	//if there is a description file
 			{
-				resource=FileUtilities.read(resourceDescriptionFile, urf, resourceURI, descriptionIO);	//read the description using the given URF instance, using the resource URI as the base URI
+				resource=Files.read(resourceDescriptionFile, urf, resourceURI, getDescriptionIO());	//read the description using the given URF instance, using the resource URI as the base URI
 			}
 			else	//if there is no description file
 			{
@@ -638,7 +629,7 @@ public class FileRepository extends AbstractRepository
 		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the file for storing the description
 		try
 		{
-			FileUtilities.write(resourceDescriptionFile, resourceURI, resourceDescription, descriptionIO);	//write the description, using the resource URI as the base URI
+			Files.write(resourceDescriptionFile, resourceURI, resourceDescription, getDescriptionIO());	//write the description, using the resource URI as the base URI
 		}
 		catch(final IOException ioException)	//if an error occurs
 		{

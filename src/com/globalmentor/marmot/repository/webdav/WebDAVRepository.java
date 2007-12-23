@@ -10,7 +10,10 @@ import static java.util.Collections.*;
 import javax.mail.internet.*;
 
 import com.garretwilson.io.*;
+
 import static com.garretwilson.lang.ObjectUtilities.*;
+
+import com.garretwilson.lang.Strings;
 import com.garretwilson.net.*;
 import static com.garretwilson.net.URIUtilities.*;
 import com.garretwilson.net.http.*;
@@ -18,7 +21,9 @@ import com.garretwilson.net.http.webdav.*;
 import static com.garretwilson.net.http.webdav.ApacheWebDAVConstants.*;
 import static com.garretwilson.net.http.webdav.WebDAVConstants.*;
 import static com.garretwilson.text.xml.XMLUtilities.*;
+import static com.garretwilson.text.CharacterEncodingConstants.*;
 import com.garretwilson.urf.*;
+
 import static com.garretwilson.urf.TURF.*;
 import static com.garretwilson.urf.URF.*;
 import com.garretwilson.urf.content.*;
@@ -26,6 +31,7 @@ import static com.garretwilson.urf.content.Content.*;
 import static com.garretwilson.urf.dcmi.DCMI.*;
 import com.garretwilson.util.*;
 import static com.garretwilson.util.LocaleUtilities.*;
+
 import com.globalmentor.marmot.repository.AbstractRepository;
 
 import org.w3c.dom.*;
@@ -47,6 +53,20 @@ public class WebDAVRepository extends AbstractRepository
 	
 	/**The extension used for directories to hold resource children.*/
 //TODO move if needed	protected final static String DIRECTORY_EXTENSION="@";	//TODO promote to parent file-based class
+
+	/**The name of the WebDAV property that holds the description of a resource.*/
+//TODO del if not needed	private final static WebDAVPropertyName RESOURCE_DESCRIPTION_PROPERTY_NAME=new WebDAVPropertyName(MARMOT_NAMESPACE_URI.toString(), "description");
+
+	/**Determines the WebDAV property that holds the description of a resource.
+	This version returns {@value #RESOURCE_DESCRIPTION_PROPERTY_NAME}.
+	@return The WebDAV property to hold a resource description.
+	*/
+/*TODO del
+	protected WebDAVPropertyName getResourceDescriptionPropertyName()
+	{
+		return RESOURCE_DESCRIPTION_PROPERTY_NAME;
+	}
+*/
 
 	/**A token local name for WebDAV for use with URF properties that have no local name.*/
 	private final static String URF_TOKEN_LOCAL_NAME="urfTokenLocalName";
@@ -156,10 +176,12 @@ public class WebDAVRepository extends AbstractRepository
 	/**Default constructor with no settings.
 	Settings must be configured before repository is opened.
 	*/
+/*TODO del when works 
 	public WebDAVRepository()
 	{
 		this.httpClient=HTTPClient.getInstance();	//TODO improve; consolidate constructors; create HTTPClient constructor
 	}
+*/
 
 	/**Repository URI contructor using the default HTTP client.
 	The given repository URI should end in a slash.
@@ -200,6 +222,9 @@ public class WebDAVRepository extends AbstractRepository
 	{
 		super(publicRepositoryURI, privateRepositoryURI);	//construct the parent class
 		this.httpClient=httpClient;	//save the HTTP client
+		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO=(URFResourceTURFIO<URFResource>)getDescriptionIO();	//get the description I/O
+		urfResourceDescriptionIO.setBOMWritten(false);	//turn off BOM generation
+		urfResourceDescriptionIO.setFormatted(false);	//turn off formatting
 	}
 	
 	/**Gets an input stream to the contents of the resource specified by the given URI.
@@ -623,29 +648,15 @@ public class WebDAVRepository extends AbstractRepository
 		try
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
-			final List<WebDAVProperty> oldPropertyList=webdavResource.propFind();	//get the original properties of this resource
-			final URFTURFGenerator turfGenerator=new URFTURFGenerator(resourceURI);	//create a new URF TURF generator
-			turfGenerator.setFormatted(false);	//don't format output
+			final URFIO<URFResource> descriptionIO=getDescriptionIO();	//get I/O for the description
 			final Set<WebDAVProperty> setProperties=new HashSet<WebDAVProperty>();	//create a set of properties to set
-
-			for(final URFProperty urfProperty:properties)	//for each property to set
+			for(final URFProperty property:properties)	//for each property to set
 			{
-				final URI urfPropertyURI=urfProperty.getPropertyURI();	//get the URI of the URF property
-				final WebDAVPropertyName webdavPropertyName=createWebDAVURFPropertyName(urfPropertyURI);	//create a WebDAV property name from the URF property URI
-				final String webdavPropertyStringValue;	//we'll determine the WebDAV property string value to use
-				final URFResource urfPropertyValue=urfProperty.getValue();	//get the value of the urf property
-					//if there are no subproperties or scoped properties, see if this is a string
-				final String urfPropertyStringValue=asString(urfPropertyValue);	//see if this is a string value
-				if(urfPropertyStringValue!=null && urfPropertyValue.getPropertyCount()==0 && urfProperty.getScope().getPropertyCount()==0)	//if the URF property value is a string, and there are no subproperties or scoped properties
-				{
-					webdavPropertyStringValue=urfPropertyStringValue;	//use the value of the string as-is
-				}
-				else	//if the URF property value is not a string, or if it has subproperties or scoped properties
-				{
-					final StringWriter stringWriter=new StringWriter();	//create a new string writer
-					turfGenerator.generateResources(stringWriter, urfPropertyValue);	//generate a TURF string from the URF property value
-					webdavPropertyStringValue=stringWriter.toString();	//use the generated TURF as the WebDAV string value
-				}
+				final URI propertyURI=property.getPropertyURI();	//get the URI of the URF property
+				final WebDAVPropertyName webdavPropertyName=createWebDAVURFPropertyName(propertyURI);	//create a WebDAV property name from the URF property URI
+				final URFResource propertyDescription=new DefaultURFResource(resourceURI);	//create a new resource description just for this property
+				propertyDescription.addProperty(property);	//add this property to the resource
+				final String webdavPropertyStringValue=Strings.write(resourceURI, propertyDescription, descriptionIO, UTF_8);	//write the description to a string, using the resource URI as the base URI
 				final WebDAVPropertyValue webdavPropertyValue=new WebDAVLiteralPropertyValue(webdavPropertyStringValue);	//create a WebDAV literal property value from the determined string
 				setProperties.add(new WebDAVProperty(webdavPropertyName, webdavPropertyValue));	//add the WebDAV property with the its value
 			}
@@ -855,7 +866,7 @@ public class WebDAVRepository extends AbstractRepository
 			}
 		}
 	}
-
+	
 	/**Creates a resource to represent this list of properties.
 	@param urf The URF data model to use when creating this resource.
 	@param referenceURI The reference URI of the property to create.
@@ -876,7 +887,8 @@ public class WebDAVRepository extends AbstractRepository
 */
 			//create a label G***maybe only do this if the resource kit has not added a label
 		boolean isCollection=false;	//we'll detect if this is a collection base upon the properties
-		final URFTURFProcessor turfProcessor=new URFTURFProcessor(urf);	//create a new processor for analyzing any URF contained in URF property values, using the existing URF instance
+		final URFIO<URFResource> descriptionIO=getDescriptionIO();	//get I/O for the description
+//TODO del		final URFTURFProcessor turfProcessor=new URFTURFProcessor(urf);	//create a new processor for analyzing any URF contained in URF property values, using the existing URF instance
 		for(final WebDAVProperty webdavProperty:propertyList)	//look at each WebDAV property
 		{
 			final WebDAVPropertyName propertyName=webdavProperty.getName();	//get the property name
@@ -979,24 +991,18 @@ public class WebDAVRepository extends AbstractRepository
 						final String propertyTextValue=((WebDAVLiteralPropertyValue)propertyValue).getText();	//get the text value of the property
 						if(propertyTextValue.startsWith(TURF_SIGNATURE))	//if this property value is stored in TURF
 						{
-							final StringReader stringReader=new StringReader(propertyTextValue);	//create a reader to the TURF string
-							turfProcessor.reset();	//reset the TURF processor
-							turfProcessor.clearAssertions();	//clear all the URF assertions so that that we won't re-create property/value settings the next time we use the processor
 							try
 							{
-								final List<URFResource> urfPropertyValues=turfProcessor.process(stringReader, resource.getURI());	//process the values
-								for(final URFResource urfPropertyValue:urfPropertyValues)	//for each value resource
+								final URFResource propertyDescription=descriptionIO.read(urf, new ByteArrayInputStream(propertyTextValue.getBytes(UTF_8)), resourceURI);	//read a description of the property
+								for(final URFProperty property:propertyDescription.getProperties(urfPropertyURI))	//for each read property that we expect in the description
 								{
-									resource.addPropertyValue(urfPropertyURI, urfPropertyValue);	//add this property value to the resource
+									resource.addProperty(property);	//add this property to the description
 								}
 							}
-							catch(final ParseIOException parseIOException)	//if there was a parsing I/O error
+							catch(final IOException ioException)	//TODO improve; comment
 							{
-								throw new DataException(parseIOException);
-							}
-							catch(final IOException ioException)	//there should never be a general I/O error with a string reader
-							{
-								throw new AssertionError(ioException);
+//TODO fix								throw new DataException(ioException);
+								Debug.warn("Error parsing property", urfPropertyURI, "with value", propertyTextValue, ioException);
 							}
 						}
 						else	//if this is a normal string property

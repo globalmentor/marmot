@@ -20,9 +20,13 @@ public class Marmot
 //TODO del	public final static URI MARMOT_NAMESPACE_URI=URI.create("http://globalmentor.com/marmot");
 
 	
+	/**The URI to the Marmot RDF namespace.*/
+	public final static URI MARMOT_RDF_NAMESPACE_URI=URI.create("http://globalmentor.com/namespaces/marmot#");	//TODO del; used by old code
+
 	/**The URI to the Marmot namespace.*/
-	public final static URI MARMOT_NAMESPACE_URI=URI.create("http://globalmentor.com/namespaces/marmot#");	//TODO del; used by old code
+	public final static URI MARMOT_NAMESPACE_URI=URI.create("http://globalmentor.com/namespaces/marmot");
 
 	/**A resource that is a collection of other resources.*/
 	public final static String COLLECTION_CLASS_NAME="Collection";
+
 }
