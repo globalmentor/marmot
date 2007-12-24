@@ -15,7 +15,7 @@ import static com.garretwilson.lang.ObjectUtilities.*;
 
 import com.garretwilson.lang.Strings;
 import com.garretwilson.net.*;
-import static com.garretwilson.net.URIUtilities.*;
+import static com.garretwilson.net.URIs.*;
 import com.garretwilson.net.http.*;
 import com.garretwilson.net.http.webdav.*;
 import static com.garretwilson.net.http.webdav.ApacheWebDAVConstants.*;
@@ -1022,7 +1022,7 @@ public class WebDAVRepository extends AbstractRepository
 				//try to find a content type if none was specified
 			if(getContentType(resource)==null)	//if no content was determined
 			{
-				final ContentType contentType=getExtensionContentType(getNameExtension(URIUtilities.getName(resourceURI)));	//get the registered content type for the resource's extension
+				final ContentType contentType=getExtensionContentType(getNameExtension(URIs.getName(resourceURI)));	//get the registered content type for the resource's extension
 				if(contentType!=null)	//if there is a registered content type for the resource's extension
 				{
 					setContentType(resource, contentType);	//set the content type property

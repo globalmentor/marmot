@@ -10,7 +10,7 @@ import static com.garretwilson.io.Files.*;
 import static com.garretwilson.io.OutputStreamUtilities.*;
 import static com.garretwilson.lang.ObjectUtilities.*;
 import com.garretwilson.net.*;
-import static com.garretwilson.net.URIUtilities.*;
+import static com.garretwilson.net.URIs.*;
 import com.garretwilson.urf.*;
 
 import com.globalmentor.marmot.security.MarmotSecurity;

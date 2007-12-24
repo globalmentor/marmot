@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 
 import static com.garretwilson.net.URIConstants.*;
-import static com.garretwilson.net.URIUtilities.*;
+import static com.garretwilson.net.URIs.*;
 
 import com.garretwilson.net.http.HTTPClient;
 import com.garretwilson.rdf.RDFResource;

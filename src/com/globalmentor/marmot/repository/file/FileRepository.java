@@ -12,7 +12,7 @@ import static com.garretwilson.io.FileConstants.*;
 import static com.garretwilson.io.Files.*;
 import static com.garretwilson.lang.CharSequenceUtilities.*;
 import static com.garretwilson.net.URIConstants.*;
-import static com.garretwilson.net.URIUtilities.*;
+import static com.garretwilson.net.URIs.*;
 
 import com.garretwilson.util.Debug;
 
@@ -563,7 +563,7 @@ public class FileRepository extends AbstractRepository
 			//try to find a content type if none was specified
 			if(getContentType(resource)==null)	//if no content was determined
 			{
-				final ContentType contentType=getExtensionContentType(getNameExtension(URIUtilities.getName(resource.getURI())));	//get the registered content type for the resource's extension
+				final ContentType contentType=getExtensionContentType(getNameExtension(URIs.getName(resource.getURI())));	//get the registered content type for the resource's extension
 				if(contentType!=null)	//if there is a registered content type for the resource's extension
 				{
 					setContentType(resource, contentType);	//set the content type property
