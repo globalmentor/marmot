@@ -18,7 +18,7 @@ import com.garretwilson.net.*;
 import static com.garretwilson.net.URIs.*;
 import com.garretwilson.net.http.*;
 import com.garretwilson.net.http.webdav.*;
-import static com.garretwilson.net.http.webdav.ApacheWebDAVConstants.*;
+import static com.garretwilson.net.http.webdav.ApacheWebDAV.*;
 import static com.garretwilson.net.http.webdav.WebDAVConstants.*;
 import static com.garretwilson.text.xml.XMLUtilities.*;
 import static com.garretwilson.text.CharacterEncodingConstants.*;
@@ -39,11 +39,9 @@ import org.w3c.dom.*;
 /**Repository accessed via WebDAV.
 <p>This repository recognizes the URF type <code>urf.List</code> and creates a collection for each such resource.</p>
 <p>URF properties are stored as normal WebDAV properties, except that the value is a TURF interchange document beginning with the TURF signature {@value TURF#TURF_SIGNATURE},
-and within the instance are one or more URF resources values of the property are stored.</p>
-	<p>If an URF property has no namespace, a WebDAV property name is formed using the URF property URI as the namespace and the string {@value #URF_TOKEN_LOCAL_NAME}
+	and within the instance are one or more URF resources values of the property are stored.
+	If an URF property has no namespace, a WebDAV property name is formed using the URF property URI as the namespace and the string {@value #URF_TOKEN_LOCAL_NAME}
 	as a local name, because WebDAV requires that each property have a separate namespace and local name.</p>
-<p>String property values with no subproperties or scoped properties should be stored as the literal contents of the string,
-with no TURF container, no TURF string delimiters, and no TURF string escaping.</p>  
 @author Garret Wilson
 */
 public class WebDAVRepository extends AbstractRepository
@@ -68,23 +66,79 @@ public class WebDAVRepository extends AbstractRepository
 	}
 */
 
+	/**The WebDAV namespaces that are not automatically added as URF properties, although some properties in these namespaces may be explicitly used.*/
+	private final Set<String> ignoredWebDAVNamespaces=new HashSet<String>();
+
+		/**Returns the WebDAV namespaces that are not automatically added as URF properties.
+		Some properties in these namespaces may be explicitly used.
+		The returned map is not thread-safe; it can be used for reading, but should not be modified after repository construction.
+		@return The WebDAV namespaces that are not automatically added as URF properties.
+		*/
+		protected Set<String> getIgnoredWebDAVNamespaces() {return ignoredWebDAVNamespaces;}
+
+	/**Repository URI contructor using the default HTTP client.
+	The given repository URI should end in a slash.
+	@param repositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
+	*/
+	public WebDAVRepository(final URI repositoryURI)
+	{
+		this(repositoryURI, HTTPClient.getInstance());	//construct the class using the default HTTP client		
+	}
+	
+	/**Repository URI and HTTP client contructor.
+	The given repository URI should end in a slash.
+	@param repositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
+	@param httpClient The HTTP client used to create a connection to this resource.	
+	*/
+	public WebDAVRepository(final URI repositoryURI, final HTTPClient httpClient)
+	{
+		this(repositoryURI, repositoryURI, httpClient);	//use the same repository URI as the public and private namespaces
+	}
+
+	/**Public repository URI and private repository URI contructor using the default HTTP client.
+	The given private repository URI should end in a slash.
+	@param publicRepositoryURI The URI identifying the location of this repository.
+	@param privateRepositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
+	*/
+	public WebDAVRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
+	{
+		this(publicRepositoryURI, privateRepositoryURI, HTTPClient.getInstance());	//construct the class using the default HTTP client				
+	}
+
+	/**Public repository URI, private repository URI, and HTTP client contructor.
+	The given private repository URI should end in a slash.
+	@param publicRepositoryURI The URI identifying the location of this repository.
+	@param privateRepositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
+	@param httpClient The HTTP client used to create a connection to this resource.	
+	*/
+	public WebDAVRepository(final URI publicRepositoryURI, final URI privateRepositoryURI, final HTTPClient httpClient)
+	{
+		super(publicRepositoryURI, privateRepositoryURI);	//construct the parent class
+		this.httpClient=httpClient;	//save the HTTP client
+		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO=(URFResourceTURFIO<URFResource>)getDescriptionIO();	//get the description I/O
+		urfResourceDescriptionIO.setBOMWritten(false);	//turn off BOM generation
+		urfResourceDescriptionIO.setFormatted(false);	//turn off formatting
+		getIgnoredWebDAVNamespaces().add(APACHE_WEBDAV_PROPERTY_NAMESPACE_URI.toString());	//by default ignore properties in the Apache WebDAV namespace
+	}
+
 	/**A token local name for WebDAV for use with URF properties that have no local name.*/
 	private final static String URF_TOKEN_LOCAL_NAME="urfTokenLocalName";
 	
-	/**Creates a name of a WebDAV property to represent an URF property.
-	<p>If an URF property has no namespace, a WebDAV property name is formed using the URF property URI as the namespace and the string {@value #URF_TOKEN_LOCAL_NAME}
+	/**Determines the WebDAV property name to represent an URF property.
+	<p>If an URF property has no namespace, this implementation forms a WebDAV property name using the URF property URI as the namespace and the string {@value #URF_TOKEN_LOCAL_NAME}
 	as a local name, because WebDAV requires that each property have a separate namespace and local name.</p>
 	@param urfPropertyURI The URI of the URF property to represent.
 	@return A WebDAV property name to use in representing an URF property with the given URF property URI.
+	@see #URF_TOKEN_LOCAL_NAME
 	*/
-	protected static WebDAVPropertyName createWebDAVURFPropertyName(final URI urfPropertyURI)
+	protected WebDAVPropertyName getWebDAVPropertyName(final URI urfPropertyURI)
 	{
 		final String webDAVPropertyNamespace;
 		final String webDAVPropertyLocalName;
 		final String rawFragment=urfPropertyURI.getRawFragment();	//get the raw fragment of the URF property URI
 		if(rawFragment!=null)	//if the URI has a fragment
 		{
-			final String urfPropertyURIString=urfPropertyURI.toString();	//get the string representation of the URF property URI URI
+			final String urfPropertyURIString=urfPropertyURI.toString();	//get the string representation of the URF property URI
 			assert urfPropertyURIString.endsWith(rawFragment);
 			webDAVPropertyNamespace=urfPropertyURIString.substring(0, urfPropertyURIString.length()-rawFragment.length());	//remove the raw fragment, but leave the fragment identifier on the namespaces
 			webDAVPropertyLocalName=rawFragment;	//the raw fragment itself is the WebDAV local name
@@ -111,8 +165,9 @@ public class WebDAVRepository extends AbstractRepository
 	<p>This method returns <code>null</code> for all WebDAV properties in the {@value WebDAVConstants#WEBDAV_NAMESPACE} namespace.</p> 
 	@param webdavPropertyName The name of the WebDAV property.
 	@return The URI of the URF property to represent the given WebDAV property, or <code>null</code> if the given WebDAV property cannot be represented in URF.
+	@see #URF_TOKEN_LOCAL_NAME
 	*/
-	protected static URI getURFPropertyURI(final WebDAVPropertyName webdavPropertyName)
+	protected URI getURFPropertyURI(final WebDAVPropertyName webdavPropertyName)
 	{
 		final String webdavPropertyNamespace=webdavPropertyName.getNamespace();	//get the property namespace
 		if(WEBDAV_NAMESPACE.equals(webdavPropertyNamespace))	//ignore the WebDAV namespace
@@ -171,60 +226,6 @@ public class WebDAVRepository extends AbstractRepository
 		final String username=getUsername();	//get the username
 		final char[] password=getPassword();	//get the password
 		return username!=null && password!=null ? new PasswordAuthentication(username, password) : null;	//return new password authentication if this information is available
-	}
-	
-	/**Default constructor with no settings.
-	Settings must be configured before repository is opened.
-	*/
-/*TODO del when works 
-	public WebDAVRepository()
-	{
-		this.httpClient=HTTPClient.getInstance();	//TODO improve; consolidate constructors; create HTTPClient constructor
-	}
-*/
-
-	/**Repository URI contructor using the default HTTP client.
-	The given repository URI should end in a slash.
-	@param repositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
-	*/
-	public WebDAVRepository(final URI repositoryURI)
-	{
-		this(repositoryURI, HTTPClient.getInstance());	//construct the class using the default HTTP client		
-	}
-	
-	/**Repository URI and HTTP client contructor.
-	The given repository URI should end in a slash.
-	@param repositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
-	@param httpClient The HTTP client used to create a connection to this resource.	
-	*/
-	public WebDAVRepository(final URI repositoryURI, final HTTPClient httpClient)
-	{
-		this(repositoryURI, repositoryURI, httpClient);	//use the same repository URI as the public and private namespaces
-	}
-
-	/**Public repository URI and private repository URI contructor using the default HTTP client.
-	The given private repository URI should end in a slash.
-	@param publicRepositoryURI The URI identifying the location of this repository.
-	@param privateRepositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
-	*/
-	public WebDAVRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
-	{
-		this(publicRepositoryURI, privateRepositoryURI, HTTPClient.getInstance());	//construct the class using the default HTTP client				
-	}
-
-	/**Public repository URI, private repository URI, and HTTP client contructor.
-	The given private repository URI should end in a slash.
-	@param publicRepositoryURI The URI identifying the location of this repository.
-	@param privateRepositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
-	@param httpClient The HTTP client used to create a connection to this resource.	
-	*/
-	public WebDAVRepository(final URI publicRepositoryURI, final URI privateRepositoryURI, final HTTPClient httpClient)
-	{
-		super(publicRepositoryURI, privateRepositoryURI);	//construct the parent class
-		this.httpClient=httpClient;	//save the HTTP client
-		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO=(URFResourceTURFIO<URFResource>)getDescriptionIO();	//get the description I/O
-		urfResourceDescriptionIO.setBOMWritten(false);	//turn off BOM generation
-		urfResourceDescriptionIO.setFormatted(false);	//turn off formatting
 	}
 	
 	/**Gets an input stream to the contents of the resource specified by the given URI.
@@ -653,7 +654,7 @@ public class WebDAVRepository extends AbstractRepository
 			for(final URFProperty property:properties)	//for each property to set
 			{
 				final URI propertyURI=property.getPropertyURI();	//get the URI of the URF property
-				final WebDAVPropertyName webdavPropertyName=createWebDAVURFPropertyName(propertyURI);	//create a WebDAV property name from the URF property URI
+				final WebDAVPropertyName webdavPropertyName=getWebDAVPropertyName(propertyURI);	//create a WebDAV property name from the URF property URI
 				final URFResource propertyDescription=new DefaultURFResource(resourceURI);	//create a new resource description just for this property
 				propertyDescription.addProperty(property);	//add this property to the resource
 				final String webdavPropertyStringValue=Strings.write(resourceURI, propertyDescription, descriptionIO, UTF_8);	//write the description to a string, using the resource URI as the base URI
@@ -885,10 +886,10 @@ public class WebDAVRepository extends AbstractRepository
 			resourceKit.initialize(this, rdf, resource);	//initialize the resource
 		}
 */
+		final Set<String> ignoredWebDAVNamespaces=getIgnoredWebDAVNamespaces();	//get the map of ignored WebDAV namespaces
 			//create a label G***maybe only do this if the resource kit has not added a label
 		boolean isCollection=false;	//we'll detect if this is a collection base upon the properties
 		final URFIO<URFResource> descriptionIO=getDescriptionIO();	//get I/O for the description
-//TODO del		final URFTURFProcessor turfProcessor=new URFTURFProcessor(urf);	//create a new processor for analyzing any URF contained in URF property values, using the existing URF instance
 		for(final WebDAVProperty webdavProperty:propertyList)	//look at each WebDAV property
 		{
 			final WebDAVPropertyName propertyName=webdavProperty.getName();	//get the property name
@@ -976,13 +977,11 @@ public class WebDAVRepository extends AbstractRepository
 					}
 				}				
 			}
-			if(APACHE_WEBDAV_PROPERTY_NAMESPACE_URI.toString().equals(propertyNamespace))	//if this property is in the Apache WebDAV namespace
+			if(!ignoredWebDAVNamespaces.contains(propertyNamespace))	//if this is not a namespace to ignore
 			{
-				//ignore Apache WebDAV properties
-			}
-			else	//for non-WebDAV properties
-			{
+//Debug.trace("looking at non-WebDAV property", propertyName);
 				final URI urfPropertyURI=getURFPropertyURI(propertyName);	//get the URI of the corresponding URF property, if any
+//Debug.trace("URF property URI", urfPropertyURI);
 				if(urfPropertyURI!=null && propertyValue!=null)	//if there is a corresponding URF property and there is an actual value specified (URF does not define a null value) TODO fix null
 				{
 
@@ -1032,6 +1031,7 @@ public class WebDAVRepository extends AbstractRepository
 			//TODO fix filename encoding/decoding---there's no way to know what operating system the server is using
 		
 			//TODO encode in UTF-8
+//		Debug.trace("ready to return resource description:", URF.toString(resource));
 		return resource;	//return the resource that respresents the file
 	}
 

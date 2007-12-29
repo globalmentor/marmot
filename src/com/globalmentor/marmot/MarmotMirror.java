@@ -11,7 +11,7 @@ import com.garretwilson.rdf.RDFResource;
 import com.garretwilson.rdf.dublincore.*;
 import com.garretwilson.rdf.version.*;
 
-import static com.garretwilson.text.CharacterConstants.*;
+import static com.garretwilson.text.Characters.*;
 import static com.garretwilson.util.CommandLineArgumentUtilities.*;
 import com.garretwilson.util.Application;
 import com.garretwilson.util.Debug;
