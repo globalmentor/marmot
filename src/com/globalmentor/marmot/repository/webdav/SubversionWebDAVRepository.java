@@ -67,7 +67,6 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 		super(publicRepositoryURI, privateRepositoryURI, httpClient);	//construct the parent class
 		final Set<String> ignoredWebDAVNamespaces=getIgnoredWebDAVNamespaces();	//get the map of ignored WebDAV namespaces
 		ignoredWebDAVNamespaces.add(SUBVERSION_DAV_NAMESPACE_URI.toString());	//by default ignore the Subversion DAV namespace
-		ignoredWebDAVNamespaces.add(SUBVERSION_CUSTOM_NAMESPACE);	//by default ignore the Subversion custom namespace
 	}
 
 	/**Determines the WebDAV property name to represent an URF property.
