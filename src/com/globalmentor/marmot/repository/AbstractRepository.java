@@ -8,9 +8,17 @@ import javax.mail.internet.ContentType;
 
 import static com.garretwilson.io.Files.*;
 import static com.garretwilson.io.OutputStreamUtilities.*;
-import static com.garretwilson.lang.ObjectUtilities.*;
+import static com.garretwilson.lang.Objects.*;
+
+import static com.garretwilson.io.ContentTypes.*;
 import com.garretwilson.net.*;
+
 import static com.garretwilson.net.URIs.*;
+
+import com.garretwilson.text.CharacterEncoding;
+import com.garretwilson.urf.content.Content;
+import static com.garretwilson.urf.content.Content.*;
+
 import com.garretwilson.urf.*;
 
 import com.globalmentor.marmot.security.MarmotSecurity;
@@ -150,25 +158,79 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	/**The map of content types mapped to lowercase URI name extensions.*/
 	private final Map<String, ContentType> extensionContentTypeMap=new HashMap<String, ContentType>(FILE_EXTENSION_CONTENT_TYPE_MAP);
 
-	/**Associates the given content type with the given extension, without regard to case.
-	@param extension The URI name extension with which the content type should be associated, or <code>null</code> if the content type should be associated with resources that have no extension.
-	@param contentType The content type to associate with the given extension.
-	@return The content type previously registered with the given extension, or <code>null</code> if no content type was previously registered.
-	@exception NullPointerException if the given content type is <code>null</code>.
-	*/
-	public ContentType registerExtensionContentType(final String extension, final ContentType contentType)
-	{
-		return extensionContentTypeMap.put(extension!=null ? extension.toLowerCase() : null, checkInstance(contentType, "Content type cannot be null."));
-	}
+		/**Associates the given content type with the given extension, without regard to case.
+		@param extension The URI name extension with which the content type should be associated, or <code>null</code> if the content type should be associated with resources that have no extension.
+		@param contentType The content type to associate with the given extension.
+		@return The content type previously registered with the given extension, or <code>null</code> if no content type was previously registered.
+		@exception NullPointerException if the given content type is <code>null</code>.
+		*/
+		public ContentType registerExtensionContentType(final String extension, final ContentType contentType)
+		{
+			return extensionContentTypeMap.put(extension!=null ? extension.toLowerCase() : null, checkInstance(contentType, "Content type cannot be null."));
+		}
+	
+		/**Returns the content type assciated with the given extension, without regard to case.
+		@param extension The URI name extension with which the content type is associated, or <code>null</code> if the content type is associated with resources that have no extension.
+		@return The content type associated with the given extension, or <code>null</code> if there is no content type associated with the given extension.
+		*/
+		public ContentType getExtensionContentType(final String extension)
+		{
+			return extensionContentTypeMap.get(extension!=null ? extension.toLowerCase() : null);	//return the content type, if any, associated with the given extension
+		}
 
-	/**Returns the content type assciated with the given extension, without regard to case.
-	@param extension The URI name extension with which the content type is associated, or <code>null</code> if the content type is associated with resources that have no extension.
-	@return The content type associated with the given extension, or <code>null</code> if there is no content type associated with the given extension.
-	*/
-	public ContentType getExtensionContentType(final String extension)
-	{
-		return extensionContentTypeMap.get(extension!=null ? extension.toLowerCase() : null);	//return the content type, if any, associated with the given extension
-	}
+	/**The map of character encodings mapped to base media types.*/
+	private final Map<String, CharacterEncoding> baseContentTypeCharacterEncodingMap=new HashMap<String, CharacterEncoding>();
+
+		/**Associates the given character encoding with the base media type of the given content type.
+		Any association will only override resources that do not explicitly have a character encoding specified.
+		Any parameters of the given content type will be ignored.
+		@param contentType The content type with which the character encoding should be associated.
+		@param contentEncoding The character encoding to associate with the given content type.
+		@return The character encoding previously registered with the given content type, or <code>null</code> if no character encoding was previously registered.
+		@exception NullPointerException if the given content type and/or character encoding is <code>null</code>.
+		*/
+		public CharacterEncoding registerContentTypeCharacterEncoding(final ContentType contentType, final CharacterEncoding contentEncoding)
+		{
+			return baseContentTypeCharacterEncodingMap.put(contentType.getBaseType(), checkInstance(contentEncoding, "Character encoding cannot be null."));
+		}
+
+		/**Returns the character encoding assciated with the given conten type.
+		Any parameters of the given content type will be ignored.
+		@param contentType The content type with which the character encoding is associated.
+		@return The character encoding associated with the given content type, or <code>null</code> if there is no character encoding associated with the given content type.
+		@exception NullPointerException if the given content type is <code>null</code>.
+		*/
+		public CharacterEncoding getContentTypeCharacterEncoding(final ContentType contentType)
+		{
+			return baseContentTypeCharacterEncodingMap.get(contentType.getBaseType());	//return the character encoding, if any, associated with the given base content type
+		}
+
+		/**@return the mapping of character encodings associated with base content types.*/
+		public Map<ContentType, CharacterEncoding> getContentTypeCharacterEncodings()
+		{
+			final Map<ContentType, CharacterEncoding> contentTypeCharacterEncodingMap=new HashMap<ContentType, CharacterEncoding>(baseContentTypeCharacterEncodingMap.size());	//create a new map to hold actual content type objects
+			for(final Map.Entry<String, CharacterEncoding> baseContentTypeCharacterEncodingEntry:baseContentTypeCharacterEncodingMap.entrySet())	//look at each mapping
+			{
+				contentTypeCharacterEncodingMap.put(createContentType(baseContentTypeCharacterEncodingEntry.getKey()), baseContentTypeCharacterEncodingEntry.getValue());	//add this mapping to the map
+			}
+			return contentTypeCharacterEncodingMap;	//return the map we created
+		}
+
+		/**Sets the content type character encoding associations to those specified in the given map.
+		Any association will only override resources that do not explicitly have a character encoding specified.
+		The current associations will be lost.
+		Any parameters of the given content types will be ignored.
+		@param contentTypeCharacterEncodings The associations of character encodings to base content types.
+		@exception NullPointerException if a given content type and/or character encoding is <code>null</code>.
+		*/
+		public void setContentTypeCharacterEncodings(final Map<ContentType, CharacterEncoding> contentTypeCharacterEncodings)
+		{
+			baseContentTypeCharacterEncodingMap.clear();	//clear the current mappings
+			for(final Map.Entry<ContentType, CharacterEncoding> contentTypeCharacterEncodingEntry:contentTypeCharacterEncodings.entrySet())	//look at each mapping
+			{
+				registerContentTypeCharacterEncoding(contentTypeCharacterEncodingEntry.getKey(), contentTypeCharacterEncodingEntry.getValue());	//register this association
+			}
+		}
 
 	/**Default constructor with no settings.
 	Settings must be configured before repository is opened.
@@ -506,6 +568,45 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 			}
 			copyResource(resourceURI, destinationRepository, destinationURI, overwrite);	//copy the resource to the other repository
 			deleteResource(resourceURI);	//delete the moved resource
+		}
+	}
+
+	/**Updates the {@value Content#TYPE_PROPERTY_URI} property of the given resource.
+	This method should be called before each non-collection resource description is returned.
+	If the resource has no {@value Content#TYPE_PROPERTY_URI} property defined, a content type will be looked up from the extension of the resource name, if any, using {@link #getExtensionContentType(CharacterEncoding)}.
+	No default content type is provided for a resource with a collection URI (i.e. a URI ending in {@value URIConstants#PATH_SEPARATOR}).
+	If the resource has no {@value Content#CHARACTER_ENCODING_PROPERTY_URI} property defined, a character encoding will be determined if possible using {@link #getContentTypeCharacterEncoding(ContentType)}.
+	@param resource The resource the content type of which should be updated.
+	@see Content#TYPE_PROPERTY_URI
+	@see Content#CHARACTER_ENCODING_PROPERTY_URI
+	*/
+	protected void updateContentType(final URFResource resource)	//TODO consider passing a MarmotSession to all the repository methods, and asking the MarmotSession for defaults 
+	{
+		ContentType contentType=getContentType(resource);	//get the specified content type of the resource
+		if(contentType==null)	//if no content type is specified
+		{
+			final URI resourceURI=resource.getURI();	//get the resource URI
+			final String resourceName=resourceURI!=null && !isCollectionURI(resourceURI) ? URIs.getName(resourceURI) : null;	//get the resource name, if any
+			if(resourceName!=null && !resourceName.isEmpty())	//if we have a non-empty name (only collections URIs should return empty names, so this the non-empty verification is redundant)
+			{
+				contentType=getExtensionContentType(getNameExtension(resourceName));	//get the registered content type, if any, for the resource's extension (which may be null)
+				if(contentType!=null)	//if we found a content type
+				{
+					setContentType(resource, contentType);	//update the content type property
+				}
+			}
+		}
+		if(contentType!=null)	//if we know a content type, update the characer encoding, if needed
+		{
+			CharacterEncoding characterEncoding=getCharacterEncoding(resource);	//get the specified character encoding of the resource
+			if(characterEncoding==null)	//if no character encoding is specified
+			{
+				characterEncoding=getContentTypeCharacterEncoding(contentType);	//get the registered character encoding, if any, for the content type
+				if(characterEncoding!=null)	//if we found a character encoding
+				{
+					setCharacterEncoding(resource, characterEncoding);	//update the character encoding property
+				}
+			}
 		}
 	}
 

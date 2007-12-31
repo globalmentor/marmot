@@ -11,7 +11,7 @@ import javax.mail.internet.*;
 
 import com.garretwilson.io.*;
 
-import static com.garretwilson.lang.ObjectUtilities.*;
+import static com.garretwilson.lang.Objects.*;
 
 import com.garretwilson.lang.Strings;
 import com.garretwilson.net.*;
@@ -20,8 +20,8 @@ import com.garretwilson.net.http.*;
 import com.garretwilson.net.http.webdav.*;
 import static com.garretwilson.net.http.webdav.ApacheWebDAV.*;
 import static com.garretwilson.net.http.webdav.WebDAVConstants.*;
+import static com.garretwilson.text.CharacterEncoding.*;
 import static com.garretwilson.text.xml.XMLUtilities.*;
-import static com.garretwilson.text.CharacterEncodingConstants.*;
 import com.garretwilson.urf.*;
 
 import static com.garretwilson.urf.TURF.*;
@@ -1014,19 +1014,11 @@ public class WebDAVRepository extends AbstractRepository
 		}
 		if(isCollection)	//if this is a collection
 		{
-			resource.removeProperties(Content.TYPE_PROPERTY_URI);	//remove any content type properties (Apache mod_dav adds a "httpd/unix-directory" pseudo MIME type for collections, for example)
+			resource.removePropertyValues(Content.TYPE_PROPERTY_URI);	//remove any content type properties (Apache mod_dav adds a "httpd/unix-directory" pseudo MIME type for collections, for example)
 		}
 		else	//if this is not a collection, try to get the content type of the resource if it wasn't specified already
 		{
-				//try to find a content type if none was specified
-			if(getContentType(resource)==null)	//if no content was determined
-			{
-				final ContentType contentType=getExtensionContentType(getNameExtension(URIs.getName(resourceURI)));	//get the registered content type for the resource's extension
-				if(contentType!=null)	//if there is a registered content type for the resource's extension
-				{
-					setContentType(resource, contentType);	//set the content type property
-				}
-			}
+			updateContentType(resource);	//update the content type information based upon the repository defaults
 		}
 			//TODO fix filename encoding/decoding---there's no way to know what operating system the server is using
 		

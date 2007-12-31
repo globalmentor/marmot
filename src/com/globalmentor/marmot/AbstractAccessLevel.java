@@ -68,7 +68,7 @@ public abstract class AbstractAccessLevel extends AbstractMarmotSecurityResource
 	*/
 	public void setAllowedPermissions(final Set<Permission> permissions)
 	{
-		removeProperties(ALLOW_PROPERTY_URI);	//remove all the allow properties
+		removePropertyValues(ALLOW_PROPERTY_URI);	//remove all the allow properties
 		for(final Permission permission:permissions)	//for each permission
 		{
 			addAllow(permission);	//allow this permission
@@ -81,7 +81,7 @@ public abstract class AbstractAccessLevel extends AbstractMarmotSecurityResource
 	*/
 	public void setAllowedPermissionTypes(final Set<PermissionType> permissionTypes)
 	{
-		removeProperties(ALLOW_PROPERTY_URI);	//remove all the allow properties
+		removePropertyValues(ALLOW_PROPERTY_URI);	//remove all the allow properties
 		for(final PermissionType permissionType:permissionTypes)	//for each permission
 		{
 			addAllow(createPermission(permissionType));	//create a permission and allow it
@@ -121,7 +121,7 @@ public abstract class AbstractAccessLevel extends AbstractMarmotSecurityResource
 	*/
 	public void setDeniedPermissions(final Set<Permission> permissions)
 	{
-		removeProperties(DENY_PROPERTY_URI);	//remove all the deny properties
+		removePropertyValues(DENY_PROPERTY_URI);	//remove all the deny properties
 		for(final Permission permission:permissions)	//for each permission
 		{
 			addDeny(permission);	//deny this permission
@@ -134,7 +134,7 @@ public abstract class AbstractAccessLevel extends AbstractMarmotSecurityResource
 	*/
 	public void setDeniedPermissionTypes(final Set<PermissionType> permissionTypes)
 	{
-		removeProperties(DENY_PROPERTY_URI);	//remove all the deny properties
+		removePropertyValues(DENY_PROPERTY_URI);	//remove all the deny properties
 		for(final PermissionType permissionType:permissionTypes)	//for each permission
 		{
 			addDeny(createPermission(permissionType));	//create a permission and deny it

@@ -2,11 +2,12 @@ package com.globalmentor.marmot.repository;
 
 import java.io.*;
 import java.net.URI;
-import java.util.List;
+import java.util.*;
 
 import javax.mail.internet.ContentType;
 
 import com.garretwilson.net.*;
+import com.garretwilson.text.CharacterEncoding;
 import com.garretwilson.urf.*;
 
 /**A Marmot information store.
@@ -67,6 +68,36 @@ public interface Repository
 	@return The content type associated with the given extension, or <code>null</code> if there is no content type associated with the given extension.
 	*/
 	public ContentType getExtensionContentType(final String extension);
+
+	/**Associates the given character encoding with the base media type of the given content type.
+	Any association will only override resources that do not explicitly have a character encoding specified.
+	Any parameters of the given content type will be ignored.
+	@param contentType The content type with which the character encoding should be associated.
+	@param contentEncoding The character encoding to associate with the given content type.
+	@return The character encoding previously registered with the given content type, or <code>null</code> if no character encoding was previously registered.
+	@exception NullPointerException if the given content type and/or character encoding is <code>null</code>.
+	*/
+	public CharacterEncoding registerContentTypeCharacterEncoding(final ContentType contentType, final CharacterEncoding contentEncoding);
+
+	/**Returns the character encoding assciated with the given conten type.
+	Any parameters of the given content type will be ignored.
+	@param contentType The content type with which the character encoding is associated.
+	@return The character encoding associated with the given content type, or <code>null</code> if there is no character encoding associated with the given content type.
+	@exception NullPointerException if the given content type is <code>null</code>.
+	*/
+	public CharacterEncoding getContentTypeCharacterEncoding(final ContentType contentType);
+
+	/**@return the mapping of character encodings associated with base content types.*/
+	public Map<ContentType, CharacterEncoding> getContentTypeCharacterEncodings();
+
+	/**Sets the content type character encoding associations to those specified in the given map.
+	Any association will only override resources that do not explicitly have a character encoding specified.
+	The current associations will be lost.
+	Any parameters of the given content types will be ignored.
+	@param contentTypeCharacterEncodings The associations of character encodings to base content types.
+	@exception NullPointerException if a given content type and/or character encoding is <code>null</code>.
+	*/
+	public void setContentTypeCharacterEncodings(final Map<ContentType, CharacterEncoding> contentTypeCharacterEncodings);
 
 	/**Determines the URI of the collection resource of the given URI; either the given resource URI if the resource represents a collection, or the parent resource if not.
 	@param resourceURI The URI of the resource for which the collection resource URI should be returned.

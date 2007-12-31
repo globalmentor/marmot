@@ -2,7 +2,7 @@ package com.globalmentor.marmot.security;
 
 import java.net.URI;
 
-import static com.garretwilson.lang.ObjectUtilities.*;
+import static com.garretwilson.lang.Objects.*;
 import com.garretwilson.urf.select.*;
 import static com.garretwilson.urf.select.Select.*;
 

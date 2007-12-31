@@ -7,7 +7,7 @@ import static java.util.Collections.*;
 
 import javax.mail.internet.ContentType;
 
-import static com.garretwilson.lang.ObjectUtilities.*;
+import static com.garretwilson.lang.Objects.*;
 
 import static com.garretwilson.lang.EnumUtilities.*;
 import com.garretwilson.net.ResourceIOException;

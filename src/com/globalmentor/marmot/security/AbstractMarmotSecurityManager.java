@@ -4,7 +4,7 @@ import java.net.URI;
 import java.security.Principal;
 import java.util.*;
 
-import static com.garretwilson.lang.ObjectUtilities.*;
+import static com.garretwilson.lang.Objects.*;
 import com.garretwilson.net.ResourceIOException;
 import com.garretwilson.urf.*;
 import com.garretwilson.urf.select.*;

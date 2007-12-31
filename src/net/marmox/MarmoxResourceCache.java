@@ -7,7 +7,7 @@ import java.util.Date;
 import static com.garretwilson.io.Files.*;
 import com.garretwilson.net.ResourceNotFoundException;
 
-import static com.garretwilson.lang.ObjectUtilities.checkInstance;
+import static com.garretwilson.lang.Objects.checkInstance;
 import static com.garretwilson.net.URIs.*;
 import com.garretwilson.urf.*;
 import static com.garretwilson.urf.content.Content.*;

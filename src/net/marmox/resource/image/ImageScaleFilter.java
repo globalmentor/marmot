@@ -13,7 +13,7 @@ import javax.media.jai.JAI;
 import javax.media.jai.PlanarImage;
 
 import static com.garretwilson.awt.geom.GeometryUtilities.*;
-import static com.garretwilson.lang.ObjectUtilities.*;
+import static com.garretwilson.lang.Objects.*;
 import com.garretwilson.net.ResourceIOException;
 import com.garretwilson.urf.URFResource;
 import com.garretwilson.util.Debug;

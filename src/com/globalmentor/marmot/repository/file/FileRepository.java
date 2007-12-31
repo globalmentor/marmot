@@ -454,7 +454,7 @@ public class FileRepository extends AbstractRepository
 		final URFResource resourceDescription=getResourceDescription(resourceURI);	//get a description of the resource
 		for(final URI propertyURI:newPropertyURISet)	//for each new property URI
 		{
-			resourceDescription.removeProperties(propertyURI);	//remove all properties with the given property URI
+			resourceDescription.removePropertyValues(propertyURI);	//remove all properties with the given property URI
 		}
 		for(final URFProperty property:properties)	//for each property given
 		{
@@ -560,15 +560,7 @@ public class FileRepository extends AbstractRepository
 */
 			setContentLength(resource, resourceFile.length());	//set the file length
 			setModified(resource, new URFDateTime(resourceFile.lastModified()));	//set the modified time as the last modified date of the file			
-			//try to find a content type if none was specified
-			if(getContentType(resource)==null)	//if no content was determined
-			{
-				final ContentType contentType=getExtensionContentType(getNameExtension(URIs.getName(resource.getURI())));	//get the registered content type for the resource's extension
-				if(contentType!=null)	//if there is a registered content type for the resource's extension
-				{
-					setContentType(resource, contentType);	//set the content type property
-				}
-			}
+			updateContentType(resource);	//update the content type information based upon the repository defaults
 		}
 
 //TODO del Debug.trace("returning RDF:", RDFUtilities.toString(resource));
