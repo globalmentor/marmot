@@ -18,15 +18,15 @@ import com.garretwilson.util.Debug;
 
 import com.garretwilson.io.*;
 import com.garretwilson.net.*;
-import com.garretwilson.urf.*;
 
-import static com.garretwilson.urf.URF.*;
-import static com.garretwilson.urf.content.Content.*;
+import static com.globalmentor.urf.URF.*;
+import static com.globalmentor.urf.content.Content.*;
 
 //TODO del import com.globalmentor.marmot.Marmot;
 //TODO del import static com.globalmentor.marmot.Marmot.*;
 import com.globalmentor.marmot.repository.AbstractRepository;
 import com.globalmentor.marmot.security.MarmotSecurity;
+import com.globalmentor.urf.*;
 
 /**Repository stored in a filesystem.
 <p>This repository recognizes the URF type <code>urf.List</code>

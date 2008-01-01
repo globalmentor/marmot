@@ -15,10 +15,10 @@ import javax.media.jai.PlanarImage;
 import static com.garretwilson.awt.geom.GeometryUtilities.*;
 import static com.garretwilson.lang.Objects.*;
 import com.garretwilson.net.ResourceIOException;
-import com.garretwilson.urf.URFResource;
 import com.garretwilson.util.Debug;
 import com.globalmentor.marmot.resource.ResourceFilter;
 import com.globalmentor.marmot.resource.image.ImageResourceKit.ImageAspect;
+import com.globalmentor.urf.URFResource;
 
 /**A filter for scaling an image.
 @author Garret Wilson

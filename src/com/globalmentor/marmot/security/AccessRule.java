@@ -3,10 +3,11 @@ package com.globalmentor.marmot.security;
 import java.net.URI;
 
 import static com.garretwilson.lang.Objects.*;
-import com.garretwilson.urf.select.*;
-import static com.garretwilson.urf.select.Select.*;
+
+import com.globalmentor.urf.select.*;
 
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
+import static com.globalmentor.urf.select.Select.*;
 
 /**Specifies a rule for access to a resource.
 @author Garret Wilson

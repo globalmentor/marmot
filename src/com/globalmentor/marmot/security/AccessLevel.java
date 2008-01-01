@@ -2,7 +2,7 @@ package com.globalmentor.marmot.security;
 
 import java.util.Set;
 
-import com.garretwilson.urf.URFResource;
+import com.globalmentor.urf.URFResource;
 
 /**An access level in relation to a resource.
 @author Garret Wilson

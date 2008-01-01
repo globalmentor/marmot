@@ -2,7 +2,7 @@ package com.globalmentor.marmot.security;
 
 import java.net.*;
 
-import static com.garretwilson.urf.URF.*;
+import static com.globalmentor.urf.URF.*;
 
 /**Constant values and utilities for Marmot security.
 @author Garret Wilson

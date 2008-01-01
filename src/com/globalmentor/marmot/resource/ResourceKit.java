@@ -7,11 +7,11 @@ import java.util.Set;
 import javax.mail.internet.ContentType;
 
 import com.garretwilson.net.ResourceIOException;
-import com.garretwilson.urf.URFResource;
 
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.PermissionType;
+import com.globalmentor.urf.URFResource;
 
 /**Support for working with a resource in a repository.
 @author Garret Wilson

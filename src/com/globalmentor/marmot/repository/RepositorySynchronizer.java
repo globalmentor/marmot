@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Date;
 
-import com.garretwilson.urf.URFResource;
-import static com.garretwilson.urf.content.Content.*;
+import static com.globalmentor.urf.content.Content.*;
 
 import com.garretwilson.util.Debug;
 import com.globalmentor.marmot.repository.Repository;
+import com.globalmentor.urf.URFResource;
 
 /**Marmot synchronization client.
 @author Garret Wilson

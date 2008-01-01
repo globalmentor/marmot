@@ -2,7 +2,7 @@ package com.globalmentor.marmot.security;
 
 import java.net.URI;
 
-import com.garretwilson.urf.AbstractClassTypedURFResource;
+import com.globalmentor.urf.AbstractClassTypedURFResource;
 
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 

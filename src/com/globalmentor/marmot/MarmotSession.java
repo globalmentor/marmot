@@ -1,11 +1,11 @@
 package com.globalmentor.marmot;
 
-import com.garretwilson.urf.URFResource;
 
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.ResourceKit;
 import com.globalmentor.marmot.resource.ResourceKit.Capability;
 import com.globalmentor.marmot.security.MarmotSecurityManager;
+import com.globalmentor.urf.URFResource;
 
 /**Marmot session information.
 @param <RK> The type of resource kits supported by this session.

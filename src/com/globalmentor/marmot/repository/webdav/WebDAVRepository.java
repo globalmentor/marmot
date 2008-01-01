@@ -22,17 +22,17 @@ import static com.garretwilson.net.http.webdav.ApacheWebDAV.*;
 import static com.garretwilson.net.http.webdav.WebDAVConstants.*;
 import static com.garretwilson.text.CharacterEncoding.*;
 import static com.garretwilson.text.xml.XMLUtilities.*;
-import com.garretwilson.urf.*;
 
-import static com.garretwilson.urf.TURF.*;
-import static com.garretwilson.urf.URF.*;
-import com.garretwilson.urf.content.*;
-import static com.garretwilson.urf.content.Content.*;
-import static com.garretwilson.urf.dcmi.DCMI.*;
 import com.garretwilson.util.*;
 import static com.garretwilson.util.LocaleUtilities.*;
+import static com.globalmentor.urf.TURF.*;
+import static com.globalmentor.urf.URF.*;
+import static com.globalmentor.urf.content.Content.*;
+import static com.globalmentor.urf.dcmi.DCMI.*;
 
 import com.globalmentor.marmot.repository.AbstractRepository;
+import com.globalmentor.urf.*;
+import com.globalmentor.urf.content.*;
 
 import org.w3c.dom.*;
 

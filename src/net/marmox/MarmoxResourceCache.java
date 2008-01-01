@@ -9,14 +9,15 @@ import com.garretwilson.net.ResourceNotFoundException;
 
 import static com.garretwilson.lang.Objects.checkInstance;
 import static com.garretwilson.net.URIs.*;
-import com.garretwilson.urf.*;
-import static com.garretwilson.urf.content.Content.*;
+import static com.globalmentor.urf.content.Content.*;
+
 import com.garretwilson.util.AbstractCache;
 import com.garretwilson.util.AbstractHashObject;
 
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.ResourceFilter;
+import com.globalmentor.urf.*;
 
 import com.guiseframework.Guise;
 

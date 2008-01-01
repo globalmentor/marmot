@@ -16,13 +16,14 @@ import com.garretwilson.net.*;
 import static com.garretwilson.net.URIs.*;
 
 import com.garretwilson.text.CharacterEncoding;
-import com.garretwilson.urf.content.Content;
-import static com.garretwilson.urf.content.Content.*;
 
-import com.garretwilson.urf.*;
 
 import com.globalmentor.marmot.security.MarmotSecurity;
+import com.globalmentor.urf.*;
+import com.globalmentor.urf.content.Content;
+
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
+import static com.globalmentor.urf.content.Content.*;
 
 /**Abstract implementation of a repository class with typical features.
 <p>Resource access methods should call {@link #checkResourceURI(URI)} as a security check to ensure the given URI is within the repository.</p>

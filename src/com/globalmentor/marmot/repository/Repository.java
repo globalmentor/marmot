@@ -8,7 +8,7 @@ import javax.mail.internet.ContentType;
 
 import com.garretwilson.net.*;
 import com.garretwilson.text.CharacterEncoding;
-import com.garretwilson.urf.*;
+import com.globalmentor.urf.*;
 
 /**A Marmot information store.
 @author Garret Wilson

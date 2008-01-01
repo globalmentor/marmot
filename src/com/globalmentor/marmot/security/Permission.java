@@ -1,6 +1,6 @@
 package com.globalmentor.marmot.security;
 
-import com.garretwilson.urf.URFResource;
+import com.globalmentor.urf.URFResource;
 
 /**A permission in relation to a resource.
 @author Garret Wilson

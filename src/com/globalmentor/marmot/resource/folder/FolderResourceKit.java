@@ -5,11 +5,12 @@ import java.net.URI;
 import static com.garretwilson.net.URIConstants.*;
 import com.garretwilson.net.ResourceIOException;
 import com.garretwilson.net.URIPath;
-import com.garretwilson.urf.*;
-import static com.garretwilson.urf.URF.*;
+
+import static com.globalmentor.urf.URF.*;
 
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.AbstractResourceKit;
+import com.globalmentor.urf.*;
 
 /**Resource kit for handling folder resources that have no content but can contain children.
 <p>Supported URF resource types:</p>
