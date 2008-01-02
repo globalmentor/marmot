@@ -18,7 +18,7 @@ import com.garretwilson.util.Debug;
 import com.garretwilson.io.*;
 import com.garretwilson.net.*;
 
-import static com.globalmentor.java.CharSequenceUtilities.*;
+import static com.globalmentor.java.CharSequences.*;
 import static com.globalmentor.urf.URF.*;
 import static com.globalmentor.urf.content.Content.*;
 

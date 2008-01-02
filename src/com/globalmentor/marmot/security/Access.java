@@ -6,7 +6,7 @@ import java.util.Collection;
 
 import com.globalmentor.urf.*;
 
-import static com.globalmentor.java.ClassUtilities.*;
+import static com.globalmentor.java.Classes.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 import static com.globalmentor.urf.URF.*;
 

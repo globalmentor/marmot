@@ -8,7 +8,7 @@ import static java.util.Collections.*;
 import javax.mail.internet.ContentType;
 
 
-import static com.globalmentor.java.EnumUtilities.*;
+import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.java.Objects.*;
 
 import com.garretwilson.net.ResourceIOException;

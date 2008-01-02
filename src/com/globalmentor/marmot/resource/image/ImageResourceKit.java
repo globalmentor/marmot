@@ -6,7 +6,7 @@ import javax.mail.internet.ContentType;
 
 import net.marmox.resource.image.ImageScaleFilter;
 
-import static com.globalmentor.java.EnumUtilities.*;
+import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.java.Objects.*;
 
 import com.globalmentor.marmot.resource.*;
