@@ -3,8 +3,8 @@ package com.globalmentor.marmot.security;
 import java.net.URI;
 import java.util.*;
 
-import static com.garretwilson.lang.Objects.*;
 
+import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 
 /**The predefined permissions as an enum for working with permissions as a group.

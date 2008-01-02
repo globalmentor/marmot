@@ -8,7 +8,6 @@ import javax.mail.internet.ContentType;
 
 import static com.garretwilson.io.Files.*;
 import static com.garretwilson.io.OutputStreamUtilities.*;
-import static com.garretwilson.lang.Objects.*;
 
 import static com.garretwilson.io.ContentTypes.*;
 import com.garretwilson.net.*;
@@ -22,6 +21,7 @@ import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
 
+import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 import static com.globalmentor.urf.content.Content.*;
 

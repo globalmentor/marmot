@@ -4,13 +4,13 @@ import java.net.URI;
 import java.security.Principal;
 import java.util.*;
 
-import static com.garretwilson.lang.Objects.*;
 import com.garretwilson.net.ResourceIOException;
 
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.select.*;
 
+import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 
 /**Abstract implementation of a security manager for Marmot.

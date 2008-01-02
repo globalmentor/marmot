@@ -2,10 +2,10 @@ package com.globalmentor.marmot.security;
 
 import java.net.URI;
 
-import static com.garretwilson.lang.Objects.*;
 
 import com.globalmentor.urf.select.*;
 
+import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 import static com.globalmentor.urf.select.Select.*;
 

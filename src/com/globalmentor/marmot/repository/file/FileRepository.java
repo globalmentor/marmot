@@ -10,7 +10,6 @@ import javax.mail.internet.ContentType;
 
 import static com.garretwilson.io.FileConstants.*;
 import static com.garretwilson.io.Files.*;
-import static com.garretwilson.lang.CharSequenceUtilities.*;
 import static com.garretwilson.net.URIConstants.*;
 import static com.garretwilson.net.URIs.*;
 
@@ -19,6 +18,7 @@ import com.garretwilson.util.Debug;
 import com.garretwilson.io.*;
 import com.garretwilson.net.*;
 
+import static com.globalmentor.java.CharSequenceUtilities.*;
 import static com.globalmentor.urf.URF.*;
 import static com.globalmentor.urf.content.Content.*;
 

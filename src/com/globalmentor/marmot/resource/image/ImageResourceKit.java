@@ -6,8 +6,8 @@ import javax.mail.internet.ContentType;
 
 import net.marmox.resource.image.ImageScaleFilter;
 
-import static com.garretwilson.lang.EnumUtilities.*;
-import static com.garretwilson.lang.Objects.*;
+import static com.globalmentor.java.EnumUtilities.*;
+import static com.globalmentor.java.Objects.*;
 
 import com.globalmentor.marmot.resource.*;
 import com.globalmentor.marmot.security.PermissionType;

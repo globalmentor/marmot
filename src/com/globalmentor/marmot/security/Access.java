@@ -3,10 +3,10 @@ package com.globalmentor.marmot.security;
 import java.net.URI;
 import java.util.Collection;
 
-import static com.garretwilson.lang.ClassUtilities.*;
 
 import com.globalmentor.urf.*;
 
+import static com.globalmentor.java.ClassUtilities.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 import static com.globalmentor.urf.URF.*;
 

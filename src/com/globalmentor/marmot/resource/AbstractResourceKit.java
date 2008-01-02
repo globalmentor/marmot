@@ -7,9 +7,10 @@ import static java.util.Collections.*;
 
 import javax.mail.internet.ContentType;
 
-import static com.garretwilson.lang.Objects.*;
 
-import static com.garretwilson.lang.EnumUtilities.*;
+import static com.globalmentor.java.EnumUtilities.*;
+import static com.globalmentor.java.Objects.*;
+
 import com.garretwilson.net.ResourceIOException;
 import com.garretwilson.net.URIPath;
 

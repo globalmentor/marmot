@@ -11,9 +11,7 @@ import javax.mail.internet.*;
 
 import com.garretwilson.io.*;
 
-import static com.garretwilson.lang.Objects.*;
 
-import com.garretwilson.lang.Strings;
 import com.garretwilson.net.*;
 import static com.garretwilson.net.URIs.*;
 import com.garretwilson.net.http.*;
@@ -25,11 +23,13 @@ import static com.garretwilson.text.xml.XMLUtilities.*;
 
 import com.garretwilson.util.*;
 import static com.garretwilson.util.LocaleUtilities.*;
+import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.urf.TURF.*;
 import static com.globalmentor.urf.URF.*;
 import static com.globalmentor.urf.content.Content.*;
 import static com.globalmentor.urf.dcmi.DCMI.*;
 
+import com.globalmentor.java.Strings;
 import com.globalmentor.marmot.repository.AbstractRepository;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.*;

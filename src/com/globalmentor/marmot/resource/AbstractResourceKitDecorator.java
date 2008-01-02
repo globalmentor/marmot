@@ -6,7 +6,7 @@ import java.util.Set;
 
 import javax.mail.internet.ContentType;
 
-import static com.garretwilson.lang.Objects.*;
+import static com.globalmentor.java.Objects.*;
 
 import com.garretwilson.net.ResourceIOException;
 

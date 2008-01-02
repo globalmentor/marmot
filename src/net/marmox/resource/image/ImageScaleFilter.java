@@ -13,7 +13,8 @@ import javax.media.jai.JAI;
 import javax.media.jai.PlanarImage;
 
 import static com.garretwilson.awt.geom.GeometryUtilities.*;
-import static com.garretwilson.lang.Objects.*;
+import static com.globalmentor.java.Objects.*;
+
 import com.garretwilson.net.ResourceIOException;
 import com.garretwilson.util.Debug;
 import com.globalmentor.marmot.resource.ResourceFilter;
