@@ -38,6 +38,8 @@ import com.globalmentor.urf.*;
 public class FileRepository extends AbstractRepository
 {
 
+		//TODO encode special characters, especially the colon on NTFS
+
 	/**The URI represting the XPackage file:folder type.*/	//TODO check; use static imports 
 //TODO move if needed	protected final static URI FILE_FOLDER_TYPE_URI=RDFUtilities.createReferenceURI(FileOntologyConstants.FILE_ONTOLOGY_NAMESPACE_URI, FileOntologyConstants.FOLDER_TYPE_NAME);	//TODO promote to parent file-based class		
 

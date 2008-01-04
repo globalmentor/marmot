@@ -172,7 +172,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	public URI getChildResourceURI(final Repository repository, final URI parentResourceURI, final String resourceName)
 	{
 		//TODO fix IllegalArgumentException by checking to ensure that the parent resource is within the repository
-		return parentResourceURI.resolve(URIPath.encodeSegment(resourceName));	//encode the resource name and resolve it against the parent resource URI
+		return parentResourceURI.resolve(URIPath.createURIPathURI(URIPath.encodeSegment(resourceName)));	//encode the resource name and resolve it against the parent resource URI; use the special URIPath method in case the name contains a colon character
 	}
 	
 	/**Creates a new resource with the appropriate default contents for this resource type.
