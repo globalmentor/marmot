@@ -3,6 +3,7 @@ package com.globalmentor.marmot.repository;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import static java.util.Collections.*;
 
 import javax.mail.internet.ContentType;
 
@@ -15,7 +16,7 @@ import com.garretwilson.net.*;
 import static com.garretwilson.net.URIs.*;
 
 import com.garretwilson.text.CharacterEncoding;
-
+import com.garretwilson.util.Debug;
 
 import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.urf.*;
@@ -81,12 +82,18 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 
 		/**Sets the base URI of the public URI namespace being managed, reference URI of the repository.
 		If there currently is no private repository URI, it will be updated to match the given public repository URI.
+		The public URIs of the sub-repositories will be updated accordingly.
 		@param publicRepositoryURI The base URI of the public URI namespace being managed.
 		@exception NullPointerException if the given URI is <code>null</code>.
+		@see #getPathRepositories()
 		*/
 		public void setPublicRepositoryURI(final URI publicRepositoryURI)
 		{
 			setURI(checkInstance(publicRepositoryURI, "Public repository URI must not be null.").normalize());
+			for(final Map.Entry<URIPath, Repository> pathRepositoryEntry:pathRepositoryMap.entrySet())	//look at each path to repository mapping
+			{
+				pathRepositoryEntry.getValue().setPublicRepositoryURI(resolve(getURI(), pathRepositoryEntry.getKey()));	//update the public URI of the repository to match its location in the repository
+			}
 		}
 
 		/**Translates a public URI in the repository to the equivalent private URI in the private URI namespace.
@@ -117,23 +124,6 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		@param autoOpen Whether the repository should automatically be opened when needed.
 		*/
 		public void setAutoOpen(final boolean autoOpen) {this.autoOpen=autoOpen;}
-
-	/**Checks to make sure the resource designated by the given resource URI is within this repository.
-	This version makes sure the given URI is a child of the resource reference URI.
-	@param resourceURI The URI of the resource to check.
-	@return The normalized form of the given resource.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception NullPointerException if the given resource URI is <code>null</code>.
-	*/
-	protected URI checkResourceURI(URI resourceURI)
-	{
-		resourceURI=checkInstance(resourceURI, "Resource URI cannot be null.").normalize();	//normalize the URI
-		if(!isChild(getURI(), resourceURI))	//if the given resource URI does not designate a resource within this repository's URI namespace (this will normalize the URI, but as we need to return a normalized form it's better to normalize first so that actual normalization changes won't have to be done twice)
-		{
-			throw new IllegalArgumentException(resourceURI+" does not designate a resource within the repository "+getURI());
-		}
-		return resourceURI;	//return the normalized form of the resource URI
-	}
 
 	/**Checks to make sure that the repository is open.
 	If the auto-open facility is turned on, the repository will be automatically opened if needed.
@@ -206,7 +196,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 			return baseContentTypeCharacterEncodingMap.get(contentType.getBaseType());	//return the character encoding, if any, associated with the given base content type
 		}
 
-		/**@return the mapping of character encodings associated with base content types.*/
+		/**@return The read-only mapping of character encodings associated with base content types.*/
 		public Map<ContentType, CharacterEncoding> getContentTypeCharacterEncodings()
 		{
 			final Map<ContentType, CharacterEncoding> contentTypeCharacterEncodingMap=new HashMap<ContentType, CharacterEncoding>(baseContentTypeCharacterEncodingMap.size());	//create a new map to hold actual content type objects
@@ -214,7 +204,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 			{
 				contentTypeCharacterEncodingMap.put(createContentType(baseContentTypeCharacterEncodingEntry.getKey()), baseContentTypeCharacterEncodingEntry.getValue());	//add this mapping to the map
 			}
-			return contentTypeCharacterEncodingMap;	//return the map we created
+			return unmodifiableMap(contentTypeCharacterEncodingMap);	//return a read-only version of the map we created
 		}
 
 		/**Sets the content type character encoding associations to those specified in the given map.
@@ -232,6 +222,102 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 				registerContentTypeCharacterEncoding(contentTypeCharacterEncodingEntry.getKey(), contentTypeCharacterEncodingEntry.getValue());	//register this association
 			}
 		}
+
+	/**The map of repositories keyed to relative collection paths.*/
+	private final Map<URIPath, Repository> pathRepositoryMap=new HashMap<URIPath, Repository>();
+
+		/**Associates the given repository with a repository path.
+		Access to any resource with a URI beginning with the given path will delegate to the indicated repository.
+		The public URI of the given repository will be updated to correspond to its location within this repository.
+		@param path The relative collection path with which the repository should be associated.
+		@param repository The repository to handle access to all resources beginning with the given path.
+		@return The repository previously registered with the given path, or <code>null</code> if no repository was previously registered.
+		@exception NullPointerException if the given path and/or repository is <code>null</code>.
+		@exception IllegalArgumentException if the given path is not relative.
+		@exception IllegalArgumentException if the given path does not represent a collection (i.e. it does not end with a path separator).
+		*/
+		public Repository registerPathRepository(final URIPath path, final Repository repository)
+		{
+			repository.setPublicRepositoryURI(resolve(getURI(), path));	//update the public URI of the repository to match its location in the repository
+			return pathRepositoryMap.put(path.checkRelative().checkCollection(), checkInstance(repository, "Repository cannot be null."));
+		}
+
+		/**Returns the repository associated with the given path.
+		@param path The relative collection path with which a repository may be associated.
+		@return The repository associated with the given path, or <code>null</code> if there is no repository associated with the given path.
+		@exception NullPointerException if the given content type is <code>null</code>.
+		@exception NullPointerException if the given path is <code>null</code>.
+		@exception IllegalArgumentException if the given path is not relative.
+		@exception IllegalArgumentException if the given path does not represent a collection (i.e. it does not end with a path separator).
+		*/
+		public Repository getPathRepositoryEncoding(final URIPath path)
+		{
+			return pathRepositoryMap.get(path.checkRelative().checkCollection());	//return the repository, if any, associated with the given path
+		}
+
+		/**@return The read-only mapping of relative paths associated with repositories.*/
+		public Map<URIPath, Repository> getPathRepositories()
+		{
+			return unmodifiableMap(pathRepositoryMap);	//return an unmodifiable version of the map
+		}
+
+		/**Sets the path repository associations to those specified in the given map.
+		Any association will only override resources that do not explicitly have a character encoding specified.
+		The current associations will be lost.
+		@param pathRepositories The associations of paths to repositories.
+		@exception NullPointerException if a given path and/or repository is <code>null</code>.
+		@exception IllegalArgumentException if a given path is not relative.
+		@exception IllegalArgumentException if a given path does not represent a collection (i.e. it does not end with a path separator).
+		*/
+		public void setPathRepositories(final Map<URIPath, Repository> pathRepositories)
+		{
+			pathRepositoryMap.clear();	//clear the current mappings
+			for(final Map.Entry<URIPath, Repository> pathRepositoryEntry:pathRepositories.entrySet())	//look at each mapping
+			{
+				registerPathRepository(pathRepositoryEntry.getKey(), pathRepositoryEntry.getValue());	//register this association
+			}
+		}
+			
+	/**Checks to make sure the resource designated by the given resource URI is within this repository.
+	This version makes sure the given URI is a child of the resource reference URI.
+	@param resourceURI The URI of the resource to check.
+	@return The normalized form of the given resource.
+	@exception NullPointerException if the given resource URI is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	*/
+	protected URI checkResourceURI(URI resourceURI)
+	{
+		resourceURI=checkInstance(resourceURI, "Resource URI cannot be null.").normalize();	//normalize the URI
+		if(!isChild(getURI(), resourceURI))	//if the given resource URI does not designate a resource within this repository's URI namespace (this will normalize the URI, but as we need to return a normalized form it's better to normalize first so that actual normalization changes won't have to be done twice)
+		{
+			throw new IllegalArgumentException(resourceURI+" does not designate a resource within the repository "+getURI());
+		}
+		return resourceURI;	//return the normalized form of the resource URI
+	}
+
+	/**Determines if the given resource URI is physically located within a sub-repository mapped to a path within this resource.
+	@param resourceURI The URI of a resource within this repository; must already be normalized.
+	@return The repository in which the resource URI is physically located; either this repository or a sub-repository.
+	@exception NullPointerException if the given resource URI is <code>null</code>.
+	@see #checkResourceURI(URI)
+	@see #getPathRepositories()
+	*/
+	protected Repository getSubrepository(final URI resourceURI)
+	{
+		final URI repositoryURI=getURI();	//get the URI of the repository
+		final URIPath resourcePath=new URIPath(repositoryURI.relativize(resourceURI));	//get the path of the resource relative to the resource
+		URIPath levelPath=resourcePath.getCurrentLevel();	//walk up the levels, starting at the current level
+		while(!levelPath.isEmpty())	//while the resource path isn't empty
+		{
+			final Repository repository=pathRepositoryMap.get(levelPath);	//see if there is a repository mapped to this level
+			if(repository!=null)	//if we found a repository mapped to this level
+			{
+				return repository;	//return the sub-repository
+			}
+			levelPath=levelPath.getParentLevel();	//look at the next higher level
+		}
+		return this;	//indicate that the resource 
+	}
 
 	/**Default constructor with no settings.
 	Settings must be configured before repository is opened.
@@ -338,8 +424,14 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public OutputStream createResource(final URI resourceURI) throws ResourceIOException
+	public OutputStream createResource(URI resourceURI) throws ResourceIOException
 	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.createResource(resourceURI);	//delegate to the subrepository
+		}
 		return createResource(resourceURI, new DefaultURFResource());	//create the resource with a default description
 	}
 
@@ -354,8 +446,14 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public URFResource createResource(final URI resourceURI, final byte[] resourceContents) throws ResourceIOException
+	public URFResource createResource(URI resourceURI, final byte[] resourceContents) throws ResourceIOException
 	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.createResource(resourceURI, resourceContents);	//delegate to the subrepository
+		}
 		return createResource(resourceURI, new DefaultURFResource(), resourceContents);	//create the resource with a default description
 	}
 
@@ -367,9 +465,14 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<URFResource> getChildResourceDescriptions(final URI resourceURI) throws ResourceIOException
+	public List<URFResource> getChildResourceDescriptions(URI resourceURI) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.getChildResourceDescriptions(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		return getChildResourceDescriptions(resourceURI, 1);	//get a list of child resource descriptions without going deeper than one level
 	}
@@ -386,6 +489,11 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	public URI getCollectionURI(URI resourceURI) throws ResourceIOException
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.getCollectionURI(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		return isCollectionURI(resourceURI) ? resourceURI : getCurrentLevel(resourceURI);	//if URI is a collection URI, return the URI; otherwise, get the current level
 	}
@@ -403,6 +511,11 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	public URI getParentResourceURI(URI resourceURI) throws ResourceIOException
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.getParentResourceURI(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		if(resourceURI.equals(getPublicRepositoryURI()))	//if the resource is the repository URI
 		{
@@ -434,8 +547,14 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error copying the resource.
 	*/
-	public void copyResource(final URI resourceURI, final URI destinationURI) throws ResourceIOException
+	public void copyResource(URI resourceURI, final URI destinationURI) throws ResourceIOException
 	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			copyResource(resourceURI, destinationURI);	//delegate to the subrepository
+		}
 		copyResource(resourceURI, destinationURI, true);	//copy the resource, overwriting any resource at the destination
 	}
 
@@ -449,8 +568,14 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error copying the resource.
 	*/
-	public void copyResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException
+	public void copyResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException
 	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			subrepository.copyResource(resourceURI, destinationRepository, destinationURI);	//delegate to the subrepository
+		}
 		copyResource(resourceURI, destinationRepository, destinationURI, true);	//copy the resource, overwriting any resource at the destination
 	}
 
@@ -467,9 +592,14 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	@exception ResourceIOException if there is an error copying the resource.
 	@exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
 	*/
-	public void copyResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite) throws ResourceIOException
+	public void copyResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			subrepository.copyResource(resourceURI, destinationRepository, destinationURI, overwrite);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		if(destinationRepository==this)	//if the resource is being copied to this repository
 		{
@@ -518,8 +648,14 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.
 	@exception ResourceIOException if there is an error moving the resource.
 	*/
-	public void moveResource(final URI resourceURI, final URI destinationURI) throws ResourceIOException
+	public void moveResource(URI resourceURI, final URI destinationURI) throws ResourceIOException
 	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			subrepository.moveResource(resourceURI, destinationURI);	//delegate to the subrepository
+		}
 		moveResource(resourceURI, destinationURI, true);	//move the resource, overwriting any resource at the destination
 	}
 
@@ -534,8 +670,14 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.
 	@exception ResourceIOException if there is an error moving the resource.
 	*/
-	public void moveResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException
+	public void moveResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException
 	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			subrepository.moveResource(resourceURI, destinationRepository, destinationURI);	//delegate to the subrepository
+		}
 		moveResource(resourceURI, destinationRepository, destinationURI, true);	//move the resource, overwriting any resource at the destination
 	}
 
@@ -553,9 +695,14 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	@exception ResourceIOException if there is an error moving the resource.
 	@exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
 	*/
-	public void moveResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite) throws ResourceIOException
+	public void moveResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			subrepository.moveResource(resourceURI, destinationRepository, destinationURI, overwrite);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		if(destinationRepository==this)	//if the resource is being moved to this repository
 		{

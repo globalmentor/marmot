@@ -31,6 +31,7 @@ import static com.globalmentor.urf.dcmi.DCMI.*;
 
 import com.globalmentor.java.Strings;
 import com.globalmentor.marmot.repository.AbstractRepository;
+import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.*;
 
@@ -235,9 +236,14 @@ public class WebDAVRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
 	*/
-	public InputStream getResourceInputStream(final URI resourceURI) throws ResourceIOException
+	public InputStream getResourceInputStream(URI resourceURI) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.getResourceInputStream(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
@@ -266,9 +272,14 @@ public class WebDAVRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the resource.
 	*/
-	public OutputStream getResourceOutputStream(final URI resourceURI) throws ResourceIOException
+	public OutputStream getResourceOutputStream(URI resourceURI) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.getResourceOutputStream(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
@@ -300,9 +311,14 @@ public class WebDAVRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public URFResource getResourceDescription(final URI resourceURI) throws ResourceIOException
+	public URFResource getResourceDescription(URI resourceURI) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.getResourceDescription(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		final URF urf=createURF();	//create a new URF data model
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
@@ -336,9 +352,14 @@ public class WebDAVRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public boolean resourceExists(final URI resourceURI) throws ResourceIOException
+	public boolean resourceExists(URI resourceURI) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.resourceExists(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
@@ -368,9 +389,14 @@ public class WebDAVRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public boolean isCollection(final URI resourceURI) throws ResourceIOException
+	public boolean isCollection(URI resourceURI) throws ResourceIOException
   {
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.isCollection(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
@@ -398,9 +424,14 @@ public class WebDAVRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public boolean hasChildren(final URI resourceURI) throws ResourceIOException
+	public boolean hasChildren(URI resourceURI) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.hasChildren(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		final URI privateResourceURI=getPrivateURI(resourceURI);	//get the URI of the resource in the private namespace
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
@@ -438,9 +469,14 @@ public class WebDAVRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<URFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws ResourceIOException
+	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final int depth) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.getChildResourceDescriptions(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		if(depth!=0)	//a depth of zero means don't get child resources
 		{
@@ -509,9 +545,14 @@ public class WebDAVRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public OutputStream createResource(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
+	public OutputStream createResource(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.createResource(resourceURI, resourceDescription);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
@@ -537,9 +578,14 @@ public class WebDAVRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public URFResource createResource(final URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException
+	public URFResource createResource(URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.createResource(resourceURI, resourceDescription, resourceContents);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
@@ -568,9 +614,14 @@ public class WebDAVRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error creating the collection.
 	*/
-	public URFResource createCollection(final URI collectionURI) throws ResourceIOException
+	public URFResource createCollection(URI collectionURI) throws ResourceIOException
 	{
-		checkResourceURI(collectionURI);	//makes sure the resource URI is valid
+		collectionURI=checkResourceURI(collectionURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(collectionURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.createCollection(collectionURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
@@ -602,9 +653,14 @@ public class WebDAVRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource properties could not be updated.
 	*/
-	public URFResource setResourceProperties(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
+	public URFResource setResourceProperties(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.setResourceProperties(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
@@ -636,9 +692,14 @@ public class WebDAVRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource properties could not be updated.
 	*/
-	public URFResource setResourceProperties(final URI resourceURI, final URFProperty... properties) throws ResourceIOException
+	public URFResource setResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.setResourceProperties(resourceURI, properties);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		final Set<URI> newPropertyURISet=new HashSet<URI>();	//create a set to find out which properties we will be setting
 		for(final URFProperty property:properties)	//look at each property
@@ -686,8 +747,15 @@ public class WebDAVRepository extends AbstractRepository
 	@exception NullPointerException if the given resource URI and/or property URIs is <code>null</code>.
 	@exception ResourceIOException if the resource properties could not be updated.
 	*/
-	public URFResource removeResourceProperties(final URI resourceURI, final URI... propertyURIs) throws ResourceIOException
+	public URFResource removeResourceProperties(URI resourceURI, final URI... propertyURIs) throws ResourceIOException
 	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.removeResourceProperties(resourceURI);	//delegate to the subrepository
+		}
+		checkOpen();	//make sure the repository is open
 		final Set<URI> propertyURISet=new HashSet<URI>();	//create a set to find out which properties we will be setting
 		addAll(propertyURISet, propertyURIs);	//create a set of properties to remove
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
@@ -773,9 +841,14 @@ public class WebDAVRepository extends AbstractRepository
 	@exception ResourceIOException if there is an error copying the resource.
 	@exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
 	*/
-	public void copyResource(final URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException
+	public void copyResource(URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			subrepository.copyResource(resourceURI, destinationURI, overwrite);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
@@ -803,9 +876,14 @@ public class WebDAVRepository extends AbstractRepository
 	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.
 	@exception ResourceIOException if the resource could not be deleted.
 	*/
-	public void deleteResource(final URI resourceURI) throws ResourceIOException
+	public void deleteResource(URI resourceURI) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			subrepository.deleteResource(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		if(resourceURI.normalize().equals(getPublicRepositoryURI()))	//if they try to delete the root URI
 		{
@@ -841,9 +919,14 @@ public class WebDAVRepository extends AbstractRepository
 	@exception ResourceIOException if there is an error moving the resource.
 	@exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
 	*/
-	public void moveResource(final URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException
+	public void moveResource(URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			subrepository.moveResource(resourceURI, destinationURI, overwrite);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		if(resourceURI.normalize().equals(getPublicRepositoryURI()))	//if they try to move the root URI
 		{

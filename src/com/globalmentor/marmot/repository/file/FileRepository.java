@@ -25,6 +25,7 @@ import static com.globalmentor.urf.content.Content.*;
 //TODO del import com.globalmentor.marmot.Marmot;
 //TODO del import static com.globalmentor.marmot.Marmot.*;
 import com.globalmentor.marmot.repository.AbstractRepository;
+import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.urf.*;
 
@@ -130,9 +131,14 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
 	*/
-	public InputStream getResourceInputStream(final URI resourceURI) throws ResourceIOException
+	public InputStream getResourceInputStream(URI resourceURI) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.getResourceInputStream(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		try
 		{
@@ -152,9 +158,14 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the resource.
 	*/
-	public OutputStream getResourceOutputStream(final URI resourceURI) throws ResourceIOException
+	public OutputStream getResourceOutputStream(URI resourceURI) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.getResourceOutputStream(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		try
 		{
@@ -178,9 +189,14 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public URFResource getResourceDescription(final URI resourceURI) throws ResourceIOException
+	public URFResource getResourceDescription(URI resourceURI) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.getResourceDescription(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		final URF urf=createURF();	//create a new URF data model
 		try
@@ -200,9 +216,14 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public boolean resourceExists(final URI resourceURI) throws ResourceIOException
+	public boolean resourceExists(URI resourceURI) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.resourceExists(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		final boolean isCollectionURI=isCollectionURI(resourceURI);	//see if the URI specifies a collection
 		final File file=new File(getPrivateURI(resourceURI));	//get the file this 
@@ -218,9 +239,14 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public boolean isCollection(final URI resourceURI) throws ResourceIOException
+	public boolean isCollection(URI resourceURI) throws ResourceIOException
   {
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.isCollection(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		return isCollectionURI(resourceURI) && new File(getPrivateURI(resourceURI)).isDirectory();	//see if the file of the private URI is a directory; don't allow a non-collection URI to find a non-directory URI, though (file systems usually don't allow both a file and a directory of the same name, so they allow the ending-slash form to be optional)
   }
@@ -232,9 +258,14 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public boolean hasChildren(final URI resourceURI) throws ResourceIOException
+	public boolean hasChildren(URI resourceURI) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.hasChildren(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
 		return isCollectionURI(resourceURI) && resourceFile.isDirectory() && resourceFile.listFiles(FILE_FILTER).length>0;	//see if this is a directory and there is more than one file in this directory
@@ -248,9 +279,14 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<URFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws ResourceIOException
+	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final int depth) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.getChildResourceDescriptions(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		if(depth!=0)	//a depth of zero means don't get child resources
 		{
@@ -302,9 +338,14 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public OutputStream createResource(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
+	public OutputStream createResource(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.createResource(resourceURI, resourceDescription);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		try
 		{
@@ -330,9 +371,14 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public URFResource createResource(final URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException
+	public URFResource createResource(URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.createResource(resourceURI, resourceDescription, resourceContents);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		try
 		{
@@ -362,10 +408,15 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error creating the collection.
 	*/
-	public URFResource createCollection(final URI collectionURI) throws ResourceIOException
+	public URFResource createCollection(URI collectionURI) throws ResourceIOException
 	{
 			//TODO do we want to check to make sure this is a collection URI?
-		checkResourceURI(collectionURI);	//makes sure the resource URI is valid
+		collectionURI=checkResourceURI(collectionURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(collectionURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.createCollection(collectionURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		try
 		{
@@ -386,9 +437,14 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.
 	@exception ResourceIOException if the resource could not be deleted.
 	*/
-	public void deleteResource(final URI resourceURI) throws ResourceIOException
+	public void deleteResource(URI resourceURI) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			subrepository.deleteResource(resourceURI);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		try
 		{
@@ -425,9 +481,14 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException Thrown if the resource properties could not be updated.
 	*/
-	public URFResource setResourceProperties(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
+	public URFResource setResourceProperties(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.setResourceProperties(resourceURI, resourceDescription);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
 		return setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
@@ -444,9 +505,14 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource properties could not be updated.
 	*/
-	public URFResource setResourceProperties(final URI resourceURI, final URFProperty... properties) throws ResourceIOException
+	public URFResource setResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.setResourceProperties(resourceURI, properties);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		final Set<URI> newPropertyURISet=new HashSet<URI>();	//create a set to find out which properties we will be setting
 		for(final URFProperty property:properties)	//look at each property
@@ -505,9 +571,14 @@ public class FileRepository extends AbstractRepository
 	@exception ResourceIOException if there is an error copying the resource.
 	@exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
 	*/
-	public void copyResource(final URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException
+	public void copyResource(URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			subrepository.copyResource(resourceURI, destinationURI, overwrite);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		throw new UnsupportedOperationException();	//TODO implement
 	}
@@ -523,9 +594,14 @@ public class FileRepository extends AbstractRepository
 	@exception ResourceIOException if there is an error moving the resource.
 	@exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
 	*/
-	public void moveResource(final URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException
+	public void moveResource(URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException
 	{
-		checkResourceURI(resourceURI);	//makes sure the resource URI is valid
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			subrepository.moveResource(resourceURI, destinationURI, overwrite);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		if(resourceURI.normalize().equals(getPublicRepositoryURI()))	//if they try to move the root URI
 		{
