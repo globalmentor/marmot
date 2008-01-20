@@ -2,6 +2,7 @@ package com.globalmentor.marmot.repository;
 
 import java.io.*;
 import java.net.*;
+import java.nio.charset.Charset;
 import java.util.*;
 import static java.util.Collections.*;
 
@@ -14,9 +15,6 @@ import static com.garretwilson.io.ContentTypes.*;
 import com.garretwilson.net.*;
 
 import static com.garretwilson.net.URIs.*;
-
-import com.garretwilson.text.CharacterEncoding;
-import com.garretwilson.util.Debug;
 
 import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.urf.*;
@@ -169,57 +167,57 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 			return extensionContentTypeMap.get(extension!=null ? extension.toLowerCase() : null);	//return the content type, if any, associated with the given extension
 		}
 
-	/**The map of character encodings mapped to base media types.*/
-	private final Map<String, CharacterEncoding> baseContentTypeCharacterEncodingMap=new HashMap<String, CharacterEncoding>();
+	/**The map of charsets mapped to base media types.*/
+	private final Map<String, Charset> baseContentTypeCharsetMap=new HashMap<String, Charset>();
 
-		/**Associates the given character encoding with the base media type of the given content type.
-		Any association will only override resources that do not explicitly have a character encoding specified.
+		/**Associates the given charset with the base media type of the given content type.
+		Any association will only override resources that do not explicitly have a charset specified.
 		Any parameters of the given content type will be ignored.
-		@param contentType The content type with which the character encoding should be associated.
-		@param contentEncoding The character encoding to associate with the given content type.
-		@return The character encoding previously registered with the given content type, or <code>null</code> if no character encoding was previously registered.
-		@exception NullPointerException if the given content type and/or character encoding is <code>null</code>.
+		@param contentType The content type with which the charset should be associated.
+		@param charset The charset to associate with the given content type.
+		@return The charset previously registered with the given content type, or <code>null</code> if no charset was previously registered.
+		@exception NullPointerException if the given content type and/or charset is <code>null</code>.
 		*/
-		public CharacterEncoding registerContentTypeCharacterEncoding(final ContentType contentType, final CharacterEncoding contentEncoding)
+		public Charset registerContentTypeCharset(final ContentType contentType, final Charset charset)
 		{
-			return baseContentTypeCharacterEncodingMap.put(contentType.getBaseType(), checkInstance(contentEncoding, "Character encoding cannot be null."));
+			return baseContentTypeCharsetMap.put(contentType.getBaseType(), checkInstance(charset, "Charset cannot be null."));
 		}
 
-		/**Returns the character encoding assciated with the given conten type.
+		/**Returns the charset assciated with the given content type.
 		Any parameters of the given content type will be ignored.
-		@param contentType The content type with which the character encoding is associated.
-		@return The character encoding associated with the given content type, or <code>null</code> if there is no character encoding associated with the given content type.
+		@param contentType The content type with which the charset is associated.
+		@return The charset associated with the given content type, or <code>null</code> if there is no charset associated with the given content type.
 		@exception NullPointerException if the given content type is <code>null</code>.
 		*/
-		public CharacterEncoding getContentTypeCharacterEncoding(final ContentType contentType)
+		public Charset getContentTypeCharset(final ContentType contentType)
 		{
-			return baseContentTypeCharacterEncodingMap.get(contentType.getBaseType());	//return the character encoding, if any, associated with the given base content type
+			return baseContentTypeCharsetMap.get(contentType.getBaseType());	//return the charset, if any, associated with the given base content type
 		}
 
-		/**@return The read-only mapping of character encodings associated with base content types.*/
-		public Map<ContentType, CharacterEncoding> getContentTypeCharacterEncodings()
+		/**@return The read-only mapping of charsets associated with base content types.*/
+		public Map<ContentType, Charset> getContentTypeCharsets()
 		{
-			final Map<ContentType, CharacterEncoding> contentTypeCharacterEncodingMap=new HashMap<ContentType, CharacterEncoding>(baseContentTypeCharacterEncodingMap.size());	//create a new map to hold actual content type objects
-			for(final Map.Entry<String, CharacterEncoding> baseContentTypeCharacterEncodingEntry:baseContentTypeCharacterEncodingMap.entrySet())	//look at each mapping
+			final Map<ContentType, Charset> contentTypeCharsetMap=new HashMap<ContentType, Charset>(baseContentTypeCharsetMap.size());	//create a new map to hold actual content type objects
+			for(final Map.Entry<String, Charset> baseContentTypeCharsetEntry:baseContentTypeCharsetMap.entrySet())	//look at each mapping
 			{
-				contentTypeCharacterEncodingMap.put(createContentType(baseContentTypeCharacterEncodingEntry.getKey()), baseContentTypeCharacterEncodingEntry.getValue());	//add this mapping to the map
+				contentTypeCharsetMap.put(createContentType(baseContentTypeCharsetEntry.getKey()), baseContentTypeCharsetEntry.getValue());	//add this mapping to the map
 			}
-			return unmodifiableMap(contentTypeCharacterEncodingMap);	//return a read-only version of the map we created
+			return unmodifiableMap(contentTypeCharsetMap);	//return a read-only version of the map we created
 		}
 
-		/**Sets the content type character encoding associations to those specified in the given map.
-		Any association will only override resources that do not explicitly have a character encoding specified.
+		/**Sets the content type charset associations to those specified in the given map.
+		Any association will only override resources that do not explicitly have a charset specified.
 		The current associations will be lost.
 		Any parameters of the given content types will be ignored.
-		@param contentTypeCharacterEncodings The associations of character encodings to base content types.
-		@exception NullPointerException if a given content type and/or character encoding is <code>null</code>.
+		@param contentTypeCharsets The associations of charsets to base content types.
+		@exception NullPointerException if a given content type and/or charset is <code>null</code>.
 		*/
-		public void setContentTypeCharacterEncodings(final Map<ContentType, CharacterEncoding> contentTypeCharacterEncodings)
+		public void setContentTypeCharsets(final Map<ContentType, Charset> contentTypeCharsets)
 		{
-			baseContentTypeCharacterEncodingMap.clear();	//clear the current mappings
-			for(final Map.Entry<ContentType, CharacterEncoding> contentTypeCharacterEncodingEntry:contentTypeCharacterEncodings.entrySet())	//look at each mapping
+			baseContentTypeCharsetMap.clear();	//clear the current mappings
+			for(final Map.Entry<ContentType, Charset> contentTypeCharsetEntry:contentTypeCharsets.entrySet())	//look at each mapping
 			{
-				registerContentTypeCharacterEncoding(contentTypeCharacterEncodingEntry.getKey(), contentTypeCharacterEncodingEntry.getValue());	//register this association
+				registerContentTypeCharset(contentTypeCharsetEntry.getKey(), contentTypeCharsetEntry.getValue());	//register this association
 			}
 		}
 
@@ -262,7 +260,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		}
 
 		/**Sets the path repository associations to those specified in the given map.
-		Any association will only override resources that do not explicitly have a character encoding specified.
+		Any association will only override resources that do not explicitly have a charset specified.
 		The current associations will be lost.
 		@param pathRepositories The associations of paths to repositories.
 		@exception NullPointerException if a given path and/or repository is <code>null</code>.
@@ -721,12 +719,12 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 
 	/**Updates the {@value Content#TYPE_PROPERTY_URI} property of the given resource.
 	This method should be called before each non-collection resource description is returned.
-	If the resource has no {@value Content#TYPE_PROPERTY_URI} property defined, a content type will be looked up from the extension of the resource name, if any, using {@link #getExtensionContentType(CharacterEncoding)}.
+	If the resource has no {@value Content#TYPE_PROPERTY_URI} property defined, a content type will be looked up from the extension of the resource name, if any, using {@link #getExtensionContentType(Charset)}.
 	No default content type is provided for a resource with a collection URI (i.e. a URI ending in {@value URIConstants#PATH_SEPARATOR}).
-	If the resource has no {@value Content#CHARACTER_ENCODING_PROPERTY_URI} property defined, a character encoding will be determined if possible using {@link #getContentTypeCharacterEncoding(ContentType)}.
+	If the resource has no {@value Content#CHARSET_PROPERTY_URI} property defined, a charset will be determined if possible using {@link #getContentTypeCharset(ContentType)}.
 	@param resource The resource the content type of which should be updated.
 	@see Content#TYPE_PROPERTY_URI
-	@see Content#CHARACTER_ENCODING_PROPERTY_URI
+	@see Content#CHARSET_PROPERTY_URI
 	*/
 	protected void updateContentType(final URFResource resource)	//TODO consider passing a MarmotSession to all the repository methods, and asking the MarmotSession for defaults 
 	{
@@ -744,15 +742,15 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 				}
 			}
 		}
-		if(contentType!=null)	//if we know a content type, update the characer encoding, if needed
+		if(contentType!=null)	//if we know a content type, update the charset, if needed
 		{
-			CharacterEncoding characterEncoding=getCharacterEncoding(resource);	//get the specified character encoding of the resource
-			if(characterEncoding==null)	//if no character encoding is specified
+			Charset charset=getCharset(resource);	//get the specified charset of the resource
+			if(charset==null)	//if no charset is specified
 			{
-				characterEncoding=getContentTypeCharacterEncoding(contentType);	//get the registered character encoding, if any, for the content type
-				if(characterEncoding!=null)	//if we found a character encoding
+				charset=getContentTypeCharset(contentType);	//get the registered charset, if any, for the content type
+				if(charset!=null)	//if we found a charset
 				{
-					setCharacterEncoding(resource, characterEncoding);	//update the character encoding property
+					setCharset(resource, charset);	//update the charset property
 				}
 			}
 		}

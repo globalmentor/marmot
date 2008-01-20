@@ -1084,7 +1084,7 @@ public class WebDAVRepository extends AbstractRepository
 							catch(final IOException ioException)	//TODO improve; comment
 							{
 //TODO fix								throw new DataException(ioException);
-								Debug.warn("Error parsing property", urfPropertyURI, "with value", propertyTextValue, ioException);
+								Debug.warn("Error parsing resource", resourceURI, "property", urfPropertyURI, "with value", propertyTextValue, ioException);
 							}
 						}
 						else	//if this is a normal string property
