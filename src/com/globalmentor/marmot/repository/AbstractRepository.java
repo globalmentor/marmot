@@ -519,7 +519,9 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		{
 			return null;	//the repository level has no parent
 		}
-		return isCollectionURI(resourceURI) ? getParentLevel(resourceURI) : getCurrentLevel(resourceURI);	//if resource is a collection URI, get the parent level; otherwise, get the current level
+		final URI parentResourceURI=isCollectionURI(resourceURI) ? getParentLevel(resourceURI) : getCurrentLevel(resourceURI);	//if resource is a collection URI, get the parent level; otherwise, get the current level
+		assert !resourceURI.equals(parentResourceURI) : "Parent URI should be different from the resource URI.";	//the resource URI will never be null, but the parent resource URI may be---but they should never be the same (default URI resolution won't work for opaque URIs)
+		return parentResourceURI;	//return the URI of the parent resource
 	}
 
 	/**Removes properties from a given resource.

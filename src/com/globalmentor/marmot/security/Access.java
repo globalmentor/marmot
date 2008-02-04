@@ -5,6 +5,7 @@ import java.util.Collection;
 
 
 import com.globalmentor.urf.*;
+import com.globalmentor.urf.select.UniversalSelector;
 
 import static com.globalmentor.java.Classes.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
@@ -50,6 +51,33 @@ public class Access extends URFListResource<AccessRule>
 	{
 		this(uri);	//construct the class with the URI
 		addAll(collection);	//add all the collection elements to the list
+	}
+
+	/**Returns an access level type that represents a summary of the access.
+	If there is no access rule, an access level type of {@link AccessLevelType#INHERITED} will be returned.
+	If there is a single access rule with a universal selector and an access level, its access level type will be returned.
+	Otherwise, {@link AccessLevelType#CUSTOM} will be returned. 
+	@return an access level type representing a summary of the access.
+	*/
+	public AccessLevelType getSummaryAccessLevelType()
+	{
+		if(isEmpty())	//if there are no access rules
+		{
+			return AccessLevelType.INHERITED;
+		}
+		else if(size()==1)	//if there is only one access rule
+		{
+			final AccessRule accessRule=get(0);	//get the access rule
+			if(accessRule.getSelector() instanceof UniversalSelector)	//if this is the universal selector
+			{
+				final AccessLevel accessLevel=accessRule.getAccessLevel();	//get the access level
+				if(accessLevel!=null)	//if there is an access level
+				{
+					return accessLevel.getAccessLevelType();	//return the access level type
+				}
+			}
+		}
+		return AccessLevelType.CUSTOM;	//anything else is considered a custom acces level
 	}
 
 }

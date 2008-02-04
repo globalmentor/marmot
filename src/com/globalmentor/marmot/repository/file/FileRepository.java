@@ -111,15 +111,17 @@ public class FileRepository extends AbstractRepository
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
 	@exception NullPointerException if one of the given respository URIs is <code>null</code>.
-	@exception IllegalArgumentException if the private repository URI does not use the {@value URIConstants#FILE_SCHEME} scheme.
+//TODO relax; improve	@exception IllegalArgumentException if the private repository URI does not use the {@value URIConstants#FILE_SCHEME} scheme.
 	*/
 	public FileRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
 	{
 		super(publicRepositoryURI, privateRepositoryURI);	//construct the parent class
+/*TODO decide if how we want initialization to occur, especially using PLOOP
 		if(!FILE_SCHEME.equals(privateRepositoryURI.getScheme()))	//if the private respository URI scheme is not the file scheme
 		{
 			throw new IllegalArgumentException(privateRepositoryURI+" does not use the "+FILE_SCHEME+" URI scheme.");
 		}
+*/
 		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO=(URFResourceTURFIO<URFResource>)getDescriptionIO();	//get the description I/O
 		urfResourceDescriptionIO.setFormatted(true);	//turn on formatting
 	}

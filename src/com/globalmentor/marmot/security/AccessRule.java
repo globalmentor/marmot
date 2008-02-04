@@ -29,7 +29,7 @@ public class AccessRule extends AbstractMarmotSecurityResource
 		super(referenceURI);  //construct the parent class
 	}
 
-	/**Return this rule's selector, or <code>null</code> if this rule has no selector property or the value is not a {@link Selector}.
+	/**Returns this rule's selector, or <code>null</code> if this rule has no selector property or the value is not a {@link Selector}.
 	@return This rule's selector, or <code>null</code> if this rule has no selector property or the value is not a {@link Selector}.
 	@see Select#SELECTOR_PROPERTY_URI
 	*/
@@ -46,7 +46,7 @@ public class AccessRule extends AbstractMarmotSecurityResource
 		setPropertyValue(SELECTOR_PROPERTY_URI, selector);	//set the select.select property
 	}
 
-	/**Sets this rule's access level, or <code>null</code> if this rule has no access level property or the value is not a {@link AccessLevel}.
+	/**Returns this rule's access level, or <code>null</code> if this rule has no access level property or the value is not a {@link AccessLevel}.
 	@return This rule's access level, or <code>null</code> if this rule has no access level property or the value is not a {@link AccessLevel}.
 	@see MarmotSecurity#ACCESS_LEVEL_PROPERTY_URI
 	*/
