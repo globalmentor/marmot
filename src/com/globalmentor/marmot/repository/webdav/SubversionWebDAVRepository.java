@@ -9,7 +9,7 @@ import com.garretwilson.net.URIConstants;
 import com.garretwilson.net.http.*;
 import com.garretwilson.net.http.webdav.*;
 import static com.garretwilson.net.http.webdav.SubversionWebDAV.*;
-import static com.garretwilson.text.Characters.*;
+import static com.globalmentor.java.Characters.*;
 
 /**Subversion repository accessed via WebDAV with autoversioning turned on.
 <p>Autoversioning must be turned on in Apaching using <code>SVNAutoversioning on</code>.</p>
