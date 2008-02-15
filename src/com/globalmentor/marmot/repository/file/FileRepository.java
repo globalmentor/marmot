@@ -28,6 +28,7 @@ import com.globalmentor.marmot.repository.AbstractRepository;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.urf.*;
+import static com.globalmentor.urf.TURF.*;
 
 /**Repository stored in a filesystem.
 <p>This repository recognizes the URF type <code>urf.List</code>
@@ -656,7 +657,7 @@ public class FileRepository extends AbstractRepository
 	*/
 	protected File getResourceDescriptionFile(final File resourceFile)
 	{
-		return changeName(resourceFile, addExtension(UNIX_HIDDEN_FILENAME_PREFIX+resourceFile.getName()+EXTENSION_SEPARATOR+MARMOT_DESCRIPTION_NAME, TURF_EXTENSION));	//return a file in the form ".file.marmot-description.turf"
+		return changeName(resourceFile, addExtension(UNIX_HIDDEN_FILENAME_PREFIX+resourceFile.getName()+EXTENSION_SEPARATOR+MARMOT_DESCRIPTION_NAME, TURF_NAME_EXTENSION));	//return a file in the form ".file.marmot-description.turf"
 	}
 
 	/**Loads a resource description for a single file.
