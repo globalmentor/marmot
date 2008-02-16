@@ -4,6 +4,7 @@ import javax.mail.internet.ContentType;
 
 import static com.garretwilson.io.ContentTypeConstants.*;
 
+import com.garretwilson.io.ContentTypes;
 import com.globalmentor.marmot.resource.*;
 
 /**Resource kit for handling audio.
@@ -19,7 +20,7 @@ public class AudioResourceKit extends AbstractResourceKit
 	/**Default constructor.*/
 	public AudioResourceKit()
 	{
-		super(new ContentType(AUDIO, MPEG_SUBTYPE, null));
+		super(new ContentType(ContentTypes.AUDIO_PRIMARY_TYPE, MPEG_SUBTYPE, null));
 	}
 
 }

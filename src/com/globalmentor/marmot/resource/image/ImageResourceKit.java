@@ -9,6 +9,7 @@ import net.marmox.resource.image.ImageScaleFilter;
 import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.java.Objects.*;
 
+import com.garretwilson.io.ContentTypes;
 import com.globalmentor.marmot.resource.*;
 import com.globalmentor.marmot.security.PermissionType;
 
@@ -91,7 +92,7 @@ public class ImageResourceKit extends AbstractResourceKit
 	/**Default constructor.*/
 	public ImageResourceKit()
 	{
-		super(new ContentType[]{new ContentType(IMAGE, GIF_SUBTYPE, null), new ContentType(IMAGE, JPEG_SUBTYPE, null), new ContentType(IMAGE, PNG_SUBTYPE, null)});
+		super(new ContentType[]{new ContentType(ContentTypes.IMAGE_PRIMARY_TYPE, GIF_SUBTYPE, null), new ContentType(ContentTypes.IMAGE_PRIMARY_TYPE, JPEG_SUBTYPE, null), new ContentType(ContentTypes.IMAGE_PRIMARY_TYPE, PNG_SUBTYPE, null)});
 	}
 
 	/**Initializes a resource description, creating whatever properties are appropriate.
