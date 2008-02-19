@@ -121,6 +121,7 @@ public interface ResourceKit
 
 	/**Creates a new resource with the appropriate default contents for this resource type.
 	If a resource already exists at the given URI it will be replaced.
+	If the resource URI is a collection URI, a collection resource will be created.
 	@param repository The repository that will contain the resource.
 	@param resourceURI The reference URI to use to identify the resource.
 	@return A description of the resource that was created.

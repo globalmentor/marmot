@@ -156,8 +156,6 @@ public interface Repository
 	public boolean resourceExists(final URI resourceURI) throws ResourceIOException;
 
 	/**Determines if the resource at a given URI is a collection.
-	This is a convenience method to quickly determine if a resource exists at the given URI
-	and retrieving that resource would result in a resource of type <code>file:Folder</code>.
 	@param resourceURI The URI of the requested resource.
 	@return <code>true</code> if the resource is a collection, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.

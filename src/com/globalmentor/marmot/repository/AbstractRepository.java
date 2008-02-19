@@ -25,6 +25,7 @@ import static com.globalmentor.marmot.security.MarmotSecurity.*;
 import static com.globalmentor.urf.content.Content.*;
 
 /**Abstract implementation of a repository class with typical features.
+<p>This implementation uses the special name {@value #COLLECTION_CONTENTS_NAME} to represent the contents (as opposed to the contained resources) of a collection resource.</p>
 <p>Resource access methods should call {@link #checkResourceURI(URI)} as a security check to ensure the given URI is within the repository.</p>
 @author Garret Wilson
 */
@@ -39,6 +40,9 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 
 		/**@return The I/O implementation that writes and reads a resource with the same reference URI as its base URI.*/
 		protected URFIO<URFResource> getDescriptionIO() {return descriptionIO;}
+
+	/**The name of a resource used to store the contents of a collection.*/
+	public final static String COLLECTION_CONTENTS_NAME="@";	//TODO add checks to prevent this resource from being accessed directly
 
 	/**The registered event listeners.*/
 //TODO bring back when needed	protected final EventListenerManager eventListenerManager=new EventListenerManager();
@@ -756,6 +760,27 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 				}
 			}
 		}
+	}
+
+	/**Determines whether a resource, identified by its private URI, should be made available in the public space.
+	If this method returns <code>false</code>, the identified resource will essentially become invisible past the {@link Repository} interface.
+	Such resources are normally used internally with special semantics to the repository implementation.
+	This version returns <code>true</code> for all resources except:
+	<ul>
+		<li>The special collection contents resource named {@value #COLLECTION_CONTENTS_NAME}.</li>
+	</ul>
+	@param privateResourceURI The private URI of a resource.
+	@return <code>true</code> if the resource should be visible as normal, or <code>false</code> if the resource should not be made available to the public space.
+	@exception NullPointerException if the given URI is <code>null</code>.
+	*/
+	protected boolean isPrivateResourcePublic(final URI privateResourceURI)
+	{
+		final String rawName=getRawName(privateResourceURI);	//get the raw name of the resource
+		if(COLLECTION_CONTENTS_NAME.equals(rawName))	//if this is the collection contents
+		{
+			return false;	//don't publish the collection contents file
+		}
+		return true;	//publish all other resources
 	}
 
 	/**Translates the given error specific to the this repository type into a resource I/O exception.

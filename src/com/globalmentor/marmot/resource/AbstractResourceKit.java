@@ -7,12 +7,12 @@ import static java.util.Collections.*;
 
 import javax.mail.internet.ContentType;
 
+import com.garretwilson.net.ResourceIOException;
+import com.garretwilson.net.URIPath;
+import static com.garretwilson.net.URIs.*;
 
 import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.java.Objects.*;
-
-import com.garretwilson.net.ResourceIOException;
-import com.garretwilson.net.URIPath;
 
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
@@ -83,7 +83,6 @@ public abstract class AbstractResourceKit implements ResourceKit
 		*/
 		public boolean hasCapabilities(final Capability... capabilities)
 		{
-
 			for(final Capability capability:capabilities)	//for each given capability
 			{
 				if(!this.capabilities.contains(capability))	///if this capability isn't present
@@ -93,6 +92,15 @@ public abstract class AbstractResourceKit implements ResourceKit
 			}
 			return true;	//this resource kit has all the given capabilities, if any
 		}
+
+	/**Capabilities constructor with no support for content type or types.
+	@param capabilities The capabilities provided by this resource kit.
+	@exception NullPointerException if the capabilities is <code>null</code>.
+	*/
+	public AbstractResourceKit(final Capability... capabilities)
+	{
+		this(new ContentType[0], capabilities);
+	}
 
 	/**Content types and capabilities constructor.
 	@param supportedContentType The content type supported by this resource kit.
@@ -174,10 +182,11 @@ public abstract class AbstractResourceKit implements ResourceKit
 		//TODO fix IllegalArgumentException by checking to ensure that the parent resource is within the repository
 		return parentResourceURI.resolve(URIPath.createURIPathURI(URIPath.encodeSegment(resourceName)));	//encode the resource name and resolve it against the parent resource URI; use the special URIPath method in case the name contains a colon character
 	}
-	
+
 	/**Creates a new resource with the appropriate default contents for this resource type.
 	If a resource already exists at the given URI it will be replaced.
-	This version creates a default resource with content of zero bytes.
+	If the resource URI is a collection URI, a collection resource will be created.
+	This version creates a default resource or collection resource with content of zero bytes.
 	@param repository The repository that will contain the resource.
 	@param resourceURI The reference URI to use to identify the resource.
 	@return A description of the resource that was created.
@@ -187,7 +196,14 @@ public abstract class AbstractResourceKit implements ResourceKit
 	*/
 	public URFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException
 	{
-		return repository.createResource(resourceURI, new byte[]{});	//create a new empty resource
+		if(isCollectionURI(resourceURI))	//if this is a collection URI
+		{
+			return repository.createCollection(resourceURI);	//create a new collection
+		}
+		else	//if this is not a collection URI
+		{
+			return repository.createResource(resourceURI, new byte[]{});	//create a new empty resource
+		}
 	}
 
 	/**Determines whether the given permission is appropriate for accessing the identified aspect.

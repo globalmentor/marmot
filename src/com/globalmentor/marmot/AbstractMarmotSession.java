@@ -7,9 +7,9 @@ import java.util.concurrent.*;
 
 import javax.mail.internet.ContentType;
 
-
 import static com.globalmentor.urf.content.Content.*;
 
+import static com.garretwilson.net.URIs.*;
 import com.garretwilson.util.*;
 
 import com.globalmentor.marmot.repository.*;
@@ -56,6 +56,17 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 		*/
 		protected void setDefaultResourceKit(final RK defaultResourceKit) {this.defaultResourceKit=defaultResourceKit;}
 
+	/**The default resource kit to use if a specific resource kit cannot be found for a collection, or <code>null</code> if there is no default collection resource kit.*/
+	private RK defaultCollectionResourceKit=null;
+
+		/**@return The default resource kit to use if a specific resource kit cannot be found for a collection, or <code>null</code> if there is no default collection resource kit.*/
+		public RK getDefaultCollectionResourceKit() {return defaultCollectionResourceKit;}
+
+		/**Sets the default collection resource kit.
+		@param defaultResourceKit The default resource kit if a specific resource kit cannot be found for a collection, or <code>null</code> if there is no default resource kit.
+		*/
+		protected void setDefaultCollectionResourceKit(final RK defaultCollectionResourceKit) {this.defaultCollectionResourceKit=defaultCollectionResourceKit;}
+
 	/**Default constructor.*/
 	public AbstractMarmotSession()
 	{
@@ -90,16 +101,37 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 	*/
 	public void installResourceKit(final RK resourceKit)
 	{
-		installResourceKit(resourceKit, false);	//install the resource kit, but not as the default resource kit
+		installResourceKit(resourceKit, false, false);	//install the resource kit, but not as the default resource kit
 	}
 
-	/**Registers a resource kit with the session, specifying if the resource kit should be considered the default resource kit.
-	If this resource kit is specified as the default, it will replace any resource kit previously specified as the default.
+	/**Registers a resource kit with the session, specifying it as the default resource kit.
+	The resource kit will replaced any other resource kit designated as default.
 	@param resourceKit The resource kit to register.
-	@param isDefault Whether the resource kit should be the default.
 	@exception IllegalStateException if the resource kit is already installed.
 	*/
-	public void installResourceKit(final RK resourceKit, final boolean isDefault)
+	public void installDefaultResourceKit(final RK resourceKit)
+	{
+		installResourceKit(resourceKit, true, false);	//install the resource kit as the default
+	}
+
+	/**Registers a resource kit with the session, specifying it as the default resource kit for collections.
+	The resource kit will replaced any other resource kit designated as default for collections.
+	@param resourceKit The resource kit to register.
+	@exception IllegalStateException if the resource kit is already installed.
+	*/
+	public void installDefaultCollectionResourceKit(final RK resourceKit)
+	{
+		installResourceKit(resourceKit, false, true);	//install the resource kit as the default for collections
+	}
+
+	/**Registers a resource kit with the session, specifying if the resource kit should be considered the default and/or the default collection resource kit.
+	If this resource kit is specified as the default, it will replace any resource kit previously specified as the default.
+	@param resourceKit The resource kit to register.
+	@param isDefaultResourceKit Whether the resource kit should be the default.
+	@param isDefaultCollectionResourceKit Whether the resource kit should be the default for collections.
+	@exception IllegalStateException if the resource kit is already installed.
+	*/
+	protected void installResourceKit(final RK resourceKit, final boolean isDefaultResourceKit, final boolean isDefaultCollectionResourceKit)
 	{
 		if(resourceKit.getMarmotSession()!=null)	//if the resource kit is already installed
 		{
@@ -108,13 +140,17 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 		assert !resourceKits.contains(resourceKit) : "Marmot contains unassigned resource kit.";
 		resourceKit.setMarmotSession(this);	//tell the resource kit its owner
 		resourceKits.add(resourceKit);	//add the resource kit
-		if(isDefault)	//if this resource kit should be the default
+		if(isDefaultResourceKit)	//if this resource kit should be the default
 		{
 			setDefaultResourceKit(resourceKit);	//set the resource kit as the default
 		}
+		if(isDefaultCollectionResourceKit)	//if this resource kit should be the default for collections
+		{
+			setDefaultCollectionResourceKit(resourceKit);	//set the resource kit as the default for collections
+		}
 		updateResourceKits();	//update the resource kits
 	}
-
+	
 	/**Unregisters a resource kit with the session.
 	If this resource kit was previously set as the default, there will no longer be a default resource kit. 
 	@param resourceKit The resource kit to unregister.
@@ -130,6 +166,10 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 		if(getDefaultResourceKit()==resourceKit)	//if this is our default resource kit
 		{
 			setDefaultResourceKit(null);	//show that we have no default resource kit
+		}
+		if(getDefaultCollectionResourceKit()==resourceKit)	//if this is our default resource kit for collections
+		{
+			setDefaultCollectionResourceKit(null);	//show that we have no default collection resource kit
 		}
 		resourceKits.remove(resourceKit);	//remove the resource kit
 		resourceKit.setMarmotSession(null);	//tell the resource kit it has no owner
@@ -153,6 +193,7 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 	<ol>
 		<li>The first resource kit supporting the resource content type.</li>
 		<li>The first resource kit supporting one of the resource types.</li>
+		<li>If the resource has a collection URI, the default collection resource kit.</li>
 		<li>The default resource kit.</li>
 	</ol>
 	@param repository The repository in which the resource resides.
@@ -201,10 +242,22 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 */
 		if(resourceKit==null)	//if we have exhausted all attempts to get a matching resource kit
 		{
-			final RK defaultResourceKit=getDefaultResourceKit();	//use the default resource kit, if there is one
-			if(defaultResourceKit!=null && defaultResourceKit.hasCapabilities(capabilities))	//if there is a default resource kit that has the requested capabilities
+			final URI resourceURI=resource.getURI();	//get the URI of the resource
+			if(resourceURI!=null && isCollectionURI(resourceURI))	//if this is a collection URI
 			{
-				resourceKit=defaultResourceKit;	//use the default resource kit
+				final RK defaultCollectionResourceKit=getDefaultCollectionResourceKit();	//use the default collection resource kit, if there is one
+				if(defaultCollectionResourceKit!=null && defaultCollectionResourceKit.hasCapabilities(capabilities))	//if there is a default collection resource kit that has the requested capabilities
+				{
+					resourceKit=defaultCollectionResourceKit;	//use the default collection resource kit
+				}
+			}
+			if(resourceKit==null)	//if we didn't find an appropriate default collection resource kit
+			{
+				final RK defaultResourceKit=getDefaultResourceKit();	//use the default resource kit, if there is one
+				if(defaultResourceKit!=null && defaultResourceKit.hasCapabilities(capabilities))	//if there is a default resource kit that has the requested capabilities
+				{
+					resourceKit=defaultResourceKit;	//use the default resource kit
+				}
 			}
 		}
 		return resourceKit;	//return whatever resource kit we found, if any

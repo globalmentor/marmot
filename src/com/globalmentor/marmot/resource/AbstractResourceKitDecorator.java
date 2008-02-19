@@ -89,6 +89,7 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit
 
 	/**Creates a new resource with the appropriate default contents for this resource type.
 	If a resource already exists at the given URI it will be replaced.
+	If the resource URI is a collection URI, a collection resource will be created.
 	@param resourceURI The reference URI to use to identify the resource.
 	@return A description of the resource that was created.
 	@exception NullPointerException if the given resource URI is <code>null</code>.

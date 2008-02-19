@@ -10,8 +10,6 @@ import static java.util.Collections.*;
 import javax.mail.internet.*;
 
 import com.garretwilson.io.*;
-
-
 import com.garretwilson.net.*;
 import static com.garretwilson.net.URIs.*;
 import com.garretwilson.net.http.*;
@@ -29,6 +27,7 @@ import static com.globalmentor.urf.URF.*;
 import static com.globalmentor.urf.content.Content.*;
 import static com.globalmentor.urf.dcmi.DCMI.*;
 
+import static com.globalmentor.java.Bytes.*;
 import com.globalmentor.java.Strings;
 import com.globalmentor.marmot.repository.AbstractRepository;
 import com.globalmentor.marmot.repository.Repository;
@@ -230,6 +229,7 @@ public class WebDAVRepository extends AbstractRepository
 	}
 	
 	/**Gets an input stream to the contents of the resource specified by the given URI.
+	For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENTS_NAME} file, if any.
 	@param resourceURI The URI of the resource to access.
 	@return An input stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -248,8 +248,24 @@ public class WebDAVRepository extends AbstractRepository
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
-			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
-			return webdavResource.getInputStream();	//return an input stream to the resource
+			if(isCollectionURI(resourceURI) && isCollection(resourceURI))	//if the resource is a collection (make sure the resource URI is also a collection URI so that we can be sure of resolving the collection contents name; WebDAV collections should only have collection URIs anyway)
+			{
+				final URI contentsURI=resourceURI.resolve(COLLECTION_CONTENTS_NAME);	//determine the URI to use for contents
+				final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(contentsURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection contents resource TODO cache these resources, maybe
+				if(webdavResource.exists())	//if there is a special collection contents resource
+				{
+					return webdavResource.getInputStream();	//return an input stream to the collection contents resource
+				}
+				else	//if there is no collection contents resource
+				{
+					return new ByteArrayInputStream(NO_BYTES);	//return an input stream to an empty byte array
+				}
+			}
+			else	//if the resource is not a collection
+			{
+				final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+				return webdavResource.getInputStream();	//return an input stream to the resource
+			}
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -266,6 +282,7 @@ public class WebDAVRepository extends AbstractRepository
 	
 	/**Gets an output stream to the contents of the resource specified by the given URI.
 	An error is generated if the resource does not exist.
+	For collections, this implementation stores the content in the {@value #COLLECTION_CONTENTS_NAME} file.
 	@param resourceURI The URI of the resource to access.
 	@return An output stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -346,6 +363,7 @@ public class WebDAVRepository extends AbstractRepository
 	}
 
 	/**Determines if the resource at the given URI exists.
+	This implementation returns <code>false</code> for all resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource to check.
 	@return <code>true</code> if the resource exists, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -361,10 +379,15 @@ public class WebDAVRepository extends AbstractRepository
 			return subrepository.resourceExists(resourceURI);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
+		final URI privateResourceURI=getPrivateURI(resourceURI);	//get the resource URI in the private space
+		if(!isPrivateResourcePublic(privateResourceURI))	//if this resource should not be public
+		{
+			return false;	//ignore this resource
+		}
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
-			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			final WebDAVResource webdavResource=new WebDAVResource(privateResourceURI, getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			return webdavResource.exists();	//see if the WebDAV resource exists		
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
@@ -381,8 +404,7 @@ public class WebDAVRepository extends AbstractRepository
 	}
 
 	/**Determines if the resource at a given URI is a collection.
-	This is a convenience method to quickly determine if a resource exists at the given URI
-	and retrieving that resource would result in a resource of type <code>file:Folder</code>.
+	This implementation returns <code>false</code> for all resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the requested resource.
 	@return <code>true</code> if the resource is a collection, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -398,10 +420,15 @@ public class WebDAVRepository extends AbstractRepository
 			return subrepository.isCollection(resourceURI);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
+		final URI privateResourceURI=getPrivateURI(resourceURI);	//get the resource URI in the private space
+		if(!isPrivateResourcePublic(privateResourceURI))	//if this resource should not be public
+		{
+			return false;	//ignore this resource
+		}
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
-			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			final WebDAVResource webdavResource=new WebDAVResource(privateResourceURI, getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			return webdavResource.isCollection();	//see if the WebDAV resource is a collection		
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
@@ -418,6 +445,7 @@ public class WebDAVRepository extends AbstractRepository
   }
 
 	/**Determines whether the resource represented by the given URI has children.
+	This implementation ignores child resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource.
 	@return <code>true</code> if the specified resource has child resources.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -441,7 +469,8 @@ public class WebDAVRepository extends AbstractRepository
 			final List<NameValuePair<URI, List<WebDAVProperty>>> propertyLists=webdavResource.propFind(Depth.ONE);	//get the properties of the resources one level down
 			for(final NameValuePair<URI, List<WebDAVProperty>> propertyList:propertyLists)	//look at each property list
 			{
-				if(!privateResourceURI.equals(propertyList.getName()))	//if this property list is *not* for this resource
+				final URI childResourcePrivateURI=propertyList.getName();	//get the private URI of the child resource this property list represents
+				if(isPrivateResourcePublic(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI))	//if the associated child resource is public and the property list is *not* for this resource
 				{
 					return true;	//this resource has children
 				}
@@ -462,6 +491,7 @@ public class WebDAVRepository extends AbstractRepository
 	}
 
 	/**Retrieves child resources of the resource at the given URI.
+	This implementation does not include child resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
 	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
 	@return A list of sub-resources descriptions directly under the given resource.
@@ -499,8 +529,8 @@ public class WebDAVRepository extends AbstractRepository
 				final List<URFResource> childResourceList=new ArrayList<URFResource>(propertyLists.size());	//create a list of child resources no larger than the number of WebDAV resource property lists
 				for(final NameValuePair<URI, List<WebDAVProperty>> propertyList:propertyLists)	//look at each property list
 				{
-					final URI childResourcePrivateURI=propertyList.getName();
-					if(!privateResourceURI.equals(childResourcePrivateURI))	//if this property list is *not* for this resource
+					final URI childResourcePrivateURI=propertyList.getName();	//get the private URI of the child resource this property list represents
+					if(isPrivateResourcePublic(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI))	//if the associated child resource is public and the property list is *not* for this resource
 					{
 						childResourceList.add(createResourceDescription(urf, getPublicURI(childResourcePrivateURI), propertyList.getValue()));	//create a resource from this URI and property lists
 					}
@@ -545,7 +575,7 @@ public class WebDAVRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public OutputStream createResource(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
+	public OutputStream createResource(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException	//TODO fix to prevent resources with special names
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -578,7 +608,7 @@ public class WebDAVRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public URFResource createResource(URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException
+	public URFResource createResource(URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException	//TODO fix to prevent resources with special names
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -614,7 +644,7 @@ public class WebDAVRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error creating the collection.
 	*/
-	public URFResource createCollection(URI collectionURI) throws ResourceIOException
+	public URFResource createCollection(URI collectionURI) throws ResourceIOException	//TODO fix to prevent resources with special names
 	{
 		collectionURI=checkResourceURI(collectionURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(collectionURI);	//see if the resource URI lies within a subrepository
@@ -876,7 +906,7 @@ public class WebDAVRepository extends AbstractRepository
 	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.
 	@exception ResourceIOException if the resource could not be deleted.
 	*/
-	public void deleteResource(URI resourceURI) throws ResourceIOException
+	public void deleteResource(URI resourceURI) throws ResourceIOException	//TODO fix to prevent resources with special names
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -973,7 +1003,7 @@ public class WebDAVRepository extends AbstractRepository
 			//create a label G***maybe only do this if the resource kit has not added a label
 		boolean isCollection=false;	//we'll detect if this is a collection base upon the properties
 		final URFIO<URFResource> descriptionIO=getDescriptionIO();	//get I/O for the description
-		for(final WebDAVProperty webdavProperty:propertyList)	//look at each WebDAV property
+		for(final WebDAVProperty webdavProperty:propertyList)	//look at each WebDAV property; process them all except the explicit URF properties, which will be processed last and override the others
 		{
 			final WebDAVPropertyName propertyName=webdavProperty.getName();	//get the property name
 			final String propertyNamespace=propertyName.getNamespace();	//get the string version of the property namespace
@@ -1007,7 +1037,7 @@ public class WebDAVRepository extends AbstractRepository
 						if(valueElements.size()==1 && COLLECTION_TYPE.equals(createQualifiedName(valueElements.get(0)).getURI()))	//if there is one child element with a reference URI of D:collection
 						{
 							isCollection=true;	//show that this is a collection
-							resource.addTypeURI(LIST_CLASS_URI);	//add the urf:List type to indicate that this resource is a folder
+//TODO del; changed approach							resource.addTypeURI(LIST_CLASS_URI);	//add the urf:List type to indicate that this resource is a folder
 						}
 					}
 				}
@@ -1060,6 +1090,17 @@ public class WebDAVRepository extends AbstractRepository
 					}
 				}				
 			}
+		}
+		if(isCollection)	//if this is a collection
+		{
+			resource.removePropertyValues(Content.TYPE_PROPERTY_URI);	//remove any content type properties (Apache mod_dav adds a "httpd/unix-directory" pseudo MIME type for collections, for example)
+		}
+		for(final WebDAVProperty webdavProperty:propertyList)	//now process the explicitly set URF properties so that they will override the other properties
+		{
+			final WebDAVPropertyName propertyName=webdavProperty.getName();	//get the property name
+			final String propertyNamespace=propertyName.getNamespace();	//get the string version of the property namespace
+			final String propertyLocalName=propertyName.getLocalName();	//get the local name of the property
+			final WebDAVPropertyValue propertyValue=webdavProperty.getValue();	//get the value of the property
 			if(!ignoredWebDAVNamespaces.contains(propertyNamespace))	//if this is not a namespace to ignore
 			{
 //Debug.trace("looking at non-WebDAV property", propertyName);
@@ -1075,6 +1116,7 @@ public class WebDAVRepository extends AbstractRepository
 						{
 							try
 							{
+								resource.removePropertyValues(urfPropertyURI);	//remove any values already present for this value (e.g. from WebDAV); the explicitly-set URF property values override all other values 
 								final URFResource propertyDescription=descriptionIO.read(urf, new ByteArrayInputStream(propertyTextValue.getBytes(UTF_8)), resourceURI);	//read a description of the property
 								for(final URFProperty property:propertyDescription.getProperties(urfPropertyURI))	//for each read property that we expect in the description
 								{
@@ -1095,11 +1137,7 @@ public class WebDAVRepository extends AbstractRepository
 				}
 			}
 		}
-		if(isCollection)	//if this is a collection
-		{
-			resource.removePropertyValues(Content.TYPE_PROPERTY_URI);	//remove any content type properties (Apache mod_dav adds a "httpd/unix-directory" pseudo MIME type for collections, for example)
-		}
-		else	//if this is not a collection, try to get the content type of the resource if it wasn't specified already
+		if(!isCollection)	//if this is not a collection, try to get the content type of the resource if it wasn't specified already
 		{
 			updateContentType(resource);	//update the content type information based upon the repository defaults
 		}

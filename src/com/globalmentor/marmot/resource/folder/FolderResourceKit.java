@@ -3,20 +3,12 @@ package com.globalmentor.marmot.resource.folder;
 import java.net.URI;
 
 import static com.garretwilson.net.URIConstants.*;
-import com.garretwilson.net.ResourceIOException;
 import com.garretwilson.net.URIPath;
-
-import static com.globalmentor.urf.URF.*;
 
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.AbstractResourceKit;
-import com.globalmentor.urf.*;
 
-/**Resource kit for handling folder resources that have no content but can contain children.
-<p>Supported URF resource types:</p>
-<ul>
-<li>{@value URF#LIST_CLASS_URI}</li>
-</ul>
+/**Resource kit for handling collections as folder resources that have no content but can contain children.
 @author Garret Wilson
 */
 public class FolderResourceKit extends AbstractResourceKit
@@ -25,7 +17,7 @@ public class FolderResourceKit extends AbstractResourceKit
 	/**Default constructor.*/
 	public FolderResourceKit()
 	{
-		super(LIST_CLASS_URI, Capability.CREATE);
+		super(Capability.CREATE);
 	}
 
 	/**Returns the URI of a child resource with the given simple name within a parent resource.
@@ -45,18 +37,4 @@ public class FolderResourceKit extends AbstractResourceKit
 		return parentResourceURI.resolve(URIPath.createURIPathURI(URIPath.encodeSegment(resourceName)+PATH_SEPARATOR));	//encode the resource name, append a path separator, and resolve it against the parent resource URI; use the special URIPath method in case the name contains a colon character
 	}
 
-	/**Creates a new resource with the appropriate default contents for this resource type.
-	If a resource already exists at the given URI it will be replaced.
-	This implementation creates a new collection.
-	@param repository The repository that will contain the resource.
-	@param resourceURI The reference URI to use to identify the resource.
-	@return A description of the resource that was created.
-	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception ResourceIOException if the resource could not be created.
-	*/
-	public URFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException
-	{
-		return repository.createCollection(resourceURI);	//create a new collection
-	}
 }

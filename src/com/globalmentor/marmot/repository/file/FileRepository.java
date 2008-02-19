@@ -17,7 +17,9 @@ import com.garretwilson.util.Debug;
 
 import com.garretwilson.io.*;
 import com.garretwilson.net.*;
+import com.garretwilson.net.http.webdav.WebDAVResource;
 
+import static com.globalmentor.java.Bytes.NO_BYTES;
 import static com.globalmentor.java.CharSequences.*;
 import static com.globalmentor.urf.URF.*;
 import static com.globalmentor.urf.content.Content.*;
@@ -51,22 +53,27 @@ public class FileRepository extends AbstractRepository
 	/**The name component of the Marmot description of a file resource.*/
 	public final static String MARMOT_DESCRIPTION_NAME="marmot-description";
 
-	/**The file filter for listing files in a directory.*/
-	protected final static FileFilter FILE_FILTER=new FileFilter()
+	/**The file filter for listing files in a directory.
+	The file filter returns those resources for which {@link #isPrivateResourcePublic(URI)} returns <code>true</code>.
+	*/
+	private final FileFilter fileFilter=new FileFilter()
 			{
 				/**Tests whether or not the specified abstract pathname is one of the file types we recognize.
+				This implementation delegates to #is
 				@param pathname The abstract pathname to be tested.
 				@return <code>true</code> if and only if <code>pathname</code> should be included.
 				*/
 				public boolean accept(final File pathname)
 				{
-					if(startsWith(pathname.getName(), EXTENSION_SEPARATOR))	//if this file begins with '.'
-						return false;	//ignore files beginning with the extension character
-					if(pathname.isDirectory())	//if this is a directory
-						return true;	//always accept directories
-					return true;	//TODO add user-based security
+					return isPrivateResourcePublic(pathname.toURI());	//see if the private URI represented by this file should be accepted 
 				}
-			};	
+			};
+		
+	/**Returns the file filter for listing files in a directory.
+	The file filter returns those resources for which {@link #isPrivateResourcePublic(URI)} returns <code>true</code>.
+	@return The file filter for listing files in a directory.
+	*/
+	protected FileFilter getFileFilter() {return fileFilter;}
 
 	/**Default constructor with no settings.
 	Settings must be configured before repository is opened.
@@ -128,6 +135,7 @@ public class FileRepository extends AbstractRepository
 	}
 	
 	/**Gets an input stream to the contents of the resource specified by the given URI.
+	For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENTS_NAME} file, if any.
 	@param resourceURI The URI of the resource to access.
 	@return An input stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -145,14 +153,31 @@ public class FileRepository extends AbstractRepository
 		checkOpen();	//make sure the repository is open
 		try
 		{
-			return new FileInputStream(new File(getPrivateURI(resourceURI)));	//return an input stream to the file of the private URI
+			if(isCollectionURI(resourceURI) && isCollection(resourceURI))	//if the resource is a collection (make sure the resource URI is also a collection URI so that we can be sure of resolving the collection contents name; file collections should only have collection URIs anyway)
+			{
+				final URI contentsURI=resourceURI.resolve(COLLECTION_CONTENTS_NAME);	//determine the URI to use for contents
+				final File file=new File(getPrivateURI(contentsURI));	//create a file object from the private URI of the special collection contents resource
+				if(file.exists())	//if there is a special collection contents resource
+				{
+					return new FileInputStream(file);	//return an input stream to the file
+				}
+				else	//if there is no collection contents resource
+				{
+					return new ByteArrayInputStream(NO_BYTES);	//return an input stream to an empty byte array
+				}
+			}
+			else	//if the resource is not a collection
+			{
+				final File file=new File(getPrivateURI(resourceURI));	//create a file object from the private URI
+				return new FileInputStream(file);	//return an input stream to the file
+			}
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
 			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 	}
-	
+
 	/**Gets an output stream to the contents of the resource specified by the given URI.
 	An error is generated if the resource does not exist.
 	@param resourceURI The URI of the resource to access.
@@ -213,6 +238,7 @@ public class FileRepository extends AbstractRepository
 	}
 
 	/**Determines if the resource at the given URI exists.
+	This implementation returns <code>false</code> for all resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource to check.
 	@return <code>true</code> if the resource exists, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -228,14 +254,18 @@ public class FileRepository extends AbstractRepository
 			return subrepository.resourceExists(resourceURI);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
+		final URI privateResourceURI=getPrivateURI(resourceURI);	//get the resource URI in the private space
+		if(!isPrivateResourcePublic(privateResourceURI))	//if this resource should not be public
+		{
+			return false;	//ignore this resource
+		}
 		final boolean isCollectionURI=isCollectionURI(resourceURI);	//see if the URI specifies a collection
-		final File file=new File(getPrivateURI(resourceURI));	//get the file this 
+		final File file=new File(privateResourceURI);	//get the file object for this resource
 		return file.exists() && (isCollectionURI || !file.isDirectory());	//see if the file of the private URI exists; don't allow a non-collection URI to find a non-directory URI, though (file systems usually don't allow both a file and a directory of the same name, so they allow the ending-slash form to be optional)
 	}
 
 	/**Determines if the resource at a given URI is a collection.
-	This is a convenience method to quickly determine if a resource exists at the given URI
-	and retrieving that resource would result in a resource of type <code>file:Folder</code>.
+	This implementation returns <code>false</code> for all resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the requested resource.
 	@return <code>true</code> if the resource is a collection, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -251,10 +281,16 @@ public class FileRepository extends AbstractRepository
 			return subrepository.isCollection(resourceURI);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		return isCollectionURI(resourceURI) && new File(getPrivateURI(resourceURI)).isDirectory();	//see if the file of the private URI is a directory; don't allow a non-collection URI to find a non-directory URI, though (file systems usually don't allow both a file and a directory of the same name, so they allow the ending-slash form to be optional)
+		final URI privateResourceURI=getPrivateURI(resourceURI);	//get the resource URI in the private space
+		if(!isPrivateResourcePublic(privateResourceURI))	//if this resource should not be public
+		{
+			return false;	//ignore this resource
+		}
+		return isCollectionURI(resourceURI) && new File(privateResourceURI).isDirectory();	//see if the file of the private URI is a directory; don't allow a non-collection URI to find a non-directory URI, though (file systems usually don't allow both a file and a directory of the same name, so they allow the ending-slash form to be optional)
   }
 
 	/**Determines whether the resource represented by the given URI has children.
+	This implementation ignores child resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource.
 	@return <code>true</code> if the specified resource has child resources.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -271,10 +307,11 @@ public class FileRepository extends AbstractRepository
 		}
 		checkOpen();	//make sure the repository is open
 		final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
-		return isCollectionURI(resourceURI) && resourceFile.isDirectory() && resourceFile.listFiles(FILE_FILTER).length>0;	//see if this is a directory and there is more than one file in this directory
+		return isCollectionURI(resourceURI) && resourceFile.isDirectory() && resourceFile.listFiles(getFileFilter()).length>0;	//see if this is a directory and there is more than one file in this directory
 	}
 
 	/**Retrieves child resources of the resource at the given URI.
+	This implementation does not include child resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
 	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
 	@return A list of sub-resources descriptions directly under the given resource.
@@ -298,7 +335,7 @@ public class FileRepository extends AbstractRepository
 			if(isCollectionURI(resourceURI) && resourceDirectory.isDirectory())	//if there is a directory for this resource
 			{
 				final URF urf=createURF();	//create a new URF data model
-				final File[] files=resourceDirectory.listFiles(FILE_FILTER);	//get a list of all files in the directory
+				final File[] files=resourceDirectory.listFiles(getFileFilter());	//get a list of all files in the directory
 				for(final File file:files)	//for each file in the directory
 				{
 					final URFResource childResource;
@@ -341,7 +378,7 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public OutputStream createResource(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
+	public OutputStream createResource(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException	//TODO fix to prevent resources with special names
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -374,7 +411,7 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public URFResource createResource(URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException
+	public URFResource createResource(URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException	//TODO fix to prevent resources with special names
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -411,7 +448,7 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error creating the collection.
 	*/
-	public URFResource createCollection(URI collectionURI) throws ResourceIOException
+	public URFResource createCollection(URI collectionURI) throws ResourceIOException	//TODO fix to prevent resources with special names
 	{
 			//TODO do we want to check to make sure this is a collection URI?
 		collectionURI=checkResourceURI(collectionURI);	//makes sure the resource URI is valid and normalize the URI
@@ -430,47 +467,6 @@ public class FileRepository extends AbstractRepository
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
 			throw createResourceIOException(collectionURI, ioException);	//translate the exception to a resource I/O exception and throw that
-		}
-	}
-
-	/**Deletes a resource.
-	@param resourceURI The reference URI of the resource to delete.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.
-	@exception ResourceIOException if the resource could not be deleted.
-	*/
-	public void deleteResource(URI resourceURI) throws ResourceIOException
-	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			subrepository.deleteResource(resourceURI);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
-		try
-		{
-			if(resourceURI.normalize().equals(getPublicRepositoryURI()))	//if they try to delete the root URI
-			{
-				throw new IllegalArgumentException("Cannot delete repository base URI "+resourceURI);
-			}
-			final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
-			/*TODO del any associated directories
-			if(resourceFile.isFile())	//if this is a file and not a directory
-			{
-				final File directory=getResourceDirectory(resourceURI);	//get the directory to use for the URI
-				if(directory.exists())	//if a directory exists for this resource
-				{
-					FileUtilities.delete(directory, true);	//recursively delete the directory						
-				}
-			}
-	*/
-			delete(resourceFile, true);	//recursively delete the file or directory
-		}
-		catch(final IOException ioException)	//if an I/O exception occurs
-		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 	}
 
@@ -586,6 +582,47 @@ public class FileRepository extends AbstractRepository
 		throw new UnsupportedOperationException();	//TODO implement
 	}
 
+	/**Deletes a resource.
+	@param resourceURI The reference URI of the resource to delete.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception IllegalArgumentException if the given resource URI is the base URI of the repository.
+	@exception ResourceIOException if the resource could not be deleted.
+	*/
+	public void deleteResource(URI resourceURI) throws ResourceIOException	//TODO fix to prevent resources with special names
+	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			subrepository.deleteResource(resourceURI);	//delegate to the subrepository
+		}
+		checkOpen();	//make sure the repository is open
+		try
+		{
+			if(resourceURI.normalize().equals(getPublicRepositoryURI()))	//if they try to delete the root URI
+			{
+				throw new IllegalArgumentException("Cannot delete repository base URI "+resourceURI);
+			}
+			final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
+			/*TODO del any associated directories
+			if(resourceFile.isFile())	//if this is a file and not a directory
+			{
+				final File directory=getResourceDirectory(resourceURI);	//get the directory to use for the URI
+				if(directory.exists())	//if a directory exists for this resource
+				{
+					FileUtilities.delete(directory, true);	//recursively delete the directory						
+				}
+			}
+	*/
+			delete(resourceFile, true);	//recursively delete the file or directory
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+		}
+	}
+
 	/**Moves a resource to another URI in this repository, overwriting any resource at the destionation only if requested.
 	@param resourceURI The URI of the resource to be moved.
 	@param destinationURI The URI to which the resource should be moved.
@@ -626,10 +663,11 @@ public class FileRepository extends AbstractRepository
 		final URFResource resource=loadResourceDescription(urf, resourceFile);	//load the resource description, if there is one
 //TODO del if not needed		final URI resourceURI=getPublicURI(resourceFile.toURI());	//get a public URI to represent the file resource
 //TODO del if not needed		final RDFResource resource=rdf.createResource(resourceURI);	//create a resource to represent the file
+			//TODO update logic not to override the explicit properties loaded, unless we decide to have some live properties
 		final String filename=resourceFile.getName();	//get the name of the file
 		if(resourceFile.isDirectory())	//if this is a directory
 		{
-			resource.addTypeURI(LIST_CLASS_URI);	//add the urf:List type to indicate that this resource is a folder
+//TODO del; changed approach			resource.addTypeURI(LIST_CLASS_URI);	//add the urf:List type to indicate that this resource is a folder
 			setModified(resource, new URFDateTime(resourceFile.lastModified()));	//set the modified timestamp as the last modified date of the file			
 		}
 		else	//if this file is not a directory
@@ -655,8 +693,10 @@ public class FileRepository extends AbstractRepository
 	@param resourceFile The file of a resource.
 	@return A new file designating the location of the resource description.
 	*/
-	protected File getResourceDescriptionFile(final File resourceFile)
+	protected File getResourceDescriptionFile(final File resourceFile)	//TODO update isPrivateResourcePublic() to hide these description files
 	{
+			//TODO only use the UNIX hidden filename prefix for UNIX file systems---probably in a subclass
+			//TODO check to see if this is a directory and, if so, use the format "@.marmot-description.turf"
 		return changeName(resourceFile, addExtension(UNIX_HIDDEN_FILENAME_PREFIX+resourceFile.getName()+EXTENSION_SEPARATOR+MARMOT_DESCRIPTION_NAME, TURF_NAME_EXTENSION));	//return a file in the form ".file.marmot-description.turf"
 	}
 

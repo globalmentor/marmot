@@ -23,13 +23,19 @@ public interface MarmotSession<RK extends ResourceKit>
 	*/
 	public void installResourceKit(final RK resourceKit);
 
-	/**Registers a resource kit with the session, specifying if the resource kit should be considered the default resource kit.
-	If this resource kit is specified as the default, it will replace any resource kit previously specified as the default.
+	/**Registers a resource kit with the session, specifying it as the default resource kit.
+	The resource kit will replaced any other resource kit designated as default.
 	@param resourceKit The resource kit to register.
-	@param isDefault Whether the resource kit should be the default.
 	@exception IllegalStateException if the resource kit is already installed.
 	*/
-	public void installResourceKit(final RK resourceKit, final boolean isDefault);
+	public void installDefaultResourceKit(final RK resourceKit);
+
+	/**Registers a resource kit with the session, specifying it as the default resource kit for collections.
+	The resource kit will replaced any other resource kit designated as default for collections.
+	@param resourceKit The resource kit to register.
+	@exception IllegalStateException if the resource kit is already installed.
+	*/
+	public void installDefaultCollectionResourceKit(final RK resourceKit);
 
 	/**Unregisters a resource kit with the session.
 	If this resource kit was previously set as the default, there will no longer be a default resource kit.
@@ -40,6 +46,9 @@ public interface MarmotSession<RK extends ResourceKit>
 
 	/**@return The default resource kit to use if a specific resource kit cannot be found, or <code>null</code> if there is no default resource kit.*/
 	public RK getDefaultResourceKit();
+
+	/**@return The default resource kit to use if a specific resource kit cannot be found for a collection, or <code>null</code> if there is no default collection resource kit.*/
+	public RK getDefaultCollectionResourceKit();
 
 	/**@return The available resource kits.*/
 	public Iterable<RK> getResourceKits();
@@ -58,6 +67,7 @@ public interface MarmotSession<RK extends ResourceKit>
 	<ol>
 		<li>The first resource kit supporting the resource content type.</li>
 		<li>The first resource kit supporting one of the resource types.</li>
+		<li>If the resource has a collection URI, the default collection resource kit.</li>
 		<li>The default resource kit.</li>
 	</ol>
 	@param repository The repository in which the resource resides.
