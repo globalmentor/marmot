@@ -13,7 +13,6 @@ import static com.garretwilson.io.Files.*;
 import static com.garretwilson.net.URIConstants.*;
 import static com.garretwilson.net.URIs.*;
 
-import com.garretwilson.util.Debug;
 
 import com.garretwilson.io.*;
 import com.garretwilson.net.*;
@@ -30,6 +29,8 @@ import com.globalmentor.marmot.repository.AbstractRepository;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.urf.*;
+import com.globalmentor.util.Debug;
+
 import static com.globalmentor.urf.TURF.*;
 
 /**Repository stored in a filesystem.

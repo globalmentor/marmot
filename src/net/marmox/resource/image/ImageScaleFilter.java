@@ -16,10 +16,10 @@ import static com.garretwilson.awt.geom.GeometryUtilities.*;
 import static com.globalmentor.java.Objects.*;
 
 import com.garretwilson.net.ResourceIOException;
-import com.garretwilson.util.Debug;
 import com.globalmentor.marmot.resource.ResourceFilter;
 import com.globalmentor.marmot.resource.image.ImageResourceKit.ImageAspect;
 import com.globalmentor.urf.URFResource;
+import com.globalmentor.util.Debug;
 
 /**A filter for scaling an image.
 @author Garret Wilson

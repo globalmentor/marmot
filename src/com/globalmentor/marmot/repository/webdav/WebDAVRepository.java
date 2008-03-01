@@ -19,13 +19,12 @@ import static com.garretwilson.net.http.webdav.WebDAVConstants.*;
 import static com.garretwilson.text.CharacterEncoding.*;
 import static com.garretwilson.text.xml.XMLUtilities.*;
 
-import com.garretwilson.util.*;
-import static com.garretwilson.util.LocaleUtilities.*;
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.urf.TURF.*;
 import static com.globalmentor.urf.URF.*;
 import static com.globalmentor.urf.content.Content.*;
 import static com.globalmentor.urf.dcmi.DCMI.*;
+import static com.globalmentor.util.Locales.*;
 
 import static com.globalmentor.java.Bytes.*;
 import com.globalmentor.java.Strings;
@@ -33,6 +32,7 @@ import com.globalmentor.marmot.repository.AbstractRepository;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.*;
+import com.globalmentor.util.*;
 
 import org.w3c.dom.*;
 

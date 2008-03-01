@@ -11,15 +11,15 @@ import com.garretwilson.rdf.RDFResource;
 import com.garretwilson.rdf.dublincore.*;
 import com.garretwilson.rdf.version.*;
 
-import static com.garretwilson.util.CommandLineArgumentUtilities.*;
 import static com.globalmentor.java.Characters.*;
+import static com.globalmentor.util.CommandLineArguments.*;
 
-import com.garretwilson.util.Application;
-import com.garretwilson.util.Debug;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.repository.RepositorySynchronizer;
 import com.globalmentor.marmot.repository.file.FileRepository;
 import com.globalmentor.marmot.repository.webdav.WebDAVRepository;
+import com.globalmentor.util.Application;
+import com.globalmentor.util.Debug;
 
 /**Marmot synchronization client.
 @author Garret Wilson

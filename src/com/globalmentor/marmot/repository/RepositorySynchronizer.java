@@ -6,9 +6,9 @@ import java.util.Date;
 
 import static com.globalmentor.urf.content.Content.*;
 
-import com.garretwilson.util.Debug;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.urf.URFResource;
+import com.globalmentor.util.Debug;
 
 /**Marmot synchronization client.
 @author Garret Wilson

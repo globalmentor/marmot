@@ -10,13 +10,13 @@ import javax.mail.internet.ContentType;
 import static com.globalmentor.urf.content.Content.*;
 
 import static com.garretwilson.net.URIs.*;
-import com.garretwilson.util.*;
 
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.marmot.resource.*;
 import com.globalmentor.marmot.resource.ResourceKit.Capability;
 import com.globalmentor.marmot.security.*;
 import com.globalmentor.urf.*;
+import com.globalmentor.util.*;
 
 /**A Marmot session with installed resource kits.
 @param <RK> The type of resource kits supported by this session.
