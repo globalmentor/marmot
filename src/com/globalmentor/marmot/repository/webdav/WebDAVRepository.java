@@ -9,7 +9,6 @@ import static java.util.Collections.*;
 
 import javax.mail.internet.*;
 
-import com.garretwilson.io.*;
 import com.garretwilson.net.*;
 import static com.garretwilson.net.URIs.*;
 import com.garretwilson.net.http.*;
@@ -27,6 +26,8 @@ import static com.globalmentor.urf.dcmi.DCMI.*;
 import static com.globalmentor.util.Locales.*;
 
 import static com.globalmentor.java.Bytes.*;
+
+import com.globalmentor.io.*;
 import com.globalmentor.java.Strings;
 import com.globalmentor.marmot.repository.AbstractRepository;
 import com.globalmentor.marmot.repository.Repository;

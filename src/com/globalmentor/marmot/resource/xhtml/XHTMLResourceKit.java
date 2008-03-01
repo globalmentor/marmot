@@ -2,7 +2,7 @@ package com.globalmentor.marmot.resource.xhtml;
 
 import static com.garretwilson.text.xml.xhtml.XHTML.*;
 
-import static com.garretwilson.io.Files.*;
+import static com.globalmentor.io.Files.*;
 
 import com.garretwilson.text.xml.XMLIO;
 import com.globalmentor.marmot.resource.*;

@@ -8,16 +8,15 @@ import static java.util.Collections.*;
 
 import javax.mail.internet.ContentType;
 
-import static com.garretwilson.io.FileConstants.*;
-import static com.garretwilson.io.Files.*;
 import static com.garretwilson.net.URIConstants.*;
 import static com.garretwilson.net.URIs.*;
 
 
-import com.garretwilson.io.*;
 import com.garretwilson.net.*;
 import com.garretwilson.net.http.webdav.WebDAVResource;
 
+import static com.globalmentor.io.FileConstants.*;
+import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Bytes.NO_BYTES;
 import static com.globalmentor.java.CharSequences.*;
 import static com.globalmentor.urf.URF.*;
@@ -25,6 +24,7 @@ import static com.globalmentor.urf.content.Content.*;
 
 //TODO del import com.globalmentor.marmot.Marmot;
 //TODO del import static com.globalmentor.marmot.Marmot.*;
+import com.globalmentor.io.*;
 import com.globalmentor.marmot.repository.AbstractRepository;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.MarmotSecurity;

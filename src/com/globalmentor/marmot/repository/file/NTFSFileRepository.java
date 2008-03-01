@@ -5,8 +5,8 @@ import java.net.URI;
 
 import com.garretwilson.net.URIConstants;
 
-import static com.garretwilson.io.FileConstants.*;
-import static com.garretwilson.io.Files.*;
+import static com.globalmentor.io.FileConstants.*;
+import static com.globalmentor.io.Files.*;
 
 /**Repository stored in an NTFS filesystem.
 This implementation stores resource descriptions in NTFS Alternate Data Streams (ADS).

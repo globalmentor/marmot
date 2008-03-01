@@ -1,15 +1,15 @@
 package com.globalmentor.marmot.resource.image;
 
-import static com.garretwilson.io.ContentTypeConstants.*;
 
 import javax.mail.internet.ContentType;
 
 import net.marmox.resource.image.ImageScaleFilter;
 
+import static com.globalmentor.io.ContentTypeConstants.*;
 import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.java.Objects.*;
 
-import com.garretwilson.io.ContentTypes;
+import com.globalmentor.io.ContentTypes;
 import com.globalmentor.marmot.resource.*;
 import com.globalmentor.marmot.security.PermissionType;
 

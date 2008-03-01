@@ -2,9 +2,9 @@ package com.globalmentor.marmot.resource.audio;
 
 import javax.mail.internet.ContentType;
 
-import static com.garretwilson.io.ContentTypeConstants.*;
+import static com.globalmentor.io.ContentTypeConstants.*;
 
-import com.garretwilson.io.ContentTypes;
+import com.globalmentor.io.ContentTypes;
 import com.globalmentor.marmot.resource.*;
 
 /**Resource kit for handling audio.
