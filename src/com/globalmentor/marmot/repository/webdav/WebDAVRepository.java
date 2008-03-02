@@ -15,10 +15,10 @@ import com.garretwilson.net.http.*;
 import com.garretwilson.net.http.webdav.*;
 import static com.garretwilson.net.http.webdav.ApacheWebDAV.*;
 import static com.garretwilson.net.http.webdav.WebDAVConstants.*;
-import static com.garretwilson.text.CharacterEncoding.*;
-import static com.garretwilson.text.xml.XMLUtilities.*;
 
 import static com.globalmentor.java.Objects.*;
+import static com.globalmentor.text.CharacterEncoding.*;
+import static com.globalmentor.text.xml.XMLUtilities.*;
 import static com.globalmentor.urf.TURF.*;
 import static com.globalmentor.urf.URF.*;
 import static com.globalmentor.urf.content.Content.*;

@@ -1,11 +1,11 @@
 package com.globalmentor.marmot.resource.xhtml;
 
-import static com.garretwilson.text.xml.xhtml.XHTML.*;
 
 import static com.globalmentor.io.Files.*;
+import static com.globalmentor.text.xml.xhtml.XHTML.*;
 
-import com.garretwilson.text.xml.XMLIO;
 import com.globalmentor.marmot.resource.*;
+import com.globalmentor.text.xml.XMLIO;
 
 /**Resource kit for handling XHTML resources.
 <p>Supported media types:</p>
