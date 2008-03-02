@@ -13,14 +13,14 @@ import com.garretwilson.net.*;
 
 import static com.garretwilson.net.URIs.*;
 
-import com.globalmentor.io.InputStreamUtilities;
+import com.globalmentor.io.InputStreams;
 import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
 
 import static com.globalmentor.io.ContentTypes.*;
 import static com.globalmentor.io.Files.*;
-import static com.globalmentor.io.OutputStreamUtilities.*;
+import static com.globalmentor.io.OutputStreams.*;
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 import static com.globalmentor.urf.content.Content.*;
@@ -623,7 +623,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 					final OutputStream outputStream=destinationRepository.createResource(destinationURI, getResourceDescription(resourceURI));	//create the destination resource with the same description as the source resource, getting an output stream for storing the contents
 					try
 					{
-						InputStreamUtilities.copy(inputStream, outputStream);	//copy the resource
+						InputStreams.copy(inputStream, outputStream);	//copy the resource
 					}
 					finally
 					{
