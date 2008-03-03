@@ -7,7 +7,7 @@ import java.util.*;
 
 import javax.mail.internet.ContentType;
 
-import com.garretwilson.net.*;
+import com.globalmentor.net.*;
 import com.globalmentor.text.CharacterEncoding;
 import com.globalmentor.urf.*;
 

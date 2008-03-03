@@ -8,26 +8,20 @@ import static java.util.Collections.*;
 
 import javax.mail.internet.ContentType;
 
-import static com.garretwilson.net.URIConstants.*;
-import static com.garretwilson.net.URIs.*;
-
-
-import com.garretwilson.net.*;
-import com.garretwilson.net.http.webdav.WebDAVResource;
-
 import static com.globalmentor.io.FileConstants.*;
 import static com.globalmentor.io.Files.*;
-import static com.globalmentor.java.Bytes.NO_BYTES;
+import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.CharSequences.*;
+import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.URF.*;
 import static com.globalmentor.urf.content.Content.*;
 
-//TODO del import com.globalmentor.marmot.Marmot;
-//TODO del import static com.globalmentor.marmot.Marmot.*;
 import com.globalmentor.io.*;
 import com.globalmentor.marmot.repository.AbstractRepository;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.MarmotSecurity;
+import com.globalmentor.net.*;
+import com.globalmentor.net.http.webdav.WebDAVResource;
 import com.globalmentor.urf.*;
 import com.globalmentor.util.Debug;
 
@@ -98,7 +92,7 @@ public class FileRepository extends AbstractRepository
 	The given repository URI should end in a slash.
 	@param repositoryURI The URI identifying the location of this repository.
 	@exception NullPointerException if the given respository URI is <code>null</code>.
-	@exception IllegalArgumentException if the repository URI does not use the {@value URIConstants#FILE_SCHEME} scheme.
+	@exception IllegalArgumentException if the repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
 	*/
 	public FileRepository(final URI repositoryURI)
 	{
@@ -120,7 +114,7 @@ public class FileRepository extends AbstractRepository
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
 	@exception NullPointerException if one of the given respository URIs is <code>null</code>.
-//TODO relax; improve	@exception IllegalArgumentException if the private repository URI does not use the {@value URIConstants#FILE_SCHEME} scheme.
+//TODO relax; improve	@exception IllegalArgumentException if the private repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
 	*/
 	public FileRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
 	{

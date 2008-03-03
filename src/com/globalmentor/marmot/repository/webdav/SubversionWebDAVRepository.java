@@ -3,18 +3,19 @@ package com.globalmentor.marmot.repository.webdav;
 import java.net.*;
 import java.util.Set;
 
-import static com.garretwilson.net.URIs.*;
 
-import com.garretwilson.net.URIConstants;
-import com.garretwilson.net.http.*;
-import com.garretwilson.net.http.webdav.*;
-import static com.garretwilson.net.http.webdav.SubversionWebDAV.*;
+import com.globalmentor.net.URIs;
+import com.globalmentor.net.http.*;
+import com.globalmentor.net.http.webdav.*;
+
 import static com.globalmentor.java.Characters.*;
+import static com.globalmentor.net.URIs.*;
+import static com.globalmentor.net.http.webdav.SubversionWebDAV.*;
 
 /**Subversion repository accessed via WebDAV with autoversioning turned on.
 <p>Autoversioning must be turned on in Apaching using <code>SVNAutoversioning on</code>.</p>
 <p>This version stores URF properties by using a URI that is the concatenation of {@value SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI} and the encoded version of the URF property URI,
-using {@value #XML_NAME_URI_ESCAPE_CHAR} as the escape character. The standard URI escape character, {@value URIConstants#ESCAPE_CHAR}, is not a valid name character, so
+using {@value #XML_NAME_URI_ESCAPE_CHAR} as the escape character. The standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name character, so
 {@value #XML_NAME_URI_ESCAPE_CHAR}, which conveniently is not a valid URI character, is used instead.</p>
 @author Garret Wilson
 */
@@ -71,7 +72,7 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 
 	/**Determines the WebDAV property name to represent an URF property.
 	This version uses the encoded URF property URI as the local name of the {@value SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI} namespace.
-	The standard URI escape character, {@value URIConstants#ESCAPE_CHAR}, is not a valid name character, so
+	The standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name character, so
 	{@value #XML_NAME_URI_ESCAPE_CHAR}, which conveniently is not a valid URI character, is used instead.
 	@param urfPropertyURI The URI of the URF property to represent.
 	@return A WebDAV property name to use in representing an URF property with the given URF property URI.
@@ -85,7 +86,7 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 
 	/**Determines the URF property to represent the given WebDAV property if possible.
 	If the WebDAV property has a local name of {@value SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI}, the decoded form of its local name, if an absolute URI, will be used as the URF property URI.
-	The standard URI escape character, {@value URIConstants#ESCAPE_CHAR}, is not a valid name character, so
+	The standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name character, so
 	{@value #XML_NAME_URI_ESCAPE_CHAR}, which conveniently is not a valid URI character, is used instead.
 	Otherwise, this method delegates to the super version.
 	@param webdavPropertyName The name of the WebDAV property.

@@ -2,10 +2,10 @@ package com.globalmentor.marmot;
 
 import java.net.URI;
 
-import com.garretwilson.net.URIPath;
 
 import static com.globalmentor.java.Objects.*;
 import com.globalmentor.marmot.repository.Repository;
+import com.globalmentor.net.URIPath;
 
 /**Encapsulates a resource and the repository within which it exists.
 @author Garret Wilson

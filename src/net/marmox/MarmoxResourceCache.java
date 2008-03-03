@@ -4,17 +4,17 @@ import java.io.*;
 import java.net.URI;
 import java.util.Date;
 
-import com.garretwilson.net.ResourceNotFoundException;
 
-import static com.garretwilson.net.URIs.*;
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Objects.checkInstance;
+import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
 
 
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.ResourceFilter;
+import com.globalmentor.net.ResourceNotFoundException;
 import com.globalmentor.urf.*;
 import com.globalmentor.util.AbstractCache;
 import com.globalmentor.util.AbstractHashObject;

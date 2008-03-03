@@ -7,9 +7,9 @@ import java.util.concurrent.*;
 
 import javax.mail.internet.ContentType;
 
+import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
 
-import static com.garretwilson.net.URIs.*;
 
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.marmot.resource.*;

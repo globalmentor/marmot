@@ -9,12 +9,6 @@ import static java.util.Collections.*;
 
 import javax.mail.internet.*;
 
-import com.garretwilson.net.*;
-import static com.garretwilson.net.URIs.*;
-import com.garretwilson.net.http.*;
-import com.garretwilson.net.http.webdav.*;
-import static com.garretwilson.net.http.webdav.ApacheWebDAV.*;
-import static com.garretwilson.net.http.webdav.WebDAVConstants.*;
 
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.text.CharacterEncoding.*;
@@ -26,11 +20,17 @@ import static com.globalmentor.urf.dcmi.DCMI.*;
 import static com.globalmentor.util.Locales.*;
 
 import static com.globalmentor.java.Bytes.*;
+import static com.globalmentor.net.URIs.*;
+import static com.globalmentor.net.http.webdav.ApacheWebDAV.*;
+import static com.globalmentor.net.http.webdav.WebDAVConstants.*;
 
 import com.globalmentor.io.*;
 import com.globalmentor.java.Strings;
 import com.globalmentor.marmot.repository.AbstractRepository;
 import com.globalmentor.marmot.repository.Repository;
+import com.globalmentor.net.*;
+import com.globalmentor.net.http.*;
+import com.globalmentor.net.http.webdav.*;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.*;
 import com.globalmentor.util.*;

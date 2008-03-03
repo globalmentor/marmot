@@ -4,9 +4,9 @@ import java.net.URI;
 import java.security.Principal;
 import java.util.*;
 
-import com.garretwilson.net.ResourceIOException;
 
 import com.globalmentor.marmot.repository.Repository;
+import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.select.*;
 

@@ -7,16 +7,16 @@ import static java.util.Collections.*;
 
 import javax.mail.internet.ContentType;
 
-import com.garretwilson.net.ResourceIOException;
-import com.garretwilson.net.URIPath;
-import static com.garretwilson.net.URIs.*;
 
 import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.java.Objects.*;
+import static com.globalmentor.net.URIs.*;
 
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.PermissionType;
+import com.globalmentor.net.ResourceIOException;
+import com.globalmentor.net.URIPath;
 import com.globalmentor.urf.URFResource;
 
 /**Abstract implementation of a resource kit.

@@ -2,11 +2,10 @@ package com.globalmentor.marmot.resource.folder;
 
 import java.net.URI;
 
-import static com.garretwilson.net.URIConstants.*;
-import com.garretwilson.net.URIPath;
-
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.AbstractResourceKit;
+import com.globalmentor.net.URIPath;
+import com.globalmentor.net.URIs;
 
 /**Resource kit for handling collections as folder resources that have no content but can contain children.
 @author Garret Wilson
@@ -34,7 +33,7 @@ public class FolderResourceKit extends AbstractResourceKit
 	public URI getChildResourceURI(final Repository repository, final URI parentResourceURI, final String resourceName)
 	{
 		//TODO fix IllegalArgumentException by checking to ensure that the parent resource is within the repository
-		return parentResourceURI.resolve(URIPath.createURIPathURI(URIPath.encodeSegment(resourceName)+PATH_SEPARATOR));	//encode the resource name, append a path separator, and resolve it against the parent resource URI; use the special URIPath method in case the name contains a colon character
+		return parentResourceURI.resolve(URIPath.createURIPathURI(URIPath.encodeSegment(resourceName)+URIs.PATH_SEPARATOR));	//encode the resource name, append a path separator, and resolve it against the parent resource URI; use the special URIPath method in case the name contains a colon character
 	}
 
 }

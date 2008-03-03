@@ -4,8 +4,8 @@ import java.net.URI;
 import java.security.Principal;
 import java.util.Set;
 
-import com.garretwilson.net.ResourceIOException;
 import com.globalmentor.marmot.repository.Repository;
+import com.globalmentor.net.ResourceIOException;
 
 /**Security manager delegate for Marmot.
 @author Garret Wilson

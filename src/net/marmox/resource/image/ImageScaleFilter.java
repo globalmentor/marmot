@@ -15,9 +15,9 @@ import javax.media.jai.PlanarImage;
 import static com.garretwilson.awt.geom.GeometryUtilities.*;
 import static com.globalmentor.java.Objects.*;
 
-import com.garretwilson.net.ResourceIOException;
 import com.globalmentor.marmot.resource.ResourceFilter;
 import com.globalmentor.marmot.resource.image.ImageResourceKit.ImageAspect;
+import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.urf.URFResource;
 import com.globalmentor.util.Debug;
 

@@ -3,7 +3,7 @@ package com.globalmentor.marmot.repository.file;
 import java.io.*;
 import java.net.URI;
 
-import com.garretwilson.net.URIConstants;
+import com.globalmentor.net.URIs;
 
 import static com.globalmentor.io.FileConstants.*;
 import static com.globalmentor.io.Files.*;
@@ -29,7 +29,7 @@ public class NTFSFileRepository extends FileRepository
 	The given repository URI should end in a slash.
 	@param repositoryURI The URI identifying the location of this repository.
 	@exception NullPointerException if the given respository URI is <code>null</code>.
-	@exception IllegalArgumentException if the repository URI does not use the {@value URIConstants#FILE_SCHEME} scheme.
+	@exception IllegalArgumentException if the repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
 	*/
 	public NTFSFileRepository(final URI repositoryURI)
 	{
@@ -51,7 +51,7 @@ public class NTFSFileRepository extends FileRepository
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
 	@exception NullPointerException if one of the given respository URIs is <code>null</code>.
-	@exception IllegalArgumentException if the private repository URI does not use the {@value URIConstants#FILE_SCHEME} scheme.
+	@exception IllegalArgumentException if the private repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
 	*/
 	public NTFSFileRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
 	{

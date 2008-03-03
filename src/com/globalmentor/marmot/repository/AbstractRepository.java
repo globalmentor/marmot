@@ -9,12 +9,11 @@ import static java.util.Collections.*;
 import javax.mail.internet.ContentType;
 
 
-import com.garretwilson.net.*;
 
-import static com.garretwilson.net.URIs.*;
 
 import com.globalmentor.io.InputStreams;
 import com.globalmentor.marmot.security.MarmotSecurity;
+import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
 
@@ -23,6 +22,7 @@ import static com.globalmentor.io.Files.*;
 import static com.globalmentor.io.OutputStreams.*;
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
+import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
 
 /**Abstract implementation of a repository class with typical features.
@@ -482,7 +482,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 
 	/**Determines the URI of the collection resource of the given URI; either the given resource URI if the resource represents a collection, or the parent resource if not.
 	If the given resource URI is a collection URI this method returns the given resource URI.
-	If the given resource URI is not a collection URI, this implementation returns the equivalent of resolving the path {@value URIConstants#CURRENT_LEVEL_PATH_SEGMENT} to the URI.
+	If the given resource URI is not a collection URI, this implementation returns the equivalent of resolving the path {@value URIs#CURRENT_LEVEL_PATH_SEGMENT} to the URI.
 	@param resourceURI The URI of the resource for which the collection resource URI should be returned.
 	@return The URI of the indicated resource's deepest collection resource, or <code>null</code> if the given URI designates a non-collection resource with no collection parent.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -502,8 +502,8 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	}
 
 	/**Determines the URI of the parent resource of the given URI.
-	If the given resource URI is a collection URI this implementation returns the equivalent of resolving the path {@value URIConstants#PARENT_LEVEL_PATH_SEGMENT} to the URI.
-	if the given resource URI is not a collection URI, this implementation returns the equivalent of resolving the path {@value URIConstants#CURRENT_LEVEL_PATH_SEGMENT} to the URI.
+	If the given resource URI is a collection URI this implementation returns the equivalent of resolving the path {@value URIs#PARENT_LEVEL_PATH_SEGMENT} to the URI.
+	if the given resource URI is not a collection URI, this implementation returns the equivalent of resolving the path {@value URIs#CURRENT_LEVEL_PATH_SEGMENT} to the URI.
 	If the given resource represents this repository, this implementation returns <code>null</code>.
 	@param resourceURI The URI of the resource for which the parent resource URI should be returned.
 	@return The URI of the indicated resource's parent resource, or <code>null</code> if the given URI designates a resource with no parent.
@@ -727,7 +727,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	/**Updates the {@value Content#TYPE_PROPERTY_URI} property of the given resource.
 	This method should be called before each non-collection resource description is returned.
 	If the resource has no {@value Content#TYPE_PROPERTY_URI} property defined, a content type will be looked up from the extension of the resource name, if any, using {@link #getExtensionContentType(Charset)}.
-	No default content type is provided for a resource with a collection URI (i.e. a URI ending in {@value URIConstants#PATH_SEPARATOR}).
+	No default content type is provided for a resource with a collection URI (i.e. a URI ending in {@value URIs#PATH_SEPARATOR}).
 	If the resource has no {@value Content#CHARSET_PROPERTY_URI} property defined, a charset will be determined if possible using {@link #getContentTypeCharset(ContentType)}.
 	@param resource The resource the content type of which should be updated.
 	@see Content#TYPE_PROPERTY_URI

@@ -3,21 +3,21 @@ package com.globalmentor.marmot;
 import java.io.IOException;
 import java.net.URI;
 
-import static com.garretwilson.net.URIConstants.*;
-import static com.garretwilson.net.URIs.*;
 
-import com.garretwilson.net.http.HTTPClient;
 import com.garretwilson.rdf.RDFResource;
 import com.garretwilson.rdf.dublincore.*;
 import com.garretwilson.rdf.version.*;
 
 import static com.globalmentor.java.Characters.*;
+import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.util.CommandLineArguments.*;
 
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.repository.RepositorySynchronizer;
 import com.globalmentor.marmot.repository.file.FileRepository;
 import com.globalmentor.marmot.repository.webdav.WebDAVRepository;
+import com.globalmentor.net.URIs;
+import com.globalmentor.net.http.HTTPClient;
 import com.globalmentor.util.Application;
 import com.globalmentor.util.Debug;
 
