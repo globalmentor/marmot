@@ -3,8 +3,6 @@ package com.globalmentor.marmot;
 import java.io.IOException;
 import java.net.URI;
 
-import com.garretwilson.rdf.dublincore.*;
-import com.garretwilson.rdf.version.*;
 
 import static com.globalmentor.java.Characters.*;
 import static com.globalmentor.net.URIs.*;
@@ -17,6 +15,8 @@ import com.globalmentor.marmot.repository.webdav.WebDAVRepository;
 import com.globalmentor.net.URIs;
 import com.globalmentor.net.http.HTTP;
 import com.globalmentor.net.http.HTTPClient;
+import com.globalmentor.rdf.dublincore.*;
+import com.globalmentor.rdf.version.*;
 import com.globalmentor.util.Application;
 import com.globalmentor.util.Debug;
 
