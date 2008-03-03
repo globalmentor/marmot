@@ -44,9 +44,9 @@ public class MarmotMirror extends Application<Object>
 	public MarmotMirror(final String[] args)
 	{
 		super(MARMOT_MIRROR_URI, args);	//construct the parent class
-		DCUtilities.addTitle(this, TITLE); //set the application name
-		VersionUtilities.addVersion(this, VERSION);  //set the application version
-		DCUtilities.addRights(this, COPYRIGHT); //set the application copyright
+		RDFDublinCore.addTitle(this, TITLE); //set the application name
+		RDFVersion.addVersion(this, VERSION);  //set the application version
+		RDFDublinCore.addRights(this, COPYRIGHT); //set the application copyright
 	}
 
 	/**The main application method.
