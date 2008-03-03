@@ -3,8 +3,6 @@ package com.globalmentor.marmot;
 import java.io.IOException;
 import java.net.URI;
 
-
-import com.garretwilson.rdf.RDFResource;
 import com.garretwilson.rdf.dublincore.*;
 import com.garretwilson.rdf.version.*;
 
@@ -17,6 +15,7 @@ import com.globalmentor.marmot.repository.RepositorySynchronizer;
 import com.globalmentor.marmot.repository.file.FileRepository;
 import com.globalmentor.marmot.repository.webdav.WebDAVRepository;
 import com.globalmentor.net.URIs;
+import com.globalmentor.net.http.HTTP;
 import com.globalmentor.net.http.HTTPClient;
 import com.globalmentor.util.Application;
 import com.globalmentor.util.Debug;
@@ -112,9 +111,9 @@ public class MarmotMirror extends Application<Object>
 	/**Create the correct type of respository for the given repository URI.
 	<p>The following types of repository schemes are recognized:</p>
 	<ul>
-		<li>{@value URIConstants#HTTP_SCHEME}</li>
-		<li>{@value URIConstants#HTTPS_SCHEME}</li>
-		<li>{@value URIConstants#FILE_SCHEME}</li>
+		<li>{@value HTTP#HTTP_URI_SCHEME}</li>
+		<li>{@value HTTP#HTTPS_SCHEME}</li>
+		<li>{@value URIs#FILE_SCHEME}</li>
 	</ul>
 	@param repositoryURI The URI of the repository to create.
 	@return A repository for the given URI.
@@ -122,7 +121,7 @@ public class MarmotMirror extends Application<Object>
 	*/
 	protected static Repository createRepository(final URI repositoryURI)
 	{
-		if(isHTTPScheme(repositoryURI))	//if this is an HTTP repository URI
+		if(HTTP.isHTTPURI(repositoryURI))	//if this is an HTTP repository URI
 		{
 			return new WebDAVRepository(repositoryURI);	//create a WebDAV-based repository
 		}

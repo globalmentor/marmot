@@ -22,7 +22,7 @@ import static com.globalmentor.util.Locales.*;
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.net.http.webdav.ApacheWebDAV.*;
-import static com.globalmentor.net.http.webdav.WebDAVConstants.*;
+import static com.globalmentor.net.http.webdav.WebDAV.*;
 
 import com.globalmentor.io.*;
 import com.globalmentor.java.Strings;
@@ -163,7 +163,7 @@ public class WebDAVRepository extends AbstractRepository
 
 	/**Determines the URF property to represent the given WebDAV property if possible.
 	<p>If the WebDAV property has a local name of {@value #URF_TOKEN_LOCAL_NAME}, the URI of its namespace will be used as the URF property URI.</p>
-	<p>This method returns <code>null</code> for all WebDAV properties in the {@value WebDAVConstants#WEBDAV_NAMESPACE} namespace.</p> 
+	<p>This method returns <code>null</code> for all WebDAV properties in the {@value WebDAV#WEBDAV_NAMESPACE} namespace.</p> 
 	@param webdavPropertyName The name of the WebDAV property.
 	@return The URI of the URF property to represent the given WebDAV property, or <code>null</code> if the given WebDAV property cannot be represented in URF.
 	@see #URF_TOKEN_LOCAL_NAME
