@@ -3,27 +3,19 @@ package com.globalmentor.marmot.repository.file;
 import java.io.*;
 import java.net.URI;
 import java.util.*;
-
 import static java.util.Collections.*;
-
-import javax.mail.internet.ContentType;
 
 import static com.globalmentor.io.FileConstants.*;
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Bytes.*;
-import static com.globalmentor.java.CharSequences.*;
 import static com.globalmentor.net.URIs.*;
-import static com.globalmentor.urf.URF.*;
 import static com.globalmentor.urf.content.Content.*;
 
 import com.globalmentor.io.*;
 import com.globalmentor.marmot.repository.AbstractRepository;
 import com.globalmentor.marmot.repository.Repository;
-import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.net.*;
-import com.globalmentor.net.http.webdav.WebDAVResource;
 import com.globalmentor.urf.*;
-import com.globalmentor.util.Debug;
 
 import static com.globalmentor.urf.TURF.*;
 
@@ -499,7 +491,7 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource properties could not be updated.
 	*/
-	public URFResource setResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException
+	public URFResource setResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException	//TODO add thread safety
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -508,21 +500,62 @@ public class FileRepository extends AbstractRepository
 			return subrepository.setResourceProperties(resourceURI, properties);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		final Set<URI> newPropertyURISet=new HashSet<URI>();	//create a set to find out which properties we will be setting
-		for(final URFProperty property:properties)	//look at each property
+		final URF urf=createURF();	//create a new URF data model
+		final URFResource resourceDescription;
+		try
 		{
-			newPropertyURISet.add(property.getPropertyURI());	//add this property URI to our set
-		}		
-		final URFResource resourceDescription=getResourceDescription(resourceURI);	//get a description of the resource
-		for(final URI propertyURI:newPropertyURISet)	//for each new property URI
+			resourceDescription=createResourceDescription(urf, new File(getPrivateURI(resourceURI)));	//get a description from a file created from the URI from the private namespace
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
 		{
-			resourceDescription.removePropertyValues(propertyURI);	//remove all properties with the given property URI
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+		}
+		for(final URFProperty property:properties)	//for each new property
+		{
+			resourceDescription.removePropertyValues(property.getPropertyURI());	//remove all properties with the given property URI
 		}
 		for(final URFProperty property:properties)	//for each property given
 		{
 			resourceDescription.addPropertyValue(property.getPropertyURI(), property.getValue());	//add this property value to the description TODO use addProperty() method when it exists
 		}
-		return setResourceProperties(resourceURI, resourceDescription);	//set the properties using the given description
+		final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
+		return setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
+	}
+
+	/**Removes properties from a given resource.
+	Any existing properties with the same URIs as the given given property/value pairs will be removed.
+	All other existing properties will be left unmodified. 
+	@param resourceURI The reference URI of the resource.
+	@param propertyURIs The properties to remove.
+	@return The updated description of the resource.
+	@exception NullPointerException if the given resource URI and/or property URIs is <code>null</code>.
+	@exception ResourceIOException if the resource properties could not be updated.
+	*/
+	public URFResource removeResourceProperties(URI resourceURI, final URI... propertyURIs) throws ResourceIOException
+	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.removeResourceProperties(resourceURI);	//delegate to the subrepository
+		}
+		checkOpen();	//make sure the repository is open
+		final URF urf=createURF();	//create a new URF data model
+		final URFResource resourceDescription;
+		try
+		{
+			resourceDescription=createResourceDescription(urf, new File(getPrivateURI(resourceURI)));	//get a description from a file created from the URI from the private namespace
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+		}
+		for(final URI propertyURI:propertyURIs)	//look at each property URI to remove
+		{
+			resourceDescription.removePropertyValues(propertyURI);	//remove all the values for this property URI
+		}
+		final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
+		return setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
 	}
 
 	/**Sets the properties of a resource based upon the given description.
