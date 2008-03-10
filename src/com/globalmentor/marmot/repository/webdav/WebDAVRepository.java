@@ -43,6 +43,7 @@ import org.w3c.dom.*;
 	and within the instance are one or more URF resources values of the property are stored.
 	If an URF property has no namespace, a WebDAV property name is formed using the URF property URI as the namespace and the string {@value #URF_TOKEN_LOCAL_NAME}
 	as a local name, because WebDAV requires that each property have a separate namespace and local name.</p>
+<p>This implementation requires exact URIs and does not follow HTTP redirects. Any redirection responses are interpreted as indicating that the resource does not exist.</p>
 @author Garret Wilson
 */
 public class WebDAVRepository extends AbstractRepository
@@ -390,6 +391,10 @@ public class WebDAVRepository extends AbstractRepository
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(privateResourceURI, getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			return webdavResource.exists();	//see if the WebDAV resource exists		
+		}
+		catch(final HTTPRedirectException httpRedirectException)	//if the WebDAV resource tries to redirect us somewhere else
+		{
+			return false;	//consider this to indicate that the resource, as identified by the resource URI, does not exist
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -1154,8 +1159,7 @@ public class WebDAVRepository extends AbstractRepository
 	<dl>
 		<dt>{@link HTTPForbiddenException}</dt> <dd>{@link ResourceForbiddenException}</dd>
 		<dt>{@link HTTPNotFoundException}</dt> <dd>{@link ResourceNotFoundException}</dd>
-		<dt>{@link HTTPMovedTemporarilyException}</dt> <dd>{@link ResourceMovedTemporarilyException}</dd>
-		<dt>{@link HTTPMovedPermanentlyException}</dt> <dd>{@link ResourceMovedPermanentlyException}</dd>
+		<dt>{@link HTTPRedirectException}</dt> <dd>{@link ResourceNotFoundException}</dd>
 		<dt>{@link HTTPPreconditionFailedException}</dt> <dd>{@link ResourceStateException}</dd>
 	</dl>
 	@param resourceURI The URI of the resource to which the exception is related.
@@ -1172,14 +1176,9 @@ public class WebDAVRepository extends AbstractRepository
 		{
 			return new ResourceNotFoundException(resourceURI, throwable);
 		}
-			//TODO check to see if the getPublicURI() throws an exception; the new location is somewhat out of our control, and may not be in the private repository namespace
-		else if(throwable instanceof HTTPMovedTemporarilyException)
+		else if(throwable instanceof HTTPRedirectException)
 		{
-			return new ResourceMovedTemporarilyException(resourceURI, getPublicURI(((HTTPMovedTemporarilyException)throwable).getLocation()), throwable);	//get the new location and translate it into the public repository namespace, if possible
-		}
-		else if(throwable instanceof HTTPMovedPermanentlyException)
-		{
-			return new ResourceMovedPermanentlyException(resourceURI, getPublicURI(((HTTPMovedPermanentlyException)throwable).getLocation()), throwable);	//get the new location and translate it into the public repository namespace, if possible
+			return new ResourceNotFoundException(resourceURI, throwable);
 		}
 		else if(throwable instanceof HTTPPreconditionFailedException)
 		{
