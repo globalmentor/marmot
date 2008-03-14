@@ -18,6 +18,7 @@ import com.globalmentor.net.ResourceNotFoundException;
 import com.globalmentor.urf.*;
 import com.globalmentor.util.AbstractCache;
 import com.globalmentor.util.AbstractHashObject;
+import com.globalmentor.util.Debug;
 
 import com.guiseframework.Guise;
 
@@ -79,6 +80,7 @@ public class MarmoxResourceCache extends AbstractCache<MarmoxResourceCache.Resou
 	*/
 	public CachedResourceInfo fetch(final ResourceCacheKey key) throws IOException
 	{
+Debug.log("Starting to fetch resource", key.getResourceURI());
 		final MarmoxSession marmoxSession=(MarmoxSession)Guise.getInstance().getGuiseSession();	//get the current session
 		final MarmoxApplication marmoxApplication=marmoxSession.getApplication();	//get the application
 		final URI userURI=key.getUserURI();	//get the URI of the user
@@ -140,6 +142,7 @@ public class MarmoxResourceCache extends AbstractCache<MarmoxResourceCache.Resou
 				file=filterFile;	//switch to the new filtered file
 			}
 		}
+		Debug.log("Finished fetching resource", key.getResourceURI());
 		return new CachedResourceInfo(file, modifiedDateTime);	//return the file, which may have been filtered
 	}
 

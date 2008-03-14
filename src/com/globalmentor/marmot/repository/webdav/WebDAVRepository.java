@@ -9,7 +9,6 @@ import static java.util.Collections.*;
 
 import javax.mail.internet.*;
 
-
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.text.CharacterEncoding.*;
 import static com.globalmentor.text.xml.XML.*;
@@ -511,7 +510,7 @@ public class WebDAVRepository extends AbstractRepository
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
 		if(subrepository!=this)	//if the resource URI lies within a subrepository
 		{
-			return subrepository.getChildResourceDescriptions(resourceURI);	//delegate to the subrepository
+			return subrepository.getChildResourceDescriptions(resourceURI, depth);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
 		if(depth!=0)	//a depth of zero means don't get child resources
@@ -695,7 +694,7 @@ public class WebDAVRepository extends AbstractRepository
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
 		if(subrepository!=this)	//if the resource URI lies within a subrepository
 		{
-			return subrepository.setResourceProperties(resourceURI);	//delegate to the subrepository
+			return subrepository.setResourceProperties(resourceURI, resourceDescription);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
@@ -789,7 +788,7 @@ public class WebDAVRepository extends AbstractRepository
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
 		if(subrepository!=this)	//if the resource URI lies within a subrepository
 		{
-			return subrepository.removeResourceProperties(resourceURI);	//delegate to the subrepository
+			return subrepository.removeResourceProperties(resourceURI, propertyURIs);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
 		final Set<URI> propertyURISet=new HashSet<URI>();	//create a set to find out which properties we will be setting
@@ -1132,7 +1131,25 @@ public class WebDAVRepository extends AbstractRepository
 							catch(final IOException ioException)	//TODO improve; comment
 							{
 //TODO fix								throw new DataException(ioException);
-								Debug.warn("Error parsing resource", resourceURI, "property", urfPropertyURI, "with value", propertyTextValue, ioException);
+								Debug.warn("Error parsing resource; removing", resourceURI, "property", urfPropertyURI, "with value", propertyTextValue, ioException);
+									//TODO eventually leave the bad property; for now, it's probably an anomaly from older development versions, so remove it
+								final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+								try
+								{
+									final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+									webdavResource.removeProperties(propertyName);	//remove the bad properties
+								}
+								catch(final IOException ioException2)	//if an I/O exception occurs
+								{
+									Debug.error(ioException2);	//just log the error; we shouldn't bring the application down over this
+								}
+								finally
+								{
+									if(passwordAuthentication!=null)	//if we used password authentication
+									{
+										fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
+									}
+								}
 							}
 						}
 						else	//if this is a normal string property
