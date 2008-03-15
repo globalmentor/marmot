@@ -8,7 +8,6 @@ import java.util.*;
 import javax.mail.internet.ContentType;
 
 import com.globalmentor.net.*;
-import com.globalmentor.text.CharacterEncoding;
 import com.globalmentor.urf.*;
 
 /**A Marmot information store.
@@ -182,15 +181,69 @@ public interface Repository
 	*/
 	public List<URFResource> getChildResourceDescriptions(final URI resourceURI) throws ResourceIOException;
 
-	/**Retrieves child resources of the resource at the given URI.
+	
+
+	
+	
+	
+	
+	
+	/**Retrieves immediate child resources of the resource at the given URI.
+	Non-collection resources are included.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
-	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
+	@param includeCollections Whether collection resources should be included.
 	@return A list of sub-resources descriptions directly under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<URFResource> getChildResourceDescriptions(final URI resourceURI, final int depth) throws ResourceIOException;
+	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final boolean includeCollections) throws ResourceIOException;
+
+	/**Retrieves immediate child resources of the resource at the given URI.
+	@param resourceURI The URI of the resource for which sub-resources should be returned.
+	@param includeCollections Whether collection resources should be included.
+	@param includeNonCollections Whether non-collection resources should be included.
+	@return A list of sub-resources descriptions directly under the given resource.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error accessing the repository.
+	*/
+	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final boolean includeCollections, final boolean includeNonCollections) throws ResourceIOException;
+
+	/**Retrieves child resources of the resource at the given URI.
+	Both collection resources and non-collection resources are included.
+	@param resourceURI The URI of the resource for which sub-resources should be returned.
+	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
+	@return A list of sub-resources descriptions under the given resource.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error accessing the repository.
+	*/
+	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final int depth) throws ResourceIOException;
+	
+	/**Retrieves child resources of the resource at the given URI.
+	Non-collection resources are included.
+	@param resourceURI The URI of the resource for which sub-resources should be returned.
+	@param includeCollections Whether collection resources should be included.
+	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
+	@return A list of sub-resources descriptions under the given resource.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error accessing the repository.
+	*/
+	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final boolean includeCollections, final int depth) throws ResourceIOException;
+
+	/**Retrieves child resources of the resource at the given URI.
+	@param resourceURI The URI of the resource for which sub-resources should be returned.
+	@param includeCollections Whether collection resources should be included.
+	@param includeNonCollections Whether non-collection resources should be included.
+	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
+	@return A list of sub-resources descriptions under the given resource.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error accessing the repository.
+	*/
+	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final boolean includeCollections, final boolean includeNonCollections, final int depth) throws ResourceIOException;
 
 	/**Creates a new resource with a default description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.

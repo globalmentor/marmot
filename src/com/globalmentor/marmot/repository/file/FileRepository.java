@@ -300,13 +300,15 @@ public class FileRepository extends AbstractRepository
 	/**Retrieves child resources of the resource at the given URI.
 	This implementation does not include child resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
+	@param includeCollections Whether collection resources should be included.
+	@param includeNonCollections Whether non-collection resources should be included.
 	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
-	@return A list of sub-resources descriptions directly under the given resource.
+	@return A list of sub-resources descriptions under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final int depth) throws ResourceIOException
+	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final boolean includeCollections, final boolean includeNonCollections, final int depth) throws ResourceIOException
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -325,6 +327,7 @@ public class FileRepository extends AbstractRepository
 				final File[] files=resourceDirectory.listFiles(getFileFilter());	//get a list of all files in the directory
 				for(final File file:files)	//for each file in the directory
 				{
+					final boolean isFileDirectory=file.isDirectory();	//see if this file is a directory
 					final URFResource childResource;
 					try
 					{
@@ -334,14 +337,18 @@ public class FileRepository extends AbstractRepository
 					{
 						throw createResourceIOException(getPublicURI(file.toURI()), ioException);	//translate the exception to a resource I/O exception and throw that, using a public URI to represent the file resource
 					}
+					final boolean includeChildResource=isFileDirectory ? includeCollections : includeNonCollections;	//see if we should include this resource
+					if(includeChildResource)	//if we should include this child resource
+					{
+						resourceList.add(childResource);	//add the resource to our list
+					}
 					final int newDepth=depth>0 ? depth-1 : depth;	//reduce the depth by one, unless we're using the unlimited depth value
-					if(file.isDirectory() && depth!=0)	//if this file is a directory and we haven't reached the bottom
+					if(isFileDirectory && depth!=0)	//if this file is a directory and we haven't reached the bottom
 					{
 						final List<URFResource> childResourceDescriptionList=getChildResourceDescriptions(childResource.getURI(), newDepth);	//get a list of child descriptions for the resource we just created
 						final URFListResource<URFResource> childrenListResource=new URFListResource<URFResource>(childResourceDescriptionList);	//create an URF list of the children
-						setContents(childResource, childrenListResource);	//add the children as the contents of the resource
+//TODO del if no longer needed						setContents(childResource, childrenListResource);	//add the children as the contents of the resource
 					}
-					resourceList.add(childResource);	//add the resource to our list
 				}
 			}
 			return resourceList;	//return the list of resources we constructed

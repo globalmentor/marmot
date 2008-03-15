@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.Charset;
 import java.util.*;
+
 import static java.util.Collections.*;
 
 import javax.mail.internet.ContentType;
@@ -461,14 +462,15 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	}
 
 	/**Retrieves immediate child resources of the resource at the given URI.
+	Both collection resources and non-collection resources are included.
 	This implementation retrieves a single-level list of descriptions by calling {@link #getChildResourceDescriptions(URI, int)}.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
-	@return A list of sub-resource descriptions directly under the given resource.
+	@return A list of sub-resources descriptions directly under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<URFResource> getChildResourceDescriptions(URI resourceURI) throws ResourceIOException
+	public final List<URFResource> getChildResourceDescriptions(URI resourceURI) throws ResourceIOException
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -479,7 +481,96 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		checkOpen();	//make sure the repository is open
 		return getChildResourceDescriptions(resourceURI, 1);	//get a list of child resource descriptions without going deeper than one level
 	}
+	
+	/**Retrieves immediate child resources of the resource at the given URI.
+	Non-collection resources are included.
+	This implementation retrieves a single-level list of descriptions by calling {@link #getChildResourceDescriptions(URI, boolean, int)}.
+	@param resourceURI The URI of the resource for which sub-resources should be returned.
+	@param includeCollections Whether collection resources should be included.
+	@return A list of sub-resources descriptions directly under the given resource.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error accessing the repository.
+	*/
+	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final boolean includeCollections) throws ResourceIOException
+	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.getChildResourceDescriptions(resourceURI, includeCollections);	//delegate to the subrepository
+		}
+		checkOpen();	//make sure the repository is open
+		return getChildResourceDescriptions(resourceURI, includeCollections, 1);	//get a list of child resource descriptions without going deeper than one level
+	}
 
+	/**Retrieves immediate child resources of the resource at the given URI.
+	This implementation retrieves a single-level list of descriptions by calling {@link #getChildResourceDescriptions(URI, boolean, boolean, int)}.
+	@param resourceURI The URI of the resource for which sub-resources should be returned.
+	@param includeCollections Whether collection resources should be included.
+	@param includeNonCollections Whether non-collection resources should be included.
+	@return A list of sub-resources descriptions directly under the given resource.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error accessing the repository.
+	*/
+	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final boolean includeCollections, final boolean includeNonCollections) throws ResourceIOException
+	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.getChildResourceDescriptions(resourceURI, includeCollections);	//delegate to the subrepository
+		}
+		checkOpen();	//make sure the repository is open
+		return getChildResourceDescriptions(resourceURI, includeCollections, includeNonCollections, 1);	//get a list of child resource descriptions without going deeper than one level
+	}
+
+	/**Retrieves child resources of the resource at the given URI.
+	Both collection resources and non-collection resources are included.
+	This implementation delegates to {@link #getChildResourceDescriptions(URI, boolean, int)}.
+	@param resourceURI The URI of the resource for which sub-resources should be returned.
+	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
+	@return A list of sub-resources descriptions under the given resource.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error accessing the repository.
+	*/
+	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final int depth) throws ResourceIOException
+	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.getChildResourceDescriptions(resourceURI, depth);	//delegate to the subrepository
+		}
+		checkOpen();	//make sure the repository is open
+		return getChildResourceDescriptions(resourceURI, true, depth);	//get a list of child resource descriptions with collections
+	}
+	
+	/**Retrieves child resources of the resource at the given URI.
+	Non-collection resources are included.
+	This implementation delegates to {@link #getChildResourceDescriptions(URI, boolean, boolean, int)}.
+	@param resourceURI The URI of the resource for which sub-resources should be returned.
+	@param includeCollections Whether collection resources should be included.
+	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
+	@return A list of sub-resources descriptions under the given resource.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error accessing the repository.
+	*/
+	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final boolean includeCollections, final int depth) throws ResourceIOException
+	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.getChildResourceDescriptions(resourceURI, includeCollections, depth);	//delegate to the subrepository
+		}
+		checkOpen();	//make sure the repository is open
+		return getChildResourceDescriptions(resourceURI, includeCollections, true, depth);	//get a list of child resource descriptions with non-collections
+	}
+	
 	/**Determines the URI of the collection resource of the given URI; either the given resource URI if the resource represents a collection, or the parent resource if not.
 	If the given resource URI is a collection URI this method returns the given resource URI.
 	If the given resource URI is not a collection URI, this implementation returns the equivalent of resolving the path {@value URIs#CURRENT_LEVEL_PATH_SEGMENT} to the URI.

@@ -498,13 +498,15 @@ public class WebDAVRepository extends AbstractRepository
 	/**Retrieves child resources of the resource at the given URI.
 	This implementation does not include child resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
+	@param includeCollections Whether collection resources should be included.
+	@param includeNonCollections Whether non-collection resources should be included.
 	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
-	@return A list of sub-resources descriptions directly under the given resource.
+	@return A list of sub-resources descriptions under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final int depth) throws ResourceIOException
+	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final boolean includeCollections, final boolean includeNonCollections, final int depth) throws ResourceIOException
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -537,7 +539,11 @@ public class WebDAVRepository extends AbstractRepository
 					final URI childResourcePrivateURI=propertyList.getName();	//get the private URI of the child resource this property list represents
 					if(isPrivateResourcePublic(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI))	//if the associated child resource is public and the property list is *not* for this resource
 					{
-						childResourceList.add(createResourceDescription(urf, getPublicURI(childResourcePrivateURI), propertyList.getValue()));	//create a resource from this URI and property lists
+						final boolean includeChildResource=isCollectionURI(childResourcePrivateURI) ? includeCollections : includeNonCollections;	//see if we should include this resource
+						if(includeChildResource)	//if we should include this child resource
+						{
+							childResourceList.add(createResourceDescription(urf, getPublicURI(childResourcePrivateURI), propertyList.getValue()));	//create a resource from this URI and property lists
+						}
 					}
 				}
 	//TODO do the special Marmot thing about checking for special Marmot directories
