@@ -181,13 +181,6 @@ public interface Repository
 	*/
 	public List<URFResource> getChildResourceDescriptions(final URI resourceURI) throws ResourceIOException;
 
-	
-
-	
-	
-	
-	
-	
 	/**Retrieves immediate child resources of the resource at the given URI.
 	Non-collection resources are included.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
@@ -349,6 +342,19 @@ public interface Repository
 	@exception ResourceIOException if the resource properties could not be updated.
 	*/
 	public URFResource removeResourceProperties(final URI resourceURI, final URI... propertyURIs) throws ResourceIOException;
+
+	/**Alters properties of a given resource.
+	This implementation does not support removing specific properties by value.
+	This implementation does not support adding properties; only setting properties.
+	@param resourceURI The reference URI of the resource.
+	@param resourceAlteration The specification of the alterations to be performed on the resource.
+	@return The updated description of the resource.
+	@exception NullPointerException if the given resource URI and/or resource alteration is <code>null</code>.
+	@exception ResourceIOException if the resource properties could not be altered.
+	@exception UnsupportedOperationException if a property is requested to be removed by value.
+	@exception UnsupportedOperationException if a property is requested to be added without the property URI first being removed (i.e. a property addition instead of a property setting).
+	*/
+	public URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException;
 
 	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository.
 	Any resource at the destination URI will be replaced.

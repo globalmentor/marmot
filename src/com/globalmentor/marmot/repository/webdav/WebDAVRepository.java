@@ -132,7 +132,7 @@ public class WebDAVRepository extends AbstractRepository
 	@return A WebDAV property name to use in representing an URF property with the given URF property URI.
 	@see #URF_TOKEN_LOCAL_NAME
 	*/
-	protected WebDAVPropertyName getWebDAVPropertyName(final URI urfPropertyURI)
+	protected WebDAVPropertyName createWebDAVPropertyName(final URI urfPropertyURI)
 	{
 		final String webDAVPropertyNamespace;
 		final String webDAVPropertyLocalName;
@@ -159,6 +159,24 @@ public class WebDAVRepository extends AbstractRepository
 			}
 		}
 		return new WebDAVPropertyName(webDAVPropertyNamespace, webDAVPropertyLocalName);	//create and return a new WebDAV property name from the components we determined
+	}
+
+	/**Creates a WebDAV property and value to represent the given URF property and value.
+	@param resourceURI The reference URI of the resource.
+	@param property The URF property to represent as for WebDAV.
+	@return A WebDAV property and value representing the given URF property.
+	@exception IOException if there is an error creating the WebDAV property and value.
+	@see #createWebDAVPropertyName(URI)
+	*/
+	protected WebDAVProperty createWebDAVProperty(final URI resourceURI, final URFProperty property) throws IOException
+	{
+		final URI propertyURI=property.getPropertyURI();	//get the URI of the URF property
+		final WebDAVPropertyName webdavPropertyName=createWebDAVPropertyName(propertyURI);	//create a WebDAV property name from the URF property URI
+		final URFResource propertyDescription=new DefaultURFResource(resourceURI);	//create a new resource description just for this property
+		propertyDescription.addProperty(property);	//add this property to the resource
+		final String webdavPropertyStringValue=Strings.write(resourceURI, propertyDescription, getDescriptionIO(), UTF_8);	//write the description to a string, using the resource URI as the base URI
+		final WebDAVPropertyValue webdavPropertyValue=new WebDAVLiteralPropertyValue(webdavPropertyStringValue);	//create a WebDAV literal property value from the determined string
+		return new WebDAVProperty(webdavPropertyName, webdavPropertyValue);	//create and return a WebDAV property and value
 	}
 
 	/**Determines the URF property to represent the given WebDAV property if possible.
@@ -755,13 +773,8 @@ public class WebDAVRepository extends AbstractRepository
 			final Set<WebDAVProperty> setProperties=new HashSet<WebDAVProperty>();	//create a set of properties to set
 			for(final URFProperty property:properties)	//for each property to set
 			{
-				final URI propertyURI=property.getPropertyURI();	//get the URI of the URF property
-				final WebDAVPropertyName webdavPropertyName=getWebDAVPropertyName(propertyURI);	//create a WebDAV property name from the URF property URI
-				final URFResource propertyDescription=new DefaultURFResource(resourceURI);	//create a new resource description just for this property
-				propertyDescription.addProperty(property);	//add this property to the resource
-				final String webdavPropertyStringValue=Strings.write(resourceURI, propertyDescription, descriptionIO, UTF_8);	//write the description to a string, using the resource URI as the base URI
-				final WebDAVPropertyValue webdavPropertyValue=new WebDAVLiteralPropertyValue(webdavPropertyStringValue);	//create a WebDAV literal property value from the determined string
-				setProperties.add(new WebDAVProperty(webdavPropertyName, webdavPropertyValue));	//add the WebDAV property with the its value
+				final WebDAVProperty webdavProperty=createWebDAVProperty(resourceURI, property);	//create a WebDAV property and value for this URF property
+				setProperties.add(webdavProperty);	//add the WebDAV property with the its value
 			}
 			webdavResource.setProperties(setProperties);	//patch the properties of the resource
 			return getResourceDescription(resourceURI);	//retrieve and return a new description of the resource
@@ -870,6 +883,70 @@ public class WebDAVRepository extends AbstractRepository
 //TODO fix			resourceFile.setLastModified(modifiedTime.getTime());	//update the last modified time TODO does this work for directories? should we check?
 		}
 		return getResourceDescription(resourceURI);	//return the new resource description
+	}
+
+	/**Alters properties of a given resource.
+	This implementation does not support removing specific properties by value.
+	This implementation does not support adding properties; only setting properties.
+	@param resourceURI The reference URI of the resource.
+	@param resourceAlteration The specification of the alterations to be performed on the resource.
+	@return The updated description of the resource.
+	@exception NullPointerException if the given resource URI and/or resource alteration is <code>null</code>.
+	@exception ResourceIOException if the resource properties could not be altered.
+	@exception UnsupportedOperationException if a property is requested to be removed by value.
+	@exception UnsupportedOperationException if a property is requested to be added without the property URI first being removed (i.e. a property addition instead of a property setting).
+	*/
+	public URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException
+	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.alterResourceProperties(resourceURI, resourceAlteration);	//delegate to the subrepository
+		}
+		checkOpen();	//make sure the repository is open
+		if(!resourceAlteration.getPropertyRemovals().isEmpty())	//if there are properties to be removed by value
+		{
+			throw new UnsupportedOperationException("This implementation does not support removing properties by value.");
+		}
+		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+		try
+		{
+			final URFIO<URFResource> descriptionIO=getDescriptionIO();	//get I/O for the description
+			final Set<URI> propertyURIRemovals=new HashSet<URI>(resourceAlteration.getPropertyURIRemovals());	//get the property URI removals, which we'll optimize based upon the property settings
+			final Set<WebDAVProperty> setWebDAVProperties=new HashSet<WebDAVProperty>();	//keep track of which WebDAV properties to set
+			for(final URFProperty propertyAddition:resourceAlteration.getPropertyAdditions())	//look at all the property additions
+			{
+				final URI propertyURI=propertyAddition.getPropertyURI();	//get the URI of the URF property
+				if(!resourceAlteration.getPropertyURIRemovals().contains(propertyURI))	//if a property addition was requested instead of a property setting (i.e. without first removing all the URI properties)
+				{
+					throw new UnsupportedOperationException("This implementation does not support adding property "+propertyAddition+"; currently only property setting is supported, requiring that the property URI first be removed.");
+				}
+				final WebDAVProperty webdavProperty=createWebDAVProperty(resourceURI, propertyAddition);	//create a WebDAV property and value for this URF property
+				setWebDAVProperties.add(webdavProperty);	//add this WebDAV property to the set of properties to set
+				propertyURIRemovals.remove(propertyURI);	//indicate that we don't have to explicitly remove this property, because it will be removed by setting it
+			}
+			final Set<WebDAVPropertyName> removeWebDAVPropertyNames=new HashSet<WebDAVPropertyName>();	//keep track of which WebDAV property names to remove
+			for(final URI propertyURIRemoval:propertyURIRemovals)	//look at all the property removals left after removing those which are irrelevant
+			{
+				final WebDAVPropertyName webdavPropertyName=createWebDAVPropertyName(propertyURIRemoval);	//create a WebDAV property name from the URF property URI
+				removeWebDAVPropertyNames.add(webdavPropertyName);	//add this WebDAV property name to the set of property names to remove
+			}
+			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			webdavResource.propPatch(removeWebDAVPropertyNames, setWebDAVProperties);	//remove and set WebDAV properties
+			return getResourceDescription(resourceURI);	//retrieve and return a new description of the resource
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+		}
+		finally
+		{
+			if(passwordAuthentication!=null)	//if we used password authentication
+			{
+				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
+			}
+		}		
 	}
 
 	/**Creates an infinitely deep copy of a resource to another URI in this repository, overwriting any resource at the destionation only if requested. 

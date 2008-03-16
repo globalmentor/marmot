@@ -79,7 +79,7 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 	@see SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI
 	@see #XML_NAME_URI_ESCAPE_CHAR
 	*/
-	protected WebDAVPropertyName getWebDAVPropertyName(final URI urfPropertyURI)
+	protected WebDAVPropertyName createWebDAVPropertyName(final URI urfPropertyURI)
 	{
 		return new WebDAVPropertyName(SUBVERSION_CUSTOM_NAMESPACE, encodeURI(urfPropertyURI, XML_NAME_URI_ESCAPE_CHAR));	//create and return a new WebDAV property name in the Subversion custom property namespace
 	}

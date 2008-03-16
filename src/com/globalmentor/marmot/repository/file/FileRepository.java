@@ -565,6 +565,53 @@ public class FileRepository extends AbstractRepository
 		return setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
 	}
 
+	/**Alters properties of a given resource.
+	@param resourceURI The reference URI of the resource.
+	@param resourceAlteration The specification of the alterations to be performed on the resource.
+	@return The updated description of the resource.
+	@exception NullPointerException if the given resource URI and/or resource alteration is <code>null</code>.
+	@exception ResourceIOException if the resource properties could not be altered.
+	*/
+	public URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException
+	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.alterResourceProperties(resourceURI, resourceAlteration);	//delegate to the subrepository
+		}
+		checkOpen();	//make sure the repository is open
+		if(!resourceAlteration.getPropertyRemovals().isEmpty())	//if there are properties to be removed by value
+		{
+			throw new UnsupportedOperationException("This implementation does not support removing properties by value.");
+		}
+		
+		final URF urf=createURF();	//create a new URF data model
+		final URFResource resourceDescription;
+		try
+		{
+			resourceDescription=createResourceDescription(urf, new File(getPrivateURI(resourceURI)));	//get a description from a file created from the URI from the private namespace
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+		}
+		for(final URI removePropertyURI:resourceAlteration.getPropertyURIRemovals())	//look at each property URI to remove
+		{
+			resourceDescription.removePropertyValues(removePropertyURI);	//remove all the values for this property URI
+		}
+		for(final URFProperty removeProperty:resourceAlteration.getPropertyRemovals())	//look at each property to remove
+		{
+			resourceDescription.removeProperty(removeProperty);	//remove the property
+		}
+		for(final URFProperty addProperty:resourceAlteration.getPropertyAdditions())	//look at each property to add
+		{
+			resourceDescription.addProperty(addProperty);	//add the property
+		}
+		final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
+		return setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
+	}
+
 	/**Sets the properties of a resource based upon the given description.
 	@param resourceURI The reference URI of the resource.
 	@param resourceDescription A description of the resource with the properties to set; the resource URI is ignored.

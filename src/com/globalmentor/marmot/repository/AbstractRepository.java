@@ -620,20 +620,6 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		return parentResourceURI;	//return the URI of the parent resource
 	}
 
-	/**Removes properties from a given resource.
-	Any existing properties with the same URIs as the given given property/value pairs will be removed.
-	All other existing properties will be left unmodified.
-	@param resourceURI The reference URI of the resource.
-	@param propertyURIs The properties to remove.
-	@return The updated description of the resource.
-	@exception NullPointerException if the given resource URI and/or property URIs is <code>null</code>.
-	@exception ResourceIOException if the resource properties could not be updated.
-	*/
-	public URFResource removeResourceProperties(final URI resourceURI, final URI... propertyURIs) throws ResourceIOException
-	{
-		throw new UnsupportedOperationException("Repository cannot yet delete its resources' properties");
-	}
-
 	/**Creates an infinitely deep copy of a resource to another URI in this repository.
 	Any resource at the destination URI will be replaced.
 	This version delegates to {@link Repository#copyResource(URI, URI, boolean)}.
