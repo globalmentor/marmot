@@ -19,6 +19,12 @@ public class ResourceLocator
 		/**@return The repository in which the resource exists.*/
 		public Repository getRepository() {return repository;}
 
+	/**The full URI to the resource within the respository.*/
+	private final URI resourceURI;
+
+		/**@return The full URI to the resource within the respository.*/
+		public URI getResourceURI() {return resourceURI;}
+
 	/**The path to the resource, relative to the repository.*/
 	private URIPath resourcePath;
 
@@ -35,12 +41,7 @@ public class ResourceLocator
 	{
 		this.repository=checkInstance(repository, "Repository cannot be null.");
 		this.resourcePath=resourcePath.checkRelative();
-	}
-
-	/**@return A full URI to the resource, resolved to the repository.*/
-	public URI getResourceURI()
-	{
-		return getRepository().getURI().resolve(getResourcePath().toURI());	//resolve the mound path to the repository		
+		this.resourceURI=repository.getURI().resolve(resourcePath.toURI());	//resolve the resource path to the repository
 	}
 
 }

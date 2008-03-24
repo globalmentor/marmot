@@ -1,12 +1,10 @@
 package com.globalmentor.marmot.resource;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.*;
 import static java.util.Collections.*;
 
 import javax.mail.internet.ContentType;
-
 
 import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.java.Objects.*;
@@ -17,7 +15,9 @@ import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.PermissionType;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.net.URIPath;
-import com.globalmentor.urf.URFResource;
+import com.globalmentor.urf.*;
+
+import static com.globalmentor.urf.dcmi.DCMI.*;
 
 /**Abstract implementation of a resource kit.
 @author Garret Wilson
@@ -69,6 +69,14 @@ public abstract class AbstractResourceKit implements ResourceKit
 		*/
 		public URI[] getSupportedResourceTypes() {return supportedResourceTypes;}
 
+	/**The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.*/
+	private final String defaultNameExtension;
+
+		/**Returns the default name extension used for the resource URI.
+		@return The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
+		*/
+		public String getDefaultNameExtension() {return defaultNameExtension;}
+
 	/**The capabilities provided by this resource kit.*/
 	private final Set<Capability> capabilities;
 	
@@ -99,50 +107,50 @@ public abstract class AbstractResourceKit implements ResourceKit
 	*/
 	public AbstractResourceKit(final Capability... capabilities)
 	{
-		this(new ContentType[0], capabilities);
+		this((String)null, capabilities);	//construct the class with no default extension
 	}
 
-	/**Content types and capabilities constructor.
+	/**Content types and capabilities constructor with no default extension.
 	@param supportedContentType The content type supported by this resource kit.
 	@param capabilities The capabilities provided by this resource kit.
 	@exception NullPointerException if the supported content type and/or capabilities is <code>null</code>.
 	*/
 	public AbstractResourceKit(final ContentType supportedContentType, final Capability... capabilities)
 	{
-		this(new ContentType[]{checkInstance(supportedContentType, "Supported content type cannot be null.")}, capabilities);
+		this(supportedContentType, null, capabilities);	//construct the class with no default extension
 	}
 
-	/**Content types and capabilities constructor.
+	/**Content types and capabilities constructor with no default extension.
 	@param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
 	@param capabilities The capabilities provided by this resource kit.
 	@exception NullPointerException if the supported content types array and/or capabilities is <code>null</code>.
 	*/
 	public AbstractResourceKit(final ContentType[] supportedContentTypes, final Capability... capabilities)
 	{
-		this(supportedContentTypes, new URI[]{}, capabilities);	//construct the class with no supported resource types
+		this(supportedContentTypes, (String)null, capabilities);	//construct the class with no default extension
 	}
 
-	/**Resource type and capabilities constructor.
+	/**Resource type and capabilities constructor with no default extension.
 	@param supportedResourceType The URI for the resource type this resource kit supports.
 	@param capabilities The capabilities provided by this resource kit.
 	@exception NullPointerException if the supported resource types and/or capabilities is <code>null</code>.
 	*/
 	public AbstractResourceKit(final URI supportedResourceType, final Capability... capabilities)
 	{
-		this(new URI[]{checkInstance(supportedResourceType, "Supported resource type cannot be null.")}, capabilities);
+		this(supportedResourceType, null, capabilities);	//construct the class with no default extension
 	}
 
-	/**Resource types and capabilities constructor.
+	/**Resource types and capabilities constructor with no default extension.
 	@param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
 	@param capabilities The capabilities provided by this resource kit.
 	@exception NullPointerException if the supported resource types array and/or capabilities is <code>null</code>.
 	*/
 	public AbstractResourceKit(final URI[] supportedResourceTypes, final Capability... capabilities)
 	{
-		this(new ContentType[]{}, supportedResourceTypes, capabilities);	//construct the class with no supported content types
+		this(supportedResourceTypes, null, capabilities);	//construct the class with no default extension
 	}
 
-	/**Content types and resource types constructor.
+	/**Content types, resource types, and capabilities constructor with no default extension.
 	@param presentation The presentation support for this resource kit.
 	@param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
 	@param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
@@ -151,58 +159,164 @@ public abstract class AbstractResourceKit implements ResourceKit
 	*/
 	public AbstractResourceKit(final ContentType[] supportedContentTypes, final URI[] supportedResourceTypes, final Capability... capabilities)
 	{
+		this(supportedContentTypes, supportedResourceTypes, null, capabilities);	//construct the class with no default extension
+	}
+	
+	/**Default extension and capabilities constructor with no support for content type or types.
+	@param defaultNameExtension The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
+	@param capabilities The capabilities provided by this resource kit.
+	@exception NullPointerException if the capabilities is <code>null</code>.
+	*/
+	public AbstractResourceKit(final String defaultNameExtension, final Capability... capabilities)
+	{
+		this(new ContentType[0], defaultNameExtension, capabilities);
+	}
+
+	/**Content types, default extension, and capabilities constructor.
+	@param supportedContentType The content type supported by this resource kit.
+	@param defaultNameExtension The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
+	@param capabilities The capabilities provided by this resource kit.
+	@exception NullPointerException if the supported content type and/or capabilities is <code>null</code>.
+	*/
+	public AbstractResourceKit(final ContentType supportedContentType, final String defaultNameExtension, final Capability... capabilities)
+	{
+		this(new ContentType[]{checkInstance(supportedContentType, "Supported content type cannot be null.")}, defaultNameExtension, capabilities);
+	}
+
+	/**Content types, default extension, and capabilities constructor.
+	@param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
+	@param defaultNameExtension The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
+	@param capabilities The capabilities provided by this resource kit.
+	@exception NullPointerException if the supported content types array and/or capabilities is <code>null</code>.
+	*/
+	public AbstractResourceKit(final ContentType[] supportedContentTypes, final String defaultNameExtension, final Capability... capabilities)
+	{
+		this(supportedContentTypes, new URI[]{}, defaultNameExtension, capabilities);	//construct the class with no supported resource types
+	}
+
+	/**Resource type, default extension, and capabilities constructor.
+	@param supportedResourceType The URI for the resource type this resource kit supports.
+	@param defaultNameExtension The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
+	@param capabilities The capabilities provided by this resource kit.
+	@exception NullPointerException if the supported resource types and/or capabilities is <code>null</code>.
+	*/
+	public AbstractResourceKit(final URI supportedResourceType, final String defaultNameExtension, final Capability... capabilities)
+	{
+		this(new URI[]{checkInstance(supportedResourceType, "Supported resource type cannot be null.")}, defaultNameExtension, capabilities);
+	}
+
+	/**Resource types, default extension, and capabilities constructor.
+	@param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
+	@param defaultNameExtension The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
+	@param capabilities The capabilities provided by this resource kit.
+	@exception NullPointerException if the supported resource types array and/or capabilities is <code>null</code>.
+	*/
+	public AbstractResourceKit(final URI[] supportedResourceTypes, final String defaultNameExtension, final Capability... capabilities)
+	{
+		this(new ContentType[]{}, supportedResourceTypes, defaultNameExtension, capabilities);	//construct the class with no supported content types
+	}
+
+	/**Content types, resource types, default extension, and capabilities constructor.
+	@param presentation The presentation support for this resource kit.
+	@param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
+	@param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
+	@param defaultNameExtension The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
+	@param capabilities The capabilities provided by this resource kit.
+	@exception NullPointerException if the supported content types array and/or the supported resource types array is <code>null</code>.
+	*/
+	public AbstractResourceKit(final ContentType[] supportedContentTypes, final URI[] supportedResourceTypes, final String defaultNameExtension, final Capability... capabilities)
+	{
 		this.supportedContentTypes=checkInstance(supportedContentTypes, "Supported content types array cannot be null.");
 		this.supportedResourceTypes=checkInstance(supportedResourceTypes, "Supported resource types array cannot be null.");
+		this.defaultNameExtension=defaultNameExtension;
 		this.capabilities=unmodifiableSet(createEnumSet(Capability.class, capabilities));
+	}
+	
+	/**Retrieves a default resource description for a given resource, without regard to whether it exists.
+	This implementation sets the DCMI date to a floating representation of the current date/time.
+	@param repository The repository within which the resource would reside.
+	@param resourceURI The URI of the resource for which a default resource description should be retrieved.
+	@exception ResourceIOException if there is an error accessing the repository.
+	@see DCMI#DATE_PROPERTY_URI
+	*/
+	public URFResource getDefaultResourceDescription(final Repository repository, final URI resourceURI) throws ResourceIOException
+	{
+		final URFResource resource=new DefaultURFResource(resourceURI);	//create a new resoruce description
+		setDate(resource, new URFDateTime());	//set the date to the current date and time with no particular time zone
+		return resource;	//return the default resource
 	}
 
 	/**Initializes a resource description, creating whatever properties are appropriate.
 	This version does nothing.
 	@param repository The repository to use to access the resource content, if needed.
 	@param resource The resource description to initialize.
-	@exception IOException if there is an error accessing the repository.
+	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public void initializeResourceDescription(final Repository repository, final URFResource resource) throws IOException
+	public void initializeResourceDescription(final Repository repository, final URFResource resource) throws ResourceIOException
 	{
 	}
 
 	/**Returns the URI of a child resource with the given simple name within a parent resource.
 	This is normally the simple name resolved against the parent resource URI, although a resource kit for collections may append an ending path separator.
 	The simple name will be encoded before being used to construct the URI.
-	This default version resolves the name against the parent resource URI.
+	This default version resolves the name against the parent resource URI and appends the resource kit's default extension, if any.
 	@param repository The repository that contains the resource.
 	@param parentResourceURI The URI to of the parent resource.
 	@param resourceName The unencoded simple name of the child resource.
 	@return The URI of the child resource
 	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@see #getDefaultNameExtension()
 	*/
 	public URI getChildResourceURI(final Repository repository, final URI parentResourceURI, final String resourceName)
 	{
 		//TODO fix IllegalArgumentException by checking to ensure that the parent resource is within the repository
-		return parentResourceURI.resolve(URIPath.createURIPathURI(URIPath.encodeSegment(resourceName)));	//encode the resource name and resolve it against the parent resource URI; use the special URIPath method in case the name contains a colon character
+		final StringBuilder stringBuilder=new StringBuilder(URIPath.encodeSegment(resourceName));	//create a new string builder, starting with the encoded simple resource name
+		final String defaultExtension=getDefaultNameExtension();	//get the default extension, if any
+		if(defaultExtension!=null)	//if we have a default extension
+		{
+			stringBuilder.append(NAME_EXTENSION_SEPARATOR).append(defaultExtension);	//append the default extension
+		}
+		return parentResourceURI.resolve(URIPath.createURIPathURI(stringBuilder.toString()));	//resolve the encoded name against the parent resource URI; use the special URIPath method in case the name contains a colon character
 	}
 
 	/**Creates a new resource with the appropriate default contents for this resource type.
 	If a resource already exists at the given URI it will be replaced.
 	If the resource URI is a collection URI, a collection resource will be created.
+	This implementation delegates to {@link #createResource(Repository, URI, URFResource)} with a default description.
+	@param repository The repository that will contain the resource.
+	@param resourceURI The reference URI to use to identify the resource.
+	@return A description of the resource that was created.
+	@exception NullPointerException if the given repository, resource URI, and/or resource description is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if the resource could not be created.
+	*/
+	public final URFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException
+	{
+		return createResource(repository, resourceURI, new DefaultURFResource(resourceURI));	//create the resource with a default description
+	}
+
+	/**Creates a new resource with the given description and the appropriate default contents for this resource type.
+	If a resource already exists at the given URI it will be replaced.
+	If the resource URI is a collection URI, a collection resource will be created.
 	This version creates a default resource or collection resource with content of zero bytes.
 	@param repository The repository that will contain the resource.
 	@param resourceURI The reference URI to use to identify the resource.
+	@param resourceDescription A description of the resource; the resource URI is ignored.
 	@return A description of the resource that was created.
 	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public URFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException
+	public URFResource createResource(final Repository repository, final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
 	{
 		if(isCollectionURI(resourceURI))	//if this is a collection URI
 		{
-			return repository.createCollection(resourceURI);	//create a new collection
+			return repository.createCollection(resourceURI, resourceDescription);	//create a new collection
 		}
 		else	//if this is not a collection URI
 		{
-			return repository.createResource(resourceURI, new byte[]{});	//create a new empty resource
+			return repository.createResource(resourceURI, resourceDescription, new byte[]{});	//create a new empty resource
 		}
 	}
 

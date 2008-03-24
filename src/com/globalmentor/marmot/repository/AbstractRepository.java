@@ -9,9 +9,6 @@ import static java.util.Collections.*;
 
 import javax.mail.internet.ContentType;
 
-
-
-
 import com.globalmentor.io.InputStreams;
 import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.net.*;
@@ -20,7 +17,6 @@ import com.globalmentor.urf.content.Content;
 
 import static com.globalmentor.io.ContentTypes.*;
 import static com.globalmentor.io.Files.*;
-import static com.globalmentor.io.OutputStreams.*;
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 import static com.globalmentor.net.URIs.*;
@@ -436,7 +432,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		{
 			return subrepository.createResource(resourceURI);	//delegate to the subrepository
 		}
-		return createResource(resourceURI, new DefaultURFResource());	//create the resource with a default description
+		return createResource(resourceURI, new DefaultURFResource(resourceURI));	//create the resource with a default description
 	}
 
 	/**Creates a new resource with a default description and contents.
@@ -458,7 +454,26 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		{
 			return subrepository.createResource(resourceURI, resourceContents);	//delegate to the subrepository
 		}
-		return createResource(resourceURI, new DefaultURFResource(), resourceContents);	//create the resource with a default description
+		return createResource(resourceURI, new DefaultURFResource(resourceURI), resourceContents);	//create the resource with a default description
+	}
+
+	/**Creates a collection in the repository.
+	This implementation delegates to {@link #createCollection(URI, URFResource)} with a default description.
+	@param collectionURI The URI of the collection to be created.
+	@return A description of the collection that was created.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error creating the collection.
+	*/
+	public URFResource createCollection(URI collectionURI) throws ResourceIOException	//TODO fix to prevent resources with special names
+	{
+		collectionURI=checkResourceURI(collectionURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(collectionURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.createCollection(collectionURI);	//delegate to the subrepository
+		}
+		return createCollection(collectionURI, new DefaultURFResource(collectionURI));	//create the collection with a default description
 	}
 
 	/**Retrieves immediate child resources of the resource at the given URI.

@@ -1,11 +1,9 @@
 package com.globalmentor.marmot.resource;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.Set;
 
 import javax.mail.internet.ContentType;
-
 
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
@@ -40,13 +38,13 @@ public interface ResourceKit
 	/**An empty array of resource type URIs.*/
 	public final static URI[] NO_RESOURCE_TYPES=new URI[] {};
 
-	/**Returns the default file extensions used for the resource URI.
-	@return The default file extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
+	/**Returns the default name extension used for the resource URI.
+	@return The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
 	*/
-//TODO del if not needed	public String getDefaultExtension();
+	public String getDefaultNameExtension();
 
-	/**Returns the file extensions supported for the resource URI.
-	@return A non-<code>null</code> array of the extensions this resource kit supports.
+	/**Returns the name extensions supported for the resource URI.
+	@return A non-<code>null</code> array of the name extensions this resource kit supports.
 	*/
 //TODO del if not needed	public String[] getSupportedExtensions();
 
@@ -82,12 +80,19 @@ public interface ResourceKit
 	*/
 	public boolean hasCapabilities(final Capability... capabilities);
 
+	/**Retrieves a default resource description for a given resource, without regard to whether it exists.
+	@param repository The repository within which the resource would reside.
+	@param resourceURI The URI of the resource for which a default resource description should be retrieved.
+	@exception ResourceIOException if there is an error accessing the repository.
+	*/
+	public URFResource getDefaultResourceDescription(final Repository repository, final URI resourceURI) throws ResourceIOException;
+
 	/**Initializes a resource description, creating whatever properties are appropriate.
 	@param repository The repository to use to access the resource content, if needed.
 	@param resource The resource description to initialize.
-	@exception IOException if there is an error accessing the repository.
+	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public void initializeResourceDescription(final Repository repository, final URFResource resource) throws IOException;
+	public void initializeResourceDescription(final Repository repository, final URFResource resource) throws ResourceIOException;
 
 	/**Returns this resource kit's installed filter based upon its ID.
 	@param filterID The ID of the filter to return.
@@ -130,7 +135,20 @@ public interface ResourceKit
 	@exception ResourceIOException if the resource could not be created.
 	*/
 	public URFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException;
-	
+
+	/**Creates a new resource with the given description and the appropriate default contents for this resource type.
+	If a resource already exists at the given URI it will be replaced.
+	If the resource URI is a collection URI, a collection resource will be created.
+	@param repository The repository that will contain the resource.
+	@param resourceURI The reference URI to use to identify the resource.
+	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@return A description of the resource that was created.
+	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if the resource could not be created.
+	*/
+	public URFResource createResource(final Repository repository, final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException;
+
 	/**Determines whether the given permission is appropriate for accessing the identified aspect.
 	This prevents aspects from being accessed at lower permissions.
 	For example, a rogue user may attempt to retrieve a preview-permission aspect such as a high-resolution image

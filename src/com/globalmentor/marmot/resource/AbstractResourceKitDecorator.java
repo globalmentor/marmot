@@ -1,14 +1,11 @@
 package com.globalmentor.marmot.resource;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.Set;
 
 import javax.mail.internet.ContentType;
 
 import static com.globalmentor.java.Objects.*;
-
-
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.PermissionType;
@@ -56,6 +53,11 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit
 	*/
 	public URI[] getSupportedResourceTypes() {return getResourceKit().getSupportedResourceTypes();}
 
+	/**Returns the default name extension used for the resource URI.
+	@return The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
+	*/
+	public String getDefaultNameExtension() {return getResourceKit().getDefaultNameExtension();}
+
 	/**Returns the capabilities of this resource kit.
 	@return The capabilities provided by this resource kit.
 	*/
@@ -67,12 +69,19 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit
 	*/
 	public boolean hasCapabilities(final Capability... capabilities) {return getResourceKit().hasCapabilities(capabilities);}
 
+	/**Retrieves a default resource description for a given resource, without regard to whether it exists.
+	@param repository The repository within which the resource would reside.
+	@param resourceURI The URI of the resource for which a default resource description should be retrieved.
+	@exception ResourceIOException if there is an error accessing the repository.
+	*/
+	public URFResource getDefaultResourceDescription(final Repository repository, final URI resourceURI) throws ResourceIOException {return getResourceKit().getDefaultResourceDescription(repository, resourceURI);}
+
 	/**Initializes a resource description, creating whatever properties are appropriate.
 	@param repository The repository to use to access the resource content, if needed.
 	@param resource The resource description to initialize.
-	@exception IOException if there is an error accessing the repository.
+	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public void initializeResourceDescription(final Repository repository, final URFResource resource) throws IOException {getResourceKit().initializeResourceDescription(repository, resource);}
+	public void initializeResourceDescription(final Repository repository, final URFResource resource) throws ResourceIOException {getResourceKit().initializeResourceDescription(repository, resource);}
 
 	/**Returns the URI of a child resource with the given simple name within a parent resource.
 	This is normally the simple name resolved against the parent resource URI, although a resource kit for collections may append an ending path separator.
@@ -97,6 +106,19 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit
 	@exception ResourceIOException if the resource could not be created.
 	*/
 	public URFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException {return getResourceKit().createResource(repository, resourceURI);}
+
+	/**Creates a new resource with the given description and the appropriate default contents for this resource type.
+	If a resource already exists at the given URI it will be replaced.
+	If the resource URI is a collection URI, a collection resource will be created.
+	@param repository The repository that will contain the resource.
+	@param resourceURI The reference URI to use to identify the resource.
+	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@return A description of the resource that was created.
+	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if the resource could not be created.
+	*/
+	public URFResource createResource(final Repository repository, final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException {return getResourceKit().createResource(repository, resourceURI, resourceDescription);}
 
 	/**Returns this resource kit's installed filter based upon its ID.
 	@param filterID The ID of the filter to return.

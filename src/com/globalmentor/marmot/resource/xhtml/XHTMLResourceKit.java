@@ -13,7 +13,11 @@ import org.w3c.dom.*;
 /**Resource kit for handling XHTML resources.
 <p>Supported media types:</p>
 <ul>
-	<li><code>application/xhtml+xml</code></li>
+	<li>{@value XHTML#XHTML_NAMESPACE_URI}</li>
+</ul>
+<p>Default extension:</p>
+<ul>
+	<li>{@value XHTML#XHTML_NAME_EXTENSION}</li>
 </ul>
 @author Garret Wilson
 */
@@ -39,7 +43,7 @@ public class XHTMLResourceKit extends AbstractResourceKit
 	/**Default constructor.*/
 	public XHTMLResourceKit()
 	{
-		super(XHTML_CONTENT_TYPE, Capability.CREATE);
+		super(XHTML_CONTENT_TYPE, XHTML_NAME_EXTENSION, Capability.CREATE);
 	}
 
 	/**Retrieves an excerpt from the given document.

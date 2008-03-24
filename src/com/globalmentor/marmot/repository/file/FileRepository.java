@@ -384,9 +384,17 @@ public class FileRepository extends AbstractRepository
 		try
 		{
 			final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
-	//TODO bring back if needed		resourceFile.createNewFile();	//create a new file as necessary
-			//TODO update the description
-			return new FileOutputStream(new File(getPrivateURI(resourceURI)));	//return an output stream to the file of the private URI
+				//TODO should we see if a directory exists?
+			if(resourceFile.exists())	//if the file exists
+			{
+				delete(resourceFile);	//delete the file
+			}
+			createNewFile(resourceFile);	//create a new file
+			if(resourceDescription.hasProperties())	//if there are any properties to set (otherwise, don't create an empty properties file)
+			{
+				setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
+			}
+			return new FileOutputStream(resourceFile, true);	//return an output stream to the file, appending to the new, empty file we created
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -426,8 +434,14 @@ public class FileRepository extends AbstractRepository
 			{
 				outputStream.close();	//always close the output stream
 			}
-			//TODO update the description
-			return createResourceDescription(createURF(), resourceFile);	//create and return a description of the new file
+			if(resourceDescription.hasProperties())	//if there are any properties to set
+			{
+				return setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object and return the new description
+			}
+			else	//if there are no properties to set, don't create an empty properties file; just return the resource description
+			{
+				return createResourceDescription(createURF(), resourceFile);	//create and return a description of the new resource				
+			}
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -435,28 +449,40 @@ public class FileRepository extends AbstractRepository
 		}
 	}
 
-	/**Creates a collection in the repository.
+	/**Creates a collection in the repository with the given description.
 	@param collectionURI The URI of the collection to be created.
+	@param collectionDescription A description of the collection; the resource URI is ignored.
 	@return A description of the collection that was created.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error creating the collection.
 	*/
-	public URFResource createCollection(URI collectionURI) throws ResourceIOException	//TODO fix to prevent resources with special names
+	public URFResource createCollection(URI collectionURI, final URFResource collectionDescription) throws ResourceIOException	//TODO fix to prevent resources with special names
 	{
 			//TODO do we want to check to make sure this is a collection URI?
 		collectionURI=checkResourceURI(collectionURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(collectionURI);	//see if the resource URI lies within a subrepository
 		if(subrepository!=this)	//if the resource URI lies within a subrepository
 		{
-			return subrepository.createCollection(collectionURI);	//delegate to the subrepository
+			return subrepository.createCollection(collectionURI, collectionDescription);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
 		try
 		{
 			final File directoryFile=new File(getPrivateURI(collectionURI));	//create a file object for the resource
+			if(directoryFile.exists())	//if the directory already exists (either as a file or a directory)
+			{
+				delete(directoryFile, true);	//delete the directory and all its children, if any
+			}
 			mkdir(directoryFile);	//create the directory
-			return createResourceDescription(createURF(), directoryFile);	//create and return a description of the new directory
+			if(collectionDescription.hasProperties())	//if there are any properties to set
+			{
+				return setResourceProperties(collectionURI, collectionDescription, directoryFile);	//update the resource properties using the file object and return the new description
+			}
+			else	//if there are no properties to set, don't create an empty properties file; just return the resource description
+			{
+				return createResourceDescription(createURF(), directoryFile);	//create and return a description of the new directory
+			}
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -511,22 +537,22 @@ public class FileRepository extends AbstractRepository
 		final URFResource resourceDescription;
 		try
 		{
-			resourceDescription=createResourceDescription(urf, new File(getPrivateURI(resourceURI)));	//get a description from a file created from the URI from the private namespace
+			final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
+			resourceDescription=createResourceDescription(urf, resourceFile);	//get a description from a file created from the URI from the private namespace
+			for(final URFProperty property:properties)	//for each new property
+			{
+				resourceDescription.removePropertyValues(property.getPropertyURI());	//remove all properties with the given property URI
+			}
+			for(final URFProperty property:properties)	//for each property given
+			{
+				resourceDescription.addProperty(property);	//add this property value to the description
+			}
+			return setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
 			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
-		for(final URFProperty property:properties)	//for each new property
-		{
-			resourceDescription.removePropertyValues(property.getPropertyURI());	//remove all properties with the given property URI
-		}
-		for(final URFProperty property:properties)	//for each property given
-		{
-			resourceDescription.addPropertyValue(property.getPropertyURI(), property.getValue());	//add this property value to the description TODO use addProperty() method when it exists
-		}
-		final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
-		return setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
 	}
 
 	/**Removes properties from a given resource.
@@ -551,18 +577,18 @@ public class FileRepository extends AbstractRepository
 		final URFResource resourceDescription;
 		try
 		{
-			resourceDescription=createResourceDescription(urf, new File(getPrivateURI(resourceURI)));	//get a description from a file created from the URI from the private namespace
+			final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
+			resourceDescription=createResourceDescription(urf, resourceFile);	//get a description from a file created from the URI from the private namespace
+			for(final URI propertyURI:propertyURIs)	//look at each property URI to remove
+			{
+				resourceDescription.removePropertyValues(propertyURI);	//remove all the values for this property URI
+			}
+			return setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
 			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
-		for(final URI propertyURI:propertyURIs)	//look at each property URI to remove
-		{
-			resourceDescription.removePropertyValues(propertyURI);	//remove all the values for this property URI
-		}
-		final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
-		return setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
 	}
 
 	/**Alters properties of a given resource.
@@ -581,35 +607,19 @@ public class FileRepository extends AbstractRepository
 			return subrepository.alterResourceProperties(resourceURI, resourceAlteration);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		if(!resourceAlteration.getPropertyRemovals().isEmpty())	//if there are properties to be removed by value
-		{
-			throw new UnsupportedOperationException("This implementation does not support removing properties by value.");
-		}
-		
 		final URF urf=createURF();	//create a new URF data model
 		final URFResource resourceDescription;
 		try
 		{
-			resourceDescription=createResourceDescription(urf, new File(getPrivateURI(resourceURI)));	//get a description from a file created from the URI from the private namespace
+			final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
+			resourceDescription=createResourceDescription(urf, resourceFile);	//get a description from a file created from the URI from the private namespace
+			resourceDescription.alter(resourceAlteration);	//alter the resource according to the specification
+			return setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
 			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
-		for(final URI removePropertyURI:resourceAlteration.getPropertyURIRemovals())	//look at each property URI to remove
-		{
-			resourceDescription.removePropertyValues(removePropertyURI);	//remove all the values for this property URI
-		}
-		for(final URFProperty removeProperty:resourceAlteration.getPropertyRemovals())	//look at each property to remove
-		{
-			resourceDescription.removeProperty(removeProperty);	//remove the property
-		}
-		for(final URFProperty addProperty:resourceAlteration.getPropertyAdditions())	//look at each property to add
-		{
-			resourceDescription.addProperty(addProperty);	//add the property
-		}
-		final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
-		return setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
 	}
 
 	/**Sets the properties of a resource based upon the given description.
@@ -634,12 +644,12 @@ public class FileRepository extends AbstractRepository
 		try
 		{
 			saveResourceDescription(saveResourceDescription, resourceFile);	//save the resource description
+			return createResourceDescription(createURF(), resourceFile);	//create and return a description of the new file
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
 			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
-		return getResourceDescription(resourceURI);	//return the new resource description
 	}
 
 	/**Creates an infinitely deep copy of a resource to another URI in this repository, overwriting any resource at the destionation only if requested. 

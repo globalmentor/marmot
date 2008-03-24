@@ -651,7 +651,12 @@ public class WebDAVRepository extends AbstractRepository
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			webdavResource.put(resourceContents);	//create a WebDAV resource with the guven contents
-			return getResourceDescription(resourceURI);	//return a description of the new resource
+			final List<WebDAVProperty> propertyList=webdavResource.propFind();	//get the properties of this resource
+			return createResourceDescription(createURF(), resourceURI, propertyList);	//create a resource from this URI and property list
+		}
+		catch(final DataException dataException)	//if the data wasn't correct
+		{
+			throw createResourceIOException(resourceURI, dataException);	//translate the exception to a resource I/O exception and throw that
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -666,20 +671,22 @@ public class WebDAVRepository extends AbstractRepository
 		}
 	}
 
-	/**Creates a collection in the repository.
+	/**Creates a collection in the repository with the given description.
 	@param collectionURI The URI of the collection to be created.
+	@param collectionDescription A description of the collection; the resource URI is ignored.
 	@return A description of the collection that was created.
+	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error creating the collection.
 	*/
-	public URFResource createCollection(URI collectionURI) throws ResourceIOException	//TODO fix to prevent resources with special names
+	public URFResource createCollection(URI collectionURI, final URFResource collectionDescription) throws ResourceIOException	//TODO fix to prevent resources with special names
 	{
 		collectionURI=checkResourceURI(collectionURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(collectionURI);	//see if the resource URI lies within a subrepository
 		if(subrepository!=this)	//if the resource URI lies within a subrepository
 		{
-			return subrepository.createCollection(collectionURI);	//delegate to the subrepository
+			return subrepository.createCollection(collectionURI, collectionDescription);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
@@ -687,7 +694,7 @@ public class WebDAVRepository extends AbstractRepository
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(collectionURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			webdavResource.mkCol();	//create the collection
-			return getResourceDescription(collectionURI);	//return a description of the new collection
+  		return setResourceProperties(collectionURI, collectionDescription, webdavResource);	//set the properties using the WebDAV resource object
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -777,7 +784,12 @@ public class WebDAVRepository extends AbstractRepository
 				setProperties.add(webdavProperty);	//add the WebDAV property with the its value
 			}
 			webdavResource.setProperties(setProperties);	//patch the properties of the resource
-			return getResourceDescription(resourceURI);	//retrieve and return a new description of the resource
+			final List<WebDAVProperty> propertyList=webdavResource.propFind();	//get the properties of this resource
+			return createResourceDescription(createURF(), resourceURI, propertyList);	//create a resource from this URI and property list
+		}
+		catch(final DataException dataException)	//if the data wasn't correct
+		{
+			throw createResourceIOException(resourceURI, dataException);	//translate the exception to a resource I/O exception and throw that
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -819,7 +831,12 @@ public class WebDAVRepository extends AbstractRepository
 			final List<WebDAVProperty> oldPropertyList=webdavResource.propFind();	//get the original properties of this resource
 			final Set<WebDAVPropertyName> removePropertyNames=getWebDAVPropertyNames(oldPropertyList, propertyURISet);	//get the WebDAV property names that will need to be removed
 			webdavResource.removeProperties(removePropertyNames);	//remove the designated properties
-			return getResourceDescription(resourceURI);	//retrieve and return a new description of the resource
+			final List<WebDAVProperty> propertyList=webdavResource.propFind();	//get the properties of this resource
+			return createResourceDescription(createURF(), resourceURI, propertyList);	//create a resource from this URI and property list
+		}
+		catch(final DataException dataException)	//if the data wasn't correct
+		{
+			throw createResourceIOException(resourceURI, dataException);	//translate the exception to a resource I/O exception and throw that
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -882,7 +899,19 @@ public class WebDAVRepository extends AbstractRepository
 			
 //TODO fix			resourceFile.setLastModified(modifiedTime.getTime());	//update the last modified time TODO does this work for directories? should we check?
 		}
-		return getResourceDescription(resourceURI);	//return the new resource description
+		try
+		{
+			final List<WebDAVProperty> propertyList=webdavResource.propFind();	//get the properties of this resource
+			return createResourceDescription(createURF(), resourceURI, propertyList);	//create a resource from this URI and property list
+		}
+		catch(final DataException dataException)	//if the data wasn't correct
+		{
+			throw createResourceIOException(resourceURI, dataException);	//translate the exception to a resource I/O exception and throw that
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+		}
 	}
 
 	/**Alters properties of a given resource.
@@ -934,7 +963,12 @@ public class WebDAVRepository extends AbstractRepository
 			}
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			webdavResource.propPatch(removeWebDAVPropertyNames, setWebDAVProperties);	//remove and set WebDAV properties
-			return getResourceDescription(resourceURI);	//retrieve and return a new description of the resource
+			final List<WebDAVProperty> propertyList=webdavResource.propFind();	//get the properties of this resource
+			return createResourceDescription(createURF(), resourceURI, propertyList);	//create a resource from this URI and property list
+		}
+		catch(final DataException dataException)	//if the data wasn't correct
+		{
+			throw createResourceIOException(resourceURI, dataException);	//translate the exception to a resource I/O exception and throw that
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{

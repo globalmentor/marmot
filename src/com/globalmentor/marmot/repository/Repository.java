@@ -301,6 +301,17 @@ public interface Repository
 	*/
 	public URFResource createCollection(final URI collectionURI) throws ResourceIOException;
 
+	/**Creates a collection in the repository with the given description.
+	@param collectionURI The URI of the collection to be created.
+	@param collectionDescription A description of the collection; the resource URI is ignored.
+	@return A description of the collection that was created.
+	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error creating the collection.
+	*/
+	public URFResource createCollection(URI collectionURI, final URFResource collectionDescription) throws ResourceIOException;
+
 	/**Deletes a resource.
 	@param resourceURI The reference URI of the resource to delete.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
