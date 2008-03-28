@@ -1,18 +1,15 @@
 package com.globalmentor.marmot.resource.xhtml;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URI;
 
 import javax.mail.internet.ContentType;
 
-import static com.globalmentor.java.Bytes.NO_BYTES;
 import static com.globalmentor.java.Objects.*;
-import static com.globalmentor.net.URIs.isCollectionURI;
-
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.*;
 import com.globalmentor.net.ResourceIOException;
+import static com.globalmentor.net.URIs.*;
 import com.globalmentor.text.xml.XMLIO;
 import static com.globalmentor.text.xml.XML.*;
 import com.globalmentor.text.xml.xhtml.XHTML;
@@ -185,7 +182,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 		{
 			final String title=getTitle(resourceDescription);	//see if there is a title
 			final Document document=createXHTMLDocument(title!=null ? title : "", true, true);	//create an XHTML document with a doctype and the correct title, if any
-			final OutputStream outputStream=repository.createResource(resourceURI, resourceDescription);	//create a new resource
+			final OutputStream outputStream=new BufferedOutputStream(repository.createResource(resourceURI, resourceDescription));	//create a new resource
 			try
 			{
 				try

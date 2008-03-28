@@ -33,7 +33,8 @@ public class MarmoxResourceCache extends AbstractCache<MarmoxResourceCache.Resou
 	/**Default constructor.*/
 	public MarmoxResourceCache()
 	{
-		super(true, 90L*24L*60L*60L*1000L);	//keep cached info for 90 days
+		super(true, Long.MAX_VALUE);	//don't dump the cache just because time has passed---keep as much as our memory will allow, as long as the information is valid
+//TODO del		super(true, 90L*24L*60L*60L*1000L);	//keep cached info for 90 days
 	}
 
 	/**Determines if a given cached value is stale.
@@ -99,51 +100,81 @@ Debug.log("Starting to fetch resource", key.getResourceURI());
 		final URFDateTime modifiedDateTime=getModified(resource);	//get the last modified time of the resource before it is filtered
 		final MarmotSession<MarmoxResourceKit> marmotSession=marmoxSession.getMarmotSession();	//get the Marmot session
 		final MarmoxResourceKit resourceKit=marmotSession.getResourceKit(repository, resource);	//get the resource kit for this resource
+		final File cacheDirectory=marmoxApplication.getCacheDirectory();	//get the cache directory
+		final File cacheUserDirectory=new File(cacheDirectory, user.getName());	//get the cache directory for this user
+		ensureDirectoryExists(cacheUserDirectory);	//make sure the cache directory for this user exists
 		final String filename=getRawName(resourceURI);	//get the filename of the resource
 		final String baseName=removeNameExtension(filename);	//get the base name to use	TODO important encode the name so that it can work on the file system
-		final String extension=getNameExtension(filename);	//get the extension to use
-		final File tempDirectory=marmoxApplication.getTempDirectory();	//get the temporary directory
-		File file=createTempFile(baseName, extension, tempDirectory, true);	//create a temporary file that will be deleted on exit
-		final InputStream inputStream=new BufferedInputStream(repository.getResourceInputStream(resourceURI));	//get a stream to the resource
-		try
+		final String extension=getNameExtension(filename);	//get the extension to use TODO important: check for a collection, as it may be possible to cache collection content in the future
+		final URI resourceParentURI=getParentURI(resourceURI);	//get the parent URI of the resource
+		final String cacheBaseName=encodeCrossPlatformFilename(resourceParentURI.getRawPath()+baseName);	//create a base name by encoding the resource URI
+			//TODO important: check for null extension
+		File cacheFile=new File(cacheUserDirectory, cacheBaseName+FILENAME_EXTENSION_SEPARATOR+extension);	//create a filename in the form cacheDir/user/encodedResourceURI.ext
+		if(modifiedDateTime==null || !cacheFile.exists() || modifiedDateTime.getTime()>cacheFile.lastModified())	//if we don't know when the resource was modified, or if there is no such cached file, or if the real resource was modified after the cached version
 		{
-			copy(inputStream, file);	//copy the resource to the file
+			final InputStream inputStream=new BufferedInputStream(repository.getResourceInputStream(resourceURI));	//get a stream to the resource
+			try
+			{
+				copy(inputStream, cacheFile);	//copy the resource to the file, replacing it if there already is such a file TODO solve the race condition of another file trying to load the old file while we're trying to replace it---or maybe find some way to recover, or use a different file, although that would complicate this algorithm
+			}
+			finally
+			{
+				inputStream.close();	//always close the stream to the resource
+			}
+			if(modifiedDateTime!=null)	//if know when the resource was modified
+			{
+				cacheFile.setLastModified(modifiedDateTime.getTime());	//update the cached file's modified time so that we will know when the resource was modified
+			}
 		}
-		finally
-		{
-			inputStream.close();	//always close the stream to the resource
-		}
-			//TODO cache the original file as well
 		final String aspectID=key.getAspectID();	//get the aspect ID
 		if(aspectID!=null)	//if there is an aspect
 		{
 			final ResourceFilter[] filters=resourceKit.getAspectFilters(aspectID);	//get the array of filters for this aspect
-			for(final ResourceFilter filter:filters)	//for each filter
+			final int filterCount=filters.length;	//find out how many filters there are
+			if(filterCount>0)	//if we have filters (if not, the file won't change---so just keep the original file
 			{
-				final File filterFile=createTempFile(baseName, extension, tempDirectory, true);	//create a new temporary file that will be deleted on exit
-				final InputStream filterInputStream=new BufferedInputStream(new FileInputStream(file));	//create an input stream to the file
-				try
+					//create a new cache file for the aspect; leave the original non-aspect cache file in case it is requested in the future
+				final File aspectCacheFile=new File(cacheUserDirectory, cacheBaseName+FILENAME_EXTENSION_SEPARATOR+aspectID+FILENAME_EXTENSION_SEPARATOR+extension);	//create a filename in the form cacheDir/user/encodedResourceURI.aspectID.ext
+				if(modifiedDateTime==null || !aspectCacheFile.exists() || modifiedDateTime.getTime()>aspectCacheFile.lastModified())	//if we don't know when the resource was modified, or if there is no such cached file, or if the real resource was modified after the cached version
 				{
-					final OutputStream filterOutputStream=new BufferedOutputStream(new FileOutputStream(filterFile));	//create an output stream to the new file
-					try
+					for(int filterIndex=0; filterIndex<filterCount; ++filterIndex)	//for each filter
 					{
-						resource=filter.filter(resource, filterInputStream, filterOutputStream);	//apply this filter
+						final ResourceFilter filter=filters[filterIndex];	//get this filter
+						final File filterFile=createTempFile(cacheBaseName, extension, cacheUserDirectory, false);	//create a new temporary file that won't be deleted on exit
+						final InputStream filterInputStream=new BufferedInputStream(new FileInputStream(cacheFile));	//create an input stream to the file
+						try
+						{
+							final OutputStream filterOutputStream=new BufferedOutputStream(new FileOutputStream(filterFile));	//create an output stream to the new file
+							try
+							{
+								resource=filter.filter(resource, filterInputStream, filterOutputStream);	//apply this filter
+							}
+							finally
+							{
+								filterOutputStream.close();	//always close the filter output stream
+							}
+						}
+						finally
+						{
+							filterInputStream.close();	//always close the filter input stream
+						}
+						if(filterIndex>0)	//if this isn't the original file (which we want to leave for future caching)
+						{
+							cacheFile.delete();	//delete the old file
+						}
+						cacheFile=filterFile;	//switch to the new filtered file
 					}
-					finally
+					moveFile(cacheFile, aspectCacheFile);	//move the temporarily-named cache file to the aspect file, overwriting any aspect cache file already there
+					if(modifiedDateTime!=null)	//if know when the resource was modified
 					{
-						filterOutputStream.close();	//always close the filter output stream
+						aspectCacheFile.setLastModified(modifiedDateTime.getTime());	//update the cached file's modified time so that we will know when the resource was modified
 					}
 				}
-				finally
-				{
-					filterInputStream.close();	//always close the filter input stream
-				}
-				file.delete();	//delete the old file TODO don't delete if we cached it
-				file=filterFile;	//switch to the new filtered file
+				cacheFile=aspectCacheFile;	//always use the cached aspect file since there was an aspect with filters
 			}
 		}
 		Debug.log("Finished fetching resource", key.getResourceURI());
-		return new CachedResourceInfo(file, modifiedDateTime);	//return the file, which may have been filtered
+		return new CachedResourceInfo(cacheFile, modifiedDateTime);	//return the cached file, which may have been filtered
 	}
 
 	/**Performs any operations that need to be done when cached information is discarded (for example, if the cached information is stale).
