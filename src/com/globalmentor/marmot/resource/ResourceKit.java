@@ -87,6 +87,13 @@ public interface ResourceKit
 	*/
 	public URFResource getDefaultResourceDescription(final Repository repository, final URI resourceURI) throws ResourceIOException;
 
+	/**Retrieves default resource contents for a given resource, without regard to whether it exists.
+	@param repository The repository within which the resource would reside.
+	@param resource The description of the resource the default contents of which to retrieve.
+	@exception ResourceIOException if there is an error accessing the repository.
+	*/
+	public byte[] getDefaultResourceContents(final Repository repository, final URFResource resource) throws ResourceIOException;
+
 	/**Initializes a resource description, creating whatever properties are appropriate.
 	@param repository The repository to use to access the resource content, if needed.
 	@param resource The resource description to initialize.
@@ -112,17 +119,32 @@ public interface ResourceKit
 	*/
 //TODO fix	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType permissionType) throws ResourceIOException;
 
+	/**Returns the URI of the collection of a child resource.
+	This is normally the collection URI of the parent resource URI.
+	Some implementations may prefer for child resources by default to be placed within sub-collections.
+	@param repository The repository that contains the resource.
+	@param parentResourceURI The URI to of the parent resource.
+	@return The URI of the child resource collection
+	@exception NullPointerException if the given repository and/or parent resource URI is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if there is an error accessing the repository.
+	@see Repository#getCollectionURI(URI)
+	*/
+	public URI getChildResourceCollectionURI(final Repository repository, final URI parentResourceURI) throws ResourceIOException;
+
 	/**Returns the URI of a child resource with the given simple name within a parent resource.
-	This is normally the simple name resolved against the parent resource URI, although a resource kit for collections may append an ending path separator.
+	This is normally the simple name resolved against the child resource collection URI, although a resource kit for collections may append an ending path separator.
 	The simple name will be encoded before being used to construct the URI.
 	@param repository The repository that contains the resource.
 	@param parentResourceURI The URI to of the parent resource.
 	@param resourceName The unencoded simple name of the child resource.
-	@return The URI of the child resource
+	@return The URI of the child resource.
 	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if there is an error accessing the repository.
+	@see #getDefaultNameExtension()
 	*/
-	public URI getChildResourceURI(final Repository repository, final URI parentResourceURI, final String resourceName);
+	public URI getChildResourceURI(final Repository repository, final URI parentResourceURI, final String resourceName) throws ResourceIOException;
 
 	/**Creates a new resource with the appropriate default contents for this resource type.
 	If a resource already exists at the given URI it will be replaced.

@@ -115,7 +115,7 @@ public interface Repository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public URI getParentResourceURI(URI resourceURI) throws ResourceIOException;
+	public URI getParentResourceURI(final URI resourceURI) throws ResourceIOException;
 
 	/**Gets an input stream to the contents of the resource specified by the given URI.
 	@param resourceURI The URI of the resource to access.
@@ -238,6 +238,17 @@ public interface Repository
 	*/
 	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final boolean includeCollections, final boolean includeNonCollections, final int depth) throws ResourceIOException;
 
+	/**Creates all the parent resources necessary for a resource to exist at the given URI.
+	If any parent resources already exist, they will not be replaced.
+	@param resourceURI The reference URI of a resource which may not exist.
+	@return A description of the most immediate parent resource created, or <code>null</code> if no parent resources were required to be created.
+	@exception NullPointerException if the given resource URI is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if a parent resource could not be created.
+	*/
+	public URFResource createParentResources(final URI resourceURI) throws ResourceIOException;
+	
 	/**Creates a new resource with a default description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
 	The returned output stream should always be closed.

@@ -10,6 +10,7 @@ import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
 
+import static com.globalmentor.java.Bytes.*;
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.PermissionType;
@@ -246,6 +247,17 @@ public abstract class AbstractResourceKit implements ResourceKit
 		return resource;	//return the default resource
 	}
 
+	/**Retrieves default resource contents for a given resource, without regard to whether it exists.
+	This version returns an empty array of bytes.
+	@param repository The repository within which the resource would reside.
+	@param resource The description of the resource the default contents of which to retrieve.
+	@exception ResourceIOException if there is an error accessing the repository.
+	*/
+	public byte[] getDefaultResourceContents(final Repository repository, final URFResource resource) throws ResourceIOException
+	{
+		return NO_BYTES;	//default to an empty resource
+	}
+
 	/**Initializes a resource description, creating whatever properties are appropriate.
 	This version does nothing.
 	@param repository The repository to use to access the resource content, if needed.
@@ -256,19 +268,37 @@ public abstract class AbstractResourceKit implements ResourceKit
 	{
 	}
 
+	/**Returns the URI of the collection of a child resource.
+	This is normally the collection URI of the parent resource URI.
+	Some implementations may prefer for child resources by default to be placed within sub-collections.
+	This default version returns the collection of the parent resource.
+	@param repository The repository that contains the resource.
+	@param parentResourceURI The URI to of the parent resource.
+	@return The URI of the child resource collection
+	@exception NullPointerException if the given repository and/or parent resource URI is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if there is an error accessing the repository.
+	@see Repository#getCollectionURI(URI)
+	*/
+	public URI getChildResourceCollectionURI(final Repository repository, final URI parentResourceURI) throws ResourceIOException
+	{
+		return repository.getCollectionURI(parentResourceURI);	//return the collection URI of the parent resource
+	}
+
 	/**Returns the URI of a child resource with the given simple name within a parent resource.
-	This is normally the simple name resolved against the parent resource URI, although a resource kit for collections may append an ending path separator.
+	This is normally the simple name resolved against the child resource collection URI, although a resource kit for collections may append an ending path separator.
 	The simple name will be encoded before being used to construct the URI.
 	This default version resolves the name against the parent resource URI and appends the resource kit's default extension, if any.
 	@param repository The repository that contains the resource.
 	@param parentResourceURI The URI to of the parent resource.
 	@param resourceName The unencoded simple name of the child resource.
-	@return The URI of the child resource
+	@return The URI of the child resource.
 	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if there is an error accessing the repository.
 	@see #getDefaultNameExtension()
 	*/
-	public URI getChildResourceURI(final Repository repository, final URI parentResourceURI, final String resourceName)
+	public URI getChildResourceURI(final Repository repository, final URI parentResourceURI, final String resourceName) throws ResourceIOException
 	{
 		//TODO fix IllegalArgumentException by checking to ensure that the parent resource is within the repository
 		final StringBuilder stringBuilder=new StringBuilder(URIPath.encodeSegment(resourceName));	//create a new string builder, starting with the encoded simple resource name
@@ -299,7 +329,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	/**Creates a new resource with the given description and the appropriate default contents for this resource type.
 	If a resource already exists at the given URI it will be replaced.
 	If the resource URI is a collection URI, a collection resource will be created.
-	This version creates a default resource or collection resource with content of zero bytes.
+	This version creates a default resource or collection resource with the contents provided by {@link #getDefaultResourceContents(Repository, URFResource)}.
 	@param repository The repository that will contain the resource.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
@@ -316,7 +346,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 		}
 		else	//if this is not a collection URI
 		{
-			return repository.createResource(resourceURI, resourceDescription, new byte[]{});	//create a new empty resource
+			return repository.createResource(resourceURI, resourceDescription, getDefaultResourceContents(repository, resourceDescription));	//create a new resource with the default contents
 		}
 	}
 

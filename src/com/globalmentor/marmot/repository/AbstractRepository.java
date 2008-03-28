@@ -412,6 +412,40 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		}
 	}
 
+	/**Creates all the parent resources necessary for a resource to exist at the given URI.
+	If any parent resources already exist, they will not be replaced.
+	@param resourceURI The reference URI of a resource which may not exist.
+	@return A description of the most immediate parent resource created, or <code>null</code> if no parent resources were required to be created.
+	@exception NullPointerException if the given resource URI is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if a parent resource could not be created.
+	*/
+	public URFResource createParentResources(URI resourceURI) throws ResourceIOException
+	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.createParentResources(resourceURI);	//delegate to the subrepository
+		}
+		if(resourceURI.equals(getPublicRepositoryURI()))	//if this is the resource URI
+		{
+			return null;	//we didn't have to create anything
+		}
+		final URI parentResourceURI=getParentResourceURI(resourceURI);	//get the parent resource URI
+		URFResource lastCreatedParentResource=createParentResources(parentResourceURI);	//create any necessary parents of the parent
+		if(!resourceExists(parentResourceURI))	//if the parent does not exist
+		{
+			final URFResource parentResource=createCollection(parentResourceURI);	//create the parent collection TODO resolve API conflict of possible non-collection parent
+			if(parentResource!=null)	//if we created a resource
+			{
+				lastCreatedParentResource=parentResource;	//update our record of the last-created parent resource
+			}
+		}
+		return lastCreatedParentResource;	//return the last parent created, if any
+	}
+
 	/**Creates a new resource with a default description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
 	The returned output stream should always be closed.
