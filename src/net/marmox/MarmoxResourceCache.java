@@ -11,6 +11,7 @@ import static com.globalmentor.urf.content.Content.*;
 
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
+import com.globalmentor.marmot.resource.ResourceFileFilter;
 import com.globalmentor.marmot.resource.ResourceFilter;
 import com.globalmentor.net.ResourceNotFoundException;
 import com.globalmentor.urf.*;
@@ -138,22 +139,29 @@ Debug.log("Starting to fetch resource", key.getResourceURI());
 					{
 						final ResourceFilter filter=filters[filterIndex];	//get this filter
 						final File filterFile=createTempFile(cacheBaseName, extension, cacheUserDirectory, false);	//create a new temporary file that won't be deleted on exit
-						final InputStream filterInputStream=new BufferedInputStream(new FileInputStream(cacheFile));	//create an input stream to the file
-						try
+						if(filter instanceof ResourceFileFilter)	//if this filter can filter files
 						{
-							final OutputStream filterOutputStream=new BufferedOutputStream(new FileOutputStream(filterFile));	//create an output stream to the new file
+							((ResourceFileFilter)filter).filter(resource, cacheFile, filterFile);	//filter directly between files
+						}
+						else	//if this filter only supports streams
+						{
+							final InputStream filterInputStream=new BufferedInputStream(new FileInputStream(cacheFile));	//create an input stream to the file
 							try
 							{
-								resource=filter.filter(resource, filterInputStream, filterOutputStream);	//apply this filter
+								final OutputStream filterOutputStream=new BufferedOutputStream(new FileOutputStream(filterFile));	//create an output stream to the new file
+								try
+								{
+									resource=filter.filter(resource, filterInputStream, filterOutputStream);	//apply this filter
+								}
+								finally
+								{
+									filterOutputStream.close();	//always close the filter output stream
+								}
 							}
 							finally
 							{
-								filterOutputStream.close();	//always close the filter output stream
+								filterInputStream.close();	//always close the filter input stream
 							}
-						}
-						finally
-						{
-							filterInputStream.close();	//always close the filter input stream
 						}
 						if(filterIndex>0)	//if this isn't the original file (which we want to leave for future caching)
 						{
