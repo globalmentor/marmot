@@ -49,7 +49,7 @@ public class ImageScaleFilter implements ResourceFilter
 	@return The new description of the filtered resource content.
 	@exception ResourceIOException if there is an error filtering the resource.
 	*/
-	public URFResource filter(final URFResource resource, final InputStream inputStream, final OutputStream outputStream) throws IOException
+	public URFResource filter(final URFResource resource, final InputStream inputStream, final OutputStream outputStream) throws IOException	//TODO review http://archives.java.sun.com/cgi-bin/wa?A2=ind0311&L=jai-interest&F=&S=&P=15036 and http://www.leptonica.com/scaling.html
 	{
 //TODO del Debug.trace("ready to scale to aspect", imageAspect);
 		final Dimension aspectDimension;	//determine the aspect dimension

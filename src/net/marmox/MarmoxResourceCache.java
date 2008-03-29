@@ -4,21 +4,17 @@ import java.io.*;
 import java.net.URI;
 import java.util.Date;
 
-
 import static com.globalmentor.io.Files.*;
-import static com.globalmentor.java.Objects.checkInstance;
+import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
-
 
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.ResourceFilter;
 import com.globalmentor.net.ResourceNotFoundException;
 import com.globalmentor.urf.*;
-import com.globalmentor.util.AbstractCache;
-import com.globalmentor.util.AbstractHashObject;
-import com.globalmentor.util.Debug;
+import com.globalmentor.util.*;
 
 import com.guiseframework.Guise;
 
@@ -107,7 +103,8 @@ Debug.log("Starting to fetch resource", key.getResourceURI());
 		final String baseName=removeNameExtension(filename);	//get the base name to use	TODO important encode the name so that it can work on the file system
 		final String extension=getNameExtension(filename);	//get the extension to use TODO important: check for a collection, as it may be possible to cache collection content in the future
 		final URI resourceParentURI=getParentURI(resourceURI);	//get the parent URI of the resource
-		final String cacheBaseName=encodeCrossPlatformFilename(resourceParentURI.getRawPath()+baseName);	//create a base name by encoding the resource URI
+		final MarmoxResourceLocator resourceLocator=new MarmoxResourceLocator(user, resourceParentURI);	//create a resource locator for the parent URI so that we can easily get the repository path
+		final String cacheBaseName=encodeCrossPlatformFilename(resourceLocator.getResourcePath()+baseName);	//create a base name by encoding the resource's relative path from the user with no extension
 			//TODO important: check for null extension
 		File cacheFile=new File(cacheUserDirectory, cacheBaseName+FILENAME_EXTENSION_SEPARATOR+extension);	//create a filename in the form cacheDir/user/encodedResourceURI.ext
 		if(modifiedDateTime==null || !cacheFile.exists() || modifiedDateTime.getTime()>cacheFile.lastModified())	//if we don't know when the resource was modified, or if there is no such cached file, or if the real resource was modified after the cached version
