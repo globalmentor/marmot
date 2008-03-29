@@ -85,6 +85,7 @@ public class ImageScaleFilter implements ResourceFilter
 			final int originalWidth=bufferedImage.getWidth();
 			final int originalHeight=bufferedImage.getHeight();
 	//TODO del Debug.trace("original image dimension", originalDimension);
+				//the multi-resizing technique described at http://today.java.net/pub/a/today/2007/04/03/perils-of-image-getscaledinstance.html produces many black lines for normal JAI scaling
 			if(originalWidth>aspectDimensions.getWidth().getValue() || originalHeight>aspectDimensions.getHeight().getValue())	//if this image needs scaled
 			{
 				final Dimensions originalDimensions=new Dimensions(originalWidth, originalHeight, Unit.PIXEL);	//find the original dimensions of the image
@@ -92,7 +93,7 @@ public class ImageScaleFilter implements ResourceFilter
 	
 				final int newWidth=(int)newDimensions.getWidth().getValue();
 				final int newHeight=(int)newDimensions.getHeight().getValue();
-	///*JAI method
+/*JAI method
 	//TODO del Debug.trace("scaling to dimension", newDimension);
 				final ParameterBlock parameterBlock=new ParameterBlock();
 				parameterBlock.addSource(bufferedImage);
@@ -113,7 +114,7 @@ public class ImageScaleFilter implements ResourceFilter
 					//TODO find fix for SubsampleAverage black line on bottom
 				final PlanarImage newImage=JAI.create("SubsampleAverage", parameterBlock, renderingHints);	//according to http://www.i-proving.ca/space/Technologies/Java+Advanced+Imaging subsample average produces better quality than "scale", and this seems to be true 
 //TODO lower quality scaling				final PlanarImage newImage=JAI.create("scale", parameterBlock, renderingHints);
-	//*/
+*/
 	
 	/*alternate Java2D method from http://today.java.net/pub/a/today/2007/04/03/perils-of-image-getscaledinstance.html that is of average quality but perhaps slower
 				final int type=(bufferedImage.getTransparency() == Transparency.OPAQUE) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
@@ -126,7 +127,18 @@ public class ImageScaleFilter implements ResourceFilter
 	      g2.drawImage(bufferedImage, 0, 0, newWidth, newHeight, null);
 	      g2.dispose();
 	*/
-				
+
+//this technique, modified from http://www.hanhuy.com/pfn/java-image-thumbnail-comparison , produces images virtually identical to JAI subsample average but is really slow---but leaves no black lines like the current JAI
+        final Image scaledImage = bufferedImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+				final int type=(bufferedImage.getTransparency() == Transparency.OPAQUE) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
+        final BufferedImage newImage = new BufferedImage(newWidth, newHeight, type);
+        Graphics2D graphics = newImage.createGraphics();
+	      graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+	      graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        graphics.drawImage(scaledImage, null, null);
+        graphics.dispose();
+        scaledImage.flush();
+
 				ImageIO.write(newImage, "JPEG", outputStream);	//write the image out as a JPEG TODO use a constant; see http://www.digitalsanctuary.com/tech-blog/java/how-to-resize-uploaded-images-using-java-better-way.html for alternate writing approach
 			}
 			else	//if the image doesn't need scaled
