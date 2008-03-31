@@ -27,7 +27,7 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 	/**Default constructor.*/
 	public XHTMLResourceKit()
 	{
-		super(XHTML_CONTENT_TYPE, XHTML_NAME_EXTENSION, Capability.CREATE);
+		super(XHTML_CONTENT_TYPE, XHTML_NAME_EXTENSION, Capability.CREATE, Capability.EDIT);
 	}
 
 }
