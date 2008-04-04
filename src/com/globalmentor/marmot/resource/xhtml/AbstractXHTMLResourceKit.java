@@ -5,6 +5,7 @@ import java.net.URI;
 
 import javax.mail.internet.ContentType;
 
+import static com.globalmentor.java.CharSequences.*;
 import static com.globalmentor.java.Objects.*;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.*;
@@ -205,7 +206,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 
 	/**Retrieves an excerpt from the given document.
 	The elements are not removed from the original document.
-	This implementation uses the first paragraph encountered depth-first. 
+	This implementation uses the first non-empty paragraph encountered depth-first. 
 	@param element The element for which an excerpt should be returned.
 	@return A document fragment containing an excerpt of the given element, or <code>null</code> if no excerpt could be located.
 	@see XHTML#ELEMENT_P
@@ -217,7 +218,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 
 	/**Retrieves an excerpt from the given element.
 	The elements are not removed from the original document.
-	This implementation uses the first paragraph encountered depth-first. 
+	This implementation uses the first non-empty paragraph encountered depth-first. 
 	@param element The element for which an excerpt should be returned.
 	@return A document fragment containing an excerpt of the given element, or <code>null</code> if no excerpt could be located.
 	@see XHTML#ELEMENT_P
@@ -226,7 +227,10 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 	{
 		if(XHTML_NAMESPACE_URI.toString().equals(element.getNamespaceURI()) && ELEMENT_P.equals(element.getLocalName()))	//if this is <xhtml:p>
 		{
-			return extractNode(element, false);	//extract the paragraph without removing it
+			if(containsNonTrim(element.getTextContent()))	//if this paragraph isn't empty
+			{
+				return extractNode(element, false);	//extract the paragraph without removing it
+			}
 		}
 		DocumentFragment excerpt=null; //process the children to try to find an excerpt
 		final NodeList childNodeList=element.getChildNodes();	//get the list of child nodes

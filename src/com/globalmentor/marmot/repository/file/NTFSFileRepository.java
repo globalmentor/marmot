@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.URI;
 
 import com.globalmentor.net.URIs;
+import com.globalmentor.urf.URFResource;
 
 import static com.globalmentor.io.FileConstants.*;
 import static com.globalmentor.io.Files.*;
@@ -66,6 +67,31 @@ public class NTFSFileRepository extends FileRepository
 	protected File getResourceDescriptionFile(final File resourceFile)
 	{
 		return changeName(resourceFile, resourceFile.getName()+NTFS_ADS_DELIMITER+MARMOT_DESCRIPTION_NAME);	//return a file in the form "file.ext:marmot-description"
+	}
+
+	/**Gets an output stream to the contents of the given resource file.
+	An error is generated if the file does not exist.
+	This version gets the resource description, deletes the file, and creates a new file with the same description because
+	simply opening a new file output stream to overwrite a file will overwrite the NTFS streams. 
+	@param resourceURI The URI of the resource to access.
+	@param resourceFile The file representing the resource.
+	@return An output stream to the resource represented by given resource file.
+	@exception IOException if there is an error accessing the resource.
+	*/
+	protected OutputStream getResourceOutputStream(final URI resourceURI, final File resourceFile) throws IOException
+	{
+		if(!resourceFile.exists())	//if the file doesn't exist
+		{
+			throw new FileNotFoundException("Cannot open output stream to non-existent file "+resourceFile+" in repository.");
+		}
+		final URFResource resourceDescription=createResourceDescription(createURF(), resourceFile);	//get a description of the existing file
+		delete(resourceFile);	//delete the file
+		createNewFile(resourceFile);	//create a new file
+		if(resourceDescription.hasProperties())	//if there are any properties to set (otherwise, don't create an empty properties file) TODO improve; this will always have properties; it would be best to check to see if there are any non-live properties
+		{
+			setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
+		}
+		return new FileOutputStream(resourceFile, true);	//return an output stream to the file, appending to the new, empty file we created
 	}
 
 }

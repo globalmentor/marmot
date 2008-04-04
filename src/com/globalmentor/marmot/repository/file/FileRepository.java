@@ -184,19 +184,31 @@ public class FileRepository extends AbstractRepository
 		checkOpen();	//make sure the repository is open
 		try
 		{
-			final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the private URI
-			if(!resourceFile.exists())	//if the file doesn't exist
-			{
-				throw new FileNotFoundException("Cannot open output stream to non-existent file "+resourceFile+" in repository.");
-			}
-			return new FileOutputStream(resourceFile);	//return an output stream to the file
+			return getResourceOutputStream(resourceURI, new File(getPrivateURI(resourceURI)));	//create a file object for the private URI and get an output stream to the file
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
 			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 	}
-	
+
+	/**Gets an output stream to the contents of the given resource file.
+	An error is generated if the file does not exist.
+	This version returns a direct output stream to the file. 
+	@param resourceURI The URI of the resource to access.
+	@param resourceFile The file representing the resource.
+	@return An output stream to the resource represented by given resource file.
+	@exception IOException if there is an error accessing the resource.
+	*/
+	protected OutputStream getResourceOutputStream(final URI resourceURI, final File resourceFile) throws IOException
+	{
+		if(!resourceFile.exists())	//if the file doesn't exist
+		{
+			throw new FileNotFoundException("Cannot open output stream to non-existent file "+resourceFile+" in repository.");
+		}
+		return new FileOutputStream(resourceFile);	//return an output stream to the file
+	}
+
 	/**Retrieves a description of the resource with the given URI.
 	@param resourceURI The URI of the resource the description of which should be retrieved.
 	@return A description of the resource with the given URI.
