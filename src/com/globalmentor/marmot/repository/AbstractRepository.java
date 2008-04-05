@@ -4,7 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.Charset;
 import java.util.*;
-
+import static java.util.Arrays.*;
 import static java.util.Collections.*;
 
 import javax.mail.internet.ContentType;
@@ -25,6 +25,13 @@ import static com.globalmentor.urf.content.Content.*;
 /**Abstract implementation of a repository class with typical features.
 <p>This implementation uses the special name {@value #COLLECTION_CONTENTS_NAME} to represent the contents (as opposed to the contained resources) of a collection resource.</p>
 <p>Resource access methods should call {@link #checkResourceURI(URI)} as a security check to ensure the given URI is within the repository.</p>
+<p>This implementation considers the following properties to be live properties:</p>
+<ul>
+	<li>{@value Content#ACCESSED_PROPERTY_URI}</li>
+	<li>{@value Content#CREATED_PROPERTY_URI}</li>
+	<li>{@value Content#LENGTH_PROPERTY_URI}</li>
+	<li>{@value Content#MODIFIED_PROPERTY_URI}</li>
+</ul>
 @author Garret Wilson
 */
 public abstract class AbstractRepository extends DefaultURFResource implements Repository
@@ -33,14 +40,17 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	/**The resource factory for resources in the Marmot security namespace.*/
 	protected final static URFResourceFactory MARMOT_SECURITY_RESOURCE_FACTORY=new JavaURFResourceFactory(MarmotSecurity.class.getPackage());
 
+	/**The name of a resource used to store the contents of a collection.*/
+	public final static String COLLECTION_CONTENTS_NAME="@";	//TODO add checks to prevent this resource from being accessed directly
+
+	/**The set of URIs that are considered live.*/
+	protected final static Set<URI> LIVE_PROPERTY_URIS=unmodifiableSet(new HashSet<URI>(asList(Content.ACCESSED_PROPERTY_URI, Content.CREATED_PROPERTY_URI, Content.LENGTH_PROPERTY_URI, Content.MODIFIED_PROPERTY_URI)));
+
 	/**The I/O implementation that writes and reads a resource with the same reference URI as its base URI.*/
 	private final URFIO<URFResource> descriptionIO;
 
 		/**@return The I/O implementation that writes and reads a resource with the same reference URI as its base URI.*/
 		protected URFIO<URFResource> getDescriptionIO() {return descriptionIO;}
-
-	/**The name of a resource used to store the contents of a collection.*/
-	public final static String COLLECTION_CONTENTS_NAME="@";	//TODO add checks to prevent this resource from being accessed directly
 
 	/**The registered event listeners.*/
 //TODO bring back when needed	protected final EventListenerManager eventListenerManager=new EventListenerManager();
@@ -411,6 +421,11 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 			open=false;	//show that the repository is now closed
 		}
 	}
+
+	/**Retrieves the live properties, which dynamically determined attributes of the resource such as content size. 
+	@return The thread-safe set of URIs of live properties.
+	*/
+	public Set<URI> getLivePropertyURIs() {return LIVE_PROPERTY_URIS;}
 
 	/**Creates all the parent resources necessary for a resource to exist at the given URI.
 	If any parent resources already exist, they will not be replaced.

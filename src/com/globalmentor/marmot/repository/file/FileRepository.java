@@ -635,6 +635,7 @@ public class FileRepository extends AbstractRepository
 	}
 
 	/**Sets the properties of a resource based upon the given description.
+	Live properties are ignored.
 	@param resourceURI The reference URI of the resource.
 	@param resourceDescription A description of the resource with the properties to set; the resource URI is ignored.
 	@param resourceFile The file to use in updating the resource properties.
@@ -644,15 +645,19 @@ public class FileRepository extends AbstractRepository
 	*/
 	protected URFResource setResourceProperties(final URI resourceURI, final URFResource resourceDescription, final File resourceFile) throws ResourceIOException
 	{
+/*TODO del; add separate method for setting live properties
 		final URFDateTime modifiedTime=getModified(resourceDescription);	//get the modified time designation, if there is one
 		if(modifiedTime!=null)	//if there is a modified time designated
 		{
 			resourceFile.setLastModified(modifiedTime.getTime());	//update the last modified time TODO does this work for directories? should we check?
 		}
+*/
 		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the resource description file
 		final URFResource saveResourceDescription=new DefaultURFResource(resourceDescription);	//create a separate description we'll use for saving
-		
-//TODO important: remove the file-related and MIME-related live properties
+		for(final URI livePropertyURI:getLivePropertyURIs())	//look at all live properties
+		{
+			saveResourceDescription.removePropertyValues(livePropertyURI);	//remove all values for this live property
+		}
 		try
 		{
 			saveResourceDescription(saveResourceDescription, resourceFile);	//save the resource description
@@ -835,6 +840,7 @@ public class FileRepository extends AbstractRepository
 	}
 
 	/**Saves a resource description for a single file.
+	The description is saved as given with no modifications.
 	@param resourceDescription The resource description to save.
 	@param resourceFile The file of a resource.
 	@exception IOException if there is an error save the resource description.

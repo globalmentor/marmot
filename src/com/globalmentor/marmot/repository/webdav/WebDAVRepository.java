@@ -776,12 +776,15 @@ public class WebDAVRepository extends AbstractRepository
 		try
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
-			final URFIO<URFResource> descriptionIO=getDescriptionIO();	//get I/O for the description
+			final Set<URI> livePropertyURIs=getLivePropertyURIs();	//get the set of live properties
 			final Set<WebDAVProperty> setProperties=new HashSet<WebDAVProperty>();	//create a set of properties to set
 			for(final URFProperty property:properties)	//for each property to set
 			{
-				final WebDAVProperty webdavProperty=createWebDAVProperty(resourceURI, property);	//create a WebDAV property and value for this URF property
-				setProperties.add(webdavProperty);	//add the WebDAV property with the its value
+				if(!livePropertyURIs.contains(property.getPropertyURI()))	//if this is not a live property
+				{
+					final WebDAVProperty webdavProperty=createWebDAVProperty(resourceURI, property);	//create a WebDAV property and value for this URF property
+					setProperties.add(webdavProperty);	//add the WebDAV property with the its value
+				}
 			}
 			webdavResource.setProperties(setProperties);	//patch the properties of the resource
 			final List<WebDAVProperty> propertyList=webdavResource.propFind();	//get the properties of this resource
@@ -830,6 +833,11 @@ public class WebDAVRepository extends AbstractRepository
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			final List<WebDAVProperty> oldPropertyList=webdavResource.propFind();	//get the original properties of this resource
 			final Set<WebDAVPropertyName> removePropertyNames=getWebDAVPropertyNames(oldPropertyList, propertyURISet);	//get the WebDAV property names that will need to be removed
+			for(final URI livePropertyURI:getLivePropertyURIs())	//look at all live properties
+			{
+				final WebDAVPropertyName liveWebDAVPropertyName=createWebDAVPropertyName(livePropertyURI);	//create a WebDAV property name for the live property URI
+				removePropertyNames.remove(liveWebDAVPropertyName);	//don't remove this property after all, as it's a live property
+			}
 			webdavResource.removeProperties(removePropertyNames);	//remove the designated properties
 			final List<WebDAVProperty> propertyList=webdavResource.propFind();	//get the properties of this resource
 			return createResourceDescription(createURF(), resourceURI, propertyList);	//create a resource from this URI and property list
@@ -873,7 +881,7 @@ public class WebDAVRepository extends AbstractRepository
 	}
 
 	/**Sets the properties of a resource based upon the given description.
-	This implementation only supports the {@value Content#MO} property, ignoring all other properties.
+	Live properties are ignored.
 	@param resourceURI The reference URI of the resource.
 	@param resourceDescription A description of the resource with the properties to set; the resource URI is ignored.
 	@param webdavResource The WebDAV resource for setting the resource WebDAV properties
@@ -883,26 +891,34 @@ public class WebDAVRepository extends AbstractRepository
 	*/
 	protected URFResource setResourceProperties(final URI resourceURI, final URFResource resourceDescription, final WebDAVResource webdavResource) throws ResourceIOException
 	{
-		final URFDateTime modifiedDateTime=getModified(resourceDescription);	//get the modified date time designation, if there is one
-		if(modifiedDateTime!=null)	//if there is a modified date time designated
-		{
-/*TODO fix
-			final String modifiedTimeString=new W3CDateFormat(W3CDateFormat.Style.DATE_TIME).format(modifiedTime);	//create a string with the modified time TODO eventually just copy over all RDF properties
-			final Element element=createPropertyupdateDocument(createWebDAVDocumentBuilder().getDOMImplementation()).getDocumentElement();	//create a propertyupdate document (it doesn't really matter what type of document we create)	//TODO check DOM exceptions here
-			appendText(element, modifiedTimeString);	//append the modified time to the document element
-			final DocumentFragment modifiedTimeDocumentFragment=extractChildren(element);	//extract the children into a document element
-			
-			
-			webdavResource.propPatch(asList(new WebDAVProperty(new QualifiedName(FILE_ONTOLOGY_NAMESPACE_URI, FILE_ONTOLOGY_NAMESPACE_PREFIX, MODIFIED_TIME_PROPERTY_NAME), )));
-			//TODO make a general method for property patching, maybe; update AbstractWebDAVServlet to store properties
-*/
-			
-//TODO fix			resourceFile.setLastModified(modifiedTime.getTime());	//update the last modified time TODO does this work for directories? should we check?
-		}
 		try
 		{
+			final Set<URI> livePropertyURIs=getLivePropertyURIs();	//get the set of live properties
 			final List<WebDAVProperty> propertyList=webdavResource.propFind();	//get the properties of this resource
-			return createResourceDescription(createURF(), resourceURI, propertyList);	//create a resource from this URI and property list
+			final Set<WebDAVProperty> removeWebDAVProperties=new HashSet<WebDAVProperty>(propertyList);	//we'll remove from this set properties that shouldn't be removed
+			final Set<WebDAVProperty> setProperties=new HashSet<WebDAVProperty>();	//create a set of properties to set
+			for(final URFProperty property:resourceDescription.getProperties())	//for each property to set TODO fix; this will not handle plural property values
+			{
+				if(!livePropertyURIs.contains(property.getPropertyURI()))	//if this is not a live property
+				{
+					final WebDAVProperty webdavProperty=createWebDAVProperty(resourceURI, property);	//create a WebDAV property and value for this URF property
+					setProperties.add(webdavProperty);	//add the WebDAV property with the its value
+					removeWebDAVProperties.remove(webdavProperty);	//remove this property from the set of properties to remove, since we'll be setting this property
+				}
+			}
+			final Set<WebDAVPropertyName> removeWebDAVPropertyNames=new HashSet<WebDAVPropertyName>();	//create a set of names to remove
+			for(final WebDAVProperty webdavProperty:removeWebDAVProperties)	//for all the properties to remove
+			{
+				removeWebDAVPropertyNames.add(webdavProperty.getName());	//add this name to remove
+			}
+			for(final URI livePropertyURI:livePropertyURIs)	//look at all live properties
+			{
+				final WebDAVPropertyName liveWebDAVPropertyName=createWebDAVPropertyName(livePropertyURI);	//create a WebDAV property name for the live property URI
+				removeWebDAVPropertyNames.remove(liveWebDAVPropertyName);	//don't remove this property after all, as it's a live property
+			}
+			webdavResource.propPatch(removeWebDAVPropertyNames, setProperties);	//remove and set properties
+			final List<WebDAVProperty> newPropertyList=webdavResource.propFind();	//get the updated properties of this resource
+			return createResourceDescription(createURF(), resourceURI, newPropertyList);	//create a resource from this URI and new property list
 		}
 		catch(final DataException dataException)	//if the data wasn't correct
 		{
@@ -941,7 +957,7 @@ public class WebDAVRepository extends AbstractRepository
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
-			final URFIO<URFResource> descriptionIO=getDescriptionIO();	//get I/O for the description
+			final Set<URI> livePropertyURIs=getLivePropertyURIs();	//get the set of live properties
 			final Set<URI> propertyURIRemovals=new HashSet<URI>(resourceAlteration.getPropertyURIRemovals());	//get the property URI removals, which we'll optimize based upon the property settings
 			final Set<WebDAVProperty> setWebDAVProperties=new HashSet<WebDAVProperty>();	//keep track of which WebDAV properties to set
 			for(final URFProperty propertyAddition:resourceAlteration.getPropertyAdditions())	//look at all the property additions
@@ -951,15 +967,23 @@ public class WebDAVRepository extends AbstractRepository
 				{
 					throw new UnsupportedOperationException("This implementation does not support adding property "+propertyAddition+"; currently only property setting is supported, requiring that the property URI first be removed.");
 				}
-				final WebDAVProperty webdavProperty=createWebDAVProperty(resourceURI, propertyAddition);	//create a WebDAV property and value for this URF property
-				setWebDAVProperties.add(webdavProperty);	//add this WebDAV property to the set of properties to set
-				propertyURIRemovals.remove(propertyURI);	//indicate that we don't have to explicitly remove this property, because it will be removed by setting it
+				if(!livePropertyURIs.contains(propertyURI))	//if this is not a live property
+				{
+					final WebDAVProperty webdavProperty=createWebDAVProperty(resourceURI, propertyAddition);	//create a WebDAV property and value for this URF property
+					setWebDAVProperties.add(webdavProperty);	//add this WebDAV property to the set of properties to set
+					propertyURIRemovals.remove(propertyURI);	//indicate that we don't have to explicitly remove this property, because it will be removed by setting it
+				}
 			}
 			final Set<WebDAVPropertyName> removeWebDAVPropertyNames=new HashSet<WebDAVPropertyName>();	//keep track of which WebDAV property names to remove
 			for(final URI propertyURIRemoval:propertyURIRemovals)	//look at all the property removals left after removing those which are irrelevant
 			{
 				final WebDAVPropertyName webdavPropertyName=createWebDAVPropertyName(propertyURIRemoval);	//create a WebDAV property name from the URF property URI
 				removeWebDAVPropertyNames.add(webdavPropertyName);	//add this WebDAV property name to the set of property names to remove
+			}
+			for(final URI livePropertyURI:livePropertyURIs)	//look at all live properties
+			{
+				final WebDAVPropertyName liveWebDAVPropertyName=createWebDAVPropertyName(livePropertyURI);	//create a WebDAV property name for the live property URI
+				removeWebDAVPropertyNames.remove(liveWebDAVPropertyName);	//don't remove this property after all, as it's a live property
 			}
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			webdavResource.propPatch(removeWebDAVPropertyNames, setWebDAVProperties);	//remove and set WebDAV properties

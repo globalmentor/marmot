@@ -11,6 +11,8 @@ import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
 
 /**A Marmot information store.
+<p>A repository has the concept of a <dfn>live property</dfn> which are dynamically set based upon resource state, such as content size and last modified date/time.
+Live properties cannot be set using normal property manipulation methods and are ignored if requested to be modified.</li>
 @author Garret Wilson
 */
 public interface Repository
@@ -54,6 +56,11 @@ public interface Repository
 	@exeption ResourceIOException if there is an error closing the repository.
 	*/
 	public void close() throws ResourceIOException;
+
+	/**Retrieves the live properties, which dynamically determined attributes of the resource such as content size. 
+	@return The thread-safe set of URIs of live properties.
+	*/
+	public Set<URI> getLivePropertyURIs();
 
 	/**Associates the given content type with the given extension, without regard to case.
 	@param extension The URI name extension with which the content type should be associated, or <code>null</code> if the content type should be associated with resources that have no extension.
@@ -135,7 +142,7 @@ public interface Repository
 	@exception ResourceIOException if there is an error accessing the resource.
 	*/
 	public OutputStream getResourceOutputStream(final URI resourceURI) throws ResourceIOException;
-	
+
 	/**Retrieves a description of the resource with the given URI.
 	@param resourceURI The URI of the resource the description of which should be retrieved.
 	@return A description of the resource with the given URI.
