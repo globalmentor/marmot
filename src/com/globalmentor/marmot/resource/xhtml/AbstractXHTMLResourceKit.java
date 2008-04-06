@@ -10,7 +10,6 @@ import static com.globalmentor.java.Objects.*;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.*;
 import com.globalmentor.net.ResourceIOException;
-import static com.globalmentor.net.URIs.*;
 import com.globalmentor.text.xml.XMLIO;
 import static com.globalmentor.text.xml.XML.*;
 import com.globalmentor.text.xml.xhtml.XHTML;
@@ -166,42 +165,27 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 		super(supportedContentTypes, supportedResourceTypes, defaultNameExtension, capabilities);	//construct the parent class
 	}
 
-	/**Creates a new resource with the given description and the appropriate default contents for this resource type.
-	If a resource already exists at the given URI it will be replaced.
-	If the resource URI is a collection URI, a collection resource will be created.
-	@param repository The repository that will contain the resource.
-	@param resourceURI The reference URI to use to identify the resource.
+	/**Writes default resource content to the given output stream.
+	This version writes no content.
+	@param repository The repository that contains the resource.
+	@param resourceURI The reference URI to use to identify the resource, which may not exist.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
-	@return A description of the resource that was created.
-	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@exception NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception ResourceIOException if the resource could not be created.
+	@exception ResourceIOException if the default resource content could not be written.
 	*/
-	public URFResource createResource(final Repository repository, final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
+	public void writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription, final OutputStream outputStream) throws ResourceIOException
 	{
-		if(!isCollectionURI(resourceURI))	//if this is not a collection URI TODO fix collection creation for XHTML content
+		final String title=getTitle(resourceDescription);	//see if there is a title
+		final Document document=createXHTMLDocument(title!=null ? title : "", true, true);	//create an XHTML document with a doctype and the correct title, if any
+		try
 		{
-			final String title=getTitle(resourceDescription);	//see if there is a title
-			final Document document=createXHTMLDocument(title!=null ? title : "", true, true);	//create an XHTML document with a doctype and the correct title, if any
-			final OutputStream outputStream=new BufferedOutputStream(repository.createResource(resourceURI, resourceDescription));	//create a new resource
-			try
-			{
-				try
-				{
-					getXHTMLIO().write(outputStream, resourceURI, document);	//write the default document				
-				}
-				finally
-				{
-					outputStream.close();	//always close the output stream
-				}
-			}
-			catch(final IOException ioException)	//if an I/O exception occurs
-			{
-				throw ResourceIOException.toResourceIOException(ioException, resourceURI);	//send a resource version of the exception
-			}
-			return repository.getResourceDescription(resourceURI);	//return the resource description
+			getXHTMLIO().write(outputStream, resourceURI, document);	//write the default document				
 		}
-		return super.createResource(repository, resourceURI, resourceDescription);	//create a default resource
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw ResourceIOException.toResourceIOException(ioException, resourceURI);	//send a resource version of the exception
+		}
 	}
 
 	/**Retrieves an excerpt from the given document.

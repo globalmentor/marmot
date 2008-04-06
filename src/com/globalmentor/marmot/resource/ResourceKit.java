@@ -1,5 +1,6 @@
 package com.globalmentor.marmot.resource;
 
+import java.io.OutputStream;
 import java.net.URI;
 import java.util.Set;
 
@@ -87,13 +88,6 @@ public interface ResourceKit
 	*/
 	public URFResource getDefaultResourceDescription(final Repository repository, final URI resourceURI) throws ResourceIOException;
 
-	/**Retrieves default resource contents for a given resource, without regard to whether it exists.
-	@param repository The repository within which the resource would reside.
-	@param resource The description of the resource the default contents of which to retrieve.
-	@exception ResourceIOException if there is an error accessing the repository.
-	*/
-	public byte[] getDefaultResourceContents(final Repository repository, final URFResource resource) throws ResourceIOException;
-
 	/**Initializes a resource description, creating whatever properties are appropriate.
 	@param repository The repository to use to access the resource content, if needed.
 	@param resource The resource description to initialize.
@@ -170,6 +164,31 @@ public interface ResourceKit
 	@exception ResourceIOException if the resource could not be created.
 	*/
 	public URFResource createResource(final Repository repository, final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException;
+
+	/**Writes default resource content for the given resource.
+	If content already exists for the given resource it will be replaced.
+	@param repository The repository that contains the resource.
+	@param resourceURI The reference URI to use to identify the resource, which may not exist.
+	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@return A description of the resource the content of which was written.
+	@exception NullPointerException if the given repository, resource URI, and/or resource description is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if the default resource content could not be written.
+	@see #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)
+	*/
+	public URFResource writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException;
+
+	/**Writes default resource content to the given output stream.
+	If content already exists for the given resource it will be replaced.
+	This version writes no content.
+	@param repository The repository that contains the resource.
+	@param resourceURI The reference URI to use to identify the resource, which may not exist.
+	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@exception NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if the default resource content could not be written.
+	*/
+	public void writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription, final OutputStream outputStream) throws ResourceIOException;
 
 	/**Determines whether the given permission is appropriate for accessing the identified aspect.
 	This prevents aspects from being accessed at lower permissions.

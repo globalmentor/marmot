@@ -8,6 +8,7 @@ import com.globalmentor.urf.URFResource;
 
 import static com.globalmentor.io.FileConstants.*;
 import static com.globalmentor.io.Files.*;
+import static com.globalmentor.net.URIs.isCollectionURI;
 
 /**Repository stored in an NTFS filesystem.
 This implementation stores resource descriptions in NTFS Alternate Data Streams (ADS).
@@ -70,9 +71,10 @@ public class NTFSFileRepository extends FileRepository
 	}
 
 	/**Gets an output stream to the contents of the given resource file.
-	An error is generated if the file does not exist.
-	This version gets the resource description, deletes the file, and creates a new file with the same description because
-	simply opening a new file output stream to overwrite a file will overwrite the NTFS streams. 
+	For collections, this implementation sets the content of the {@value #COLLECTION_CONTENTS_NAME} file, if any.
+	If this resource is not a collection, this version gets the resource description, deletes the file, and creates a new file with the same description because
+	simply opening a new file output stream to overwrite a file will overwrite the NTFS streams.
+	For collections, an output stream is retrieved normally because the special collection content file does not maintain properties. 
 	@param resourceURI The URI of the resource to access.
 	@param resourceFile The file representing the resource.
 	@return An output stream to the resource represented by given resource file.
@@ -80,18 +82,21 @@ public class NTFSFileRepository extends FileRepository
 	*/
 	protected OutputStream getResourceOutputStream(final URI resourceURI, final File resourceFile) throws IOException
 	{
-		if(!resourceFile.exists())	//if the file doesn't exist
+		if(isCollectionURI(resourceURI))	//if the resource is a collection
 		{
-			throw new FileNotFoundException("Cannot open output stream to non-existent file "+resourceFile+" in repository.");
+			return super.getResourceOutputStream(resourceURI, resourceFile);	//open an output stream to the special resource file normally
 		}
-		final URFResource resourceDescription=createResourceDescription(createURF(), resourceFile);	//get a description of the existing file
-		delete(resourceFile);	//delete the file
-		createNewFile(resourceFile);	//create a new file
-		if(resourceDescription.hasProperties())	//if there are any properties to set (otherwise, don't create an empty properties file) TODO improve; this will always have properties; it would be best to check to see if there are any non-live properties
+		else	//if the resource is not a collection, perform special processing to allow resource properties to be maintained
 		{
-			setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
+			final URFResource resourceDescription=createResourceDescription(createURF(), resourceFile);	//get a description of the existing file
+			delete(resourceFile);	//delete the file
+			createNewFile(resourceFile);	//create a new file
+			if(resourceDescription.hasProperties())	//if there are any properties to set (otherwise, don't create an empty properties file) TODO improve; this will always have properties; it would be best to check to see if there are any non-live properties
+			{
+				setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
+			}
+			return new FileOutputStream(resourceFile, true);	//return an output stream to the file, appending to the new, empty file we created
 		}
-		return new FileOutputStream(resourceFile, true);	//return an output stream to the file, appending to the new, empty file we created
 	}
 
 }

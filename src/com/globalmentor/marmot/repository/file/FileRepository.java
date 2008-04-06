@@ -26,7 +26,7 @@ import static com.globalmentor.urf.TURF.*;
 	to store child resources.</p>
 @author Garret Wilson
 */
-public class FileRepository extends AbstractRepository
+public class FileRepository extends AbstractRepository	//TODO fix content length for collections
 {
 
 		//TODO encode special characters, especially the colon on NTFS
@@ -167,6 +167,7 @@ public class FileRepository extends AbstractRepository
 
 	/**Gets an output stream to the contents of the resource specified by the given URI.
 	An error is generated if the resource does not exist.
+	For collections, this implementation sets the content of the {@value #COLLECTION_CONTENTS_NAME} file, if any.
 	@param resourceURI The URI of the resource to access.
 	@return An output stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -184,7 +185,22 @@ public class FileRepository extends AbstractRepository
 		checkOpen();	//make sure the repository is open
 		try
 		{
-			return getResourceOutputStream(resourceURI, new File(getPrivateURI(resourceURI)));	//create a file object for the private URI and get an output stream to the file
+			final File resourceFile=new File(getPrivateURI(resourceURI));	//get a file for the resource
+			if(!resourceFile.exists())	//if the file doesn't exist
+			{
+				throw new FileNotFoundException("Cannot open output stream to non-existent file "+resourceFile+" in repository.");
+			}
+			final File contentFile;	//determine the file to use for storing contents
+			if(isCollectionURI(resourceURI) && isCollection(resourceURI))	//if the resource is a collection (make sure the resource URI is also a collection URI so that we can be sure of resolving the collection contents name; file collections should only have collection URIs anyway)
+			{
+				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENTS_NAME);	//determine the URI to use for contents
+				contentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection contents resource
+			}
+			else	//if the resource is not a collection
+			{
+				contentFile=resourceFile;	//use the normal resource file
+			}
+			return getResourceOutputStream(resourceURI, contentFile);	//return an output stream to the content file
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -193,7 +209,6 @@ public class FileRepository extends AbstractRepository
 	}
 
 	/**Gets an output stream to the contents of the given resource file.
-	An error is generated if the file does not exist.
 	This version returns a direct output stream to the file. 
 	@param resourceURI The URI of the resource to access.
 	@param resourceFile The file representing the resource.
@@ -202,10 +217,6 @@ public class FileRepository extends AbstractRepository
 	*/
 	protected OutputStream getResourceOutputStream(final URI resourceURI, final File resourceFile) throws IOException
 	{
-		if(!resourceFile.exists())	//if the file doesn't exist
-		{
-			throw new FileNotFoundException("Cannot open output stream to non-existent file "+resourceFile+" in repository.");
-		}
 		return new FileOutputStream(resourceFile);	//return an output stream to the file
 	}
 

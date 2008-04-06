@@ -1,5 +1,8 @@
 package com.globalmentor.marmot.resource;
 
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URI;
 import java.util.*;
 import static java.util.Collections.*;
@@ -329,7 +332,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	/**Creates a new resource with the given description and the appropriate default contents for this resource type.
 	If a resource already exists at the given URI it will be replaced.
 	If the resource URI is a collection URI, a collection resource will be created.
-	This version creates a default resource or collection resource with the contents provided by {@link #getDefaultResourceContents(Repository, URFResource)}.
+	This version creates a resource or collection resource and then writes default content using {@link #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)}.
 	@param repository The repository that will contain the resource.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
@@ -346,8 +349,71 @@ public abstract class AbstractResourceKit implements ResourceKit
 		}
 		else	//if this is not a collection URI
 		{
-			return repository.createResource(resourceURI, resourceDescription, getDefaultResourceContents(repository, resourceDescription));	//create a new resource with the default contents
+			final OutputStream outputStream=new BufferedOutputStream(repository.createResource(resourceURI, resourceDescription));	//create a new resource
+			try
+			{
+				try
+				{
+					writeDefaultResourceContent(repository, resourceURI, resourceDescription, outputStream);	//write default content to the output stream
+				}
+				finally
+				{
+					outputStream.close();	//always close the output stream
+				}
+			}
+			catch(final IOException ioException)	//if an I/O exception occurs
+			{
+				throw ResourceIOException.toResourceIOException(ioException, resourceURI);	//send a resource version of the exception
+			}
+			return repository.getResourceDescription(resourceURI);	//return the resource description
 		}
+	}
+
+	/**Writes default resource content for the given resource.
+	If content already exists for the given resource it will be replaced.
+	This implementation delegates to {@link #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)}.
+	@param repository The repository that contains the resource.
+	@param resourceURI The reference URI to use to identify the resource, which may not exist.
+	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@return A description of the resource the content of which was written.
+	@exception NullPointerException if the given repository, resource URI, and/or resource description is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if the default resource content could not be written.
+	@see #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)
+	*/
+	public URFResource writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
+	{
+		final OutputStream outputStream=new BufferedOutputStream(repository.getResourceOutputStream(resourceURI));	//create a new resource
+		try
+		{
+			try
+			{
+				writeDefaultResourceContent(repository, resourceURI, resourceDescription, outputStream);	//write default content to the output stream
+			}
+			finally
+			{
+				outputStream.close();	//always close the output stream
+			}
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw ResourceIOException.toResourceIOException(ioException, resourceURI);	//send a resource version of the exception
+		}
+		return repository.getResourceDescription(resourceURI);	//return the resource description
+	}
+
+	/**Writes default resource content to the given output stream.
+	If content already exists for the given resource it will be replaced.
+	This version writes no content.
+	@param repository The repository that contains the resource.
+	@param resourceURI The reference URI to use to identify the resource, which may not exist.
+	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@exception NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if the default resource content could not be written.
+	*/
+	public void writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription, final OutputStream outputStream) throws ResourceIOException
+	{
 	}
 
 	/**Determines whether the given permission is appropriate for accessing the identified aspect.

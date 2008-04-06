@@ -1,6 +1,10 @@
 package com.globalmentor.marmot;
 
 
+import java.util.Set;
+
+import javax.mail.internet.ContentType;
+
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.ResourceKit;
 import com.globalmentor.marmot.resource.ResourceKit.Capability;
@@ -52,6 +56,12 @@ public interface MarmotSession<RK extends ResourceKit>
 
 	/**@return The available resource kits.*/
 	public Iterable<RK> getResourceKits();
+
+	/**Returns the content types supported by all the available resource kits.
+	@return An immutable set of content types supported by all available resource kits.
+	@see ResourceKit#getSupportedContentTypes()
+	*/
+	public Set<ContentType> getSupportedContentTypes();
 
 	/**Determines if there exists  resource kit appropriate for the given resource supporting the given capabilities.
 	@param repository The repository in which the resource resides.

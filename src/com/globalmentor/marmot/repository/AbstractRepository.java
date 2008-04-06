@@ -212,7 +212,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 			final Map<ContentType, Charset> contentTypeCharsetMap=new HashMap<ContentType, Charset>(baseContentTypeCharsetMap.size());	//create a new map to hold actual content type objects
 			for(final Map.Entry<String, Charset> baseContentTypeCharsetEntry:baseContentTypeCharsetMap.entrySet())	//look at each mapping
 			{
-				contentTypeCharsetMap.put(createContentType(baseContentTypeCharsetEntry.getKey()), baseContentTypeCharsetEntry.getValue());	//add this mapping to the map
+				contentTypeCharsetMap.put(getContentTypeInstance(baseContentTypeCharsetEntry.getKey()), baseContentTypeCharsetEntry.getValue());	//add this mapping to the map
 			}
 			return unmodifiableMap(contentTypeCharsetMap);	//return a read-only version of the map we created
 		}

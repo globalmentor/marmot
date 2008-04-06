@@ -24,12 +24,13 @@ import static com.globalmentor.net.http.webdav.ApacheWebDAV.*;
 import static com.globalmentor.net.http.webdav.WebDAV.*;
 
 import com.globalmentor.io.*;
+import static com.globalmentor.io.ContentTypes.*;
 import com.globalmentor.java.Strings;
-import com.globalmentor.marmot.repository.AbstractRepository;
-import com.globalmentor.marmot.repository.Repository;
+import com.globalmentor.marmot.repository.*;
 import com.globalmentor.net.*;
 import com.globalmentor.net.http.*;
 import com.globalmentor.net.http.webdav.*;
+import com.globalmentor.text.ArgumentSyntaxException;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.*;
 import com.globalmentor.util.*;
@@ -45,7 +46,7 @@ import org.w3c.dom.*;
 <p>This implementation requires exact URIs and does not follow HTTP redirects. Any redirection responses are interpreted as indicating that the resource does not exist.</p>
 @author Garret Wilson
 */
-public class WebDAVRepository extends AbstractRepository
+public class WebDAVRepository extends AbstractRepository	//TODO fix content length for collections
 {
 
 		//TODO the current technique of erasing the password after each call may become obsolete when the HTTP client supports persistent connections
@@ -325,7 +326,17 @@ public class WebDAVRepository extends AbstractRepository
 			{
 				throw new ResourceNotFoundException(resourceURI, "Cannot open output stream to non-existent resource "+resourceURI);
 			}
-			return webdavResource.getOutputStream();	//return an output stream to the resource
+			final WebDAVResource contentWebDAVResource;	//determine the WebDAV resource for accessing the content file
+			if(isCollectionURI(resourceURI) && isCollection(resourceURI))	//if the resource is a collection (make sure the resource URI is also a collection URI so that we can be sure of resolving the collection contents name; WebDAV collections should only have collection URIs anyway)
+			{
+				final URI contentsURI=resourceURI.resolve(COLLECTION_CONTENTS_NAME);	//determine the URI to use for contents
+				contentWebDAVResource=new WebDAVResource(getPrivateURI(contentsURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection contents resource
+			}
+			else	//if the resource is not a collection
+			{
+				contentWebDAVResource=webdavResource;	//use the normal WebDAV resource
+			}
+			return contentWebDAVResource.getOutputStream();	//return an output stream to the resource
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -333,10 +344,12 @@ public class WebDAVRepository extends AbstractRepository
 		}
 		finally
 		{
+/*TODO fix; erasing the password here causes the delayed writing to fail; switch to allowing the WebDAV resource to create a copy of the password and then erase the copy later
 			if(passwordAuthentication!=null)	//if we used password authentication
 			{
 				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
 			}
+*/
 		}
 	}
 	
@@ -650,13 +663,8 @@ public class WebDAVRepository extends AbstractRepository
 		try
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
-			webdavResource.put(resourceContents);	//create a WebDAV resource with the guven contents
-			final List<WebDAVProperty> propertyList=webdavResource.propFind();	//get the properties of this resource
-			return createResourceDescription(createURF(), resourceURI, propertyList);	//create a resource from this URI and property list
-		}
-		catch(final DataException dataException)	//if the data wasn't correct
-		{
-			throw createResourceIOException(resourceURI, dataException);	//translate the exception to a resource I/O exception and throw that
+			webdavResource.put(resourceContents);	//create a WebDAV resource with the given contents
+  		return setResourceProperties(resourceURI, resourceDescription, webdavResource);	//set the properties using the WebDAV resource object
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -895,6 +903,29 @@ public class WebDAVRepository extends AbstractRepository
 		{
 			final Set<URI> livePropertyURIs=getLivePropertyURIs();	//get the set of live properties
 			final List<WebDAVProperty> propertyList=webdavResource.propFind();	//get the properties of this resource
+			final URFResource oldResourceDescription=createResourceDescription(createURF(), resourceURI, propertyList);	//create a resource from this URI and property list; don't use the raw WebDAV properties, because they may have properties we're ignoring
+
+			final Set<WebDAVProperty> setWebDAVProperties=new HashSet<WebDAVProperty>();	//create a set of properties to set
+			for(final URFProperty property:resourceDescription.getProperties())	//for each property to set TODO fix; this will not handle plural property values
+			{
+				if(!livePropertyURIs.contains(property.getPropertyURI()))	//if this is not a live property
+				{
+					final WebDAVProperty webdavProperty=createWebDAVProperty(resourceURI, property);	//create a WebDAV property and value for this URF property
+					setWebDAVProperties.add(webdavProperty);	//add the WebDAV property with the its value
+				}
+			}
+			final Set<WebDAVProperty> removeWebDAVProperties=new HashSet<WebDAVProperty>();	//create a set of properties to remove
+			for(final URFProperty property:oldResourceDescription.getProperties())	//for each old property
+			{
+				if(!livePropertyURIs.contains(property.getPropertyURI()) && !resourceDescription.hasProperty(property))	//if this is not a live property and the new description does not have this property
+				{
+					final WebDAVProperty webdavProperty=createWebDAVProperty(resourceURI, property);	//create a WebDAV property and value for this URF property
+					removeWebDAVProperties.add(webdavProperty);	//we'll remove this property
+				}
+			}
+/*TODO del
+			
+			
 			final Set<WebDAVProperty> removeWebDAVProperties=new HashSet<WebDAVProperty>(propertyList);	//we'll remove from this set properties that shouldn't be removed
 			final Set<WebDAVProperty> setProperties=new HashSet<WebDAVProperty>();	//create a set of properties to set
 			for(final URFProperty property:resourceDescription.getProperties())	//for each property to set TODO fix; this will not handle plural property values
@@ -906,17 +937,20 @@ public class WebDAVRepository extends AbstractRepository
 					removeWebDAVProperties.remove(webdavProperty);	//remove this property from the set of properties to remove, since we'll be setting this property
 				}
 			}
+*/
 			final Set<WebDAVPropertyName> removeWebDAVPropertyNames=new HashSet<WebDAVPropertyName>();	//create a set of names to remove
 			for(final WebDAVProperty webdavProperty:removeWebDAVProperties)	//for all the properties to remove
 			{
 				removeWebDAVPropertyNames.add(webdavProperty.getName());	//add this name to remove
 			}
+/*TODO del
 			for(final URI livePropertyURI:livePropertyURIs)	//look at all live properties
 			{
 				final WebDAVPropertyName liveWebDAVPropertyName=createWebDAVPropertyName(livePropertyURI);	//create a WebDAV property name for the live property URI
 				removeWebDAVPropertyNames.remove(liveWebDAVPropertyName);	//don't remove this property after all, as it's a live property
 			}
-			webdavResource.propPatch(removeWebDAVPropertyNames, setProperties);	//remove and set properties
+*/
+			webdavResource.propPatch(removeWebDAVPropertyNames, setWebDAVProperties);	//remove and set properties
 			final List<WebDAVProperty> newPropertyList=webdavResource.propFind();	//get the updated properties of this resource
 			return createResourceDescription(createURF(), resourceURI, newPropertyList);	//create a resource from this URI and new property list
 		}
@@ -1210,15 +1244,15 @@ public class WebDAVRepository extends AbstractRepository
 					final String contentTypeString=propertyValue.getText().trim();	//get the content type string
 					try
 					{
-						final ContentType contentType=new ContentType(contentTypeString);	//create a content type object from the text of the element
+						final ContentType contentType=getContentTypeInstance(contentTypeString);	//create a content type object from the text of the element
 						if(contentType!=null)	//if we know the content type
 						{
 							setContentType(resource, contentType);	//set the content type property
 						}
 					}
-					catch(final javax.mail.internet.ParseException parseException)	//if the content type is not a correct MIME type
+					catch(final ArgumentSyntaxException argumentSyntaxException)	//if the content type is not a correct MIME type
 					{
-						throw new DataException("Illegal WebDAV "+GET_CONTENT_TYPE_PROPERTY_NAME+" value: "+contentTypeString, parseException);
+						throw new DataException("Illegal WebDAV "+GET_CONTENT_TYPE_PROPERTY_NAME+" value: "+contentTypeString, argumentSyntaxException);
 					}
 				}
 				else if(GET_LAST_MODIFIED_PROPERTY_NAME.equals(propertyLocalName) && propertyValue!=null)	//D:getlastmodified

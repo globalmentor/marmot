@@ -1,6 +1,5 @@
 package com.globalmentor.marmot.resource.image;
 
-
 import javax.mail.internet.ContentType;
 
 import net.marmox.resource.image.ImageScaleFilter;
@@ -9,7 +8,7 @@ import static com.globalmentor.io.ContentTypeConstants.*;
 import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.java.Objects.*;
 
-import com.globalmentor.io.ContentTypes;
+import static com.globalmentor.io.ContentTypes.*;
 import com.globalmentor.marmot.resource.*;
 import com.globalmentor.marmot.security.PermissionType;
 
@@ -42,7 +41,7 @@ public class ImageResourceKit extends AbstractResourceKit
 //TODO del if not needed	protected final static String[] SUPPORTED_EXTENSIONS=new String[] {JPG_EXTENSION, JPEG_EXTENSION};
 
 	/**The "image/jpeg" content type.*/
-//TODO del if not needed	protected final static ContentType IMAGE_JPEG_CONTENT_TYPE=new ContentType(IMAGE, JPEG_SUBTYPE, null);
+//TODO del if not needed	protected final static ContentType IMAGE_JPEG_CONTENT_TYPE=getContentTypeInstance(IMAGE, JPEG_SUBTYPE);
 
 	/**The image content type array.*/
 //TODO del if not needed	protected final static ContentType[] SUPPORTED_CONTENT_TYPES=new ContentType[] {IMAGE_JPEG_CONTENT_TYPE};
@@ -92,7 +91,7 @@ public class ImageResourceKit extends AbstractResourceKit
 	/**Default constructor.*/
 	public ImageResourceKit()
 	{
-		super(new ContentType[]{new ContentType(ContentTypes.IMAGE_PRIMARY_TYPE, GIF_SUBTYPE, null), new ContentType(ContentTypes.IMAGE_PRIMARY_TYPE, JPEG_SUBTYPE, null), new ContentType(ContentTypes.IMAGE_PRIMARY_TYPE, PNG_SUBTYPE, null)});
+		super(new ContentType[]{getContentTypeInstance(IMAGE_PRIMARY_TYPE, GIF_SUBTYPE), getContentTypeInstance(IMAGE_PRIMARY_TYPE, JPEG_SUBTYPE), getContentTypeInstance(IMAGE_PRIMARY_TYPE, PNG_SUBTYPE)});
 	}
 
 	/**Initializes a resource description, creating whatever properties are appropriate.

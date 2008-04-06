@@ -1,5 +1,6 @@
 package com.globalmentor.marmot.resource;
 
+import java.io.OutputStream;
 import java.net.URI;
 import java.util.Set;
 
@@ -76,14 +77,6 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit
 	*/
 	public URFResource getDefaultResourceDescription(final Repository repository, final URI resourceURI) throws ResourceIOException {return getResourceKit().getDefaultResourceDescription(repository, resourceURI);}
 
-	/**Retrieves default resource contents for a given resource, without regard to whether it exists.
-	This version returns an empty array of bytes.
-	@param repository The repository within which the resource would reside.
-	@param resource The description of the resource the default contents of which to retrieve.
-	@exception ResourceIOException if there is an error accessing the repository.
-	*/
-	public byte[] getDefaultResourceContents(final Repository repository, final URFResource resource) throws ResourceIOException {return getResourceKit().getDefaultResourceContents(repository, resource);}
-
 	/**Initializes a resource description, creating whatever properties are appropriate.
 	@param repository The repository to use to access the resource content, if needed.
 	@param resource The resource description to initialize.
@@ -141,6 +134,31 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit
 	@exception ResourceIOException if the resource could not be created.
 	*/
 	public URFResource createResource(final Repository repository, final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException {return getResourceKit().createResource(repository, resourceURI, resourceDescription);}
+
+	/**Writes default resource content for the given resource.
+	If content already exists for the given resource it will be replaced.
+	@param repository The repository that contains the resource.
+	@param resourceURI The reference URI to use to identify the resource, which may not exist.
+	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@return A description of the resource the content of which was written.
+	@exception NullPointerException if the given repository, resource URI, and/or resource description is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if the default resource content could not be written.
+	@see #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)
+	*/
+	public URFResource writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException {return getResourceKit().writeDefaultResourceContent(repository, resourceURI, resourceDescription);}
+
+	/**Writes default resource content to the given output stream.
+	If content already exists for the given resource it will be replaced.
+	This version writes no content.
+	@param repository The repository that contains the resource.
+	@param resourceURI The reference URI to use to identify the resource, which may not exist.
+	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@exception NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if the default resource content could not be written.
+	*/
+	public void writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription, final OutputStream outputStream) throws ResourceIOException {getResourceKit().writeDefaultResourceContent(repository, resourceURI, resourceDescription, outputStream);}
 
 	/**Returns this resource kit's installed filter based upon its ID.
 	@param filterID The ID of the filter to return.

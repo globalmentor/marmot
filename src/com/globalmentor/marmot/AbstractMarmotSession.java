@@ -10,7 +10,6 @@ import javax.mail.internet.ContentType;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
 
-
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.marmot.resource.*;
 import com.globalmentor.marmot.resource.ResourceKit.Capability;
@@ -44,6 +43,17 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 
 	/**The map of resource kit lists, keyed to supported resource type URIs.*/
 	private CollectionMap<URI, RK, List<RK>> resourceTypeResourceKitsMap=new CopyOnWriteArrayListConcurrentHashMap<URI, RK>();
+
+	/**The thread-safe immutable set of content types supported by all the available resource kits.
+	<em>Caution: {@link ContentType} does not correctly support {@link ContentType#equals(Object)}, which means equality in a set will be determined by identity.</em>
+	*/
+	private Set<ContentType> supportedContentTypes=emptySet();
+	
+		/**Returns the content types supported by all the available resource kits.
+		@return An immutable set of content types supported by all available resource kits.
+		@see ResourceKit#getSupportedContentTypes()
+		*/
+		public Set<ContentType> getSupportedContentTypes() {return supportedContentTypes;}
 
 	/**The default resource kit to use if a specific resource kit cannot be found, or <code>null</code> if there is no default resource kit.*/
 	private RK defaultResourceKit=null;
@@ -81,17 +91,20 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 		{
 			contentTypeResourceKitsMap.clear();	//clear the maps
 			resourceTypeResourceKitsMap.clear();
+			final Set<ContentType> supportedContentTypes=new HashSet<ContentType>();	//create a set of content types, even though content types use identity comparison
 			for(final RK resourceKit:resourceKits)	//for each resource kit
 			{		
 				for(final ContentType contentType:resourceKit.getSupportedContentTypes())	//for each content type this resource kit supports
 				{
 					contentTypeResourceKitsMap.addItem(contentType.getBaseType(), resourceKit);	//add this resource kit to the map			
+					supportedContentTypes.add(contentType);	//store the content type in our set
 				}
 				for(final URI resourceType:resourceKit.getSupportedResourceTypes())	//for each resource type this resource kit supports
 				{
 					resourceTypeResourceKitsMap.addItem(resourceType, resourceKit);	//add this resource kit to the map			
 				}
 			}
+			this.supportedContentTypes=unmodifiableSet(supportedContentTypes);	//store the updated supported content types set
 		}
 	}
 
