@@ -179,71 +179,45 @@ public interface Repository
 	*/
 	public boolean hasChildren(final URI resourceURI) throws ResourceIOException;
 
-	/**Retrieves immediate child resources of the resource at the given URI.
+	/**Retrieves child resources of the resource at the given URI.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
-	@return A list of sub-resource descriptions directly under the given resource.
+	@return A list of sub-resource descriptions under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<URFResource> getChildResourceDescriptions(final URI resourceURI) throws ResourceIOException;
-
-	/**Retrieves immediate child resources of the resource at the given URI.
-	Non-collection resources are included.
-	@param resourceURI The URI of the resource for which sub-resources should be returned.
-	@param includeCollections Whether collection resources should be included.
-	@return A list of sub-resources descriptions directly under the given resource.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the repository.
-	*/
-	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final boolean includeCollections) throws ResourceIOException;
-
-	/**Retrieves immediate child resources of the resource at the given URI.
-	@param resourceURI The URI of the resource for which sub-resources should be returned.
-	@param includeCollections Whether collection resources should be included.
-	@param includeNonCollections Whether non-collection resources should be included.
-	@return A list of sub-resources descriptions directly under the given resource.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the repository.
-	*/
-	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final boolean includeCollections, final boolean includeNonCollections) throws ResourceIOException;
+	public List<URFResource> getChildResourceDescriptions(URI resourceURI) throws ResourceIOException;
 
 	/**Retrieves child resources of the resource at the given URI.
-	Both collection resources and non-collection resources are included.
+	@param resourceURI The URI of the resource for which sub-resources should be returned.
+	@param resourceFilter The filter that determines whether child resources should be included, or <code>null</code> if the child resources should not be filtered.
+	@return A list of sub-resource descriptions under the given resource.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error accessing the repository.
+	*/
+	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final ResourceFilter resourceFilter) throws ResourceIOException;
+
+	/**Retrieves child resources of the resource at the given URI.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
 	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
-	@return A list of sub-resources descriptions under the given resource.
+	@return A list of sub-resource descriptions under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
 	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final int depth) throws ResourceIOException;
-	
-	/**Retrieves child resources of the resource at the given URI.
-	Non-collection resources are included.
-	@param resourceURI The URI of the resource for which sub-resources should be returned.
-	@param includeCollections Whether collection resources should be included.
-	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
-	@return A list of sub-resources descriptions under the given resource.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the repository.
-	*/
-	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final boolean includeCollections, final int depth) throws ResourceIOException;
 
 	/**Retrieves child resources of the resource at the given URI.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
-	@param includeCollections Whether collection resources should be included.
-	@param includeNonCollections Whether non-collection resources should be included.
+	@param resourceFilter The filter that determines whether child resources should be included, or <code>null</code> if the child resources should not be filtered.
 	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
-	@return A list of sub-resources descriptions under the given resource.
+	@return A list of sub-resource descriptions under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final boolean includeCollections, final boolean includeNonCollections, final int depth) throws ResourceIOException;
+	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final ResourceFilter resourceFilter, final int depth) throws ResourceIOException;
 
 	/**Creates all the parent resources necessary for a resource to exist at the given URI.
 	If any parent resources already exist, they will not be replaced.

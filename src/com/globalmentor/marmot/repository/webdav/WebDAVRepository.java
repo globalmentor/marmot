@@ -529,15 +529,14 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 	/**Retrieves child resources of the resource at the given URI.
 	This implementation does not include child resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
-	@param includeCollections Whether collection resources should be included.
-	@param includeNonCollections Whether non-collection resources should be included.
+	@param resourceFilter The filter that determines whether child resources should be included, or <code>null</code> if the child resources should not be filtered.
 	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
-	@return A list of sub-resources descriptions under the given resource.
+	@return A list of sub-resource descriptions under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final boolean includeCollections, final boolean includeNonCollections, final int depth) throws ResourceIOException
+	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final ResourceFilter resourceFilter, final int depth) throws ResourceIOException
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -570,10 +569,14 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 					final URI childResourcePrivateURI=propertyList.getName();	//get the private URI of the child resource this property list represents
 					if(isPrivateResourcePublic(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI))	//if the associated child resource is public and the property list is *not* for this resource
 					{
-						final boolean includeChildResource=isCollectionURI(childResourcePrivateURI) ? includeCollections : includeNonCollections;	//see if we should include this resource
-						if(includeChildResource)	//if we should include this child resource
+						final URI childResourcePublicURI=getPublicURI(childResourcePrivateURI);	//get the public URI of this child resource
+						if(resourceFilter==null || resourceFilter.isPass(childResourcePublicURI))	//if we should include this resource based upon its URI
 						{
-							childResourceList.add(createResourceDescription(urf, getPublicURI(childResourcePrivateURI), propertyList.getValue()));	//create a resource from this URI and property lists
+							final URFResource childResourceDescription=createResourceDescription(urf, childResourcePublicURI, propertyList.getValue());	//create a resource from this URI and property lists
+							if(resourceFilter==null || resourceFilter.isPass(childResourceDescription))	//if we should include this resource based upon its description
+							{
+								childResourceList.add(childResourceDescription);	//add this child resource description to our list
+							}
 						}
 					}
 				}
