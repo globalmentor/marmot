@@ -1,19 +1,22 @@
 package com.globalmentor.marmot.resource.xhtml;
 
-import static com.globalmentor.io.Files.*;
-
 import java.io.IOException;
 import java.net.URI;
 
-import org.w3c.dom.Document;
+import net.marmox.resource.*;
+import net.marmox.resource.xhtml.XHTMLMenuWidget;
 
+import static com.globalmentor.io.Files.*;
+import static com.globalmentor.java.Classes.*;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.net.ResourceIOException;
 
 import static com.globalmentor.net.URIs.*;
-
+import static com.globalmentor.text.xml.XML.*;
 import com.globalmentor.text.xml.xhtml.XHTML;
 import static com.globalmentor.text.xml.xhtml.XHTML.*;
+
+import org.w3c.dom.*;
 
 /**Resource kit for handling XHTML resources.
 <p>Supported media types:</p>
@@ -60,6 +63,27 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 		}
 		while(collectionURI!=null);	//keep going up the hierarchy until we run out of parent collections
 		return null;	//indicate that we could find no template URI
+	}
+
+	/**Retrieves a default template document for the identified resource.
+	@param repository The repository in which the resource resides.
+	@param resourceURI The URI of the resource.
+	@return A default template document for the given resource.
+	@throws ResourceIOException if there is an error accessing the repository.
+	*/
+	public static Document getDefaultResourceTemplate(final Repository repository, final URI resourceURI) throws ResourceIOException
+	{
+		final Document document=createXHTMLDocument("Template");	//create a new template document TODO use a constant
+		final Element bodyElement=getBodyElement(document);	//get the body element of the document
+		assert bodyElement!=null : "XHTML documents should always have a body.";
+		final Element headerElement=document.createElementNS(XHTML_NAMESPACE_URI.toString(), ELEMENT_HEADER);	//<header>
+		bodyElement.appendChild(headerElement);
+		appendElementNS(headerElement, createJavaURI(BreadcrumbWidget.class.getPackage()).toString(), getLocalName(BreadcrumbWidget.class));	//<BreadcrumbWidget>
+		appendElementNS(headerElement, createJavaURI(ResourceLabelHeadingWidget.class.getPackage()).toString(), getLocalName(ResourceLabelHeadingWidget.class));	//<ResourceLabelHeadingWidget>
+		final Element asideElement=document.createElementNS(XHTML_NAMESPACE_URI.toString(), ELEMENT_ASIDE);	//<aside>
+		bodyElement.appendChild(asideElement);
+		appendElementNS(asideElement, createJavaURI(XHTMLMenuWidget.class.getPackage()).toString(), getLocalName(XHTMLMenuWidget.class));	//<XHTMLMenuWidget>
+		return document;	//return the template document we constructed
 	}
 
 	/**Loads the template document for the identified resource.

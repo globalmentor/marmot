@@ -88,4 +88,13 @@ public interface MarmotSession<RK extends ResourceKit>
 	*/
 	public RK getResourceKit(final Repository repository, final URFResource resource, final Capability... capabilities);
 
+	/**Retrieves a resource kit appropriate for a MIME content type.
+	This method should only be used for special-purpose functionality;
+	when accessing resources {@link #getResourceKit(Repository, URFResource, Capability...)} should normally be used instead.
+	@param contentType The type of content the resource contains.
+	@param capabilities The capabilities required for the resource kit.
+	@return A resource kit with the requested capabilities to handle the given content type, or <code>null</code> if no appropriate resource kit is registered.
+	*/
+	public RK getResourceKit(final ContentType contentType, final Capability... capabilities);
+
 }
