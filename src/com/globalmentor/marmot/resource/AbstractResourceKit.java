@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.*;
+import static java.util.Arrays.*;
 import static java.util.Collections.*;
 
 import javax.mail.internet.ContentType;
@@ -20,7 +21,8 @@ import com.globalmentor.marmot.security.PermissionType;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.net.URIPath;
 import com.globalmentor.urf.*;
-
+import com.globalmentor.urf.content.Content;
+import static com.globalmentor.urf.content.Content.*;
 import static com.globalmentor.urf.dcmi.DCMI.*;
 
 /**Abstract implementation of a resource kit.
@@ -55,28 +57,34 @@ public abstract class AbstractResourceKit implements ResourceKit
 			}
 		}
 
-	/**A non-<code>null</code> array of the content types this resource kit supports.*/
-	private final ContentType[] supportedContentTypes;
+	/**Returns the default content type used for the resource kit.
+	This version returns any of the supported content types, if there are any.
+	@return The default content type name this resource kit uses, or <code>null</code> if there is no default content type.
+	*/
+	public ContentType getDefaultContentType() {return !supportedContentTypes.isEmpty() ? supportedContentTypes.iterator().next() : null;}
+
+	/**A read-only set of the content types this resource kit supports.*/
+	private final Set<ContentType> supportedContentTypes;
 
 		/**Returns the content types supported.
 		This is the primary method of determining which resource kit to use for a given resource.
-		@return A non-<code>null</code> array of the content types this resource kit supports.
+		@return A read-only set of the content types this resource kit supports.
 		*/
-		public ContentType[] getSupportedContentTypes() {return supportedContentTypes;}
+		public Set<ContentType> getSupportedContentTypes() {return supportedContentTypes;}
 
-	/**A non-<code>null</code> array of the URIs for the resource types this resource kit supports.*/
-	private final URI[] supportedResourceTypes;
+	/**A read-only set of the URIs for the resource types this resource kit supports.*/
+	private final Set<URI> supportedResourceTypes;
 	
 		/**Returns the resource types supported.
 		This is the secondary method of determining which resource kit to use for a given resource.
-		@return A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
+		@return A read-only set of the URIs for the resource types this resource kit supports.
 		*/
-		public URI[] getSupportedResourceTypes() {return supportedResourceTypes;}
+		public Set<URI> getSupportedResourceTypes() {return supportedResourceTypes;}
 
 	/**The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.*/
 	private final String defaultNameExtension;
 
-		/**Returns the default name extension used for the resource URI.
+		/**Returns the default name extension used by the resource kit.
 		@return The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
 		*/
 		public String getDefaultNameExtension() {return defaultNameExtension;}
@@ -230,22 +238,29 @@ public abstract class AbstractResourceKit implements ResourceKit
 	*/
 	public AbstractResourceKit(final ContentType[] supportedContentTypes, final URI[] supportedResourceTypes, final String defaultNameExtension, final Capability... capabilities)
 	{
-		this.supportedContentTypes=checkInstance(supportedContentTypes, "Supported content types array cannot be null.");
-		this.supportedResourceTypes=checkInstance(supportedResourceTypes, "Supported resource types array cannot be null.");
+		this.supportedContentTypes=unmodifiableSet(new HashSet<ContentType>(asList(checkInstance(supportedContentTypes, "Supported content types array cannot be null."))));
+		this.supportedResourceTypes=unmodifiableSet(new HashSet<URI>(asList(checkInstance(supportedResourceTypes, "Supported resource types array cannot be null."))));
 		this.defaultNameExtension=defaultNameExtension;
 		this.capabilities=unmodifiableSet(createEnumSet(Capability.class, capabilities));
 	}
 	
 	/**Retrieves a default resource description for a given resource, without regard to whether it exists.
+	This version sets a default content type if the resource kit supports content types.
 	This implementation sets the DCMI date to a floating representation of the current date/time.
 	@param repository The repository within which the resource would reside.
 	@param resourceURI The URI of the resource for which a default resource description should be retrieved.
 	@exception ResourceIOException if there is an error accessing the repository.
+	@see Content#TYPE_PROPERTY_URI
 	@see DCMI#DATE_PROPERTY_URI
 	*/
 	public URFResource getDefaultResourceDescription(final Repository repository, final URI resourceURI) throws ResourceIOException
 	{
 		final URFResource resource=new DefaultURFResource(resourceURI);	//create a new resoruce description
+		final ContentType contentType=getDefaultContentType();	//get the default content type, if any
+		if(contentType!=null)	//if there is a default content type
+		{
+			setContentType(resource, contentType);	//set the content type
+		}
 		setDate(resource, new URFDateTime());	//set the date to the current date and time with no particular time zone
 		return resource;	//return the default resource
 	}
@@ -345,7 +360,16 @@ public abstract class AbstractResourceKit implements ResourceKit
 	{
 		if(isCollectionURI(resourceURI))	//if this is a collection URI
 		{
-			return repository.createCollection(resourceURI, resourceDescription);	//create a new collection
+			final URFResource newResource=repository.createCollection(resourceURI, resourceDescription);	//create a new collection
+			if(hasDefaultResourceContent(repository, resourceURI))	//if there is default content for the resource
+			{
+				writeDefaultResourceContent(repository, resourceURI, newResource);	//write default content
+				return repository.getResourceDescription(resourceURI);	//return the updated resource description
+			}
+			else	//if there is no default content for the resource
+			{
+				return newResource;	//return the resource description we already got back
+			}
 		}
 		else	//if this is not a collection URI
 		{
@@ -354,7 +378,10 @@ public abstract class AbstractResourceKit implements ResourceKit
 			{
 				try
 				{
-					writeDefaultResourceContent(repository, resourceURI, resourceDescription, outputStream);	//write default content to the output stream
+					if(hasDefaultResourceContent(repository, resourceURI))	//if there is default content for the resource
+					{
+						writeDefaultResourceContent(repository, resourceURI, resourceDescription, outputStream);	//write default content to the output stream
+					}
 				}
 				finally
 				{
@@ -402,12 +429,28 @@ public abstract class AbstractResourceKit implements ResourceKit
 		return repository.getResourceDescription(resourceURI);	//return the resource description
 	}
 
+	/**Indicates whether this resource has default resource content.
+	This version returns <code>false</code>.
+	@param repository The repository that contains the resource.
+	@param resourceURI The reference URI to use to identify the resource, which may not exist.
+	@exception NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if the default resource content could not be written.
+	@see #writeDefaultResourceContent(Repository, URI, URFResource)
+	@see #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)
+	*/
+	public boolean hasDefaultResourceContent(final Repository repository, final URI resourceURI) throws ResourceIOException
+	{
+		return false;
+	}
+
 	/**Writes default resource content to the given output stream.
 	If content already exists for the given resource it will be replaced.
 	This version writes no content.
 	@param repository The repository that contains the resource.
 	@param resourceURI The reference URI to use to identify the resource, which may not exist.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@param outputStream The output stream to which to write the default content.
 	@exception NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception ResourceIOException if the default resource content could not be written.

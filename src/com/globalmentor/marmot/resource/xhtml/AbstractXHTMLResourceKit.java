@@ -165,8 +165,22 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 		super(supportedContentTypes, supportedResourceTypes, defaultNameExtension, capabilities);	//construct the parent class
 	}
 
+	/**Indicates whether this resource has default resource content.
+	This version returns <code>true</code>.
+	@param repository The repository that contains the resource.
+	@param resourceURI The reference URI to use to identify the resource, which may not exist.
+	@exception NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if the default resource content could not be written.
+	@see #writeDefaultResourceContent(Repository, URI, URFResource)
+	@see #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)
+	*/
+	public boolean hasDefaultResourceContent(final Repository repository, final URI resourceURI) throws ResourceIOException
+	{
+		return true;
+	}
+
 	/**Writes default resource content to the given output stream.
-	This version writes no content.
 	@param repository The repository that contains the resource.
 	@param resourceURI The reference URI to use to identify the resource, which may not exist.
 	@param resourceDescription A description of the resource; the resource URI is ignored.

@@ -39,7 +39,7 @@ public interface ResourceKit
 	/**An empty array of resource type URIs.*/
 	public final static URI[] NO_RESOURCE_TYPES=new URI[] {};
 
-	/**Returns the default name extension used for the resource URI.
+	/**Returns the default name extension used by the resource kit.
 	@return The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
 	*/
 	public String getDefaultNameExtension();
@@ -58,17 +58,22 @@ public interface ResourceKit
 	*/
 	public void setMarmotSession(final MarmotSession<?> marmotSession);
 
+	/**Returns the default content type used for the resource kit.
+	@return The default content type name this resource kit uses, or <code>null</code> if there is no default content type.
+	*/
+	public ContentType getDefaultContentType();
+
 	/**Returns the content types supported.
 	This is the primary method of determining which resource kit to use for a given resource.
-	@return A non-<code>null</code> array of the content types this resource kit supports.
+	@return A read-only set of the content types this resource kit supports.
 	*/
-	public ContentType[] getSupportedContentTypes();
+	public Set<ContentType> getSupportedContentTypes();
 
 	/**Returns the resource types supported.
 	This is the secondary method of determining which resource kit to use for a given resource.
-	@return A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
+	@return A read-only set of the URIs for the resource types this resource kit supports.
 	*/
-	public URI[] getSupportedResourceTypes();
+	public Set<URI> getSupportedResourceTypes();
 
 	/**Returns the capabilities of this resource kit.
 	@return The capabilities provided by this resource kit.
@@ -165,6 +170,17 @@ public interface ResourceKit
 	*/
 	public URFResource createResource(final Repository repository, final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException;
 
+	/**Indicates whether this resource has default resource content.
+	@param repository The repository that contains the resource.
+	@param resourceURI The reference URI to use to identify the resource, which may not exist.
+	@exception NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if the default resource content could not be written.
+	@see #writeDefaultResourceContent(Repository, URI, URFResource)
+	@see #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)
+	*/
+	public boolean hasDefaultResourceContent(final Repository repository, final URI resourceURI) throws ResourceIOException;
+
 	/**Writes default resource content for the given resource.
 	If content already exists for the given resource it will be replaced.
 	@param repository The repository that contains the resource.
@@ -184,6 +200,7 @@ public interface ResourceKit
 	@param repository The repository that contains the resource.
 	@param resourceURI The reference URI to use to identify the resource, which may not exist.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@param outputStream The output stream to which to write the default content.
 	@exception NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception ResourceIOException if the default resource content could not be written.
