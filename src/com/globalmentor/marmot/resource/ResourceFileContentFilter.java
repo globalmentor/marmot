@@ -9,7 +9,7 @@ import com.globalmentor.urf.URFResource;
 Resource file filters must still support stream-based filtering.
 @author Garret Wilson
 */
-public interface ResourceFileFilter extends ResourceFilter
+public interface ResourceFileContentFilter extends ResourceContentFilter
 {
 
 	/**Performs a filtering operation on a resource.

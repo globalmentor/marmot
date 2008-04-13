@@ -133,10 +133,10 @@ public class ImageResourceKit extends AbstractResourceKit
 	@exception NullPointerException if the given aspect ID is <code>null</code>.
 	@exception IllegalArgumentException if the given aspect ID does not represent a valid aspect.
 	*/
-	public ResourceFilter[] getAspectFilters(final String aspectID) throws IllegalArgumentException
+	public ResourceContentFilter[] getAspectFilters(final String aspectID) throws IllegalArgumentException
 	{
 		final ImageAspect imageAspect=getSerializedEnum(ImageAspect.class, aspectID);	//determine the image aspect from the ID
-		return new ResourceFilter[]{new ImageScaleFilter(imageAspect)};	//return the correct image aspect filter
+		return new ResourceContentFilter[]{new ImageScaleFilter(imageAspect)};	//return the correct image aspect filter
 	}
 
 }

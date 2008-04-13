@@ -438,7 +438,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	@exception NullPointerException if the given aspect ID is <code>null</code>.
 	@exception IllegalArgumentException if the given aspect ID does not represent a valid aspect.
 	*/
-	public ResourceFilter[] getAspectFilters(final String aspectID)
+	public ResourceContentFilter[] getAspectFilters(final String aspectID)
 	{
 		throw new IllegalArgumentException(checkInstance(aspectID, "Aspect ID cannot be null."));		
 	}

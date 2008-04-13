@@ -18,7 +18,7 @@ and need not provide URI-based filtering inside {@link #isPass(URFResource)} if 
 public interface ResourceFilter extends Filter<URFResource>
 {
 
-	/**The filter that only allows collection resource URIs.
+	/**The resource filter that only passes collection resource URIs.
 	@see URIs#isCollectionURI(URI)
 	*/
 	public final static ResourceFilter COLLECTION_RESOURCE_URI_FILTER=new AbstractResourceURIFilter()
@@ -26,7 +26,7 @@ public interface ResourceFilter extends Filter<URFResource>
 			public boolean isPass(final URI resourceURI) {return isCollectionURI(resourceURI);}			
 		};
 	
-	/**The filter that only allows non-collection resource URIs.
+	/**The resource filter that only passes non-collection resource URIs.
 	@see URIs#isCollectionURI(URI)
 	*/
 	public final static ResourceFilter NON_COLLECTION_RESOURCE_URI_FILTER=new AbstractResourceURIFilter()

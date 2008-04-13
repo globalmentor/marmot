@@ -8,7 +8,7 @@ import com.globalmentor.urf.URFResource;
 /**An object that can filter resource descriptions and content.
 @author Garret Wilson
 */
-public interface ResourceFilter
+public interface ResourceContentFilter
 {
 
 	/**Performs a filtering operation on a resource.

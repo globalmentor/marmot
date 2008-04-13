@@ -9,7 +9,9 @@ import org.w3c.dom.Document;
 
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.net.ResourceIOException;
+
 import static com.globalmentor.net.URIs.*;
+
 import com.globalmentor.text.xml.xhtml.XHTML;
 import static com.globalmentor.text.xml.xhtml.XHTML.*;
 
@@ -67,6 +69,7 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 	@throws ResourceIOException if there is an error accessing the repository.
 	@see #getResourceTemplateURI(Repository, URI)
 	*/
+/*TODO del if not needed
 	public static Document getResourceTemplate(final Repository repository, final URI resourceURI) throws ResourceIOException
 	{
 		final URI resourceTemplateURI=getResourceTemplateURI(repository, resourceURI);	//get the URI of the resource template, if there is one
@@ -86,4 +89,5 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 			return null;
 		}
 	}
+*/
 }

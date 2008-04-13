@@ -206,6 +206,6 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit
 	@exception NullPointerException if the given aspect ID is <code>null</code>.
 	@exception IllegalArgumentException if the given aspect ID does not represent a valid aspect.
 	*/
-	public ResourceFilter[] getAspectFilters(final String aspectID) {return getResourceKit().getAspectFilters(aspectID);}
+	public ResourceContentFilter[] getAspectFilters(final String aspectID) {return getResourceKit().getAspectFilters(aspectID);}
 
 }

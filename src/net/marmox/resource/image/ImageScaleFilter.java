@@ -19,8 +19,8 @@ import static com.globalmentor.java.Objects.*;
 
 import static com.globalmentor.io.Files.*;
 
-import com.globalmentor.marmot.resource.ResourceFileFilter;
-import com.globalmentor.marmot.resource.ResourceFilter;
+import com.globalmentor.marmot.resource.ResourceFileContentFilter;
+import com.globalmentor.marmot.resource.ResourceContentFilter;
 import com.globalmentor.marmot.resource.image.ImageResourceKit.ImageAspect;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.urf.URFResource;
@@ -31,7 +31,7 @@ import com.guiseframework.geometry.*;
 /**A filter for scaling an image.
 @author Garret Wilson
 */
-public class ImageScaleFilter implements ResourceFilter
+public class ImageScaleFilter implements ResourceContentFilter
 {
 
 	/**The image aspect for this scale.*/

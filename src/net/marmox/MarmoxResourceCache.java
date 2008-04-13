@@ -11,8 +11,8 @@ import static com.globalmentor.urf.content.Content.*;
 
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
-import com.globalmentor.marmot.resource.ResourceFileFilter;
-import com.globalmentor.marmot.resource.ResourceFilter;
+import com.globalmentor.marmot.resource.ResourceFileContentFilter;
+import com.globalmentor.marmot.resource.ResourceContentFilter;
 import com.globalmentor.net.ResourceNotFoundException;
 import com.globalmentor.urf.*;
 import com.globalmentor.util.*;
@@ -127,7 +127,7 @@ Debug.log("Starting to fetch resource", key.getResourceURI());
 		final String aspectID=key.getAspectID();	//get the aspect ID
 		if(aspectID!=null)	//if there is an aspect
 		{
-			final ResourceFilter[] filters=resourceKit.getAspectFilters(aspectID);	//get the array of filters for this aspect
+			final ResourceContentFilter[] filters=resourceKit.getAspectFilters(aspectID);	//get the array of filters for this aspect
 			final int filterCount=filters.length;	//find out how many filters there are
 			if(filterCount>0)	//if we have filters (if not, the file won't change---so just keep the original file
 			{
@@ -137,11 +137,11 @@ Debug.log("Starting to fetch resource", key.getResourceURI());
 				{
 					for(int filterIndex=0; filterIndex<filterCount; ++filterIndex)	//for each filter
 					{
-						final ResourceFilter filter=filters[filterIndex];	//get this filter
+						final ResourceContentFilter filter=filters[filterIndex];	//get this filter
 						final File filterFile=createTempFile(cacheBaseName, extension, cacheUserDirectory, false);	//create a new temporary file that won't be deleted on exit
-						if(filter instanceof ResourceFileFilter)	//if this filter can filter files
+						if(filter instanceof ResourceFileContentFilter)	//if this filter can filter files
 						{
-							((ResourceFileFilter)filter).filter(resource, cacheFile, filterFile);	//filter directly between files
+							((ResourceFileContentFilter)filter).filter(resource, cacheFile, filterFile);	//filter directly between files
 						}
 						else	//if this filter only supports streams
 						{
