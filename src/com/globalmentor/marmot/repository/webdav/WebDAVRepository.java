@@ -122,6 +122,20 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 		urfResourceDescriptionIO.setFormatted(false);	//turn off formatting
 		getIgnoredWebDAVNamespaces().add(APACHE_WEBDAV_PROPERTY_NAMESPACE_URI.toString());	//by default ignore properties in the Apache WebDAV namespace
 	}
+	
+	/**Creates a repository of the same type as this repository with the same access privileges as this one.
+	This factory method is commonly used to use a parent repository as a factory for other repositories in its namespace.
+	@param publicRepositoryURI The public URI identifying the location of the new repository.
+	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
+	@throws NullPointerException if the given public repository URI and/or private repository URI is <code>null</code>.
+	*/
+	protected Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
+	{
+		final WebDAVRepository repository=new WebDAVRepository(publicRepositoryURI, privateRepositoryURI, getHTTPClient());	//create a new repository
+		repository.setUsername(getUsername());	//transfer authentication info
+		repository.setPassword(getPassword());	//transfer authentication info
+		return repository;	//return the new repository
+	}
 
 	/**A token local name for WebDAV for use with URF properties that have no local name.*/
 	private final static String URF_TOKEN_LOCAL_NAME="urfTokenLocalName";

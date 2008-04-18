@@ -13,9 +13,7 @@ import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
 
 import com.globalmentor.io.*;
-import com.globalmentor.marmot.repository.AbstractRepository;
-import com.globalmentor.marmot.repository.Repository;
-import com.globalmentor.marmot.repository.ResourceFilter;
+import com.globalmentor.marmot.repository.*;
 import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
 
@@ -122,7 +120,18 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO=(URFResourceTURFIO<URFResource>)getDescriptionIO();	//get the description I/O
 		urfResourceDescriptionIO.setFormatted(true);	//turn on formatting
 	}
-	
+
+	/**Creates a repository of the same type as this repository with the same access privileges as this one.
+	This factory method is commonly used to use a parent repository as a factory for other repositories in its namespace.
+	@param publicRepositoryURI The public URI identifying the location of the new repository.
+	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
+	@throws NullPointerException if the given public repository URI and/or private repository URI is <code>null</code>.
+	*/
+	protected Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
+	{
+		return new FileRepository(publicRepositoryURI, privateRepositoryURI);	//create and return a new file repository
+	}
+
 	/**Gets an input stream to the contents of the resource specified by the given URI.
 	For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENTS_NAME} file, if any.
 	@param resourceURI The URI of the resource to access.

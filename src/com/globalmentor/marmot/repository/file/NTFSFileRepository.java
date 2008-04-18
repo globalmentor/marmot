@@ -3,6 +3,7 @@ package com.globalmentor.marmot.repository.file;
 import java.io.*;
 import java.net.URI;
 
+import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.net.URIs;
 import com.globalmentor.urf.URFResource;
 
@@ -58,6 +59,17 @@ public class NTFSFileRepository extends FileRepository
 	public NTFSFileRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
 	{
 		super(publicRepositoryURI, privateRepositoryURI);	//construct the parent class
+	}
+
+	/**Creates a repository of the same type as this repository with the same access privileges as this one.
+	This factory method is commonly used to use a parent repository as a factory for other repositories in its namespace.
+	@param publicRepositoryURI The public URI identifying the location of the new repository.
+	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
+	@throws NullPointerException if the given public repository URI and/or private repository URI is <code>null</code>.
+	*/
+	protected Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
+	{
+		return new NTFSFileRepository(publicRepositoryURI, privateRepositoryURI);	//create and return a new NTFS file repository
 	}
 
 	/**Determines the file that holds the description of the given resource file.

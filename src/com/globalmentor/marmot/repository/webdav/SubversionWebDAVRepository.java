@@ -4,6 +4,7 @@ import java.net.*;
 import java.util.Set;
 
 
+import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.net.URIs;
 import com.globalmentor.net.http.*;
 import com.globalmentor.net.http.webdav.*;
@@ -68,6 +69,20 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 		super(publicRepositoryURI, privateRepositoryURI, httpClient);	//construct the parent class
 		final Set<String> ignoredWebDAVNamespaces=getIgnoredWebDAVNamespaces();	//get the map of ignored WebDAV namespaces
 		ignoredWebDAVNamespaces.add(SUBVERSION_DAV_NAMESPACE_URI.toString());	//by default ignore the Subversion DAV namespace
+	}
+
+	/**Creates a repository of the same type as this repository with the same access privileges as this one.
+	This factory method is commonly used to use a parent repository as a factory for other repositories in its namespace.
+	@param publicRepositoryURI The public URI identifying the location of the new repository.
+	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
+	@throws NullPointerException if the given public repository URI and/or private repository URI is <code>null</code>.
+	*/
+	protected Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
+	{
+		final SubversionWebDAVRepository repository=new SubversionWebDAVRepository(publicRepositoryURI, privateRepositoryURI, getHTTPClient());	//create a new repository
+		repository.setUsername(getUsername());	//transfer authentication info
+		repository.setPassword(getPassword());	//transfer authentication info
+		return repository;	//return the new repository
 	}
 
 	/**Determines the WebDAV property name to represent an URF property.
