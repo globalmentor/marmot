@@ -21,7 +21,7 @@ import static com.globalmentor.io.Files.*;
 
 import com.globalmentor.marmot.resource.ResourceFileContentFilter;
 import com.globalmentor.marmot.resource.ResourceContentFilter;
-import com.globalmentor.marmot.resource.image.ImageResourceKit.ImageAspect;
+import com.globalmentor.marmot.resource.image.ImageAspect;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.urf.URFResource;
 import com.globalmentor.util.Debug;
@@ -68,10 +68,10 @@ public class ImageScaleFilter implements ResourceContentFilter
 		final Dimensions aspectDimensions;	//determine the aspect dimensions
 		switch(getImageAspect())	//see what image aspect is called for
 		{
-			case PREVIEW:
+			case preview:
 				aspectDimensions=PREVIEW_DIMENSIONS;
 				break;
-			case THUMBNAIL:
+			case thumbnail:
 				aspectDimensions=THUMBNAIL_DIMENSIONS;
 				break;
 			default:

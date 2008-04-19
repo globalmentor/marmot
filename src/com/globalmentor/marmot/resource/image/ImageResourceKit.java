@@ -24,70 +24,6 @@ import com.globalmentor.marmot.security.PermissionType;
 public class ImageResourceKit extends AbstractResourceKit
 {
 
-	/**Available images aspects.*/
-	public enum ImageAspect
-	{
-		/**Dimensions appropriate for presenting as a preview.*/
-		PREVIEW,
-
-		/**Dimensions appropriate for presenting as a thumbnail.*/
-		THUMBNAIL;
-	};
-
-	/**The default file extension.*/
-//TODO del if not needed	protected final static String DEFAULT_EXTENSION=JPG_EXTENSION;
-
-	/**The supported file extensions.*/
-//TODO del if not needed	protected final static String[] SUPPORTED_EXTENSIONS=new String[] {JPG_EXTENSION, JPEG_EXTENSION};
-
-	/**The "image/jpeg" content type.*/
-//TODO del if not needed	protected final static ContentType IMAGE_JPEG_CONTENT_TYPE=getContentTypeInstance(IMAGE, JPEG_SUBTYPE);
-
-	/**The image content type array.*/
-//TODO del if not needed	protected final static ContentType[] SUPPORTED_CONTENT_TYPES=new ContentType[] {IMAGE_JPEG_CONTENT_TYPE};
-
-	/**Returns the default file extensions used for the resource URI.
-	@return The default file extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
-	*/
-/*TODO del if not needed
-	public String getDefaultExtension()
-	{
-		return DEFAULT_EXTENSION;	//return the default extension		
-	}
-*/
-
-	/**Returns the file extensions supported for the resource URI.
-	@return A non-<code>null</code> array of the extensions this resource kit supports.
-	*/
-/*TODO del if not needed
-	public String[] getSupportedExtensions()
-	{
-		return SUPPORTED_EXTENSIONS;	//return our array of supported extensions		
-	}
-*/
-
-	/**Returns the content types supported.
-	This is the primary method of determining which resource kit to use for a given resource.
-	@return A non-<code>null</code> array of the content types this resource kit supports.
-	*/
-/*TODO del if not needed
-	public ContentType[] getSupportedContentTypes()
-	{
-		return SUPPORTED_CONTENT_TYPES;	//return our array of supported content types 		
-	}
-*/
-
-	/**Returns the resource types supported.
-	This is the secondary method of determining which resource kit to use for a given resource.
-	@return A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
-	*/
-/*TODO del if not needed
-	public URI[] getSupportedResourceTypes()
-	{
-		return NO_RESOURCE_TYPES;	//return an empty array of URIs		
-	}
-*/
-
 	/**Default constructor.*/
 	public ImageResourceKit()
 	{
@@ -124,7 +60,7 @@ public class ImageResourceKit extends AbstractResourceKit
 	*/
 	public boolean isAspectAllowed(final String aspectID, final PermissionType permissionType)
 	{
-		final ImageAspect imageAspect=getSerializedEnum(ImageAspect.class, aspectID);	//determine the image aspect from the ID to make sure it is non-null and valid
+		final ImageAspect imageAspect=ImageAspect.valueOf(aspectID);	//determine the image aspect from the ID to make sure it is non-null and valid
 		return checkInstance(permissionType, "Permission type cannot be null")==PermissionType.PREVIEW;	//all image aspects can only be used in preview mode
 }
 
@@ -135,7 +71,7 @@ public class ImageResourceKit extends AbstractResourceKit
 	*/
 	public ResourceContentFilter[] getAspectFilters(final String aspectID) throws IllegalArgumentException
 	{
-		final ImageAspect imageAspect=getSerializedEnum(ImageAspect.class, aspectID);	//determine the image aspect from the ID
+		final ImageAspect imageAspect=ImageAspect.valueOf(aspectID);	//determine the image aspect from the ID
 		return new ResourceContentFilter[]{new ImageScaleFilter(imageAspect)};	//return the correct image aspect filter
 	}
 

@@ -675,7 +675,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 		}
 */
 		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the resource description file
-		final URFResource saveResourceDescription=new DefaultURFResource(resourceDescription);	//create a separate description we'll use for saving
+		final URFResource saveResourceDescription=new DefaultURFResource(resourceDescription, resourceURI);	//create a separate description we'll use for saving, indicating the true URI of the resource
 		for(final URI livePropertyURI:getLivePropertyURIs())	//look at all live properties
 		{
 			saveResourceDescription.removePropertyValues(livePropertyURI);	//remove all values for this live property
