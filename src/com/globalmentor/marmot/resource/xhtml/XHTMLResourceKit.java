@@ -8,12 +8,20 @@ import net.marmox.resource.xhtml.XHTMLMenuWidget;
 
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Classes.*;
+
+import static com.globalmentor.marmot.Marmot.*;
+
+import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.net.ResourceIOException;
+import com.globalmentor.net.URIPath;
 
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.text.xml.XML.*;
 import com.globalmentor.text.xml.xhtml.XHTML;
+import com.globalmentor.urf.URFResource;
+import static com.globalmentor.urf.URF.*;
+
 import static com.globalmentor.text.xml.xhtml.XHTML.*;
 
 import org.w3c.dom.*;
@@ -34,8 +42,10 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 
 	/**The default simple name (i.e. the name without an extension) of an XHTML template.*/
 	public final static String DEFAULT_TEMPLATE_SIMPLE_NAME="_";
+	/**The extension for XHTML template resource names.*/
+	public final static String XHTML_TEMPLATE_NAME_EXTENSION="_xhtml";	//TODO create content type for _xhtml file
 	/**The default name an XHTML template.*/
-	public final static String DEFAULT_TEMPLATE_NAME=addExtension(DEFAULT_TEMPLATE_SIMPLE_NAME, XHTML_NAME_EXTENSION);
+	public final static String DEFAULT_TEMPLATE_NAME=addExtension(DEFAULT_TEMPLATE_SIMPLE_NAME, XHTML_TEMPLATE_NAME_EXTENSION);
 
 	/**Default constructor.*/
 	public XHTMLResourceKit()
@@ -44,6 +54,8 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 	}
 
 	/**Determines the URI of the template to use for the resource identified by the given URI.
+	First a template is attempted to be identified from the {@value Marmot#TEMPLATE_URI_PROPERTY_URI} property.
+	Then, if there is no template explicitly identified, a template named {@value #DEFAULT_TEMPLATE_NAME} is searched for up the hierarchy.
 	@param repository The repository in which the resource resides.
 	@param resourceURI The URI of the resource.
 	@return The URI of the template to use for the resource, or <code>null</code> if no template could be located.
@@ -51,6 +63,30 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 	*/
 	public static URI getResourceTemplateURI(final Repository repository, final URI resourceURI) throws ResourceIOException
 	{
+		return getResourceTemplateURI(repository, repository.getResourceDescription(resourceURI));	//get the description of the resource and look for a template
+	}
+
+	/**Determines the URI of the template to use for the given resource.
+	First a template is attempted to be identified from the {@value Marmot#TEMPLATE_URI_PROPERTY_URI} property.
+	Then, if there is no template explicitly identified, a template named {@value #DEFAULT_TEMPLATE_NAME} is searched for up the hierarchy.
+	@param repository The repository in which the resource resides.
+	@param resource The resource for which a template URI should be retrieved.
+	@return The URI of the template to use for the resource, or <code>null</code> if no template could be located.
+	@throws ResourceIOException if there is an error accessing the repository.
+	*/
+	public static URI getResourceTemplateURI(final Repository repository, final URFResource resource) throws ResourceIOException
+	{
+		final URI resourceURI=resource.getURI();	//get the URI of the resource
+		final URI explicitTemplateURI=Marmot.getTemplateURI(resource);	//get the template URI property, if any
+		if(explicitTemplateURI!=null)	//if there is a template URI specified
+		{
+			final URIPath templatePath=URIPath.asPathURIPath(explicitTemplateURI);	//see if this is a path: URI
+			if(templatePath==null || !templatePath.isRelative())	//if this is not a relative path TODO determine how to handle absolute paths and general URIs appropriately; this will probably include making subrepositories be able to access root repositories
+			{
+				throw new ResourceIOException(resourceURI, "Specified template URI "+explicitTemplateURI+" for resource "+resourceURI+" currently must be a relative <path:...> URI.");
+			}
+			return resourceURI.resolve(templatePath.toURI());	//resolve the template path to the resource URI
+		}
 		URI collectionURI=getCurrentLevel(resourceURI);	//start at the current collection level
 		do
 		{

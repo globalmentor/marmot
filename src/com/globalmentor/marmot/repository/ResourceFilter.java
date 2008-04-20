@@ -2,8 +2,6 @@ package com.globalmentor.marmot.repository;
 
 import java.net.URI;
 
-import static com.globalmentor.net.URIs.*;
-
 import com.globalmentor.net.URIs;
 import com.globalmentor.urf.URFResource;
 import com.globalmentor.util.Filter;
@@ -21,18 +19,12 @@ public interface ResourceFilter extends Filter<URFResource>
 	/**The resource filter that only passes collection resource URIs.
 	@see URIs#isCollectionURI(URI)
 	*/
-	public final static ResourceFilter COLLECTION_RESOURCE_URI_FILTER=new AbstractResourceURIFilter()
-		{
-			public boolean isPass(final URI resourceURI) {return isCollectionURI(resourceURI);}			
-		};
+	public final static ResourceFilter COLLECTION_RESOURCE_URI_FILTER=new DefaultResourceURIFilter(true, false);
 	
 	/**The resource filter that only passes non-collection resource URIs.
 	@see URIs#isCollectionURI(URI)
 	*/
-	public final static ResourceFilter NON_COLLECTION_RESOURCE_URI_FILTER=new AbstractResourceURIFilter()
-		{
-			public boolean isPass(final URI resourceURI) {return !isCollectionURI(resourceURI);}			
-		};
+	public final static ResourceFilter NON_COLLECTION_RESOURCE_URI_FILTER=new DefaultResourceURIFilter(false, true);
 	
 	/**Determines whether a given resource should pass through the filter or be filtered out based upon its URI.
 	@param resourceURI The resource URI to filter.
