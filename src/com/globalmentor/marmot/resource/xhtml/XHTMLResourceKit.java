@@ -9,9 +9,6 @@ import net.marmox.resource.xhtml.XHTMLMenuWidget;
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Classes.*;
 
-import static com.globalmentor.marmot.Marmot.*;
-
-import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.net.URIPath;
@@ -47,6 +44,12 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 	/**The default name an XHTML template.*/
 	public final static String DEFAULT_TEMPLATE_NAME=addExtension(DEFAULT_TEMPLATE_SIMPLE_NAME, XHTML_TEMPLATE_NAME_EXTENSION);
 
+	/**The URI of the Marmot XHTML namespace.*/
+	public final static URI MARMOT_XHTML_NAMESPACE_URI=URI.create("http://globalmentor.com/marmot/resource/xhtml");
+		//properties
+	/**Specifies a template of resource by its URI, which may be a path URI relative to the repository.*/
+	public final static URI TEMPLATE_URI_PROPERTY_URI=createResourceURI(MARMOT_XHTML_NAMESPACE_URI, "templateURI");
+
 	/**Default constructor.*/
 	public XHTMLResourceKit()
 	{
@@ -54,7 +57,7 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 	}
 
 	/**Determines the URI of the template to use for the resource identified by the given URI.
-	First a template is attempted to be identified from the {@value Marmot#TEMPLATE_URI_PROPERTY_URI} property.
+	First a template is attempted to be identified from the {@value XHTMLResourceKit#TEMPLATE_URI_PROPERTY_URI} property.
 	Then, if there is no template explicitly identified, a template named {@value #DEFAULT_TEMPLATE_NAME} is searched for up the hierarchy.
 	@param repository The repository in which the resource resides.
 	@param resourceURI The URI of the resource.
@@ -67,7 +70,7 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 	}
 
 	/**Determines the URI of the template to use for the given resource.
-	First a template is attempted to be identified from the {@value Marmot#TEMPLATE_URI_PROPERTY_URI} property.
+	First a template is attempted to be identified from the {@value XHTMLResourceKit#TEMPLATE_URI_PROPERTY_URI} property.
 	Then, if there is no template explicitly identified, a template named {@value #DEFAULT_TEMPLATE_NAME} is searched for up the hierarchy.
 	@param repository The repository in which the resource resides.
 	@param resource The resource for which a template URI should be retrieved.
@@ -77,7 +80,7 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 	public static URI getResourceTemplateURI(final Repository repository, final URFResource resource) throws ResourceIOException
 	{
 		final URI resourceURI=resource.getURI();	//get the URI of the resource
-		final URI explicitTemplateURI=Marmot.getTemplateURI(resource);	//get the template URI property, if any
+		final URI explicitTemplateURI=XHTMLResourceKit.getTemplateURI(resource);	//get the template URI property, if any
 		if(explicitTemplateURI!=null)	//if there is a template URI specified
 		{
 			final URIPath templatePath=URIPath.asPathURIPath(explicitTemplateURI);	//see if this is a path: URI
@@ -120,6 +123,26 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 		bodyElement.appendChild(asideElement);
 		appendElementNS(asideElement, createJavaURI(XHTMLMenuWidget.class.getPackage()).toString(), getLocalName(XHTMLMenuWidget.class));	//<XHTMLMenuWidget>
 		return document;	//return the template document we constructed
+	}
+
+	/**Returns the template URI of the resource
+	@param resource The resource the property of which should be located.
+	@return The URI value of the property, or <code>null</code> if there is no such property or the property value is not a URI.
+	@see #TEMPLATE_URI_PROPERTY_URI
+	*/
+	public static URI getTemplateURI(final URFResource resource)
+	{
+		return asURI(resource.getPropertyValue(TEMPLATE_URI_PROPERTY_URI));
+	}
+
+	/**Sets the template URI of the resource.
+	@param resource The resource of which the property should be set.
+	@param value The property value to set.
+	@see #TEMPLATE_URI_PROPERTY_URI
+	*/
+	public static void setTemplateURI(final URFResource resource, final URI value)
+	{
+		resource.setPropertyValue(TEMPLATE_URI_PROPERTY_URI, value);
 	}
 
 	/**Loads the template document for the identified resource.
