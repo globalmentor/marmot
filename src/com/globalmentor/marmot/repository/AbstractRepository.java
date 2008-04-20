@@ -10,6 +10,7 @@ import static java.util.Collections.*;
 
 import javax.mail.internet.ContentType;
 
+import com.globalmentor.io.Files;
 import com.globalmentor.io.InputStreams;
 import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.net.*;
@@ -33,6 +34,7 @@ import static com.globalmentor.urf.content.Content.*;
 	<li>{@value Content#LENGTH_PROPERTY_URI}</li>
 	<li>{@value Content#MODIFIED_PROPERTY_URI}</li>
 </ul>
+<p>This implementation initializes the map of extension contents to {@link Files#FILE_EXTENSION_CONTENT_TYPE_MAP}.</p>
 @author Garret Wilson
 */
 public abstract class AbstractRepository extends DefaultURFResource implements Repository
@@ -261,7 +263,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		@exception IllegalArgumentException if the given path is not relative.
 		@exception IllegalArgumentException if the given path does not represent a collection (i.e. it does not end with a path separator).
 		*/
-		public Repository getPathRepositoryEncoding(final URIPath path)
+		public Repository getPathRepository(final URIPath path)
 		{
 			return pathRepositoryMap.get(path.checkRelative().checkCollection());	//return the repository, if any, associated with the given path
 		}
@@ -903,7 +905,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		{
 			final URI resourceURI=resource.getURI();	//get the resource URI
 			final String resourceName=resourceURI!=null && !isCollectionURI(resourceURI) ? URIs.getName(resourceURI) : null;	//get the resource name, if any
-			if(resourceName!=null && !resourceName.isEmpty())	//if we have a non-empty name (only collections URIs should return empty names, so this the non-empty verification is redundant)
+			if(resourceName!=null && !resourceName.isEmpty())	//if we have a non-empty name (only collections URIs should return empty names, so this non-empty verification is redundant)
 			{
 				contentType=getExtensionContentType(getNameExtension(resourceName));	//get the registered content type, if any, for the resource's extension (which may be null)
 				if(contentType!=null)	//if we found a content type

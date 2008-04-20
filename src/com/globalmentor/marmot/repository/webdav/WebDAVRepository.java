@@ -1255,7 +1255,8 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 					{
 						throw new DataException("Illegal WebDAV "+GET_CONTENT_LENGTH_PROPERTY_NAME+" value: "+contentLengthString, numberFormatException);
 					}
-				}				
+				}
+/*TODO del; we probably don't want to trust the server's content type at all, because Subversion, for instance, seems to think *._xhtml is application/xhtml+xml without us telling it; the problem is that the Marmot session (with the resource kits and content types) is currently Guise session-based, so we currently have to hard-code the associations
 				else if(GET_CONTENT_TYPE_PROPERTY_NAME.equals(propertyLocalName) && propertyValue!=null)	//D:getcontenttype
 				{
 					final String contentTypeString=propertyValue.getText().trim();	//get the content type string
@@ -1272,6 +1273,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 						throw new DataException("Illegal WebDAV "+GET_CONTENT_TYPE_PROPERTY_NAME+" value: "+contentTypeString, argumentSyntaxException);
 					}
 				}
+*/
 				else if(GET_LAST_MODIFIED_PROPERTY_NAME.equals(propertyLocalName) && propertyValue!=null)	//D:getlastmodified
 				{
 					final String lastModifiedDateString=propertyValue.getText().trim();	//get the last modified date string

@@ -1,5 +1,9 @@
 package com.globalmentor.marmot.repository;
 
+import static com.globalmentor.java.Objects.checkInstance;
+import static com.globalmentor.net.URIs.resolve;
+import static java.util.Collections.unmodifiableMap;
+
 import java.io.*;
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -123,7 +127,42 @@ public interface Repository
 	@exception NullPointerException if a given content type and/or charset is <code>null</code>.
 	*/
 	public void setContentTypeCharsets(final Map<ContentType, Charset> contentTypeCharsets);
+	
+	/**Associates the given repository with a repository path.
+	Access to any resource with a URI beginning with the given path will delegate to the indicated repository.
+	The public URI of the given repository will be updated to correspond to its location within this repository.
+	@param path The relative collection path with which the repository should be associated.
+	@param repository The repository to handle access to all resources beginning with the given path.
+	@return The repository previously registered with the given path, or <code>null</code> if no repository was previously registered.
+	@exception NullPointerException if the given path and/or repository is <code>null</code>.
+	@exception IllegalArgumentException if the given path is not relative.
+	@exception IllegalArgumentException if the given path does not represent a collection (i.e. it does not end with a path separator).
+	*/
+	public Repository registerPathRepository(final URIPath path, final Repository repository);
 
+	/**Returns the repository associated with the given path.
+	@param path The relative collection path with which a repository may be associated.
+	@return The repository associated with the given path, or <code>null</code> if there is no repository associated with the given path.
+	@exception NullPointerException if the given content type is <code>null</code>.
+	@exception NullPointerException if the given path is <code>null</code>.
+	@exception IllegalArgumentException if the given path is not relative.
+	@exception IllegalArgumentException if the given path does not represent a collection (i.e. it does not end with a path separator).
+	*/
+	public Repository getPathRepository(final URIPath path);
+
+	/**@return The read-only mapping of relative paths associated with repositories.*/
+	public Map<URIPath, Repository> getPathRepositories();
+
+	/**Sets the path repository associations to those specified in the given map.
+	Any association will only override resources that do not explicitly have a charset specified.
+	The current associations will be lost.
+	@param pathRepositories The associations of paths to repositories.
+	@exception NullPointerException if a given path and/or repository is <code>null</code>.
+	@exception IllegalArgumentException if a given path is not relative.
+	@exception IllegalArgumentException if a given path does not represent a collection (i.e. it does not end with a path separator).
+	*/
+	public void setPathRepositories(final Map<URIPath, Repository> pathRepositories);
+	
 	/**Determines the URI of the collection resource of the given URI; either the given resource URI if the resource represents a collection, or the parent resource if not.
 	@param resourceURI The URI of the resource for which the collection resource URI should be returned.
 	@return The URI of the indicated resource's deepest collection resource, or <code>null</code> if the given URI designates a non-collection resource with no collection parent.
