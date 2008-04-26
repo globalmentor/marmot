@@ -1,9 +1,5 @@
 package com.globalmentor.marmot.repository;
 
-import static com.globalmentor.java.Objects.checkInstance;
-import static com.globalmentor.net.URIs.resolve;
-import static java.util.Collections.unmodifiableMap;
-
 import java.io.*;
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -16,7 +12,12 @@ import com.globalmentor.urf.*;
 
 /**A Marmot information store.
 <p>A repository has the concept of a <dfn>live property</dfn> which are dynamically set based upon resource state, such as content size and last modified date/time.
-Live properties cannot be set using normal property manipulation methods and are ignored if requested to be modified.</li>
+Live properties cannot be set using normal property manipulation methods and are ignored if requested to be modified.</p>
+<p>By design a repository has no direct method for explicitly and exlusively setting all properties of a resource.
+Instead, resources can have individual properties added, removed, and set. 
+This allows a loosely-coupled model that can be implemented by a variety of storage mechanisms and prevents inadvertent removal of unmentioned properties.
+If it is required to exclusively specify all properties of a resource, the properties of a resource may be retrieved
+and the unwanted properties explicitly removed.</p>  
 @author Garret Wilson
 */
 public interface Repository
@@ -369,17 +370,6 @@ public interface Repository
 	@exception ResourceIOException if the resource could not be deleted.
 	*/
 	public void deleteResource(final URI resourceURI) throws ResourceIOException;
-
-	/**Sets the properties of a resource based upon the given description.
-	@param resourceURI The reference URI of the resource.
-	@param resourceDescription A description of the resource with the properties to set; the resource URI is ignored.
-	@return The updated description of the resource.
-	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if the resource properties could not be updated.
-	*/
-	public URFResource setResourceProperties(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException;
 
 	/**Sets the properties of a given resource.
 	Any existing properties with the same URIs as the given given property/value pairs will be removed.

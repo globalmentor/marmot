@@ -7,8 +7,6 @@ import java.util.*;
 import static java.util.Arrays.*;
 import static java.util.Collections.*;
 
-import javax.mail.internet.*;
-
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.text.CharacterEncoding.*;
 import static com.globalmentor.text.xml.XML.*;
@@ -24,13 +22,11 @@ import static com.globalmentor.net.http.webdav.ApacheWebDAV.*;
 import static com.globalmentor.net.http.webdav.WebDAV.*;
 
 import com.globalmentor.io.*;
-import static com.globalmentor.io.ContentTypes.*;
 import com.globalmentor.java.Strings;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.net.*;
 import com.globalmentor.net.http.*;
 import com.globalmentor.net.http.webdav.*;
-import com.globalmentor.text.ArgumentSyntaxException;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.*;
 import com.globalmentor.util.*;
@@ -227,7 +223,6 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 			final URI webdavPropertyNamespaceURI=new URI(webdavPropertyNamespace);	//get the property namespace URI
 			final String webdavPropertyLocalName=webdavPropertyName.getLocalName();	//get the property local name
 				//if the local name is just a token local name, the namespace is the real URF property URI
-//TODO del when works			return URF_TOKEN_LOCAL_NAME.equals(webdavPropertyLocalName) ? webdavPropertyNamespaceURI : createResourceURI(webdavPropertyNamespaceURI, webdavPropertyLocalName);
 			return URF_TOKEN_LOCAL_NAME.equals(webdavPropertyLocalName) ? webdavPropertyNamespaceURI : webdavPropertyName.getURI();
 		}
 		catch(final URISyntaxException uriSyntaxException)	//if the namespace is not a valid URI, this is not a valid URF property
@@ -695,7 +690,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			webdavResource.put(resourceContents);	//create a WebDAV resource with the given contents
-  		return setResourceProperties(resourceURI, resourceDescription, webdavResource);	//set the properties using the WebDAV resource object
+  		return alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), webdavResource);	//set the properties using the WebDAV resource object
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -733,49 +728,11 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(collectionURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			webdavResource.mkCol();	//create the collection
-  		return setResourceProperties(collectionURI, collectionDescription, webdavResource);	//set the properties using the WebDAV resource object
+  		return alterResourceProperties(collectionURI, DefaultURFResourceAlteration.createResourceAlteration(collectionDescription), webdavResource);	//set the properties using the WebDAV resource object
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
 			throw createResourceIOException(collectionURI, ioException);	//translate the exception to a resource I/O exception and throw that
-		}
-		finally
-		{
-			if(passwordAuthentication!=null)	//if we used password authentication
-			{
-				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
-			}
-		}
-	}
-
-	/**Sets the properties of a resource based upon the given description.
-	This version delegates to {@link #setResourceProperties(URI, URFResource, WebDAVResource)}.
-	@param resourceURI The reference URI of the resource.
-	@param resourceDescription A description of the resource with the properties to set; the resource URI is ignored.
-	@return The updated description of the resource.
-	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if the resource properties could not be updated.
-	*/
-	public URFResource setResourceProperties(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
-	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.setResourceProperties(resourceURI, resourceDescription);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
-		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
-		try
-		{
-			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
-			return setResourceProperties(resourceURI, resourceDescription, webdavResource);	//set the properties using the WebDAV resource object
-		}
-		catch(final IOException ioException)	//if an I/O exception occurs
-		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 		finally
 		{
@@ -807,82 +764,6 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 		return webdavPropertyNames;	//return the WebDAV property names we collected		
 	}
 
-	/**Sets the properties of a resource based upon the given description.
-	Live properties are ignored.
-	@param resourceURI The reference URI of the resource.
-	@param resourceDescription A description of the resource with the properties to set; the resource URI is ignored.
-	@param webdavResource The WebDAV resource for setting the resource WebDAV properties
-	@return The updated description of the resource.
-	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
-	@exception ResourceIOException if the resource properties could not be updated.
-	*/
-	protected URFResource setResourceProperties(final URI resourceURI, final URFResource resourceDescription, final WebDAVResource webdavResource) throws ResourceIOException
-	{
-		try
-		{
-			final Set<URI> livePropertyURIs=getLivePropertyURIs();	//get the set of live properties
-			final List<WebDAVProperty> propertyList=webdavResource.propFind();	//get the properties of this resource
-			final URFResource oldResourceDescription=createResourceDescription(createURF(), resourceURI, propertyList);	//create a resource from this URI and property list; don't use the raw WebDAV properties, because they may have properties we're ignoring
-
-			final Set<WebDAVProperty> setWebDAVProperties=new HashSet<WebDAVProperty>();	//create a set of properties to set
-			for(final URFProperty property:resourceDescription.getProperties())	//for each property to set TODO fix; this will not handle plural property values
-			{
-				if(!livePropertyURIs.contains(property.getPropertyURI()))	//if this is not a live property
-				{
-					final WebDAVProperty webdavProperty=createWebDAVProperty(resourceURI, property);	//create a WebDAV property and value for this URF property
-					setWebDAVProperties.add(webdavProperty);	//add the WebDAV property with the its value
-				}
-			}
-			final Set<WebDAVProperty> removeWebDAVProperties=new HashSet<WebDAVProperty>();	//create a set of properties to remove
-			for(final URFProperty property:oldResourceDescription.getProperties())	//for each old property
-			{
-				if(!livePropertyURIs.contains(property.getPropertyURI()) && !resourceDescription.hasProperty(property))	//if this is not a live property and the new description does not have this property
-				{
-					final WebDAVProperty webdavProperty=createWebDAVProperty(resourceURI, property);	//create a WebDAV property and value for this URF property
-					removeWebDAVProperties.add(webdavProperty);	//we'll remove this property
-				}
-			}
-/*TODO del
-			
-			
-			final Set<WebDAVProperty> removeWebDAVProperties=new HashSet<WebDAVProperty>(propertyList);	//we'll remove from this set properties that shouldn't be removed
-			final Set<WebDAVProperty> setProperties=new HashSet<WebDAVProperty>();	//create a set of properties to set
-			for(final URFProperty property:resourceDescription.getProperties())	//for each property to set TODO fix; this will not handle plural property values
-			{
-				if(!livePropertyURIs.contains(property.getPropertyURI()))	//if this is not a live property
-				{
-					final WebDAVProperty webdavProperty=createWebDAVProperty(resourceURI, property);	//create a WebDAV property and value for this URF property
-					setProperties.add(webdavProperty);	//add the WebDAV property with the its value
-					removeWebDAVProperties.remove(webdavProperty);	//remove this property from the set of properties to remove, since we'll be setting this property
-				}
-			}
-*/
-			final Set<WebDAVPropertyName> removeWebDAVPropertyNames=new HashSet<WebDAVPropertyName>();	//create a set of names to remove
-			for(final WebDAVProperty webdavProperty:removeWebDAVProperties)	//for all the properties to remove
-			{
-				removeWebDAVPropertyNames.add(webdavProperty.getName());	//add this name to remove
-			}
-/*TODO del
-			for(final URI livePropertyURI:livePropertyURIs)	//look at all live properties
-			{
-				final WebDAVPropertyName liveWebDAVPropertyName=createWebDAVPropertyName(livePropertyURI);	//create a WebDAV property name for the live property URI
-				removeWebDAVPropertyNames.remove(liveWebDAVPropertyName);	//don't remove this property after all, as it's a live property
-			}
-*/
-			webdavResource.propPatch(removeWebDAVPropertyNames, setWebDAVProperties);	//remove and set properties
-			final List<WebDAVProperty> newPropertyList=webdavResource.propFind();	//get the updated properties of this resource
-			return createResourceDescription(createURF(), resourceURI, newPropertyList);	//create a resource from this URI and new property list
-		}
-		catch(final DataException dataException)	//if the data wasn't correct
-		{
-			throw createResourceIOException(resourceURI, dataException);	//translate the exception to a resource I/O exception and throw that
-		}
-		catch(final IOException ioException)	//if an I/O exception occurs
-		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
-		}
-	}
-
 	/**Alters properties of a given resource.
 	This implementation does not support removing specific properties by value.
 	This implementation does not support adding properties; only setting properties.
@@ -908,6 +789,42 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 			throw new UnsupportedOperationException("This implementation does not support removing properties by value.");
 		}
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+		try
+		{
+			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			return alterResourceProperties(resourceURI, resourceAlteration, webdavResource);	//alter the properties of the resource
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+		}
+		finally
+		{
+			if(passwordAuthentication!=null)	//if we used password authentication
+			{
+				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
+			}
+		}		
+	}
+	
+	/**Alters properties of a given resource.
+	This implementation does not support removing specific properties by value.
+	This implementation does not support adding properties; only setting properties.
+	@param resourceURI The reference URI of the resource.
+	@param resourceAlteration The specification of the alterations to be performed on the resource.
+	@param webdavResource The WebDAV resource to be modified.
+	@return The updated description of the resource.
+	@exception NullPointerException if the given resource URI, resource alteration, and/or WebDAV resource is <code>null</code>.
+	@exception IOException if the resource properties could not be altered.
+	@exception UnsupportedOperationException if a property is requested to be removed by value.
+	@exception UnsupportedOperationException if a property is requested to be added without the property URI first being removed (i.e. a property addition instead of a property setting).
+	*/
+	protected URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration, final WebDAVResource webdavResource) throws IOException
+	{
+		if(!resourceAlteration.getPropertyRemovals().isEmpty())	//if there are properties to be removed by value
+		{
+			throw new UnsupportedOperationException("This implementation does not support removing properties by value.");
+		}
 		try
 		{
 			final Set<URI> livePropertyURIs=getLivePropertyURIs();	//get the set of live properties
@@ -948,7 +865,6 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 				final WebDAVPropertyName liveWebDAVPropertyName=createWebDAVPropertyName(livePropertyURI);	//create a WebDAV property name for the live property URI
 				removeWebDAVPropertyNames.remove(liveWebDAVPropertyName);	//don't remove this property after all, as it's a live property
 			}
-			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			webdavResource.propPatch(removeWebDAVPropertyNames, setWebDAVProperties);	//remove and set WebDAV properties
 			final List<WebDAVProperty> propertyList=webdavResource.propFind();	//get the properties of this resource
 			return createResourceDescription(createURF(), resourceURI, propertyList);	//create a resource from this URI and property list
@@ -957,19 +873,9 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 		{
 			throw createResourceIOException(resourceURI, dataException);	//translate the exception to a resource I/O exception and throw that
 		}
-		catch(final IOException ioException)	//if an I/O exception occurs
-		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
-		}
-		finally
-		{
-			if(passwordAuthentication!=null)	//if we used password authentication
-			{
-				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
-			}
-		}		
 	}
-
+	
+	
 	/**Creates an infinitely deep copy of a resource to another URI in this repository, overwriting any resource at the destionation only if requested. 
 	@param resourceURI The URI of the resource to be copied.
 	@param destinationURI The URI to which the resource should be copied.
@@ -1368,7 +1274,11 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 	  {
 	  	try
 	  	{
-	  		setResourceProperties(getResourceURI(), getResourceDescription(), getWebDAVResource());	//set the properties using the WebDAV resource object
+	  		alterResourceProperties(getResourceURI(), DefaultURFResourceAlteration.createResourceAlteration(getResourceDescription()), getWebDAVResource());	//set the properties using the WebDAV resource object
+			}
+			catch(final IOException ioException)	//if an I/O exception occurs
+			{
+				throw createResourceIOException(getResourceURI(), ioException);	//translate the exception to a resource I/O exception and throw that
 			}
 			finally
 			{

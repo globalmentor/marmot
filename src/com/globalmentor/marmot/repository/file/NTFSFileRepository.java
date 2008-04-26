@@ -5,6 +5,7 @@ import java.net.URI;
 
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.net.URIs;
+import com.globalmentor.urf.DefaultURFResourceAlteration;
 import com.globalmentor.urf.URFResource;
 
 import static com.globalmentor.io.FileConstants.*;
@@ -105,7 +106,7 @@ public class NTFSFileRepository extends FileRepository
 			createNewFile(resourceFile);	//create a new file
 			if(resourceDescription.hasProperties())	//if there are any properties to set (otherwise, don't create an empty properties file) TODO improve; this will always have properties; it would be best to check to see if there are any non-live properties
 			{
-				setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
+	  		alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), resourceFile);	//set the properties using the file
 			}
 			return new FileOutputStream(resourceFile, true);	//return an output stream to the file, appending to the new, empty file we created
 		}

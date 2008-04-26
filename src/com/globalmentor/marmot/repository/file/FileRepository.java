@@ -426,7 +426,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 			createNewFile(resourceFile);	//create a new file
 			if(resourceDescription.hasProperties())	//if there are any properties to set (otherwise, don't create an empty properties file)
 			{
-				setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
+	  		alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), resourceFile);	//set the properties using the file
 			}
 			return new FileOutputStream(resourceFile, true);	//return an output stream to the file, appending to the new, empty file we created
 		}
@@ -470,7 +470,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 			}
 			if(resourceDescription.hasProperties())	//if there are any properties to set
 			{
-				return setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object and return the new description
+	  		return alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), resourceFile);	//set the properties using the file
 			}
 			else	//if there are no properties to set, don't create an empty properties file; just return the resource description
 			{
@@ -511,7 +511,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 			mkdir(directoryFile);	//create the directory
 			if(collectionDescription.hasProperties())	//if there are any properties to set
 			{
-				return setResourceProperties(collectionURI, collectionDescription, directoryFile);	//update the resource properties using the file object and return the new description
+	  		return alterResourceProperties(collectionURI, DefaultURFResourceAlteration.createResourceAlteration(collectionDescription), directoryFile);	//set the properties using the file
 			}
 			else	//if there are no properties to set, don't create an empty properties file; just return the resource description
 			{
@@ -522,29 +522,6 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 		{
 			throw createResourceIOException(collectionURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
-	}
-
-	/**Sets the properties of a resource based upon the given description.
-	This version delegates to {@link #setResourceProperties(URI, URFResource, File)}.
-	@param resourceURI The reference URI of the resource.
-	@param resourceDescription A description of the resource with the properties to set; the resource URI is ignored.
-	@return The updated description of the resource.
-	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException Thrown if the resource properties could not be updated.
-	*/
-	public URFResource setResourceProperties(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
-	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.setResourceProperties(resourceURI, resourceDescription);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
-		final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
-		return setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
 	}
 
 	/**Alters properties of a given resource.
@@ -563,56 +540,39 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 			return subrepository.alterResourceProperties(resourceURI, resourceAlteration);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
+		return alterResourceProperties(resourceURI, resourceAlteration, new File(getPrivateURI(resourceURI)));	//create a file object and alter the properties for the file
+	}
+
+	/**Alters properties of a given resource.
+	Live properties are ignored.
+	@param resourceURI The reference URI of the resource.
+	@param resourceAlteration The specification of the alterations to be performed on the resource.
+	@param resourceFile The file to use in updating the resource properties.
+	@return The updated description of the resource.
+	@exception NullPointerException if the given resource URI, resource alteration, and/or resource file is <code>null</code>.
+	@exception ResourceIOException if the resource properties could not be altered.
+	*/
+	protected URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration, final File resourceFile) throws ResourceIOException
+	{
 		final URF urf=createURF();	//create a new URF data model
 		final URFResource resourceDescription;
 		try
 		{
-			final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
 			resourceDescription=createResourceDescription(urf, resourceFile);	//get a description from a file created from the URI from the private namespace
 			resourceDescription.alter(resourceAlteration);	//alter the resource according to the specification
-			return setResourceProperties(resourceURI, resourceDescription, resourceFile);	//update the resource properties using the file object
+			for(final URI livePropertyURI:getLivePropertyURIs())	//look at all live properties
+			{
+				resourceDescription.removePropertyValues(livePropertyURI);	//remove all values for this live property
+			}
+			saveResourceDescription(resourceDescription, resourceFile);	//save the resource description
+			return resourceDescription;	//return the updated description
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
 			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 	}
-
-	/**Sets the properties of a resource based upon the given description.
-	Live properties are ignored.
-	@param resourceURI The reference URI of the resource.
-	@param resourceDescription A description of the resource with the properties to set; the resource URI is ignored.
-	@param resourceFile The file to use in updating the resource properties.
-	@return The updated description of the resource.
-	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
-	@exception ResourceIOException Thrown if the resource properties could not be updated.
-	*/
-	protected URFResource setResourceProperties(final URI resourceURI, final URFResource resourceDescription, final File resourceFile) throws ResourceIOException
-	{
-/*TODO del; add separate method for setting live properties
-		final URFDateTime modifiedTime=getModified(resourceDescription);	//get the modified time designation, if there is one
-		if(modifiedTime!=null)	//if there is a modified time designated
-		{
-			resourceFile.setLastModified(modifiedTime.getTime());	//update the last modified time TODO does this work for directories? should we check?
-		}
-*/
-		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the resource description file
-		final URFResource saveResourceDescription=new DefaultURFResource(resourceDescription, resourceURI);	//create a separate description we'll use for saving, indicating the true URI of the resource
-		for(final URI livePropertyURI:getLivePropertyURIs())	//look at all live properties
-		{
-			saveResourceDescription.removePropertyValues(livePropertyURI);	//remove all values for this live property
-		}
-		try
-		{
-			saveResourceDescription(saveResourceDescription, resourceFile);	//save the resource description
-			return createResourceDescription(createURF(), resourceFile);	//create and return a description of the new file
-		}
-		catch(final IOException ioException)	//if an I/O exception occurs
-		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
-		}
-	}
-
+	
 	/**Creates an infinitely deep copy of a resource to another URI in this repository, overwriting any resource at the destionation only if requested. 
 	@param resourceURI The URI of the resource to be copied.
 	@param destinationURI The URI to which the resource should be copied.
