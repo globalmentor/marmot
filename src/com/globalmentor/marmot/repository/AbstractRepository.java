@@ -479,6 +479,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		{
 			return subrepository.createParentResources(resourceURI);	//delegate to the subrepository
 		}
+		checkOpen();	//make sure the repository is open
 		if(resourceURI.equals(getPublicRepositoryURI()))	//if this is the resource URI
 		{
 			return null;	//we didn't have to create anything
@@ -576,7 +577,6 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		{
 			return subrepository.getChildResourceDescriptions(resourceURI);	//delegate to the subrepository
 		}
-		checkOpen();	//make sure the repository is open
 		return getChildResourceDescriptions(resourceURI, 1);	//get a list of child resource descriptions without going deeper than one level
 	}
 
@@ -597,7 +597,6 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		{
 			return subrepository.getChildResourceDescriptions(resourceURI, resourceFilter);	//delegate to the subrepository
 		}
-		checkOpen();	//make sure the repository is open
 		return getChildResourceDescriptions(resourceURI, resourceFilter, 1);	//get a list of child resource descriptions without going deeper than one level
 	}
 
@@ -618,47 +617,53 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		{
 			return subrepository.getChildResourceDescriptions(resourceURI, depth);	//delegate to the subrepository
 		}
-		checkOpen();	//make sure the repository is open
 		return getChildResourceDescriptions(resourceURI, null, depth);	//get a list of child resource descriptions without filtering
 	}
 
-	/**Retrieves child resources of the resource at the given URI.
-	This implementation does not include child resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
-	@param resourceURI The URI of the resource for which sub-resources should be returned.
-	@param resourceFilter The filter that determines whether child resources should be included, or <code>null</code> if the child resources should not be filtered.
-	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
-	@return A list of sub-resource descriptions under the given resource.
+	/**Sets the properties of a given resource.
+	Any existing properties with the same URIs as the given given property/value pairs will be removed.
+	All other existing properties will be left unmodified.
+	This implementation creates an {@link URFResourceAlteration} and delegates to {@link #alterResourceProperties(URI, URFResourceAlteration)}.
+	@param resourceURI The reference URI of the resource.
+	@param properties The properties to set.
+	@return The updated description of the resource.
+	@exception NullPointerException if the given resource URI and/or properties is <code>null</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the repository.
+	@exception ResourceIOException if the resource properties could not be updated.
 	*/
-//TODO del	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final ResourceFilter resourceFilter, final int depth) throws ResourceIOException
-
-	/**Retrieves child resources of the resource at the given URI.
-	Non-collection resources are included.
-	This implementation delegates to {@link #getChildResourceDescriptions(URI, boolean, boolean, int)}.
-	@param resourceURI The URI of the resource for which sub-resources should be returned.
-	@param includeCollections Whether collection resources should be included.
-	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
-	@return A list of sub-resources descriptions under the given resource.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the repository.
-	*/
-/*TODO del
-	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final boolean includeCollections, final int depth) throws ResourceIOException
+	public URFResource setResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
 		if(subrepository!=this)	//if the resource URI lies within a subrepository
 		{
-			return subrepository.getChildResourceDescriptions(resourceURI, includeCollections, depth);	//delegate to the subrepository
+			return subrepository.setResourceProperties(resourceURI, properties);	//delegate to the subrepository
 		}
-		checkOpen();	//make sure the repository is open
-		return getChildResourceDescriptions(resourceURI, includeCollections, true, depth);	//get a list of child resource descriptions with non-collections
+		return alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createSetPropertiesAlteration(properties));	//create an alteration for setting properties and alter the resource
 	}
-*/
-	
+
+	/**Removes properties from a given resource.
+	Any existing properties with the same URIs as the given given property/value pairs will be removed.
+	All other existing properties will be left unmodified. 
+	This implementation creates an {@link URFResourceAlteration} and delegates to {@link #alterResourceProperties(URI, URFResourceAlteration)}.
+	@param resourceURI The reference URI of the resource.
+	@param propertyURIs The properties to remove.
+	@return The updated description of the resource.
+	@exception NullPointerException if the given resource URI and/or property URIs is <code>null</code>.
+	@exception ResourceIOException if the resource properties could not be updated.
+	*/
+	public URFResource removeResourceProperties(URI resourceURI, final URI... propertyURIs) throws ResourceIOException
+	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.removeResourceProperties(resourceURI, propertyURIs);	//delegate to the subrepository
+		}
+		return alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createRemovePropertiesAlteration(propertyURIs));	//create an alteration for removing properties and alter the resource
+	}
+
 	/**Determines the URI of the collection resource of the given URI; either the given resource URI if the resource represents a collection, or the parent resource if not.
 	If the given resource URI is a collection URI this method returns the given resource URI.
 	If the given resource URI is not a collection URI, this implementation returns the equivalent of resolving the path {@value URIs#CURRENT_LEVEL_PATH_SEGMENT} to the URI.
