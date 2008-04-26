@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.text.DateFormat;
 import java.util.*;
+
 import static java.util.Arrays.*;
 import static java.util.Collections.*;
 
@@ -559,7 +560,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final ResourceFilter resourceFilter, final int depth) throws ResourceIOException
+	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final ResourceFilter resourceFilter, final int depth) throws ResourceIOException	//TODO change this to a set
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -593,16 +594,30 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 					if(isPrivateResourcePublic(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI))	//if the associated child resource is public and the property list is *not* for this resource
 					{
 						final URI childResourcePublicURI=getPublicURI(childResourcePrivateURI);	//get the public URI of this child resource
-						if(resourceFilter==null || resourceFilter.isPass(childResourcePublicURI))	//if we should include this resource based upon its URI
+						if(getSubrepository(childResourcePublicURI)==this)	//if this child wouldn't be located in a subrepository (i.e. ignore resources obscured by subrepositories)
 						{
-							final URFResource childResourceDescription=createResourceDescription(urf, childResourcePublicURI, propertyList.getValue());	//create a resource from this URI and property lists
-							if(resourceFilter==null || resourceFilter.isPass(childResourceDescription))	//if we should include this resource based upon its description
+							if(resourceFilter==null || resourceFilter.isPass(childResourcePublicURI))	//if we should include this resource based upon its URI
 							{
-								childResourceList.add(childResourceDescription);	//add this child resource description to our list
+								final URFResource childResourceDescription=createResourceDescription(urf, childResourcePublicURI, propertyList.getValue());	//create a resource from this URI and property lists
+								if(resourceFilter==null || resourceFilter.isPass(childResourceDescription))	//if we should include this resource based upon its description
+								{
+									childResourceList.add(childResourceDescription);	//add this child resource description to our list
+								}
 							}
 						}
 					}
 				}
+					//aggregate any mapped subrepositories
+				for(final Repository childSubrepository:getChildSubrepositories(resourceURI))	//see if any subrepositories are mapped as children of this repository
+				{
+					final URI childSubrepositoryURI=childSubrepository.getURI();	//get the URI of the subrepository
+					childResourceList.add(childSubrepository.getResourceDescription(childSubrepositoryURI));	//get a description of the subrepository root resource
+					if(depth==-1 || depth>0)	//if we should get child resources lower in the hierarchy
+					{
+						childResourceList.addAll(childSubrepository.getChildResourceDescriptions(childSubrepositoryURI, resourceFilter, depth==-1 ? depth : depth-1));	//get descriptions of subrepository children
+					}
+				}
+				
 	//TODO do the special Marmot thing about checking for special Marmot directories
 				
 	//TODO fix				Collections.sort(resourceList);	//sort the resource by URI

@@ -353,7 +353,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 		if(depth!=0)	//a depth of zero means don't get child resources
 		{
 			final File resourceDirectory=new File(getPrivateURI(resourceURI));	//create a file object for the resource
-			final List<URFResource> resourceList=new ArrayList<URFResource>();	//create a list to hold the files that are not directories	
+			final List<URFResource> childResourceList=new ArrayList<URFResource>();	//create a list to hold the files that are not directories	
 			if(isCollectionURI(resourceURI) && resourceDirectory.isDirectory())	//if there is a directory for this resource
 			{
 				final URF urf=createURF();	//create a new URF data model
@@ -361,31 +361,43 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 				for(final File file:files)	//for each file in the directory
 				{
 					final URI childResourcePublicURI=getPublicURI(file.toURI());	//get a public URI to represent the file resource
-					
-					if(resourceFilter==null || resourceFilter.isPass(childResourcePublicURI))	//if we should include this resource based upon its URI
+					if(getSubrepository(childResourcePublicURI)==this)	//if this child wouldn't be located in a subrepository (i.e. ignore resources obscured by subrepositories)
 					{
-						final URFResource childResourceDescription;
-						try
+						if(resourceFilter==null || resourceFilter.isPass(childResourcePublicURI))	//if we should include this resource based upon its URI
 						{
-							childResourceDescription=createResourceDescription(urf, file);	//create a resource description for this file
-						}
-						catch(final IOException ioException)	//if an I/O exception occurs
-						{
-							throw createResourceIOException(getPublicURI(file.toURI()), ioException);	//translate the exception to a resource I/O exception and throw that, using a public URI to represent the file resource
-						}
-						if(resourceFilter==null || resourceFilter.isPass(childResourceDescription))	//if we should include this resource based upon its description
-						{
-							resourceList.add(childResourceDescription);	//add the resource to our list
-							if(depth!=0 && file.isDirectory())	//if this file is a directory and we haven't reached the bottom
+							final URFResource childResourceDescription;
+							try
 							{
-								final int newDepth=depth>0 ? depth-1 : depth;	//reduce the depth by one, unless we're using the unlimited depth value
-								resourceList.addAll(getChildResourceDescriptions(childResourcePublicURI, resourceFilter, newDepth));	//get a list of child descriptions for the resource we just created and add them to the list
+								childResourceDescription=createResourceDescription(urf, file);	//create a resource description for this file
+							}
+							catch(final IOException ioException)	//if an I/O exception occurs
+							{
+								throw createResourceIOException(getPublicURI(file.toURI()), ioException);	//translate the exception to a resource I/O exception and throw that, using a public URI to represent the file resource
+							}
+							if(resourceFilter==null || resourceFilter.isPass(childResourceDescription))	//if we should include this resource based upon its description
+							{
+								childResourceList.add(childResourceDescription);	//add the resource to our list
+								if(depth!=0 && file.isDirectory())	//if this file is a directory and we haven't reached the bottom
+								{
+									final int newDepth=depth>0 ? depth-1 : depth;	//reduce the depth by one, unless we're using the unlimited depth value
+									childResourceList.addAll(getChildResourceDescriptions(childResourcePublicURI, resourceFilter, newDepth));	//get a list of child descriptions for the resource we just created and add them to the list
+								}
 							}
 						}
 					}
 				}
+					//aggregate any mapped subrepositories
+				for(final Repository childSubrepository:getChildSubrepositories(resourceURI))	//see if any subrepositories are mapped as children of this repository
+				{
+					final URI childSubrepositoryURI=childSubrepository.getURI();	//get the URI of the subrepository
+					childResourceList.add(childSubrepository.getResourceDescription(childSubrepositoryURI));	//get a description of the subrepository root resource
+					if(depth==-1 || depth>0)	//if we should get child resources lower in the hierarchy
+					{
+						childResourceList.addAll(childSubrepository.getChildResourceDescriptions(childSubrepositoryURI, resourceFilter, depth==-1 ? depth : depth-1));	//get descriptions of subrepository children
+					}
+				}
 			}
-			return resourceList;	//return the list of resources we constructed
+			return childResourceList;	//return the list of resources we constructed
 		}
 		else	//if a depth of zero was requested
 		{

@@ -16,6 +16,7 @@ import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
+import com.globalmentor.util.*;
 
 import static com.globalmentor.io.ContentTypes.*;
 import static com.globalmentor.io.Files.*;
@@ -239,6 +240,9 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	/**The map of repositories keyed to relative collection paths.*/
 	private final Map<URIPath, Repository> pathRepositoryMap=new HashMap<URIPath, Repository>();
 
+	/**The map of repositories pairs keyed to relative parent collection paths.*/
+	private final CollectionMap<URIPath, Repository, Set<Repository>> parentPathRepositoryMap=new HashSetHashMap<URIPath, Repository>();
+
 		/**Associates the given repository with a repository path.
 		Access to any resource with a URI beginning with the given path will delegate to the indicated repository.
 		The public URI of the given repository will be updated to correspond to its location within this repository.
@@ -252,6 +256,11 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		public Repository registerPathRepository(final URIPath path, final Repository repository)
 		{
 			repository.setPublicRepositoryURI(resolve(getURI(), path));	//update the public URI of the repository to match its location in the repository
+			if(!URIPath.ROOT_URI_PATH.equals(path))	//if this is not the root path (it's not normal to map the root path to another repository, but check for it anyway
+			{
+				final URIPath parentPath=path.getParentPath();	//get the parent path
+				parentPathRepositoryMap.addItem(parentPath, repository);	//associate this repository with the parent path
+			}
 			return pathRepositoryMap.put(path.checkRelative().checkCollection(), checkInstance(repository, "Repository cannot be null."));
 		}
 
@@ -285,6 +294,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		public void setPathRepositories(final Map<URIPath, Repository> pathRepositories)
 		{
 			pathRepositoryMap.clear();	//clear the current mappings
+			parentPathRepositoryMap.clear();
 			for(final Map.Entry<URIPath, Repository> pathRepositoryEntry:pathRepositories.entrySet())	//look at each mapping
 			{
 				registerPathRepository(pathRepositoryEntry.getKey(), pathRepositoryEntry.getValue());	//register this association
@@ -329,7 +339,23 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 			}
 			levelPath=levelPath.getParentLevel();	//look at the next higher level
 		}
-		return this;	//indicate that the resource 
+		return this;	//indicate that the resource isn't in any subrepository
+	}
+
+	/**Retrieves the subrepositories, if any, mapped under a given parent path.
+	For example, if subrepositories are mapped to parent/sub1 and parent/sub2, getting child repositories
+	for http://example.com/parent/ will return the two mapped subrepositories.
+	@param parentResourceURI The URI of a resource within this repository that may be the parent of one or more subrepositories; should be a collection URI, and must already be normalized.
+	@return A set of repositories mapped to paths which are direct children of the given resource URI.
+	@exception NullPointerException if the given resource URI is <code>null</code>.
+	*/
+	@SuppressWarnings("unchecked")
+	protected Set<Repository> getChildSubrepositories(final URI parentResourceURI)
+	{
+		final URI repositoryURI=getURI();	//get the URI of the repository
+		final URIPath resourcePath=new URIPath(repositoryURI.relativize(parentResourceURI));	//get the path of the resource relative to the resource
+		final Set<Repository> childSubrepositories=parentPathRepositoryMap.get(resourcePath);	//see if there are any subrepositories mapped under the given parent resource URI
+		return childSubrepositories!=null ? unmodifiableSet(childSubrepositories) : (Set<Repository>)EMPTY_SET;	//return an unmodifiablel set of the subrepositories, if there are any
 	}
 
 	/**Default constructor with no settings.
