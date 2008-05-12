@@ -8,11 +8,13 @@ import ij.process.ImageProcessor;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.renderable.ParameterBlock;
 import java.io.*;
 import java.net.URI;
+import java.util.Iterator;
 
-import javax.imageio.ImageIO;
+import javax.imageio.*;
+import javax.imageio.metadata.IIOMetadata;
+import javax.imageio.stream.*;
 import javax.media.jai.*;
 
 import static com.globalmentor.java.Objects.*;
@@ -81,10 +83,35 @@ public class ImageScaleFilter implements ResourceContentFilter
 //TODO del Debug.trace("aspect dimensions:", scaledDimension);
 		try
 		{
-			final BufferedImage bufferedImage=ImageIO.read(inputStream);	//read the image
+			final ImageInputStream imageInputStream=ImageIO.createImageInputStream(inputStream);	//create an image input stream from the input stream
+			if(imageInputStream==null)	//if we weren't able to create an image input stream
+			{
+      	throw new ResourceIOException(resource.getURI(), "Unable to create image input stream for resource "+resource.getURI());
+			}
+      final Iterator<ImageReader> imageReaderIterator=ImageIO.getImageReaders(imageInputStream);	//get an iterator to image readers for this image input stream 
+      if(!imageReaderIterator.hasNext())	//if there are no image readers available for this image
+      {
+      	throw new ResourceIOException(resource.getURI(), "No image readers available for resource "+resource.getURI());
+      }
+      final ImageReader imageReader=imageReaderIterator.next();	//get the first image reader available
+      final ImageReadParam imageReadParam=imageReader.getDefaultReadParam();	//get the default image reading parameters
+      imageReader.setInput(imageInputStream, true, true);	//tell the image reader to read from the image input stream
+      final BufferedImage bufferedImage;
+//TODO fix      IIOMetadata iioMetadata=null;
+			try
+			{
+//TODO don't do this blindly; this copies *all* metadata and messes up the palette on at least black-and-white images				iioMetadata=imageReader.getImageMetadata(0);	//get the metadata for the first image (and only image that we currently support)
+				bufferedImage=imageReader.read(0, imageReadParam);	//tell the image reader to read the image
+			}
+			finally
+			{
+				imageReader.dispose();	//tell the image reader we don't need it any more
+			}
+//TODO del when works			final BufferedImage bufferedImage=ImageIO.read(inputStream);	//read the image
 			final int originalWidth=bufferedImage.getWidth();
 			final int originalHeight=bufferedImage.getHeight();
 	//TODO del Debug.trace("original image dimension", originalDimension);
+      final BufferedImage newImage;
 				//the multi-resizing technique described at http://today.java.net/pub/a/today/2007/04/03/perils-of-image-getscaledinstance.html produces many black lines for normal JAI scaling
 			if(originalWidth>aspectDimensions.getWidth().getValue() || originalHeight>aspectDimensions.getHeight().getValue())	//if this image needs scaled
 			{
@@ -131,19 +158,41 @@ public class ImageScaleFilter implements ResourceContentFilter
 //this technique, modified from http://www.hanhuy.com/pfn/java-image-thumbnail-comparison , produces images virtually identical to JAI subsample average but is really slow---but leaves no black lines like the current JAI
         final Image scaledImage = bufferedImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
 				final int type=(bufferedImage.getTransparency() == Transparency.OPAQUE) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
-        final BufferedImage newImage = new BufferedImage(newWidth, newHeight, type);
+        newImage = new BufferedImage(newWidth, newHeight, type);
         Graphics2D graphics = newImage.createGraphics();
 	      graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 	      graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         graphics.drawImage(scaledImage, null, null);
         graphics.dispose();
         scaledImage.flush();
-
-				ImageIO.write(newImage, "JPEG", outputStream);	//write the image out as a JPEG TODO use a constant; see http://www.digitalsanctuary.com/tech-blog/java/how-to-resize-uploaded-images-using-java-better-way.html for alternate writing approach
+//TODO del when works				ImageIO.write(newImage, "JPEG", outputStream);	//write the image out as a JPEG TODO use a constant; see http://www.digitalsanctuary.com/tech-blog/java/how-to-resize-uploaded-images-using-java-better-way.html for alternate writing approach
 			}
 			else	//if the image doesn't need scaled
 			{
-				ImageIO.write(bufferedImage, "JPEG", outputStream);	//write the image out as a JPEG TODO use a constant
+        newImage=bufferedImage;	//write the buffered image unchanged
+//TODO del when works				ImageIO.write(bufferedImage, "JPEG", outputStream);	//write the image out as a JPEG TODO use a constant
+			}
+			final ImageWriter imageWriter=ImageIO.getImageWriter(imageReader);	//get an image writer that corresponds to the reader; this will hopefully conserve the metadata as well
+			final ImageWriteParam imageWriteParam=imageWriter.getDefaultWriteParam();	//get default parameters for writing the image
+			if(imageWriteParam.canWriteCompressed())	//if the writer can compress images (if we don't do this check, an exception will be thrown if the image writer doesn't support compression, e.g. for PNG files)
+			{
+				imageWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);	//indicate that we'll explicitly set the compression quality
+				imageWriteParam.setCompressionQuality(1.0f);	//use the highest quality available; see http://www.universalwebservices.net/web-programming-resources/java/adjust-jpeg-image-compression-quality-when-saving-images-in-java
+			}
+			final ImageOutputStream imageOutputStream=ImageIO.createImageOutputStream(outputStream);	//create an image output stream from the output stream
+			if(imageOutputStream==null)	//if we weren't able to create an image output stream
+			{
+      	throw new ResourceIOException(resource.getURI(), "Unable to create image output stream for resource "+resource.getURI());
+			}
+			imageWriter.setOutput(imageOutputStream);	//tell the image writer to write to the image output stream
+			final IIOImage iioImage=new IIOImage(newImage, null, null);	//create an iioImage to write	TODO fix , preserving the metadata, if any, we got from the original file
+			try
+			{
+				imageWriter.write(null, iioImage, imageWriteParam);	//tell the image writer to read the image using the custom parameters
+			}
+			finally
+			{
+				imageWriter.dispose();	//tell the image writer we don't need it any more
 			}
 	/*TODO fix so that we can copy the data unchanged; we've already used up the input stream at this point, though
 			else	//if the image doesn't need scaled
