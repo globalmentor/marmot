@@ -1,25 +1,20 @@
 package com.globalmentor.marmot.resource.xhtml;
 
-import java.io.IOException;
 import java.net.URI;
-
-import net.marmox.resource.*;
-import net.marmox.resource.xhtml.XHTMLMenuWidget;
 
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Classes.*;
-
 import com.globalmentor.marmot.repository.Repository;
-import com.globalmentor.net.ResourceIOException;
-import com.globalmentor.net.URIPath;
-
+import com.globalmentor.net.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.text.xml.XML.*;
 import com.globalmentor.text.xml.xhtml.XHTML;
+import static com.globalmentor.text.xml.xhtml.XHTML.*;
 import com.globalmentor.urf.URFResource;
 import static com.globalmentor.urf.URF.*;
 
-import static com.globalmentor.text.xml.xhtml.XHTML.*;
+import net.marmox.resource.*;
+import net.marmox.resource.xhtml.XHTMLMenuWidget;
 
 import org.w3c.dom.*;
 
@@ -117,7 +112,6 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 		assert bodyElement!=null : "XHTML documents should always have a body.";
 		final Element headerElement=document.createElementNS(XHTML_NAMESPACE_URI.toString(), ELEMENT_HEADER);	//<header>
 		bodyElement.appendChild(headerElement);
-		appendElementNS(headerElement, createJavaURI(BreadcrumbWidget.class.getPackage()).toString(), getLocalName(BreadcrumbWidget.class));	//<BreadcrumbWidget>
 		appendElementNS(headerElement, createJavaURI(ResourceLabelHeadingWidget.class.getPackage()).toString(), getLocalName(ResourceLabelHeadingWidget.class));	//<ResourceLabelHeadingWidget>
 		final Element asideElement=document.createElementNS(XHTML_NAMESPACE_URI.toString(), ELEMENT_ASIDE);	//<aside>
 		bodyElement.appendChild(asideElement);
