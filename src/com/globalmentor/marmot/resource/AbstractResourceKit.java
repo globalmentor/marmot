@@ -1,8 +1,6 @@
 package com.globalmentor.marmot.resource;
 
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URI;
 import java.util.*;
 import static java.util.Arrays.*;
@@ -484,5 +482,69 @@ public abstract class AbstractResourceKit implements ResourceKit
 	public ResourceContentFilter[] getAspectFilters(final String aspectID)
 	{
 		throw new IllegalArgumentException(checkInstance(aspectID, "Aspect ID cannot be null."));		
+	}
+
+	/**Determines the URI of a resource related to the given resource.
+	This method is useful for determining a specified or default template or theme resource.
+	First a related resource is attempted to be identified from the specified property, if any.
+	Then, if there is no related resource explicitly identified, a related resource of the given name is searched for in the directory and optionally up the hierarchy.
+	This implementation only supports relative path URIs.
+	@param repository The repository in which the resource resides.
+	@param resourceURI The URI of the resource for which a related resource URI should be retrieved.
+	@param relatedResourcePathURIPropertyURI The URI of the property indicating an explicit related resource by its path URI, or <code>null</code> if there no explicit related resource is allowed to be designated.
+	@param defaultRelatedResourceName The name of a default related resource to be found in the same collection as the given resource, or <code>null</code> if no default related resources are allowed.
+	@param checkAncestors <code>true</code> if default related resources should be searched for up the ancestor hierarchy.
+	@return The URI of the related resource, or <code>null</code> if no related resource could be located.
+	@throws ResourceIOException if there is an error accessing the repository.
+	*/
+	public static URI getRelatedResourceURI(final Repository repository, final URI resourceURI, final URI relatedResourcePathURIPropertyURI, final String defaultRelatedResourceName, final boolean checkAncestors) throws ResourceIOException
+	{
+		return getRelatedResourceURI(repository, repository.getResourceDescription(resourceURI), relatedResourcePathURIPropertyURI, defaultRelatedResourceName, checkAncestors);	//get the description of the resource and look for a related resource
+	}
+
+	/**Determines the URI of a resource related to the given resource.
+	This method is useful for determining a specified or default template or theme resource.
+	First a related resource is attempted to be identified from the specified property, if any.
+	Then, if there is no related resource explicitly identified, a related resource of the given name is searched for in the directory and optionally up the hierarchy.
+	This implementation only supports relative path URIs.
+	@param repository The repository in which the resource resides.
+	@param resource The resource for which a related resource URI should be retrieved.
+	@param relatedResourcePathURIPropertyURI The URI of the property indicating an explicit related resource by its path URI, or <code>null</code> if there no explicit related resource is allowed to be designated.
+	@param defaultRelatedResourceName The name of a default related resource to be found in the same collection as the given resource, or <code>null</code> if no default related resources are allowed.
+	@param checkAncestors <code>true</code> if default related resources should be searched for up the ancestor hierarchy.
+	@return The URI of the related resource, or <code>null</code> if no related resource could be located.
+	@throws ResourceIOException if there is an error accessing the repository.
+	*/
+	public static URI getRelatedResourceURI(final Repository repository, final URFResource resource, final URI relatedResourcePathURIPropertyURI, final String defaultRelatedResourceName, final boolean checkAncestors) throws ResourceIOException
+	{
+		final URI resourceURI=resource.getURI();	//get the URI of the resource
+		if(relatedResourcePathURIPropertyURI!=null)	//if we should check a property for an explicit related resource
+		{
+			final URI explicitRelatedResourceURI=URF.asURI(resource.getPropertyValue(relatedResourcePathURIPropertyURI));	//get the related resource URI property value, if any
+			if(explicitRelatedResourceURI!=null)	//if there is a related resource URI specified
+			{
+				final URIPath relatedResourcePath=URIPath.asPathURIPath(explicitRelatedResourceURI);	//see if this is a path: URI
+				if(relatedResourcePath==null || !relatedResourcePath.isRelative())	//if this is not a relative path TODO determine how to handle absolute paths and general URIs appropriately; this will probably include making subrepositories be able to access root repositories
+				{
+					throw new ResourceIOException(resourceURI, "Specified related resource URI "+explicitRelatedResourceURI+" for resource "+resourceURI+" currently must be a relative <path:...> URI.");
+				}
+				return resourceURI.resolve(relatedResourcePath.toURI());	//resolve the related resource path to the resource URI
+			}
+		}
+		if(defaultRelatedResourceName!=null)	//if a default related resource name was given
+		{
+			URI collectionURI=getCurrentLevel(resourceURI);	//start at the current collection level
+			do
+			{
+				final URI relatedResourceURI=collectionURI.resolve(defaultRelatedResourceName);	//get the URI of the related resource if it were to reside at this level
+				if(repository.resourceExists(relatedResourceURI))	//if the related resource exists here
+				{
+					return relatedResourceURI;	//return the URI of the template
+				}
+				collectionURI=repository.getParentResourceURI(collectionURI);	//go up a level
+			}
+			while(checkAncestors && collectionURI!=null);	//keep going up the hierarchy until we run out of parent collections
+		}
+		return null;	//indicate that we could find no template URI
 	}
 }

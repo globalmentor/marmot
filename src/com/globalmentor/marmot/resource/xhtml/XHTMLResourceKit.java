@@ -74,6 +74,8 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 	*/
 	public static URI getResourceTemplateURI(final Repository repository, final URFResource resource) throws ResourceIOException
 	{
+		return getRelatedResourceURI(repository, resource, TEMPLATE_URI_PROPERTY_URI, DEFAULT_TEMPLATE_NAME, true);
+/*TODO del when works
 		final URI resourceURI=resource.getURI();	//get the URI of the resource
 		final URI explicitTemplateURI=XHTMLResourceKit.getTemplateURI(resource);	//get the template URI property, if any
 		if(explicitTemplateURI!=null)	//if there is a template URI specified
@@ -97,6 +99,7 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 		}
 		while(collectionURI!=null);	//keep going up the hierarchy until we run out of parent collections
 		return null;	//indicate that we could find no template URI
+*/
 	}
 
 	/**Retrieves a default template document for the identified resource.

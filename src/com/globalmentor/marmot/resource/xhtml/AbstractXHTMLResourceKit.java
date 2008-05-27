@@ -12,11 +12,9 @@ import com.globalmentor.marmot.resource.*;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.text.xml.XMLIO;
 import static com.globalmentor.text.xml.XML.*;
-import com.globalmentor.text.xml.xhtml.XHTML;
-import com.globalmentor.urf.URFResource;
-import static com.globalmentor.urf.dcmi.DCMI.*;
-
+import com.globalmentor.urf.*;
 import static com.globalmentor.text.xml.xhtml.XHTML.*;
+import static com.globalmentor.urf.dcmi.DCMI.*;
 
 import org.w3c.dom.*;
 
