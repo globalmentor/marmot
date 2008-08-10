@@ -16,10 +16,11 @@
 
 package com.globalmentor.marmot;
 
+import static com.globalmentor.urf.URF.*;
+
 import java.net.URI;
 
-
-import static com.globalmentor.urf.URF.*;
+import com.globalmentor.urf.URFResource;
 
 /**Constant values and utilities used by Marmot.
 @author Garret Wilson
@@ -36,8 +37,44 @@ public class Marmot
 //TODO del	public final static URI ALL_PRINCIPALS_URI=createMailtoURI(String.valueOf(WILDCARD_PRINCIPAL_CHAR), String.valueOf(WILDCARD_PRINCIPAL_CHAR));
 
 	/**The URI to the Marmot namespace.*/
-//TODO del	public final static URI MARMOT_NAMESPACE_URI=URI.create("http://globalmentor.com/marmot");
+	public final static URI MARMOT_NAMESPACE_URI=URI.create("http://globalmentor.com/marmot/");
 
+		//Marmot properties
+	/**Provides an annotation of the resource.*/
+	public final static URI ANNOTATION_PROPERTY_URI=createResourceURI(MARMOT_NAMESPACE_URI, "annotation");
+
+	/**Returns the annotations of the resource.
+	@param resource The resource the property of which should be located.
+	@return The annotation values of the property.
+	@see #ANNOTATION_PROPERTY_URI
+	*/
+	public static Iterable<Annotation> getAnnotations(final URFResource resource)
+	{
+		return getAnnotations(resource, Annotation.class);
+	}
+
+	/**Returns the annotations of the resource.
+	@param <A> The type of annotation to be returned.
+	@param resource The resource the property of which should be located.
+	@return The annotation values of the property.
+	@see #ANNOTATION_PROPERTY_URI
+	*/
+	public static <A extends Annotation> Iterable<A> getAnnotations(final URFResource resource, final Class<A> annotationClass)
+	{
+		return resource.getPropertyValues(ANNOTATION_PROPERTY_URI, annotationClass);
+	}
+
+	/**Adds an annotation to the resource.
+	@param resource The resource of which the property should be set.
+	@param value The property value to set.
+	@see #ANNOTATION_PROPERTY_URI
+	*/
+	public static void addAnnotation(final URFResource resource, final Annotation value)
+	{
+		resource.addPropertyValue(ANNOTATION_PROPERTY_URI, value);
+	}
+
+		//deprecated
 	
 	/**The URI of the Marmot RDF namespace.*/
 	public final static URI MARMOT_RDF_NAMESPACE_URI=URI.create("http://globalmentor.com/namespaces/marmot#");	//TODO del; used by old code

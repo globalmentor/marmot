@@ -79,6 +79,19 @@ public interface Repository
 	*/
 	public Repository createSubrepository(final URI publicRepositoryURI, final URIPath privateSubrepositoryPath);
 
+	/**Registers a resource factory to be used to create resources with a type from the specified namespace.
+	If a resource factory is already registered for this namespace, it will be replaced.
+	@param typeNamespaceURI The namespace of the resource type for which this factory should be used to create objects.
+	@param factory The resource factory that will be used to create resources of types from this namespace.
+	*/
+	public void registerResourceFactory(final URI typeNamespaceURI, final URFResourceFactory factory);
+
+	/**Removes the resource factory being used to create resources with a type from the specified namespace.
+	If there is no resource factory registered for this namespace, no action will be taken.
+	@param typeNamespaceURI The namespace of the resource type for which this factory should be used to create objects.
+	*/
+	public void unregisterResourceFactory(final URI typeNamespaceURI);
+
 	/**@return Whether the repository has been opened for access.*/
 	public boolean isOpen();
 
@@ -387,6 +400,18 @@ public interface Repository
 	*/
 	public void deleteResource(final URI resourceURI) throws ResourceIOException;
 
+	/**Adds properties to a given resource.
+	All existing properties will be left unmodified.
+	@param resourceURI The reference URI of the resource.
+	@param properties The properties to set.
+	@return The updated description of the resource.
+	@exception NullPointerException if the given resource URI and/or properties is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if the resource properties could not be updated.
+	*/
+	public URFResource addResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException;
+
 	/**Sets the properties of a given resource.
 	Any existing properties with the same URIs as the given given property/value pairs will be removed.
 	All other existing properties will be left unmodified. 
@@ -410,8 +435,6 @@ public interface Repository
 	public URFResource removeResourceProperties(final URI resourceURI, final URI... propertyURIs) throws ResourceIOException;
 
 	/**Alters properties of a given resource.
-	This implementation does not support removing specific properties by value.
-	This implementation does not support adding properties; only setting properties.
 	@param resourceURI The reference URI of the resource.
 	@param resourceAlteration The specification of the alterations to be performed on the resource.
 	@return The updated description of the resource.

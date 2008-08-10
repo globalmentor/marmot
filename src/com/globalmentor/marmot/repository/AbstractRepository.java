@@ -28,6 +28,7 @@ import javax.mail.internet.ContentType;
 
 import com.globalmentor.io.Files;
 import com.globalmentor.io.InputStreams;
+import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
@@ -37,6 +38,7 @@ import com.globalmentor.util.*;
 import static com.globalmentor.io.ContentTypes.*;
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Objects.*;
+import static com.globalmentor.marmot.Marmot.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
@@ -57,6 +59,8 @@ import static com.globalmentor.urf.content.Content.*;
 public abstract class AbstractRepository extends DefaultURFResource implements Repository
 {
 
+	/**The resource factory for resources in the Marmot namespace.*/
+	protected final static URFResourceFactory MARMOT_RESOURCE_FACTORY=new JavaURFResourceFactory(Marmot.class.getPackage());
 	/**The resource factory for resources in the Marmot security namespace.*/
 	protected final static URFResourceFactory MARMOT_SECURITY_RESOURCE_FACTORY=new JavaURFResourceFactory(MarmotSecurity.class.getPackage());
 
@@ -374,14 +378,27 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		return childSubrepositories!=null ? unmodifiableSet(childSubrepositories) : (Set<Repository>)EMPTY_SET;	//return an unmodifiablel set of the subrepositories, if there are any
 	}
 
-	/**Default constructor with no settings.
-	Settings must be configured before repository is opened.
-	*/
-/*TODO del when not needed
-	public AbstractRepository()
-	{
-	}
-*/
+	/**A map of resource factories, keyed to namespace URIs.*/
+	private final Map<URI, URFResourceFactory> namespaceURIResourceFactoryMap=new HashMap<URI, URFResourceFactory>();
+
+		/**Registers a resource factory to be used to create resources with a type from the specified namespace.
+		If a resource factory is already registered for this namespace, it will be replaced.
+		@param typeNamespaceURI The namespace of the resource type for which this factory should be used to create objects.
+		@param factory The resource factory that will be used to create resources of types from this namespace.
+		*/
+		public void registerResourceFactory(final URI typeNamespaceURI, final URFResourceFactory factory)
+		{
+			namespaceURIResourceFactoryMap.put(typeNamespaceURI, factory);
+		}
+
+		/**Removes the resource factory being used to create resources with a type from the specified namespace.
+		If there is no resource factory registered for this namespace, no action will be taken.
+		@param typeNamespaceURI The namespace of the resource type for which this factory should be used to create objects.
+		*/
+		public void unregisterResourceFactory(final URI typeNamespaceURI)
+		{
+			namespaceURIResourceFactoryMap.remove(typeNamespaceURI);
+		}
 
 	/**URI contructor with no separate private URI namespace.
 	@param repositoryURI The URI identifying the location of this repository.
@@ -417,6 +434,8 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		super(checkInstance(publicRepositoryURI, "Public repository URI cannot be null.").normalize());	//construct the parent class with the public reference URI
 		this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI cannot be null.").normalize();
 		this.descriptionIO=checkInstance(descriptionIO, "Description I/O cannot be null.");	//save the description I/O
+		registerResourceFactory(MARMOT_NAMESPACE_URI, MARMOT_RESOURCE_FACTORY);	//register the Marmot factory
+		registerResourceFactory(MARMOT_SECURITY_NAMESPACE_URI, MARMOT_SECURITY_RESOURCE_FACTORY);	//register the Marmot resource factory
 	}
 
 	/**Creates a repository of the same type as this repository with the same access privileges as this one.
@@ -458,7 +477,10 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	protected URF createURF()
 	{
 		final URF urf=new URF();	//create a new URF data model
-		urf.registerResourceFactory(MARMOT_SECURITY_NAMESPACE_URI, MARMOT_SECURITY_RESOURCE_FACTORY);	//register the Marmot resource factory with the data model
+		for(final Map.Entry<URI, URFResourceFactory> namespaceURIResourceFactoryMapEntry:namespaceURIResourceFactoryMap.entrySet())	//for each resource factory and corresponding URI
+		{
+			urf.registerResourceFactory(namespaceURIResourceFactoryMapEntry.getKey(), namespaceURIResourceFactoryMapEntry.getValue());	//register the resource factories with the URF data model
+		}
 		return urf;	//return the new data model
 	}
 
@@ -660,6 +682,28 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 			return subrepository.getChildResourceDescriptions(resourceURI, depth);	//delegate to the subrepository
 		}
 		return getChildResourceDescriptions(resourceURI, null, depth);	//get a list of child resource descriptions without filtering
+	}
+
+	/**Adds properties to a given resource.
+	All existing properties will be left unmodified.
+	This implementation creates an {@link URFResourceAlteration} and delegates to {@link #alterResourceProperties(URI, URFResourceAlteration)}.
+	@param resourceURI The reference URI of the resource.
+	@param properties The properties to set.
+	@return The updated description of the resource.
+	@exception NullPointerException if the given resource URI and/or properties is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if the resource properties could not be updated.
+	*/
+	public URFResource addResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException
+	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.addResourceProperties(resourceURI, properties);	//delegate to the subrepository
+		}
+		return alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createAddPropertiesAlteration(properties));	//create an alteration for adding properties and alter the resource
 	}
 
 	/**Sets the properties of a given resource.
