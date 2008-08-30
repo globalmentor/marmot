@@ -18,15 +18,15 @@ package com.globalmentor.marmot;
 
 import java.net.URI;
 
-import com.globalmentor.urf.content.ContentResource;
+import com.globalmentor.urf.content.AbstractContentResource;
 
 /**The abstract base class of a resource annotation.
 @author Garret Wilson
 */
-public abstract class AbstractAnnotation extends ContentResource implements Annotation
+public abstract class AbstractAnnotation extends AbstractContentResource implements Annotation
 {
 
-	/**URI and type namespace URI.
+	/**URI and type namespace URI constructor.
 	@param uri The URI for the resource, or <code>null</code> if the resource should have no URI.
 	@param typeNamespaceURI The namespace URI of the URI of the type to be added.
 	@exception NullPointerException if the given type type namespace URI is <code>null</code>.
