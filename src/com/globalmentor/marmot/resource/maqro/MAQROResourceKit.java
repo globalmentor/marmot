@@ -16,10 +16,18 @@
 
 package com.globalmentor.marmot.resource.maqro;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
+
 import javax.mail.internet.ContentType;
 
+import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.*;
+import com.globalmentor.net.ResourceIOException;
+import com.globalmentor.urf.URFResource;
 import com.globalmentor.urf.maqro.MAQRO;
+
 import static com.globalmentor.urf.maqro.MAQRO.*;
 
 /**Resource kit for handling mentoring activities and interactions.
@@ -36,6 +44,30 @@ public class MAQROResourceKit extends AbstractResourceKit
 	public MAQROResourceKit()
 	{
 		super(new ContentType[]{MENTOR_ACTIVITY_CONTENT_TYPE});
+	}
+
+	/**Writes default resource content to the given output stream.
+	@param repository The repository that contains the resource.
+	@param resourceURI The reference URI to use to identify the resource, which may not exist.
+	@param resourceDescription A description of the resource; the resource URI is ignored.
+	@exception NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception ResourceIOException if the default resource content could not be written.
+	*/
+	public void writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription, final OutputStream outputStream) throws ResourceIOException
+	{
+/*TODO fix for MAQRO
+		final String title=getTitle(resourceDescription);	//see if there is a title
+		final Document document=createXHTMLDocument(title!=null ? title : "", true, true);	//create an XHTML document with a doctype and the correct title, if any
+		try
+		{
+			getXHTMLIO().write(outputStream, resourceURI, document);	//write the default document				
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw ResourceIOException.toResourceIOException(ioException, resourceURI);	//send a resource version of the exception
+		}
+*/
 	}
 
 }
