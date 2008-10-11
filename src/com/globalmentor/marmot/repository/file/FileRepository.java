@@ -720,7 +720,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 */
 			setContentLength(resource, resourceFile.length());	//set the file length
 			setModified(resource, new URFDateTime(resourceFile.lastModified()));	//set the modified time as the last modified date of the file			
-			updateContentType(resource);	//update the content type information based upon the repository defaults
+//TODO del			updateContentType(resource);	//update the content type information based upon the repository defaults
 		}
 
 //TODO del Debug.trace("returning RDF:", RDFUtilities.toString(resource));

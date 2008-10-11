@@ -16,21 +16,27 @@
 
 package com.globalmentor.marmot;
 
+import com.globalmentor.io.Files;
 import java.net.*;
+import java.nio.charset.Charset;
 import java.util.*;
+
 import static java.util.Collections.*;
+
 import java.util.concurrent.*;
 
 import javax.mail.internet.ContentType;
 
+import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
-import static com.globalmentor.urf.content.Content.*;
 
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.marmot.resource.*;
 import com.globalmentor.marmot.resource.ResourceKit.Capability;
 import com.globalmentor.marmot.security.*;
+import com.globalmentor.net.URIs;
 import com.globalmentor.urf.*;
+import com.globalmentor.urf.content.*;
 import com.globalmentor.util.*;
 
 /**A Marmot session with installed resource kits.
@@ -52,8 +58,58 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 		/**@return The available resource kits.*/
 		public Iterable<RK> getResourceKits() {return unmodifiableSet(resourceKits);} 
 
-	//TODO should we use set maps instead of list maps here?
+	/**The map of content types mapped to lowercase URI name extensions.*/
+	private final Map<String, ContentType> extensionContentTypeMap=new HashMap<String, ContentType>(Files.FILE_EXTENSION_CONTENT_TYPE_MAP);
+
+		/**Associates the given content type with the given extension, without regard to case.
+		@param extension The URI name extension with which the content type should be associated, or <code>null</code> if the content type should be associated with resources that have no extension.
+		@param contentType The content type to associate with the given extension.
+		@return The content type previously registered with the given extension, or <code>null</code> if no content type was previously registered.
+		@exception NullPointerException if the given content type is <code>null</code>.
+		*/
+		public ContentType registerExtensionContentType(final String extension, final ContentType contentType)
+		{
+			return extensionContentTypeMap.put(extension!=null ? extension.toLowerCase() : null, checkInstance(contentType, "Content type cannot be null."));
+		}
 	
+		/**Returns the content type assciated with the given extension, without regard to case.
+		@param extension The URI name extension with which the content type is associated, or <code>null</code> if the content type is associated with resources that have no extension.
+		@return The content type associated with the given extension, or <code>null</code> if there is no content type associated with the given extension.
+		*/
+		public ContentType getExtensionContentType(final String extension)
+		{
+			return extensionContentTypeMap.get(extension!=null ? extension.toLowerCase() : null);	//return the content type, if any, associated with the given extension
+		}
+
+	/**The map of charsets mapped to base media types.*/
+	private final Map<String, Charset> baseContentTypeCharsetMap=new HashMap<String, Charset>();
+
+		/**Associates the given charset with the base media type of the given content type.
+		Any association will only override resources that do not explicitly have a charset specified.
+		Any parameters of the given content type will be ignored.
+		@param contentType The content type with which the charset should be associated.
+		@param charset The charset to associate with the given content type.
+		@return The charset previously registered with the given content type, or <code>null</code> if no charset was previously registered.
+		@exception NullPointerException if the given content type and/or charset is <code>null</code>.
+		*/
+		public Charset registerContentTypeCharset(final ContentType contentType, final Charset charset)
+		{
+			return baseContentTypeCharsetMap.put(contentType.getBaseType(), checkInstance(charset, "Charset cannot be null."));
+		}
+
+		/**Returns the charset assciated with the given content type.
+		Any parameters of the given content type will be ignored.
+		@param contentType The content type with which the charset is associated.
+		@return The charset associated with the given content type, or <code>null</code> if there is no charset associated with the given content type.
+		@exception NullPointerException if the given content type is <code>null</code>.
+		*/
+		public Charset getContentTypeCharset(final ContentType contentType)
+		{
+			return baseContentTypeCharsetMap.get(contentType.getBaseType());	//return the charset, if any, associated with the given base content type
+		}
+		
+	//TODO should we use set maps instead of list maps here?
+
 	/**The map of resource kit lists, keyed to supported content type base types.*/
 	private CollectionMap<String, RK, List<RK>> contentTypeResourceKitsMap=new CopyOnWriteArrayListConcurrentHashMap<String, RK>();
 
@@ -220,7 +276,7 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 	/**Retrieves a resource kit appropriate for the given resource.
 	This method locates a resource kit in the following priority:
 	<ol>
-		<li>The first resource kit supporting the resource content type.</li>
+		<li>The first resource kit supporting the resource content type determined by {@link #determineContentType(URFResource)}.</li>
 		<li>The first resource kit supporting one of the resource types.</li>
 		<li>If the resource has a collection URI, the default collection resource kit.</li>
 		<li>The default resource kit.</li>
@@ -230,12 +286,13 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 	@param capabilities The capabilities required for the resource kit.
 	@return A resource kit to handle the given resource with the given capabilities, if any, in relation to the resource;
 		or <code>null</code> if there is no registered resource kit with the given capabilities in relation to the resource.
+	@see #determineContentType(URFResource)
 	*/
 	public RK getResourceKit(final Repository repository, final URFResource resource, final Capability... capabilities)
 	{
 		RK resourceKit=null;
 			//step 1: try to match a resource kit by content type
-		final ContentType contentType=getContentType(resource); //get the content type of the resource
+		final ContentType contentType=determineContentType(resource); //get the content type of the resource
 		if(contentType!=null)	//if we know the content type of the resource
 		{
 			resourceKit=getResourceKit(contentType, capabilities);	//see if we have a resource kit registered for this media type and capabilities
@@ -340,4 +397,51 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 		return resourceKit!=null && resourceKit.hasCapabilities(capabilities) ? resourceKit : null;	//return the resource kit if it has the given capabilities
 	}
 
+	/**Determines the content type of a resource.
+	The content type is determined in this order:
+	<ol>
+		<li>The value of the {@value Content#TYPE_PROPERTY_URI} property, if any.</li> 
+		<li>The registered content type for the resource extension, if any, returned by {@link #getExtensionContentType(String)}.</li> 
+	</ol>
+	@param resource The resource for which a content type should be determined.
+	@return The content type for the given resource, or <code>null</code> if no content type can be determined for the given resource.
+	*/
+	public ContentType determineContentType(final URFResource resource)
+	{
+		ContentType contentType=Content.getContentType(resource);	//see if the resource indicates a content type
+		if(contentType==null)	//if the resource does not indicate a content type
+		{
+			final URI resourceURI=resource.getURI();	//get the resource URI
+			final String resourceName=resourceURI!=null && !isCollectionURI(resourceURI) ? URIs.getName(resourceURI) : null;	//get the resource name, if any
+			if(resourceName!=null && !resourceName.isEmpty())	//if we have a non-empty name (only collections URIs should return empty names, so this non-empty verification is redundant)
+			{
+				contentType=getExtensionContentType(getNameExtension(resourceName));	//get the registered content type, if any, for the resource's extension (which may be null)
+			}
+		}
+		return contentType;
+	}
+
+	/**Determines the charset of a resource.
+	The charset is determined in this order:
+	<ol>
+		<li>The value of the {@value Content#CHARSET_PROPERTY_URI} property, if any.</li> 
+		<li>The registered charset for the determined content type, if any, returned by {@link #getContentTypeCharset(ContentType)}.</li> 
+	</ol>
+	@param resource The resource for which a charset should be determined.
+	@return The charset for the given resource, or <code>null</code> if no charset can be determined for the given resource.
+	@see #determineContentType(URFResource)
+	*/
+	public Charset determineCharset(final URFResource resource)
+	{
+		Charset charset=Content.getCharset(resource);	//see if the resource indicates a charset
+		if(charset==null)	//if the resource does not indicate a charset
+		{
+			final ContentType contentType=determineContentType(resource);	//try to determine a content type
+			if(contentType!=null)	//if we could determine a content type
+			{
+				charset=getContentTypeCharset(contentType);	//get the registered charset, if any, for the determined content type
+			}
+		}
+		return charset;
+	}
 }

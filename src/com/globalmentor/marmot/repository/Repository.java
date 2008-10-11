@@ -27,8 +27,9 @@ import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
 
 /**A Marmot information store.
-<p>A repository has the concept of a <dfn>live property</dfn> which are dynamically set based upon resource state, such as content size and last modified date/time.
-Live properties cannot be set using normal property manipulation methods and are ignored if requested to be modified.</p>
+<p>A repository has the concept of a <dfn>live property</dfn> which is dynamically set based upon resource state, such as content size and last modified date/time.
+Live properties are definitionally inherent to the makeup of the resource.
+Live properties cannot be set using normal property manipulation methods and are ignored if requested to be modified. See {@link #getLivePropertyURIs()}.</p>
 <p>By design a repository has no direct method for explicitly and exlusively setting all properties of a resource.
 Instead, resources can have individual properties added, removed, and set. 
 This allows a loosely-coupled model that can be implemented by a variety of storage mechanisms and prevents inadvertent removal of unmentioned properties.

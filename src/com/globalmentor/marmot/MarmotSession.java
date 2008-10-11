@@ -16,6 +16,7 @@
 
 package com.globalmentor.marmot;
 
+import java.nio.charset.Charset;
 import java.util.Set;
 
 import javax.mail.internet.ContentType;
@@ -25,6 +26,7 @@ import com.globalmentor.marmot.resource.ResourceKit;
 import com.globalmentor.marmot.resource.ResourceKit.Capability;
 import com.globalmentor.marmot.security.MarmotSecurityManager;
 import com.globalmentor.urf.URFResource;
+import com.globalmentor.urf.content.Content;
 
 /**Marmot session information.
 @param <RK> The type of resource kits supported by this session.
@@ -90,7 +92,7 @@ public interface MarmotSession<RK extends ResourceKit>
 	/**Retrieves a resource kit appropriate for the given resource.
 	This method locates a resource kit in the following priority:
 	<ol>
-		<li>The first resource kit supporting the resource content type.</li>
+		<li>The first resource kit supporting the resource content type determined by {@link #determineContentType(URFResource)}.</li>
 		<li>The first resource kit supporting one of the resource types.</li>
 		<li>If the resource has a collection URI, the default collection resource kit.</li>
 		<li>The default resource kit.</li>
@@ -100,6 +102,7 @@ public interface MarmotSession<RK extends ResourceKit>
 	@param capabilities The capabilities required for the resource kit.
 	@return A resource kit to handle the given resource with the given capabilities, if any, in relation to the resource;
 		or <code>null</code> if there is no registered resource kit with the given capabilities in relation to the resource.
+	@see #determineContentType(URFResource)
 	*/
 	public RK getResourceKit(final Repository repository, final URFResource resource, final Capability... capabilities);
 
@@ -111,5 +114,60 @@ public interface MarmotSession<RK extends ResourceKit>
 	@return A resource kit with the requested capabilities to handle the given content type, or <code>null</code> if no appropriate resource kit is registered.
 	*/
 	public RK getResourceKit(final ContentType contentType, final Capability... capabilities);
+
+	/**Associates the given content type with the given extension, without regard to case.
+	@param extension The URI name extension with which the content type should be associated, or <code>null</code> if the content type should be associated with resources that have no extension.
+	@param contentType The content type to associate with the given extension.
+	@return The content type previously registered with the given extension, or <code>null</code> if no content type was previously registered.
+	@exception NullPointerException if the given content type is <code>null</code>.
+	*/
+	public ContentType registerExtensionContentType(final String extension, final ContentType contentType);
+
+	/**Returns the content type assciated with the given extension, without regard to case.
+	@param extension The URI name extension with which the content type is associated, or <code>null</code> if the content type is associated with resources that have no extension.
+	@return The content type associated with the given extension, or <code>null</code> if there is no content type associated with the given extension.
+	*/
+	public ContentType getExtensionContentType(final String extension);
+
+	/**Associates the given charset with the base media type of the given content type.
+	Any association will only override resources that do not explicitly have a charset specified.
+	Any parameters of the given content type will be ignored.
+	@param contentType The content type with which the charset should be associated.
+	@param charset The charset to associate with the given content type.
+	@return The charset previously registered with the given content type, or <code>null</code> if no charset was previously registered.
+	@exception NullPointerException if the given content type and/or charset is <code>null</code>.
+	*/
+	public Charset registerContentTypeCharset(final ContentType contentType, final Charset charset);
+
+	/**Returns the charset assciated with the given content type.
+	Any parameters of the given content type will be ignored.
+	@param contentType The content type with which the charset is associated.
+	@return The charset associated with the given content type, or <code>null</code> if there is no charset associated with the given content type.
+	@exception NullPointerException if the given content type is <code>null</code>.
+	*/
+	public Charset getContentTypeCharset(final ContentType contentType);
+
+	/**Determines the content type of a resource.
+	The content type is determined in this order:
+	<ol>
+		<li>The value of the {@value Content#TYPE_PROPERTY_URI} property, if any.</li> 
+		<li>The registered content type for the resource extension, if any, returned by {@link #getExtensionContentType(String)}.</li> 
+	</ol>
+	@param resource The resource for which a content type should be determined.
+	@return The content type for the given resource, or <code>null</code> if no content type can be determined for the given resource.
+	*/
+	public ContentType determineContentType(final URFResource resource);
+
+	/**Determines the charset of a resource.
+	The charset is determined in this order:
+	<ol>
+		<li>The value of the {@value Content#CHARSET_PROPERTY_URI} property, if any.</li> 
+		<li>The registered charset for the determined content type, if any, returned by {@link #getContentTypeCharset(ContentType)}.</li> 
+	</ol>
+	@param resource The resource for which a charset should be determined.
+	@return The charset for the given resource, or <code>null</code> if no charset can be determined for the given resource.
+	@see #determineContentType(URFResource)
+	*/
+	public Charset determineCharset(final URFResource resource);
 
 }

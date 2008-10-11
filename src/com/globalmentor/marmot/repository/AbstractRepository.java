@@ -989,6 +989,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	@see Content#TYPE_PROPERTY_URI
 	@see Content#CHARSET_PROPERTY_URI
 	*/
+/*TODO del when works; transferred to MarmotSession
 	protected void updateContentType(final URFResource resource)	//TODO consider passing a MarmotSession to all the repository methods, and asking the MarmotSession for defaults 
 	{
 		ContentType contentType=getContentType(resource);	//get the specified content type of the resource
@@ -1018,6 +1019,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 			}
 		}
 	}
+*/
 
 	/**Determines whether a resource, identified by its private URI, should be made available in the public space.
 	If this method returns <code>false</code>, the identified resource will essentially become invisible past the {@link Repository} interface.

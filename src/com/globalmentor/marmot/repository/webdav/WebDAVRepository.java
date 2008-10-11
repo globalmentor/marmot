@@ -1229,10 +1229,12 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 				}
 			}
 		}
+/*TODO del
 		if(!isCollection)	//if this is not a collection, try to get the content type of the resource if it wasn't specified already
 		{
 			updateContentType(resource);	//update the content type information based upon the repository defaults
 		}
+*/
 			//TODO fix filename encoding/decoding---there's no way to know what operating system the server is using
 		
 			//TODO encode in UTF-8
