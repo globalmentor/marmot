@@ -18,7 +18,7 @@ package com.globalmentor.marmot.repository;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Date;
+import java.util.*;
 
 import static com.globalmentor.urf.content.Content.*;
 
@@ -45,7 +45,7 @@ public class RepositorySynchronizer
 		IGNORE;
 	}
 
-	/**How to resolve a descrepancy between a source and a destination resource..*/
+	/**How to resolve a descrepancy between a source and a destination resource.*/
 	public enum Resolution
 	{
 		/**The source will overwrite the destination; the destination is intended to be a mirror of the source.*/
@@ -70,34 +70,53 @@ public class RepositorySynchronizer
 		/**@return The action to perform if there is a destination resource and no corresponding source resource.*/
 		public Action getOrphanDestinationAction() {return orphanDestinationAction;}
 
-	/**How an incompatibility between resources will be resolved.*/
-	private Resolution unsynchronizedResolution;
+	/**How a content incompatibility between resources will be resolved.*/
+	private Resolution contentUnsynchronizedResolution;
 
-		/**@return How an incompatibility between resources will be resolved.*/
-		public Resolution getUnsynchronizedResolution() {return unsynchronizedResolution;}
+		/**@return How a content incompatibility between resources will be resolved.*/
+		public Resolution getContentUnsynchronizedResolution() {return contentUnsynchronizedResolution;}
 
 	/**Default constructor with backup settings.*/
 	public RepositorySynchronizer()
 	{
 		orphanSourceAction=Action.COPY;
 		orphanDestinationAction=Action.DELETE;
-		unsynchronizedResolution=Resolution.BACKUP;
+		contentUnsynchronizedResolution=Resolution.BACKUP;
 	}
-	
+
 	/**Synchronizes two resources in two separate repositories.
 	If the resources are collections, the child resources will also be synchronized.
 	@param sourceRepository The repository in which the source resource lies.
-	@param sourceResourceURI The URI of the source resource
+	@param sourceResourceURI The URI of the source resource.
 	@param destinationRepository The repository in which the destination resource lies.
 	@param destinationResourceURI The URI of the destination resource.
 	@throws IOException if there is an I/O error whle synchronizing the resources.
 	*/
 	public void synchronize(final Repository sourceRepository, final URI sourceResourceURI, final Repository destinationRepository, final URI destinationResourceURI) throws IOException
 	{
-Debug.trace("ready to synchronize source", sourceResourceURI, "and destination", destinationResourceURI);
-		final boolean sourceExists=sourceRepository.resourceExists(sourceResourceURI);	//see if the source exists
+		final URFResource sourceResourceDescription=sourceRepository.resourceExists(sourceResourceURI) ? sourceRepository.getResourceDescription(sourceResourceURI) : null;	//get the description of the source resource if it exists
+		final URFResource destinationResourceDescription=destinationRepository.resourceExists(destinationResourceURI) ? destinationRepository.getResourceDescription(destinationResourceURI) : null;	//get the description of the destination resource if it exists
+		synchronize(sourceRepository, sourceResourceURI, sourceResourceURI, sourceResourceDescription, destinationRepository, destinationResourceURI, destinationResourceURI, destinationResourceDescription);	//synchronize using the descriptions and the initial URIs as the base URIs
+	}
+
+	/**Synchronizes two resources in two separate repositories.
+	If the resources are collections, the child resources will also be synchronized.
+	@param sourceRepository The repository in which the source resource lies.
+	@param sourceBaseURI The base URI in the source repository; the root of the source tree being synchronized.
+	@param sourceResourceURI The URI of the source resource.
+	@param sourceResourceDescription The description of the source resource, or <code>null</code> if the source resource does not exist.
+	@param destinationRepository The repository in which the destination resource lies.
+	@param destinationBaseURI The base URI in the destination repository; the root of the destination tree being synchronized.
+	@param destinationResourceURI The URI of the destination resource.
+	@param destinationResourceDescription The description of the destination resource, or <code>null</code> if the destination resource does not exist.
+	@throws IOException if there is an I/O error whle synchronizing the resources.
+	*/
+	protected void synchronize(final Repository sourceRepository, final URI sourceBaseURI, final URI sourceResourceURI, final URFResource sourceResourceDescription, final Repository destinationRepository, final URI destinationBaseURI, final URI destinationResourceURI, final URFResource destinationResourceDescription) throws IOException
+	{
+Debug.trace("Synchronizing from", sourceResourceURI, "to", destinationResourceURI);
+		final boolean sourceExists=sourceResourceDescription!=null;	//see if the source exists
 Debug.trace("source exists", sourceExists);
-		final boolean destinationExists=destinationRepository.resourceExists(destinationResourceURI);	//see if the destination exists
+		final boolean destinationExists=destinationResourceDescription!=null;	//see if the destination exists
 Debug.trace("destination exists", destinationExists);
 		if(sourceExists!=destinationExists)	//if one resource exists and the other doesn't
 		{
@@ -107,7 +126,7 @@ Debug.trace("destination exists", destinationExists);
 				if(isSourceCollection)	//if the source is a collection
 				{
 					Debug.info("Orphan source collection", sourceResourceURI, "creating destination collection", destinationResourceURI, "to match.");
-					destinationRepository.createCollection(destinationResourceURI);	//crate a destination collection TODO allow configuration				
+					destinationRepository.createCollection(destinationResourceURI, sourceResourceDescription);	//crate a destination collection TODO allow configuration				
 				}
 				else	//if the source is not a collection
 				{
@@ -136,11 +155,11 @@ Debug.trace("destination exists", destinationExists);
 			final boolean isDestinationCollection=destinationRepository.isCollection(destinationResourceURI);	//see if the destination is a collection
 			if(isSourceCollection==isDestinationCollection)	//if the source and destination are compatible
 			{
-				final boolean isSynchronized=isSynchronized(sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//see if the two resources are synchronized
+				final boolean isSynchronized=isContentSynchronized(sourceRepository, sourceResourceDescription, destinationRepository, destinationResourceDescription);	//see if the two resources are synchronized
 				if(!isSynchronized)//if the source and destination are not synchronized
 				{
-					Debug.info("Resolving discrepancy between source resource", sourceResourceURI, "and destination resource", destinationResourceURI, "by", getUnsynchronizedResolution());
-					resolve(getUnsynchronizedResolution(), sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//resolve the descrepancy between source and destination
+					Debug.info("Resolving discrepancy between source resource", sourceResourceURI, "and destination resource", destinationResourceURI, "by", getContentUnsynchronizedResolution());
+					resolve(getContentUnsynchronizedResolution(), sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//resolve the descrepancy between source and destination
 Debug.trace("done resolving");
 				}
 			}
@@ -150,7 +169,7 @@ Debug.trace("done resolving");
 				destinationRepository.deleteResource(destinationResourceURI);	//delete the destination, whatever it is
 				if(isSourceCollection)	//if the source is a collection
 				{
-					destinationRepository.createCollection(destinationResourceURI);	//create a destination collection TODO allow configuration									
+					destinationRepository.createCollection(destinationResourceURI, sourceResourceDescription);	//create a destination collection TODO allow configuration									
 				}
 				else	//if the source is a normal resource
 				{
@@ -158,63 +177,78 @@ Debug.trace("done resolving");
 				}
 			}
 		}
-Debug.trace("both existed; we did what we needed to do; nothing more should happen (other than checking collection");
+		//TODO synchronize collection content
+		//TODO synchronize metadata
+Debug.trace("both exist; we did what we needed to do; nothing more should happen (other than checking collection).");
 		if(sourceRepository.isCollection(sourceResourceURI) && destinationRepository.isCollection(destinationResourceURI))	//if after all the resource-level synchronization we now have two collections
 		{
-			//TODO synchronize children
+			final Map<URI, URFResource> destinationChildResourceDescriptions=new LinkedHashMap<URI, URFResource>();	//create a map for the destination resources, preserving their iteration order only as a courtesy
+			for(final URFResource destinationChildResourceDescription:destinationRepository.getChildResourceDescriptions(destinationResourceURI))	//prepopulate the destination child resource map to allow quick lookup when we iterate the source child resources
+			{
+				destinationChildResourceDescriptions.put(destinationChildResourceDescription.getURI(), destinationChildResourceDescription);
+			}
+			final Map<URI, URFResource> sourceChildResourceDescriptions=new LinkedHashMap<URI, URFResource>();	//create a map for the source resources, preserving their iteration order only as a courtesy
+			for(final URFResource sourceChildResourceDescription:sourceRepository.getChildResourceDescriptions(sourceResourceURI))	//iterate the source child resources
+			{
+				sourceChildResourceDescriptions.put(sourceChildResourceDescription.getURI(), sourceChildResourceDescription);	//store this source child resource in the map
+				final URI destinationChildResourceURI=destinationBaseURI.resolve(sourceBaseURI.relativize(sourceChildResourceDescription.getURI()));	//resolve the relative child URI against the base destination URI to determine what the destnation child resource URI should be
+				final URFResource destinationChildResourceDescription=destinationChildResourceDescriptions.get(destinationChildResourceURI);	//get the description of the destination child resource (although there may not be one)
+				synchronize(sourceRepository, sourceBaseURI, sourceChildResourceDescription.getURI(), sourceChildResourceDescription, destinationRepository, destinationBaseURI, destinationChildResourceURI, destinationChildResourceDescription);	//synchronize this source child and the corresponding destination child, the latter of which may not exist
+			}
+			for(final URFResource destinationChildResourceDescription:destinationChildResourceDescriptions.values())	//iterate the destination child resources to synchronize any destination resources that may not be in the source
+			{
+				final URI sourceChildResourceURI=sourceBaseURI.resolve(destinationBaseURI.relativize(destinationChildResourceDescription.getURI()));	//resolve the relative child URI against the base source URI to determine what the source child resource URI should be
+				final URFResource sourceChildResourceDescription=sourceChildResourceDescriptions.get(sourceChildResourceURI);	//get the description of the source child resource (although there may not be one)
+				if(sourceChildResourceDescription==null)	//only synchronize destination resources for which there is no corresponding source child resource, because we already synchronized all the corresponding ones
+				{
+					synchronize(sourceRepository, sourceBaseURI, sourceChildResourceURI, sourceChildResourceDescription, destinationRepository, destinationBaseURI, destinationChildResourceDescription.getURI(), destinationChildResourceDescription);	//synchronize this source child and the destination child, the former of which does not exist
+				}
+			}
 		}
 	}
 
-	/**Checks to see if two resources are mirrors of one another.
-	This method considers two non-existant resources to be mirrors.
+	/**Checks to see if the content of two existing resources are mirrors of one another.
+	This method attempts to guess whether content has changed by examining various properties.
 	Two collections with the same relevant individual properties are considered mirrors; child resources are not examined.
 	@param sourceRepository The repository in which the source resource lies.
-	@param sourceResourceURI The URI of the source resource
+	@param sourceResourceDescription The source resource
 	@param destinationRepository The repository in which the destination resource lies.
-	@param destinationResourceURI The URI of the destination resource.
+	@param destinationResourceDescription The destination resource.
 	@return <code>true</code> If both resources are of the same type and have the same relevant properties, such as size and content.
+	@throws NullPointerException if one of the repositories and/or resources is <code>null</code>.
 	@throws IOException if there is a problem accessing one of the resources.
 	*/
-	public boolean isSynchronized(final Repository sourceRepository, final URI sourceResourceURI, final Repository destinationRepository, final URI destinationResourceURI) throws IOException
+	public boolean isContentSynchronized(final Repository sourceRepository, final URFResource sourceResourceDescription, final Repository destinationRepository, final URFResource destinationResourceDescription) throws IOException
 	{
-		final boolean sourceExists=sourceRepository.resourceExists(sourceResourceURI);	//see if the source exists
-		final boolean isSourceCollection=sourceExists && sourceRepository.isCollection(sourceResourceURI);	//see if the source is a collection
-		final boolean destinationExists=destinationRepository.resourceExists(destinationResourceURI);	//see if the destination exists
-		final boolean isDestinationCollection=destinationExists && destinationRepository.isCollection(destinationResourceURI);	//see if the destination is a collection
-		if(sourceExists)	//if we have a source resource
+		final boolean isSourceCollection=sourceRepository.isCollection(sourceResourceDescription.getURI());	//see if the source is a collection
+		final boolean isDestinationCollection=destinationRepository.isCollection(destinationResourceDescription.getURI());	//see if the destination is a collection
+			//resource/collection
+		if(isSourceCollection!=isDestinationCollection)	//if we have a resource/collection discrepancy
 		{
-				//exists
-			if(!destinationExists)	//if the destination doesn't exist, it can't be a mirror
-			{
-				return false;	//only the source exists, not the destination
-			}
-				//resource/collection
-			if(isSourceCollection!=isDestinationCollection)	//if we have a resource/collection discrepancy
-			{
-				return false;	//one resource is a collection; the other is a normal resource
-			}
-			final URFResource sourceResource=sourceRepository.getResourceDescription(sourceResourceURI);	//get a description of the source resource
-			final URFResource destinationResource=destinationRepository.getResourceDescription(destinationResourceURI);	//get a description of the destination resource
-			final long sourceSize=getContentLength(sourceResource);	//get the size of the source
-			final long destinationSize=getContentLength(destinationResource);	//get the size of the destination
-				//size
-			if(sourceSize<0 || sourceSize!=destinationSize)	//if the sizes don't match, or we don't know one of the sizes
-			{
-				return false;	//there is a size discrepancy
-			}
-				//date
-			final Date sourceDate=getModified(sourceResource);	//get the date of the source
-			final Date destinationDate=getModified(destinationResource);	//get the date of the destination
+			return false;	//one resource is a collection; the other is a normal resource
+		}
+		final long sourceContentLength=getContentLength(sourceResourceDescription);	//get the size of the source
+		final long destinationContentLength=getContentLength(destinationResourceDescription);	//get the size of the destination
+			//size
+		if(!isSourceCollection && (sourceContentLength<0 || destinationContentLength<0))	//if we don't know one of the sizes of non-collections
+		{
+			return false;	//there is a size discrepancy
+		}
+		if(sourceContentLength!=destinationContentLength)	//if the sizes don't match
+		{
+			return false;	//there is a size discrepancy
+		}
+			//date
+		if(!isSourceCollection || sourceContentLength>0)	//ignore date descrepancies of collections with no content
+		{
+			final Date sourceDate=getModified(sourceResourceDescription);	//get the date of the source
+			final Date destinationDate=getModified(destinationResourceDescription);	//get the date of the destination
 			if(sourceDate==null || sourceDate!=destinationDate)	//if the dates don't match or if there is no date
 			{
 				return false;	//there is a date discrepancy
 			}
-			return true;	//the resources matched all our tests
 		}
-		else	//if no source exists
-		{
-			return !destinationExists;	//this is only a mirror situation if the destination also doesn't exist
-		}	
+		return true;	//the resources matched all our tests
 	}
 
 	/**Performs an action on a source and destination resource pair.

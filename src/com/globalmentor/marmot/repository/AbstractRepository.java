@@ -44,14 +44,12 @@ import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
 
 /**Abstract implementation of a repository class with typical features.
-<p>This implementation uses the special name {@value #COLLECTION_CONTENTS_NAME} to represent the contents (as opposed to the contained resources) of a collection resource.</p>
+<p>This implementation uses the special name {@value #COLLECTION_CONTENT_NAME} to represent the contents (as opposed to the contained resources) of a collection resource.</p>
 <p>Resource access methods should call {@link #checkResourceURI(URI)} as a security check to ensure the given URI is within the repository.</p>
 <p>This implementation considers the following properties to be live properties:</p>
 <ul>
 	<li>{@value Content#ACCESSED_PROPERTY_URI}</li>
-	<li>{@value Content#CREATED_PROPERTY_URI}</li>
 	<li>{@value Content#LENGTH_PROPERTY_URI}</li>
-	<li>{@value Content#MODIFIED_PROPERTY_URI}</li>
 </ul>
 <p>This implementation initializes the map of extension contents to {@link Files#FILE_EXTENSION_CONTENT_TYPE_MAP}.</p>
 @author Garret Wilson
@@ -64,11 +62,11 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	/**The resource factory for resources in the Marmot security namespace.*/
 	protected final static URFResourceFactory MARMOT_SECURITY_RESOURCE_FACTORY=new JavaURFResourceFactory(MarmotSecurity.class.getPackage());
 
-	/**The name of a resource used to store the contents of a collection.*/
-	public final static String COLLECTION_CONTENTS_NAME="@";	//TODO add checks to prevent this resource from being accessed directly
+	/**The name of a resource used to store the content of a collection.*/
+	public final static String COLLECTION_CONTENT_NAME="@";	//TODO add checks to prevent this resource from being accessed directly
 
 	/**The set of URIs that are considered live.*/
-	protected final static Set<URI> LIVE_PROPERTY_URIS=unmodifiableSet(new HashSet<URI>(asList(Content.ACCESSED_PROPERTY_URI, Content.CREATED_PROPERTY_URI, Content.LENGTH_PROPERTY_URI, Content.MODIFIED_PROPERTY_URI)));
+	protected final static Set<URI> LIVE_PROPERTY_URIS=unmodifiableSet(new HashSet<URI>(asList(Content.ACCESSED_PROPERTY_URI, Content.LENGTH_PROPERTY_URI)));
 
 	/**The I/O implementation that writes and reads a resource with the same reference URI as its base URI.*/
 	private final URFIO<URFResource> descriptionIO;
@@ -564,6 +562,8 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	/**Creates a new resource with a default description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
 	The returned output stream should always be closed.
+	The {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
+	The {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
 	If a resource with no contents is desired, {@link #createResource(URI, byte[])} with zero bytes is better suited for this task.
 	This implementation delegates to {@link #createResource(URI, URFResource)} with a default description.
 	@param resourceURI The reference URI to use to identify the resource.
@@ -573,7 +573,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public OutputStream createResource(URI resourceURI) throws ResourceIOException
+	public final OutputStream createResource(URI resourceURI) throws ResourceIOException
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -586,6 +586,8 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 
 	/**Creates a new resource with a default description and contents.
 	If a resource already exists at the given URI it will be replaced.
+	The {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
+	The {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
 	This implementation delegates to {@link #createResource(URI, URFResource, byte[])} with a default description.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceContents The contents to store in the resource.
@@ -595,7 +597,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public URFResource createResource(URI resourceURI, final byte[] resourceContents) throws ResourceIOException
+	public final URFResource createResource(URI resourceURI, final byte[] resourceContents) throws ResourceIOException
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -607,6 +609,8 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	}
 
 	/**Creates a collection in the repository.
+	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
+	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
 	This implementation delegates to {@link #createCollection(URI, URFResource)} with a default description.
 	@param collectionURI The URI of the collection to be created.
 	@return A description of the collection that was created.
@@ -614,7 +618,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error creating the collection.
 	*/
-	public URFResource createCollection(URI collectionURI) throws ResourceIOException	//TODO fix to prevent resources with special names
+	public final URFResource createCollection(URI collectionURI) throws ResourceIOException	//TODO fix to prevent resources with special names
 	{
 		collectionURI=checkResourceURI(collectionURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(collectionURI);	//see if the resource URI lies within a subrepository
@@ -1026,7 +1030,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	Such resources are normally used internally with special semantics to the repository implementation.
 	This version returns <code>true</code> for all resources except:
 	<ul>
-		<li>The special collection contents resource named {@value #COLLECTION_CONTENTS_NAME}.</li>
+		<li>The special collection contents resource named {@value #COLLECTION_CONTENT_NAME}.</li>
 	</ul>
 	@param privateResourceURI The private URI of a resource.
 	@return <code>true</code> if the resource should be visible as normal, or <code>false</code> if the resource should not be made available to the public space.
@@ -1035,7 +1039,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	protected boolean isPrivateResourcePublic(final URI privateResourceURI)
 	{
 		final String rawName=getRawName(privateResourceURI);	//get the raw name of the resource
-		if(COLLECTION_CONTENTS_NAME.equals(rawName))	//if this is the collection contents
+		if(COLLECTION_CONTENT_NAME.equals(rawName))	//if this is the collection contents
 		{
 			return false;	//don't publish the collection contents file
 		}
@@ -1052,6 +1056,82 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	protected ResourceIOException createResourceIOException(final URI resourceURI, final Throwable throwable)
 	{
 		return throwable instanceof ResourceIOException ? (ResourceIOException)throwable : new ResourceIOException(resourceURI, throwable);	//default to simple exception chaining with a new resource I/O exception, if the throwable isn't already a resourc I/O exception
+	}
+
+	/**Returns a description possibly updated to reflect a created and/or modified date and time.
+	This is a convenience method to allow a repository implementation to add the content creation and modified properties properties when needed.
+	If not already present in the given description and the caller so requests, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
+	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
+	@param resourceDescription The description of the resource.
+	@param updateCreated Whether the {@link Content#CREATED_PROPERTY_URI} will also be updated.
+	@throws NullPointerException if the given description is <code>null</code>.
+	*/
+/*TODO del
+	protected URFResource ensureModifiedProperties(URFResource resourceDescription, final boolean updateCreated)
+	{
+		boolean update=false;
+		boolean setContentModified=!resourceDescription.hasProperty(Content.MODIFIED_PROPERTY_URI);	//see if the description has an indication of when the content was modified
+		boolean setContentCreated=false;	//start out assuming we won't have to set the content created property 
+		if(!setContentModified)	//if the description already indicates when the content was modified
+		{
+			if(updateCreated)	//if we should update the created property
+			{
+				setContentCreated=!resourceDescription.hasProperty(Content.CREATED_PROPERTY_URI);	//see if the description has an indication of when the content was created
+			}
+		}
+		if(setContentCreated || setContentModified)	//if we should set one of the properties
+		{
+			resourceDescription=new DefaultURFResource(resourceDescription);	//make a copy of the description so that we can modify it without changing what was passed to us
+			final URFDateTime dateTime=new URFDateTime();	//create a new timestamp representing this instant
+			if(setContentCreated)	//if we should set the created time
+			{
+				Content.setCreated(resourceDescription, dateTime);
+			}
+			if(setContentModified)	//if we should set the modified time
+			{
+				Content.setCreated(resourceDescription, dateTime);
+			}
+		}
+		return resourceDescription;	//return the description, which we may or may not have copied and modified
+	}
+*/
+
+	/**Determines whether the given resource has properties that are not live.
+	@param resourceDescription The description of the resource.
+	*/
+/*TODO del
+	protected boolean hasDeadProperties(final URFResource resourceDescription)
+	{
+		
+	}
+*/
+
+	/**Returns a description possibly updated to reflect a created and modified date and time.
+	This is a convenience method to allow a repository implementation to add the content created and modified properties properties when needed.
+	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
+	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
+	@param resourceDescription The description of the resource.
+	@throws NullPointerException if the given description is <code>null</code>.
+	*/
+	protected URFResource ensureModifiedProperties(URFResource resourceDescription)
+	{
+		boolean update=false;
+		boolean setContentCreated=!resourceDescription.hasProperty(Content.CREATED_PROPERTY_URI);	//see if the description has an indication of when the content was created
+		boolean setContentModified=!resourceDescription.hasProperty(Content.MODIFIED_PROPERTY_URI);	//see if the description has an indication of when the content was modified
+		if(setContentCreated || setContentModified)	//if we should set one of the properties
+		{
+			resourceDescription=new DefaultURFResource(resourceDescription);	//make a copy of the description so that we can modify it without changing what was passed to us
+			final URFDateTime dateTime=new URFDateTime();	//create a new timestamp representing this instant
+			if(setContentCreated)	//if we should set the created time
+			{
+				Content.setCreated(resourceDescription, dateTime);
+			}
+			if(setContentModified)	//if we should set the modified time
+			{
+				Content.setCreated(resourceDescription, dateTime);
+			}
+		}
+		return resourceDescription;	//return the description, which we may or may not have copied and modified
 	}
 
 	/**Cleans up the object for garbage collection.

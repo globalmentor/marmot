@@ -100,7 +100,7 @@ public class NTFSFileRepository extends FileRepository
 	}
 
 	/**Gets an output stream to the contents of the given resource file.
-	For collections, this implementation sets the content of the {@value #COLLECTION_CONTENTS_NAME} file, if any.
+	For collections, this implementation sets the content of the {@value #COLLECTION_CONTENT_NAME} file, if any.
 	If this resource is not a collection, this version gets the resource description, deletes the file, and creates a new file with the same description because
 	simply opening a new file output stream to overwrite a file will overwrite the NTFS streams.
 	For collections, an output stream is retrieved normally because the special collection content file does not maintain properties. 
@@ -117,7 +117,7 @@ public class NTFSFileRepository extends FileRepository
 		}
 		else	//if the resource is not a collection, perform special processing to allow resource properties to be maintained
 		{
-			final URFResource resourceDescription=createResourceDescription(createURF(), resourceFile);	//get a description of the existing file
+			final URFResource resourceDescription=createResourceDescription(createURF(), resourceURI, resourceFile);	//get a description of the existing file
 			delete(resourceFile);	//delete the file
 			createNewFile(resourceFile);	//create a new file
 			if(resourceDescription.hasProperties())	//if there are any properties to set (otherwise, don't create an empty properties file) TODO improve; this will always have properties; it would be best to check to see if there are any non-live properties

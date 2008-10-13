@@ -20,11 +20,13 @@ import java.io.*;
 import java.net.URI;
 import java.util.*;
 
+import static java.util.Arrays.fill;
 import static java.util.Collections.*;
 
 import static com.globalmentor.io.FileConstants.*;
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Bytes.*;
+import static com.globalmentor.java.Objects.checkInstance;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
 
@@ -32,6 +34,7 @@ import com.globalmentor.io.*;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
+import com.globalmentor.urf.content.Content;
 
 import static com.globalmentor.urf.TURF.*;
 
@@ -40,6 +43,7 @@ import static com.globalmentor.urf.TURF.*;
 	and creates a directory for each such resource. Directories will be created
 	transparently for other resources with other types and media types as needed
 	to store child resources.</p>
+<p>This implementation uses the file last modified timestamp to store the {@value Content#MODIFIED_PROPERTY_URI} property.</p>
 @author Garret Wilson
 */
 public class FileRepository extends AbstractRepository	//TODO fix content length for collections
@@ -149,7 +153,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 	}
 
 	/**Gets an input stream to the contents of the resource specified by the given URI.
-	For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENTS_NAME} file, if any.
+	For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any.
 	@param resourceURI The URI of the resource to access.
 	@return An input stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -169,13 +173,13 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 		{
 			if(isCollectionURI(resourceURI) && isCollection(resourceURI))	//if the resource is a collection (make sure the resource URI is also a collection URI so that we can be sure of resolving the collection contents name; file collections should only have collection URIs anyway)
 			{
-				final URI contentsURI=resourceURI.resolve(COLLECTION_CONTENTS_NAME);	//determine the URI to use for contents
-				final File file=new File(getPrivateURI(contentsURI));	//create a file object from the private URI of the special collection contents resource
-				if(file.exists())	//if there is a special collection contents resource
+				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+				final File contentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection content resource
+				if(contentFile.exists())	//if there is a special collection content resource
 				{
-					return new FileInputStream(file);	//return an input stream to the file
+					return new FileInputStream(contentFile);	//return an input stream to the file
 				}
-				else	//if there is no collection contents resource
+				else	//if there is no collection content resource
 				{
 					return new ByteArrayInputStream(NO_BYTES);	//return an input stream to an empty byte array
 				}
@@ -194,14 +198,14 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 
 	/**Gets an output stream to the contents of the resource specified by the given URI.
 	An error is generated if the resource does not exist.
-	For collections, this implementation sets the content of the {@value #COLLECTION_CONTENTS_NAME} file, if any.
+	For collections, this implementation sets the content of the {@value #COLLECTION_CONTENT_NAME} file, if any.
 	@param resourceURI The URI of the resource to access.
 	@return An output stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the resource.
 	*/
-	public OutputStream getResourceOutputStream(URI resourceURI) throws ResourceIOException
+	public OutputStream getResourceOutputStream(URI resourceURI) throws ResourceIOException	//TODO fix to update modified date
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -217,11 +221,11 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 			{
 				throw new FileNotFoundException("Cannot open output stream to non-existent file "+resourceFile+" in repository.");
 			}
-			final File contentFile;	//determine the file to use for storing contents
-			if(isCollectionURI(resourceURI) && isCollection(resourceURI))	//if the resource is a collection (make sure the resource URI is also a collection URI so that we can be sure of resolving the collection contents name; file collections should only have collection URIs anyway)
+			final File contentFile;	//determine the file to use for storing content
+			if(isCollectionURI(resourceURI) && isCollection(resourceURI))	//if the resource is a collection (make sure the resource URI is also a collection URI so that we can be sure of resolving the collection content name; file collections should only have collection URIs anyway)
 			{
-				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENTS_NAME);	//determine the URI to use for contents
-				contentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection contents resource
+				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+				contentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection content resource
 			}
 			else	//if the resource is not a collection
 			{
@@ -266,7 +270,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 		final URF urf=createURF();	//create a new URF data model
 		try
 		{
-			return createResourceDescription(urf, new File(getPrivateURI(resourceURI)));	//create and return a description from a file created from the URI from the private namespace
+			return createResourceDescription(urf, resourceURI, new File(getPrivateURI(resourceURI)));	//create and return a description from a file created from the URI from the private namespace
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -384,7 +388,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 							final URFResource childResourceDescription;
 							try
 							{
-								childResourceDescription=createResourceDescription(urf, file);	//create a resource description for this file
+								childResourceDescription=createResourceDescription(urf, childResourcePublicURI, file);	//create a resource description for this file
 							}
 							catch(final IOException ioException)	//if an I/O exception occurs
 							{
@@ -424,6 +428,8 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 	/**Creates a new resource with the given description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
 	The returned output stream should always be closed.
+	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
+	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
 	If a resource with no contents is desired, {@link #createResource(URI, URFResource, byte[])} with zero bytes is better suited for this task.
 	This implementation updates resource properties before storing the contents of the resource.
 	@param resourceURI The reference URI to use to identify the resource.
@@ -434,7 +440,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public OutputStream createResource(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException	//TODO fix to prevent resources with special names
+	public OutputStream createResource(URI resourceURI, URFResource resourceDescription) throws ResourceIOException	//TODO fix to prevent resources with special names
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -452,11 +458,8 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 				delete(resourceFile);	//delete the file
 			}
 			createNewFile(resourceFile);	//create a new file
-			if(resourceDescription.hasProperties())	//if there are any properties to set (otherwise, don't create an empty properties file)
-			{
-	  		alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), resourceFile);	//set the properties using the file
-			}
-			return new FileOutputStream(resourceFile, true);	//return an output stream to the file, appending to the new, empty file we created
+			resourceDescription=ensureModifiedProperties(resourceDescription);	//add the content modified properties as needed
+			return new DescriptionWriterOutputStreamDecorator(new FileOutputStream(resourceFile, true), resourceURI, resourceDescription, resourceFile);	//wrap the output stream in a decorator that will update the properties after the contents are stored
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -466,6 +469,8 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 
 	/**Creates a new resource with the given description and contents.
 	If a resource already exists at the given URI it will be replaced.
+	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
+	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
 	@param resourceContents The contents to store in the resource.
@@ -475,7 +480,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public URFResource createResource(URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException	//TODO fix to prevent resources with special names
+	public URFResource createResource(URI resourceURI, URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException	//TODO fix to prevent resources with special names
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -496,14 +501,8 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 			{
 				outputStream.close();	//always close the output stream
 			}
-			if(resourceDescription.hasProperties())	//if there are any properties to set
-			{
-	  		return alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), resourceFile);	//set the properties using the file
-			}
-			else	//if there are no properties to set, don't create an empty properties file; just return the resource description
-			{
-				return createResourceDescription(createURF(), resourceFile);	//create and return a description of the new resource				
-			}
+			resourceDescription=ensureModifiedProperties(resourceDescription);	//add the content modified properties as needed
+  		return alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), resourceFile);	//set the properties using the file
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -512,6 +511,8 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 	}
 
 	/**Creates a collection in the repository with the given description.
+	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
+	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
 	@param collectionURI The URI of the collection to be created.
 	@param collectionDescription A description of the collection; the resource URI is ignored.
 	@return A description of the collection that was created.
@@ -519,7 +520,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error creating the collection.
 	*/
-	public URFResource createCollection(URI collectionURI, final URFResource collectionDescription) throws ResourceIOException	//TODO fix to prevent resources with special names
+	public URFResource createCollection(URI collectionURI, URFResource collectionDescription) throws ResourceIOException	//TODO fix to prevent resources with special names
 	{
 			//TODO do we want to check to make sure this is a collection URI?
 		collectionURI=checkResourceURI(collectionURI);	//makes sure the resource URI is valid and normalize the URI
@@ -537,13 +538,14 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 				delete(directoryFile, true);	//delete the directory and all its children, if any
 			}
 			mkdir(directoryFile);	//create the directory
+			collectionDescription=ensureModifiedProperties(collectionDescription);	//add the content modified properties as needed
 			if(collectionDescription.hasProperties())	//if there are any properties to set
 			{
 	  		return alterResourceProperties(collectionURI, DefaultURFResourceAlteration.createResourceAlteration(collectionDescription), directoryFile);	//set the properties using the file
 			}
 			else	//if there are no properties to set, don't create an empty properties file; just return the resource description
 			{
-				return createResourceDescription(createURF(), directoryFile);	//create and return a description of the new directory
+				return createResourceDescription(createURF(), collectionURI, directoryFile);	//create and return a description of the new directory
 			}
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
@@ -583,16 +585,16 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 	protected URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration, final File resourceFile) throws ResourceIOException
 	{
 		final URF urf=createURF();	//create a new URF data model
-		final URFResource resourceDescription;
 		try
 		{
-			resourceDescription=createResourceDescription(urf, resourceFile);	//get a description from a file created from the URI from the private namespace
+			final URFResource resourceDescription=createResourceDescription(urf, resourceURI, resourceFile);	//get a description from a file created from the URI from the private namespace
 			resourceDescription.alter(resourceAlteration);	//alter the resource according to the specification
+			final URFResource tempDescription=new DefaultURFResource(resourceDescription);	//create a temporary resource so that we can remove the live properties
 			for(final URI livePropertyURI:getLivePropertyURIs())	//look at all live properties
 			{
-				resourceDescription.removePropertyValues(livePropertyURI);	//remove all values for this live property
+				tempDescription.removePropertyValues(livePropertyURI);	//remove all values for this live property
 			}
-			saveResourceDescription(resourceDescription, resourceFile);	//save the resource description
+			saveResourceDescription(tempDescription, resourceFile);	//save the resource description
 			return resourceDescription;	//return the updated description
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
@@ -695,21 +697,29 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 
 	/**Creates a resource description to represent a single file.
 	@param urf The URF data model to use when creating this resource.
+	@param resourceURI The URI of the resource being described.
 	@param resourceFile The file for which a resource should be created.
 	@return A resource description of the given file.
 	@exception IOException if there is an error creating the resource description.
 	*/
-	protected URFResource createResourceDescription(final URF urf, final File resourceFile) throws IOException
+	protected URFResource createResourceDescription(final URF urf, final URI resourceURI, final File resourceFile) throws IOException
 	{
 		final URFResource resource=loadResourceDescription(urf, resourceFile);	//load the resource description, if there is one
-//TODO del if not needed		final URI resourceURI=getPublicURI(resourceFile.toURI());	//get a public URI to represent the file resource
-//TODO del if not needed		final RDFResource resource=rdf.createResource(resourceURI);	//create a resource to represent the file
-			//TODO update logic not to override the explicit properties loaded, unless we decide to have some live properties
 		final String filename=resourceFile.getName();	//get the name of the file
+		long contentLength=0;	//we'll update the content length if we can
+		URFDateTime contentModified=new URFDateTime(resourceFile.lastModified());	//get the last modified date of the file; we'll update this if needed
 		if(resourceFile.isDirectory())	//if this is a directory
 		{
-//TODO del; changed approach			resource.addTypeURI(LIST_CLASS_URI);	//add the urf:List type to indicate that this resource is a folder
-			setModified(resource, new URFDateTime(resourceFile.lastModified()));	//set the modified timestamp as the last modified date of the file			
+			if(isCollection(resourceURI))	//if the resource is a collection (make sure the resource URI is also a collection URI so that we can be sure of resolving the collection contents name; file collections should only have collection URIs anyway)
+			{
+				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+				final File contentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection content resource
+				if(contentFile.exists())	//if there is a special collection content resource
+				{
+					contentLength=contentFile.length();	//use the length of the special collection content resource
+					contentModified=new URFDateTime(resourceFile.lastModified());	//set the modified timestamp as the last modified date of the content file			
+				}
+			}
 		}
 		else	//if this file is not a directory
 		{
@@ -718,13 +728,16 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 			final String label=FileUtilities.removeExtension(FileUtilities.decodeFilename(filename));
 			addLabel(resource, label); //add the unescaped filename without an extension as a label
 */
-			setContentLength(resource, resourceFile.length());	//set the file length
-			setModified(resource, new URFDateTime(resourceFile.lastModified()));	//set the modified time as the last modified date of the file			
+			contentLength=resourceFile.length();	//use the file length
 //TODO del			updateContentType(resource);	//update the content type information based upon the repository defaults
 		}
-
-//TODO del Debug.trace("returning RDF:", RDFUtilities.toString(resource));
-		
+		setContentLength(resource, contentLength);	//indicate the length of the content
+		setModified(resource, new URFDateTime(resourceFile.lastModified()));	//set the modified timestamp as the last modified date of the file			
+		final URFDateTime created=getCreated(resource);	//try to determine the creation date and time; the stored creation time will always trump everything else
+		if(created==null)	//if there is no creation date
+		{
+			setCreated(resource, contentModified);	//set the created time as the last modified date of the file, as Java doesn't allow access to the creation time
+		}
 		return resource;	//return the resource that respresents the file
 	}
 
@@ -772,23 +785,47 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 	}
 
 	/**Saves a resource description for a single file.
-	The description is saved as given with no modifications.
+	Except for as noted below, the description is saved as given with no modifications.
+	If the {@value Content#MODIFIED_PROPERTY_URI} property is present, it is not saved and the file modified time is updated to match that value.
+	If the {@value Content#CREATED_PROPERTY_URI} property is present and it is identical to the {@value Content#MODIFIED_PROPERTY_URI} property, it is not saved.
+	If the resource description file does not exist and there are no properties to save, no resource description file is created.
 	@param resourceDescription The resource description to save.
 	@param resourceFile The file of a resource.
 	@exception IOException if there is an error save the resource description.
 	@see #getResourceDescriptionFile(File)
 	*/
-	protected void saveResourceDescription(final URFResource resourceDescription, final File resourceFile) throws IOException
+	protected void saveResourceDescription(URFResource resourceDescription, final File resourceFile) throws IOException
 	{
+		final URFDateTime modified=getModified(resourceDescription);	//see if the description indicates the last modified time
+		if(modified!=null)	//if the last modified time was indicated
+		{
+			resourceDescription=new DefaultURFResource(resourceDescription);	//create a copy of the description
+			resourceDescription.removePropertyValues(Content.MODIFIED_PROPERTY_URI);	//remove all last-modified values from the desciption we'll actually save
+			final URFDateTime created=getCreated(resourceDescription);	//see if the description indicates the created date
+			if(created!=null && created.getTime()==modified.getTime())	//if the created time is the same as the modified time
+			{
+				resourceDescription.removePropertyValues(Content.CREATED_PROPERTY_URI);	//remove all created timestamp values from the desciption to save, as Java can't distinguish between content created and modified and they'll both be initialized from the same value, anyway, when reading
+			}
+		}
 		final URI resourceURI=getPublicURI(resourceFile.toURI());	//get a public URI to represent the file resource
 		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the file for storing the description
-		try
+		if(resourceDescription.hasProperties() || resourceDescriptionFile.exists())	//if there are any properties to set (otherwise, don't create an empty properties file) or the description file already exists
 		{
-			Files.write(resourceDescriptionFile, resourceURI, resourceDescription, getDescriptionIO());	//write the description, using the resource URI as the base URI
+			try
+			{
+				Files.write(resourceDescriptionFile, resourceURI, resourceDescription, getDescriptionIO());	//write the description, using the resource URI as the base URI
+			}
+			catch(final IOException ioException)	//if an error occurs
+			{
+				throw new IOException("Error writing resource description to "+resourceDescriptionFile, ioException);
+			}
 		}
-		catch(final IOException ioException)	//if an error occurs
+		if(modified!=null)	//if a modification timestamp was indicated
 		{
-			throw new IOException("Error writing resource description to "+resourceDescriptionFile, ioException);
+			if(!resourceFile.setLastModified(modified.getTime()))	//update the file's record of the last modified time
+			{
+				throw new IOException("Error updating modified time of "+resourceFile);
+			}
 		}
 	}
 
@@ -813,4 +850,59 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 		}
 	}
 
+	/**Creates an output stream that updates the properties of a file after its contents are stored.
+	@author Garret Wilson
+	*/
+	protected class DescriptionWriterOutputStreamDecorator extends OutputStreamDecorator<OutputStream>
+	{
+		/**The URI of the resource.*/
+		private final URI resourceURI;
+
+			/**@protected The URI of the resource.*/
+			public URI getResourceURI() {return resourceURI;}
+	
+		/**The description of the resource to store.*/
+		private final URFResource resourceDescription;
+
+			/**@return The description of the resource.*/
+			protected URFResource getResourceDescription() {return resourceDescription;}
+
+		/**The file for updating the properties.*/
+		private final File resourceFile;
+
+			/**@return The file for updating the properties.*/
+			protected File getResourceFile() {return resourceFile;}
+
+		/**Decorates the given output stream.
+		@param outputStream The output stream to decorate
+		@param resourceURI The URI of the resource.
+		@param resourceDescription The description of the resource to store as WebDAV properties.
+		@param resourceFile The file for updating the properties.
+		@exception NullPointerException if the given output stream, resourceURI, resource description, and/or resource file is <code>null</code>.
+		*/
+		public DescriptionWriterOutputStreamDecorator(final OutputStream outputStream, final URI resourceURI, final URFResource resourceDescription, final File resourceFile)
+		{
+			super(outputStream);	//construct the parent class
+			this.resourceURI=checkInstance(resourceURI, "Resource URI cannot be null.");
+			this.resourceDescription=checkInstance(resourceDescription, "Resource description cannot be null.");
+			this.resourceFile=checkInstance(resourceFile, "Resource file cannot be null.");
+		}
+	
+	  /**Called after the stream is successfully closed.
+		This version updates the WebDAV properties to reflect the given resource description.
+		@exception ResourceIOException if an I/O error occurs.
+		*/
+	  protected void afterClose() throws ResourceIOException
+	  {
+	  	try
+	  	{
+	  		alterResourceProperties(getResourceURI(), DefaultURFResourceAlteration.createResourceAlteration(getResourceDescription()), resourceFile);	//set the properties using the resource file
+			}
+			catch(final IOException ioException)	//if an I/O exception occurs
+			{
+				throw createResourceIOException(getResourceURI(), ioException);	//translate the exception to a resource I/O exception and throw that
+			}
+	  }
+
+	}
 }

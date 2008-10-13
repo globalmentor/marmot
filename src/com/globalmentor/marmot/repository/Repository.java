@@ -25,6 +25,7 @@ import javax.mail.internet.ContentType;
 
 import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
+import com.globalmentor.urf.content.Content;
 
 /**A Marmot information store.
 <p>A repository has the concept of a <dfn>live property</dfn> which is dynamically set based upon resource state, such as content size and last modified date/time.
@@ -35,6 +36,16 @@ Instead, resources can have individual properties added, removed, and set.
 This allows a loosely-coupled model that can be implemented by a variety of storage mechanisms and prevents inadvertent removal of unmentioned properties.
 If it is required to exclusively specify all properties of a resource, the properties of a resource may be retrieved
 and the unwanted properties explicitly removed.</p>  
+<p>The {@value Content#MODIFIED_PROPERTY_URI} property is <em>not</em> considered a live property; it is completely managed by Marmot.
+This is because the last modification of the content, represented by this property, is distinct from the last modification of the underlying file store.
+However, this property does have some peculiarities:
+<ul>
+	<li>When reading a resource <em>description</em>, if no {@value Content#MODIFIED_PROPERTY_URI} property exists the repository implementation may use the
+		modified value of the underlying file store if present.</li>
+	<li>When writing resource <em>content</em>, if no {@value Content#MODIFIED_PROPERTY_URI} is given in the provided description,
+		a new property will be automatically added with the current date and time.</li>
+</ul>
+<p>Collections should indicated a {@value Content#LENGTH_PROPERTY_URI} of zero unless the collection has content. A content length should never be missing.</p>
 @author Garret Wilson
 */
 public interface Repository
@@ -321,6 +332,8 @@ public interface Repository
 	/**Creates a new resource with a default description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
 	The returned output stream should always be closed.
+	The {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
+	The {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
 	If a resource with no contents is desired, {@link #createResource(URI, byte[])} with zero bytes is better suited for this task.
 	@param resourceURI The reference URI to use to identify the resource.
 	@return An output stream for storing the contents of the resource.
@@ -334,8 +347,10 @@ public interface Repository
 	/**Creates a new resource with the given description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
 	The returned output stream should always be closed.
-	If a resource with no contents is desired, {@link #createResource(URI, URFResource, byte[])} with zero bytes is better suited for this task.
 	It is unspecified whether the resource description will be updated before or after the resource contents are stored.
+	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
+	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
+	If a resource with no contents is desired, {@link #createResource(URI, URFResource, byte[])} with zero bytes is better suited for this task.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
 	@return An output stream for storing the contents of the resource.
@@ -348,6 +363,8 @@ public interface Repository
 
 	/**Creates a new resource with a default description and contents.
 	If a resource already exists at the given URI it will be replaced.
+	The {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
+	The {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceContents The contents to store in the resource.
 	@return A description of the resource that was created.
@@ -360,6 +377,8 @@ public interface Repository
 
 	/**Creates a new resource with the given description and contents.
 	If a resource already exists at the given URI it will be replaced.
+	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
+	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
 	@param resourceContents The contents to store in the resource.
@@ -372,6 +391,8 @@ public interface Repository
 	public URFResource createResource(final URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException;
 
 	/**Creates a collection in the repository.
+	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
+	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
 	@param collectionURI The URI of the collection to be created.
 	@return A description of the collection that was created.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -382,6 +403,8 @@ public interface Repository
 	public URFResource createCollection(final URI collectionURI) throws ResourceIOException;
 
 	/**Creates a collection in the repository with the given description.
+	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
+	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
 	@param collectionURI The URI of the collection to be created.
 	@param collectionDescription A description of the collection; the resource URI is ignored.
 	@return A description of the collection that was created.

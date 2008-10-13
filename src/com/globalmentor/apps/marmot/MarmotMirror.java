@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.globalmentor.marmot;
+package com.globalmentor.apps.marmot;
 
 import java.io.IOException;
 import java.net.URI;
@@ -49,10 +49,10 @@ public class MarmotMirror extends Application<Object>
 	public final static String TITLE="Marmot Mirror"+TRADE_MARK_SIGN_CHAR;
 
 	/**The application copyright.*/
-	public final static String COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2006 GlobalMentor, Inc. All Rights Reserved.";	//TODO i18n
+	public final static String COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2006-2008 GlobalMentor, Inc. All Rights Reserved.";	//TODO i18n
 
 	/**The version of the application.*/
-	public final static String VERSION="Alpha Version 0.1 build 20061124";
+	public final static String VERSION="Alpha Version 0.1 build 2008-10-11";
 
 	/**Argument constructor.
 	@param args The command line arguments.
@@ -92,7 +92,7 @@ public class MarmotMirror extends Application<Object>
 		HTTPClient.getInstance().setLogged(Debug.isDebug() && Debug.getReportLevels().contains(Debug.ReportLevel.LOG));	//if debugging is turned on, tell the HTTP client to log its data TODO fix this better---make some sort of flag specifically for communication tracking
 		
 		
-		Debug.info("Mirroring from "+sourceRepositoryURI+" "+sourceResourceURI+" to "+destinationRepositoryURI+" "+destinationResourceURI);
+		Debug.info("Mirroring from", sourceRepositoryURI, sourceResourceURI, "to", destinationRepositoryURI, destinationResourceURI);
 		final Repository sourceRepository=createRepository(sourceRepositoryURI);	//create the correct type of repository for the source
 		final Repository destinationRepository=createRepository(destinationRepositoryURI);	//create the correct type of repository for the destination
 		try
