@@ -360,8 +360,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 
 	/**Creates a new resource with the given description and the appropriate default contents for this resource type.
 	If a resource already exists at the given URI it will be replaced.
-	If the resource URI is a collection URI, a collection resource will be created.
-	This version creates a resource or collection resource and then writes default content using {@link #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)}.
+	This version creates a resource then writes default content, if any, using {@link #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)}.
 	@param repository The repository that will contain the resource.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
@@ -372,20 +371,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	*/
 	public URFResource createResource(final Repository repository, final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
 	{
-		if(isCollectionURI(resourceURI))	//if this is a collection URI
-		{
-			final URFResource newResource=repository.createCollection(resourceURI, resourceDescription);	//create a new collection
-			if(hasDefaultResourceContent(repository, resourceURI))	//if there is default content for the resource
-			{
-				writeDefaultResourceContent(repository, resourceURI, newResource);	//write default content
-				return repository.getResourceDescription(resourceURI);	//return the updated resource description
-			}
-			else	//if there is no default content for the resource
-			{
-				return newResource;	//return the resource description we already got back
-			}
-		}
-		else	//if this is not a collection URI
+		if(hasDefaultResourceContent(repository, resourceURI))	//if there is default content for the resource
 		{
 			final OutputStream outputStream=new BufferedOutputStream(repository.createResource(resourceURI, resourceDescription));	//create a new resource
 			try
@@ -401,12 +387,16 @@ public abstract class AbstractResourceKit implements ResourceKit
 				{
 					outputStream.close();	//always close the output stream
 				}
+				return repository.getResourceDescription(resourceURI);	//return the resource description
 			}
 			catch(final IOException ioException)	//if an I/O exception occurs
 			{
 				throw ResourceIOException.toResourceIOException(ioException, resourceURI);	//send a resource version of the exception
 			}
-			return repository.getResourceDescription(resourceURI);	//return the resource description
+		}
+		else	//if there is no default content for the resource
+		{
+			return repository.createResource(resourceURI, resourceDescription, NO_BYTES);	//create a new resource with no content
 		}
 	}
 

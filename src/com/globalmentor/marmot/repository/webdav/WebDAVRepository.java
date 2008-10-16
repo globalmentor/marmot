@@ -691,7 +691,18 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 		try
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
-			final OutputStream outputStream=webdavResource.getOutputStream();	//get an output stream to the WebDAV resource
+			final WebDAVResource contentWebDAVResource;	//determine the WebDAV resource for accessing the content file
+			if(isCollectionURI(resourceURI))	//if this is a collection
+			{
+				webdavResource.mkCol();	//create the collection
+				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+				contentWebDAVResource=new WebDAVResource(getPrivateURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource
+			}
+			else	//if this is not a collection
+			{
+				contentWebDAVResource=webdavResource;	//use the normal WebDAV resource
+			}
+			final OutputStream outputStream=contentWebDAVResource.getOutputStream();	//get an output stream to the content WebDAV resource
 			resourceDescription=ensureModifiedProperties(resourceDescription);	//add the content modified properties as needed
 			return new DescriptionWriterOutputStreamDecorator(outputStream, resourceURI, resourceDescription, webdavResource, passwordAuthentication);	//wrap the output stream in a decorator that will update the WebDAV properties after the contents are stored; this method will erase the provided password, if any, after it completes the resource property updates
 		}
@@ -727,7 +738,21 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 		try
 		{
 			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
-			webdavResource.put(resourceContents);	//create a WebDAV resource with the given contents
+			final WebDAVResource contentWebDAVResource;	//determine the WebDAV resource for accessing the content file
+			if(isCollectionURI(resourceURI))	//if this is a collection
+			{
+				webdavResource.mkCol();	//create the collection
+				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+				contentWebDAVResource=new WebDAVResource(getPrivateURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource
+			}
+			else	//if this is not a collection
+			{
+				contentWebDAVResource=webdavResource;	//use the normal WebDAV resource
+			}
+			if(resourceContents.length>0 || !isCollectionURI(resourceURI))	//don't write empty content for a new collection
+			{
+				contentWebDAVResource.put(resourceContents);	//create the content WebDAV resource with the given contents
+			}
 			resourceDescription=ensureModifiedProperties(resourceDescription);	//add the content modified properties as needed
   		return alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), webdavResource);	//set the properties using the WebDAV resource object
 		}
@@ -738,51 +763,6 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 		catch(final DataException dataException)	//if the data wasn't correct
 		{
 			throw createResourceIOException(resourceURI, dataException);	//translate the exception to a resource I/O exception and throw that
-		}
-		finally
-		{
-			if(passwordAuthentication!=null)	//if we used password authentication
-			{
-				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
-			}
-		}
-	}
-
-	/**Creates a collection in the repository with the given description.
-	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
-	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
-	@param collectionURI The URI of the collection to be created.
-	@param collectionDescription A description of the collection; the resource URI is ignored.
-	@return A description of the collection that was created.
-	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error creating the collection.
-	*/
-	public URFResource createCollection(URI collectionURI, URFResource collectionDescription) throws ResourceIOException	//TODO fix to prevent resources with special names
-	{
-		collectionURI=checkResourceURI(collectionURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(collectionURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.createCollection(collectionURI, collectionDescription);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
-		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
-		try
-		{
-			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(collectionURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
-			webdavResource.mkCol();	//create the collection
-			collectionDescription=ensureModifiedProperties(collectionDescription);	//add the content modified properties as needed
-  		return alterResourceProperties(collectionURI, DefaultURFResourceAlteration.createResourceAlteration(collectionDescription), webdavResource);	//set the properties using the WebDAV resource object
-		}
-		catch(final IOException ioException)	//if an I/O exception occurs
-		{
-			throw createResourceIOException(collectionURI, ioException);	//translate the exception to a resource I/O exception and throw that
-		}
-		catch(final DataException dataException)	//if the data wasn't correct
-		{
-			throw createResourceIOException(collectionURI, dataException);	//translate the exception to a resource I/O exception and throw that
 		}
 		finally
 		{
@@ -1075,7 +1055,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 	{
 		final URFResource resource=urf.locateResource(resourceURI);	//create a resource to represent the WebDAV property list
 		final Set<String> ignoredWebDAVNamespaces=getIgnoredWebDAVNamespaces();	//get the map of ignored WebDAV namespaces
-		boolean isCollection=false;	//we'll detect if this is a collection base upon the properties
+		boolean isCollection=false;	//we'll detect if this is a collection base upon the properties TODO update to check to make sure collections have collection URIs and vice-versa
 		final URFIO<URFResource> descriptionIO=getDescriptionIO();	//get I/O for the description
 		
 		final WebDAVProperty webdavDisplayNameProperty=properties.get(DISPLAY_NAME_PROPERTY_NAME);	//D:displayname

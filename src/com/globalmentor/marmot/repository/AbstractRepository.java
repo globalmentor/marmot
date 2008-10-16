@@ -37,6 +37,7 @@ import com.globalmentor.util.*;
 
 import static com.globalmentor.io.ContentTypes.*;
 import static com.globalmentor.io.Files.*;
+import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.marmot.Marmot.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
@@ -550,11 +551,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		URFResource lastCreatedParentResource=createParentResources(parentResourceURI);	//create any necessary parents of the parent
 		if(!resourceExists(parentResourceURI))	//if the parent does not exist
 		{
-			final URFResource parentResource=createCollection(parentResourceURI);	//create the parent collection TODO resolve API conflict of possible non-collection parent
-			if(parentResource!=null)	//if we created a resource
-			{
-				lastCreatedParentResource=parentResource;	//update our record of the last-created parent resource
-			}
+			lastCreatedParentResource=createResource(parentResourceURI, NO_BYTES);	//create the parent collection
 		}
 		return lastCreatedParentResource;	//return the last parent created, if any
 	}
@@ -606,27 +603,6 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 			return subrepository.createResource(resourceURI, resourceContents);	//delegate to the subrepository
 		}
 		return createResource(resourceURI, new DefaultURFResource(resourceURI), resourceContents);	//create the resource with a default description
-	}
-
-	/**Creates a collection in the repository.
-	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
-	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
-	This implementation delegates to {@link #createCollection(URI, URFResource)} with a default description.
-	@param collectionURI The URI of the collection to be created.
-	@return A description of the collection that was created.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error creating the collection.
-	*/
-	public final URFResource createCollection(URI collectionURI) throws ResourceIOException	//TODO fix to prevent resources with special names
-	{
-		collectionURI=checkResourceURI(collectionURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(collectionURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.createCollection(collectionURI);	//delegate to the subrepository
-		}
-		return createCollection(collectionURI, new DefaultURFResource(collectionURI));	//create the collection with a default description
 	}
 
 	/**Retrieves child resources of the resource at the given URI.
@@ -875,26 +851,36 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 			try
 			{
 	//TODO del Debug.trace("ready to create resource", destinationURI, "in destination repository", destinationRepository.getReferenceURI());
-					//TODO check for non-existent source resource
-				final InputStream inputStream=getResourceInputStream(resourceURI);	//get an input stream to the source resource
-				try
+				final boolean isCollection=isCollectionURI(resourceURI);	//see if the resource is a collection
+				final URFResource resourceDescription=getResourceDescription(resourceURI);	//get a description of the resource
+				final long contentLength=getContentLength(resourceDescription);	//get the size of the resource content
+				if(contentLength==0)	//if this is a resource with no content, don't needlessly create content (especially important for collections)
 				{
-						//TODO create an overwrite-aware createResource() method
-					final OutputStream outputStream=destinationRepository.createResource(destinationURI, getResourceDescription(resourceURI));	//create the destination resource with the same description as the source resource, getting an output stream for storing the contents
+					destinationRepository.createResource(destinationURI, resourceDescription, NO_BYTES);	//create a zero-byte resource with the given description
+				}
+				else	//if there is content
+				{
+						//TODO check for non-existent source resource
+					final InputStream inputStream=getResourceInputStream(resourceURI);	//get an input stream to the source resource
 					try
 					{
-						InputStreams.copy(inputStream, outputStream);	//copy the resource
+							//TODO create an overwrite-aware createResource() method
+						final OutputStream outputStream=destinationRepository.createResource(destinationURI, resourceDescription);	//create the destination resource with the same description as the source resource, getting an output stream for storing the contents
+						try
+						{
+							InputStreams.copy(inputStream, outputStream);	//copy the resource
+						}
+						finally
+						{
+							outputStream.close();	//always close the output stream
+						}
 					}
 					finally
 					{
-						outputStream.close();	//always close the output stream
+						inputStream.close();	//always close the input stream
 					}
 				}
-				finally
-				{
-					inputStream.close();	//always close the input stream
-				}
-				//TODO copy the properties
+				//TODO copy the child resources
 			}
 			catch(final IOException ioException)	//if an I/O exception occurs
 			{

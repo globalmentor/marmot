@@ -23,6 +23,7 @@ import java.util.*;
 import static com.globalmentor.urf.content.Content.*;
 
 import com.globalmentor.marmot.repository.Repository;
+import static com.globalmentor.net.URIs.*;
 import com.globalmentor.urf.URFResource;
 import com.globalmentor.util.Debug;
 
@@ -110,6 +111,7 @@ public class RepositorySynchronizer
 	@param destinationResourceURI The URI of the destination resource.
 	@param destinationResourceDescription The description of the destination resource, or <code>null</code> if the destination resource does not exist.
 	@throws IOException if there is an I/O error whle synchronizing the resources.
+	@throws IllegalArgumentException if one of the resources is a collection and the other is not.
 	*/
 	protected void synchronize(final Repository sourceRepository, final URI sourceBaseURI, final URI sourceResourceURI, final URFResource sourceResourceDescription, final Repository destinationRepository, final URI destinationBaseURI, final URI destinationResourceURI, final URFResource destinationResourceDescription) throws IOException
 	{
@@ -122,59 +124,30 @@ Debug.trace("destination exists", destinationExists);
 		{
 			if(sourceExists)	//if the source resource exists but not the destination
 			{
-				final boolean isSourceCollection=sourceRepository.isCollection(sourceResourceURI);	//see if the source is a collection
-				if(isSourceCollection)	//if the source is a collection
-				{
-					Debug.info("Orphan source collection", sourceResourceURI, "creating destination collection", destinationResourceURI, "to match.");
-					destinationRepository.createCollection(destinationResourceURI, sourceResourceDescription);	//crate a destination collection TODO allow configuration				
-				}
-				else	//if the source is not a collection
-				{
-					Debug.info("Orphan source resource", sourceResourceURI, "performing action", getOrphanSourceAction(), "for destination resource", destinationResourceURI);
-					performAction(getOrphanSourceAction(), sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//perform the correct action when the source exists and the destination does not
-				}
+				Debug.info("Orphan source resource", sourceResourceURI, "performing action", getOrphanSourceAction(), "for destination resource", destinationResourceURI);
+				performAction(getOrphanSourceAction(), sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//perform the correct action when the source exists and the destination does not
 			}
 			else	//if the source resource does not exist but the destination does
 			{
-				final boolean isDestinationCollection=destinationRepository.isCollection(destinationResourceURI);	//see if the destination is a collection
-				if(isDestinationCollection)	//if the destination is a collection
-				{
-					Debug.info("Creating source collection", sourceResourceURI, "to match orphaned destination collection", destinationResourceURI);
-					destinationRepository.deleteResource(destinationResourceURI);	//delete the destination collection  TODO allow configuration		
-				}
-				else	//if the destination is not a collection
-				{
-					Debug.info("Performing action", getOrphanDestinationAction(), "for source resource", sourceResourceURI, "on orphan destination resource", destinationResourceURI);
-					performAction(getOrphanDestinationAction(), destinationRepository, destinationResourceURI, sourceRepository, sourceResourceURI);	//perform the correct action when the destination exists and the source does not
-				}
+				Debug.info("Performing action", getOrphanDestinationAction(), "for source resource", sourceResourceURI, "on orphan destination resource", destinationResourceURI);
+				performAction(getOrphanDestinationAction(), destinationRepository, destinationResourceURI, sourceRepository, sourceResourceURI);	//perform the correct action when the destination exists and the source does not
 			}			
 		}
 		else if(sourceExists)	//if both resources exist (we know at this point that either both exist or both don't exist)
 		{
-			final boolean isSourceCollection=sourceRepository.isCollection(sourceResourceURI);	//see if the source is a collection
-			final boolean isDestinationCollection=destinationRepository.isCollection(destinationResourceURI);	//see if the destination is a collection
-			if(isSourceCollection==isDestinationCollection)	//if the source and destination are compatible
+			final boolean isSourceCollection=isCollectionURI(sourceResourceDescription.getURI());	//see if the source is a collection
+			final boolean isDestinationCollection=isCollectionURI(destinationResourceDescription.getURI());	//see if the destination is a collection
+				//resource/collection
+			if(isSourceCollection!=isDestinationCollection)	//if we have a resource/collection discrepancy
 			{
-				final boolean isSynchronized=isContentSynchronized(sourceRepository, sourceResourceDescription, destinationRepository, destinationResourceDescription);	//see if the two resources are synchronized
-				if(!isSynchronized)//if the source and destination are not synchronized
-				{
-					Debug.info("Resolving discrepancy between source resource", sourceResourceURI, "and destination resource", destinationResourceURI, "by", getContentUnsynchronizedResolution());
-					resolve(getContentUnsynchronizedResolution(), sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//resolve the descrepancy between source and destination
-Debug.trace("done resolving");
-				}
+				throw new IllegalArgumentException("The resources are of different types: "+sourceResourceDescription.getURI()+", "+destinationResourceDescription.getURI());	//one resource is a collection; the other is a normal resource
 			}
-			else	//if the source and destination are not the same type of resource
+			final boolean isSynchronized=isContentSynchronized(sourceRepository, sourceResourceDescription, destinationRepository, destinationResourceDescription);	//see if the two resources are synchronized
+			if(!isSynchronized)//if the source and destination are not synchronized
 			{
-				Debug.info("Resolving discrepancy between source", sourceResourceURI, "and destination", destinationResourceURI, "resource types to match the source");
-				destinationRepository.deleteResource(destinationResourceURI);	//delete the destination, whatever it is
-				if(isSourceCollection)	//if the source is a collection
-				{
-					destinationRepository.createCollection(destinationResourceURI, sourceResourceDescription);	//create a destination collection TODO allow configuration									
-				}
-				else	//if the source is a normal resource
-				{
-					sourceRepository.copyResource(sourceResourceURI, destinationRepository, destinationResourceURI);	//copy the source to the destination
-				}
+				Debug.info("Resolving discrepancy between source resource", sourceResourceURI, "and destination resource", destinationResourceURI, "by", getContentUnsynchronizedResolution());
+				resolve(getContentUnsynchronizedResolution(), sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//resolve the descrepancy between source and destination
+Debug.trace("done resolving");
 			}
 		}
 		//TODO synchronize collection content
@@ -217,15 +190,16 @@ Debug.trace("both exist; we did what we needed to do; nothing more should happen
 	@return <code>true</code> If both resources are of the same type and have the same relevant properties, such as size and content.
 	@throws NullPointerException if one of the repositories and/or resources is <code>null</code>.
 	@throws IOException if there is a problem accessing one of the resources.
+	@throws IllegalArgumentException if one of the resources is a collection and the other is not.
 	*/
 	public boolean isContentSynchronized(final Repository sourceRepository, final URFResource sourceResourceDescription, final Repository destinationRepository, final URFResource destinationResourceDescription) throws IOException
 	{
-		final boolean isSourceCollection=sourceRepository.isCollection(sourceResourceDescription.getURI());	//see if the source is a collection
-		final boolean isDestinationCollection=destinationRepository.isCollection(destinationResourceDescription.getURI());	//see if the destination is a collection
+		final boolean isSourceCollection=isCollectionURI(sourceResourceDescription.getURI());	//see if the source is a collection
+		final boolean isDestinationCollection=isCollectionURI(destinationResourceDescription.getURI());	//see if the destination is a collection
 			//resource/collection
 		if(isSourceCollection!=isDestinationCollection)	//if we have a resource/collection discrepancy
 		{
-			return false;	//one resource is a collection; the other is a normal resource
+			throw new IllegalArgumentException("The resources are of different types: "+sourceResourceDescription.getURI()+", "+destinationResourceDescription.getURI());	//one resource is a collection; the other is a normal resource
 		}
 		final long sourceContentLength=getContentLength(sourceResourceDescription);	//get the size of the source
 		final long destinationContentLength=getContentLength(destinationResourceDescription);	//get the size of the destination

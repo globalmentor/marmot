@@ -28,6 +28,9 @@ import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
 
 /**A Marmot information store.
+<p>Objects stored in a repository are <dfn>resources</dfn>. Certain resources called <dfn>collections</dfn> have a parent/child relationship with other resources;
+otherwise they are treated like other resources. There are no special methods for working with collection resources;
+rather, collections are identified by an ending {@link URIs#PATH_SEPARATOR} character.</p>
 <p>A repository has the concept of a <dfn>live property</dfn> which is dynamically set based upon resource state, such as content size and last modified date/time.
 Live properties are definitionally inherent to the makeup of the resource.
 Live properties cannot be set using normal property manipulation methods and are ignored if requested to be modified. See {@link #getLivePropertyURIs()}.</p>
@@ -389,31 +392,6 @@ public interface Repository
 	@exception ResourceIOException if the resource could not be created.
 	*/
 	public URFResource createResource(final URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException;
-
-	/**Creates a collection in the repository.
-	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
-	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
-	@param collectionURI The URI of the collection to be created.
-	@return A description of the collection that was created.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error creating the collection.
-	*/
-	public URFResource createCollection(final URI collectionURI) throws ResourceIOException;
-
-	/**Creates a collection in the repository with the given description.
-	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
-	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
-	@param collectionURI The URI of the collection to be created.
-	@param collectionDescription A description of the collection; the resource URI is ignored.
-	@return A description of the collection that was created.
-	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error creating the collection.
-	*/
-	public URFResource createCollection(URI collectionURI, final URFResource collectionDescription) throws ResourceIOException;
 
 	/**Deletes a resource.
 	@param resourceURI The reference URI of the resource to delete.

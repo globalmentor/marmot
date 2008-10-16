@@ -120,10 +120,7 @@ public class NTFSFileRepository extends FileRepository
 			final URFResource resourceDescription=createResourceDescription(createURF(), resourceURI, resourceFile);	//get a description of the existing file
 			delete(resourceFile);	//delete the file
 			createNewFile(resourceFile);	//create a new file
-			if(resourceDescription.hasProperties())	//if there are any properties to set (otherwise, don't create an empty properties file) TODO improve; this will always have properties; it would be best to check to see if there are any non-live properties
-			{
-	  		alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), resourceFile);	//set the properties using the file
-			}
+  		alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), resourceFile);	//set the properties using the file
 			return new FileOutputStream(resourceFile, true);	//return an output stream to the file, appending to the new, empty file we created
 		}
 	}
