@@ -525,6 +525,28 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	*/
 	public Set<URI> getLivePropertyURIs() {return LIVE_PROPERTY_URIS;}
 
+	/**Gets an output stream to the contents of the resource specified by the given URI.
+	The content modified datetime is set to the current date and time.
+	An error is generated if the resource does not exist.
+	@param resourceURI The URI of the resource to access.
+	@return An output stream to the resource represented by the given URI.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error accessing the resource.
+	@see Content#MODIFIED_PROPERTY_URI
+	*/
+	public final OutputStream getResourceOutputStream(URI resourceURI) throws ResourceIOException
+	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			return subrepository.getResourceOutputStream(resourceURI);	//delegate to the subrepository
+		}
+		checkOpen();	//make sure the repository is open
+		return getResourceOutputStream(resourceURI, new URFDateTime());	//get an output stream with a new modified datetime of now
+	}
+	
 	/**Creates all the parent resources necessary for a resource to exist at the given URI.
 	If any parent resources already exist, they will not be replaced.
 	@param resourceURI The reference URI of a resource which may not exist.

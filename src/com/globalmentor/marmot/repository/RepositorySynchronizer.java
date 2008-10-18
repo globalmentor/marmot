@@ -17,37 +17,42 @@
 package com.globalmentor.marmot.repository;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.util.*;
 
 import static com.globalmentor.urf.content.Content.*;
 
+import com.globalmentor.io.InputStreams;
 import com.globalmentor.marmot.repository.Repository;
 import static com.globalmentor.net.URIs.*;
+
+import com.globalmentor.urf.URFDateTime;
 import com.globalmentor.urf.URFResource;
 import com.globalmentor.util.Debug;
 
-/**Marmot synchronization client.
+/**Marmot synchronization support.
 @author Garret Wilson
 */
 public class RepositorySynchronizer
 {
 
-	/**An action to perform for a single resource between source and destination repositories.*/
-	public enum Action
+	/**The resolution to perform on an orphan source or destination repository that doesn't exist in the other repository.*/
+	public enum OrphanResolution
 	{
-		/**Copy the source to the destination within the context.*/
+		/**Copy the orphan resource.*/
 		COPY,
-		/**Move the source to the destination within the context.*/
+		/**Move the orphan resource.*/
 		MOVE,
-		/**Delete the source within the context.*/
+		/**Delete the orphan resource.*/
 		DELETE,
 		/**Do nothing.*/
 		IGNORE;
 	}
 
-	/**How to resolve a descrepancy between a source and a destination resource.*/
-	public enum Resolution
+	/**How to resolve a descrepancy between a source and a destination resource content.*/
+	public enum ContentResolution
 	{
 		/**The source will overwrite the destination; the destination is intended to be a mirror of the source.*/
 		BACKUP,
@@ -59,30 +64,30 @@ public class RepositorySynchronizer
 		IGNORE;
 	}
 
-	/**The action to perform if there is a source resource and no corresponding destination resource.*/
-	private Action orphanSourceAction;
+	/**The resolution if there is a source resource and no corresponding destination resource.*/
+	private OrphanResolution orphanSourceResolution;
 
-		/**@return The action to perform if there is a source resource and no corresponding destination resource.*/
-		public Action getOrphanSourceAction() {return orphanSourceAction;}
+		/**@return The resolution if there is a source resource and no corresponding destination resource.*/
+		public OrphanResolution getOrphanSourceResolution() {return orphanSourceResolution;}
 
-	/**The action to perform if there is a destination resource and no corresponding source resource.*/
-	private Action orphanDestinationAction;
+	/**The resolution if there is a destination resource and no corresponding source resource.*/
+	private OrphanResolution orphanDestinationResolution;
 
-		/**@return The action to perform if there is a destination resource and no corresponding source resource.*/
-		public Action getOrphanDestinationAction() {return orphanDestinationAction;}
+		/**@return The resolution if there is a destination resource and no corresponding source resource.*/
+		public OrphanResolution getOrphanDestinationResolution() {return orphanDestinationResolution;}
 
 	/**How a content incompatibility between resources will be resolved.*/
-	private Resolution contentUnsynchronizedResolution;
+	private ContentResolution contentResolution;
 
 		/**@return How a content incompatibility between resources will be resolved.*/
-		public Resolution getContentUnsynchronizedResolution() {return contentUnsynchronizedResolution;}
+		public ContentResolution getContentResolution() {return contentResolution;}
 
 	/**Default constructor with backup settings.*/
 	public RepositorySynchronizer()
 	{
-		orphanSourceAction=Action.COPY;
-		orphanDestinationAction=Action.DELETE;
-		contentUnsynchronizedResolution=Resolution.BACKUP;
+		orphanSourceResolution=OrphanResolution.COPY;
+		orphanDestinationResolution=OrphanResolution.DELETE;
+		contentResolution=ContentResolution.BACKUP;
 	}
 
 	/**Synchronizes two resources in two separate repositories.
@@ -115,45 +120,80 @@ public class RepositorySynchronizer
 	*/
 	protected void synchronize(final Repository sourceRepository, final URI sourceBaseURI, final URI sourceResourceURI, final URFResource sourceResourceDescription, final Repository destinationRepository, final URI destinationBaseURI, final URI destinationResourceURI, final URFResource destinationResourceDescription) throws IOException
 	{
-Debug.trace("Synchronizing from", sourceResourceURI, "to", destinationResourceURI);
+		final boolean isSourceCollection=isCollectionURI(sourceResourceDescription.getURI());	//see if the source is a collection
+		final boolean isDestinationCollection=isCollectionURI(destinationResourceDescription.getURI());	//see if the destination is a collection
+			//resource/collection
+		if(isSourceCollection!=isDestinationCollection)	//if we have a resource/collection discrepancy
+		{
+			throw new IllegalArgumentException("The resources are of different types: "+sourceResourceDescription.getURI()+", "+destinationResourceDescription.getURI());	//one resource is a collection; the other is a normal resource
+		}
+//Debug.trace("Synchronizing from", sourceResourceURI, "to", destinationResourceURI);
 		final boolean sourceExists=sourceResourceDescription!=null;	//see if the source exists
-Debug.trace("source exists", sourceExists);
+//Debug.trace("source exists", sourceExists);
 		final boolean destinationExists=destinationResourceDescription!=null;	//see if the destination exists
-Debug.trace("destination exists", destinationExists);
+//Debug.trace("destination exists", destinationExists);
 		if(sourceExists!=destinationExists)	//if one resource exists and the other doesn't
 		{
+			final OrphanResolution resolution;
 			if(sourceExists)	//if the source resource exists but not the destination
 			{
-				Debug.info("Orphan source resource", sourceResourceURI, "performing action", getOrphanSourceAction(), "for destination resource", destinationResourceURI);
-				performAction(getOrphanSourceAction(), sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//perform the correct action when the source exists and the destination does not
+				resolution=getOrphanSourceResolution();	//determine the resolution
+				Debug.info("Orphan source resource", sourceResourceURI, "performing action", resolution, "for destination resource", destinationResourceURI);
+				resolveOrphan(resolution, sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//perform the correct action when the source exists and the destination does not
+/*TODO del
+				switch(resolution)	//update the descriptions based upon the resolution
+				{
+					case MOVE:	//both move and copy result in a new output; move also removes the input
+						sourceResourceDescription=null;
+					case COPY:
+						destinationResourceDescription=destinationRepository.getResourceDescription(destinationResourceURI); 
+						break;
+					case DELETE:
+						sourceResourceDescription=null;
+						break;
+					case IGNORE:
+						break;
+					default:
+						throw new AssertionError("Unrecognized resolution "+resolution);
+				}
+*/
 			}
 			else	//if the source resource does not exist but the destination does
 			{
-				Debug.info("Performing action", getOrphanDestinationAction(), "for source resource", sourceResourceURI, "on orphan destination resource", destinationResourceURI);
-				performAction(getOrphanDestinationAction(), destinationRepository, destinationResourceURI, sourceRepository, sourceResourceURI);	//perform the correct action when the destination exists and the source does not
-			}			
+				resolution=getOrphanDestinationResolution();	//determine the resolution
+				Debug.info("Performing action", getOrphanDestinationResolution(), "for source resource", sourceResourceURI, "on orphan destination resource", destinationResourceURI);
+				resolveOrphan(resolution, destinationRepository, destinationResourceURI, sourceRepository, sourceResourceURI);	//perform the correct action when the destination exists and the source does not
+/*TODO del
+				switch(resolution)	//update the descriptions based upon the resolution
+				{
+					case MOVE:	//both move and copy result in a new output; move also removes the input
+						destinationResourceDescription=null;
+					case COPY:
+						sourceResourceDescription=sourceRepository.getResourceDescription(sourceResourceURI); 
+						break;
+					case DELETE:
+						destinationResourceDescription=null;
+						break;
+					case IGNORE:
+						break;
+					default:
+						throw new AssertionError("Unrecognized resolution "+resolution);
+				}
+*/
+			}
 		}
 		else if(sourceExists)	//if both resources exist (we know at this point that either both exist or both don't exist)
 		{
-			final boolean isSourceCollection=isCollectionURI(sourceResourceDescription.getURI());	//see if the source is a collection
-			final boolean isDestinationCollection=isCollectionURI(destinationResourceDescription.getURI());	//see if the destination is a collection
-				//resource/collection
-			if(isSourceCollection!=isDestinationCollection)	//if we have a resource/collection discrepancy
+			final boolean isContentSynchronized=isContentSynchronized(sourceRepository, sourceResourceDescription, destinationRepository, destinationResourceDescription);	//see if the content of the two resources are synchronized
+			if(!isContentSynchronized)//if the source and destination are not synchronized
 			{
-				throw new IllegalArgumentException("The resources are of different types: "+sourceResourceDescription.getURI()+", "+destinationResourceDescription.getURI());	//one resource is a collection; the other is a normal resource
-			}
-			final boolean isSynchronized=isContentSynchronized(sourceRepository, sourceResourceDescription, destinationRepository, destinationResourceDescription);	//see if the two resources are synchronized
-			if(!isSynchronized)//if the source and destination are not synchronized
-			{
-				Debug.info("Resolving discrepancy between source resource", sourceResourceURI, "and destination resource", destinationResourceURI, "by", getContentUnsynchronizedResolution());
-				resolve(getContentUnsynchronizedResolution(), sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//resolve the descrepancy between source and destination
-Debug.trace("done resolving");
+				resolveContent(getContentResolution(), sourceRepository, sourceResourceDescription, destinationRepository, destinationResourceDescription);	//resolve the descrepancy between source and destination
+//Debug.trace("done resolving");
 			}
 		}
-		//TODO synchronize collection content
 		//TODO synchronize metadata
-Debug.trace("both exist; we did what we needed to do; nothing more should happen (other than checking collection).");
-		if(sourceRepository.isCollection(sourceResourceURI) && destinationRepository.isCollection(destinationResourceURI))	//if after all the resource-level synchronization we now have two collections
+//Debug.trace("both exist; we did what we needed to do; nothing more should happen (other than checking collection).");
+		if(isSourceCollection && sourceRepository.resourceExists(sourceResourceURI) && destinationRepository.resourceExists(destinationResourceURI))	//if now have two collections that both exist
 		{
 			final Map<URI, URFResource> destinationChildResourceDescriptions=new LinkedHashMap<URI, URFResource>();	//create a map for the destination resources, preserving their iteration order only as a courtesy
 			for(final URFResource destinationChildResourceDescription:destinationRepository.getChildResourceDescriptions(destinationResourceURI))	//prepopulate the destination child resource map to allow quick lookup when we iterate the source child resources
@@ -217,7 +257,7 @@ Debug.trace("both exist; we did what we needed to do; nothing more should happen
 		{
 			final Date sourceDate=getModified(sourceResourceDescription);	//get the date of the source
 			final Date destinationDate=getModified(destinationResourceDescription);	//get the date of the destination
-			if(sourceDate==null || sourceDate!=destinationDate)	//if the dates don't match or if there is no date
+			if(sourceDate==null || !sourceDate.equals(destinationDate))	//if the dates don't match or if there is no date
 			{
 				return false;	//there is a date discrepancy
 			}
@@ -225,81 +265,112 @@ Debug.trace("both exist; we did what we needed to do; nothing more should happen
 		return true;	//the resources matched all our tests
 	}
 
-	/**Performs an action on a source and destination resource pair.
-	@param action The action to perform.
-	@param sourceRepository The source repository in this context.
-	@param sourceResourceURI The source resource in this context.
-	@param destinationRepository The destination repository in this context.
-	@param destinationResourceURI The destination resource in this context.
+	/**Resolves an orphan situation.
+	@param resolution The action to perform.
+	@param orphanRepository The source repository in this context.
+	@param orphanResourceURI The source resource in this context.
+	@param otherRepository The destination repository in this context.
+	@param otherResourceURI The destination resource in this context.
 	@throws IOException if there is an I/O error while performing the action.
 	*/
-	protected void performAction(final Action action, final Repository sourceRepository, final URI sourceResourceURI, final Repository destinationRepository, final URI destinationResourceURI) throws IOException
+	protected void resolveOrphan(final OrphanResolution resolution, final Repository orphanRepository, final URI orphanResourceURI, final Repository otherRepository, final URI otherResourceURI) throws IOException
 	{
-		switch(action)	//see what action to take
+Debug.info("Resolve orphan:", resolution, orphanRepository, orphanResourceURI, otherRepository, otherResourceURI);
+		switch(resolution)	//see what action to take
 		{
 			case COPY:
-				sourceRepository.copyResource(sourceResourceURI, destinationRepository, destinationResourceURI);	//copy the source to the destination
+				orphanRepository.copyResource(orphanResourceURI, otherRepository, otherResourceURI);	//copy the source to the destination
 				break;
 			case MOVE:
-				sourceRepository.moveResource(sourceResourceURI, destinationRepository, destinationResourceURI);	//move the source to the destination
+				orphanRepository.moveResource(orphanResourceURI, otherRepository, otherResourceURI);	//move the source to the destination
 				break;
 			case DELETE:
-				sourceRepository.deleteResource(sourceResourceURI);	//delete the source
-				break;
-			case IGNORE:
-				break;
-			default:
-				throw new AssertionError("Unrecognized action "+action);
-		}		
-	}
-
-	/**Resolves a descrepancy between a source and a destination resource.
-	If the resource dates are not available, the {@link Resolution#SYNCHRONIZE} resolution will have no effect.
-	@param resolution How the descrepancy should be resolved
-	@param sourceRepository The source repository in this context.
-	@param sourceResourceURI The source resource in this context.
-	@param destinationRepository The destination repository in this context.
-	@param destinationResourceURI The destination resource in this context.
-	@throws IOException if there is an I/O error while performing the action.
-	*/
-	protected void resolve(final Resolution resolution, final Repository sourceRepository, final URI sourceResourceURI, final Repository destinationRepository, final URI destinationResourceURI) throws IOException
-	{
-Debug.trace("resolving descrepancy");
-		switch(resolution)	//see how to resolve the descrepancy
-		{
-			case BACKUP:
-Debug.trace("starting to backup through repository");
-				sourceRepository.copyResource(sourceResourceURI, destinationRepository, destinationResourceURI);	//copy the source to the destination
-Debug.trace("finished backing up through repository");
-				break;
-			case RESTORE:
-				destinationRepository.copyResource(destinationResourceURI, sourceRepository, sourceResourceURI);	//copy the destination to the source
-				break;
-			case SYNCHRONIZE:	//synchronization will do nothing if a date is not availale for one of the resources or if the dates are the same
-				{
-					final URFResource sourceResource=sourceRepository.getResourceDescription(sourceResourceURI);	//get a description of the source resource
-					final URFResource destinationResource=destinationRepository.getResourceDescription(destinationResourceURI);	//get a description of the destination resource
-					final Date sourceDate=getModified(sourceResource);	//get the date of the source
-					final Date destinationDate=getModified(destinationResource);	//get the date of the destination
-					if(sourceDate!=null && destinationDate!=null)	//if we have dates for the resources
-					{
-						final int dateComparison=sourceDate.compareTo(destinationDate);	//compare the dates
-						if(dateComparison<0)	//if the source is older than the destination
-						{
-							destinationRepository.copyResource(destinationResourceURI, sourceRepository, sourceResourceURI);	//copy the destination to the source						
-						}
-						else if(dateComparison>0)	//if the destination is older than the source
-						{
-							sourceRepository.copyResource(sourceResourceURI, destinationRepository, destinationResourceURI);	//copy the source to the destination						
-						}
-					}
-				}
+				orphanRepository.deleteResource(orphanResourceURI);	//delete the source
 				break;
 			case IGNORE:
 				break;
 			default:
 				throw new AssertionError("Unrecognized resolution "+resolution);
 		}		
+	}
+
+	/**Resolves a descrepancy between a source and a destination resource.
+	If the resource dates are not available or are the same, the {@link ContentResolution#SYNCHRONIZE} resolution will have no effect.
+	Both resources must exist.
+	@param resolution How the descrepancy should be resolved
+	@param sourceRepository The source repository.
+	@param sourceResourceDescription The description of the source resource.
+	@param destinationRepository The destination repository.
+	@param destinationResourceDescription The description of the destination resource.
+	@throws NullPointerException if any of the given arguments are <code>null</code>.
+	@throws IOException if there is an I/O error while performing the action.
+	*/
+	protected void resolveContent(ContentResolution resolution, final Repository sourceRepository, final URFResource sourceResourceDescription, final Repository destinationRepository, final URFResource destinationResourceDescription) throws IOException
+	{
+Debug.info("Resolve content:", resolution, sourceRepository, sourceResourceDescription.getURI(), destinationRepository, destinationResourceDescription.getURI());
+		if(resolution==ContentResolution.IGNORE)	//if this situation should be ignored
+		{
+			return;	//don't do anything
+		}
+		if(resolution==ContentResolution.SYNCHRONIZE) {	//if we should synchronize the resource content
+			final Date sourceDate=getModified(sourceResourceDescription);	//get the date of the source
+			final Date destinationDate=getModified(sourceResourceDescription);	//get the date of the destination
+			if(sourceDate!=null && destinationDate!=null)	//if we have dates for the resources
+			{
+				final int dateComparison=sourceDate.compareTo(destinationDate);	//compare the dates
+				if(dateComparison>0)	//if the destination is older than the source
+				{
+					resolution=ContentResolution.BACKUP;	//copy the source to the destination
+				}
+				else if(dateComparison<0)	//if the source is older than the destination
+				{
+					resolution=ContentResolution.RESTORE;	//copy the destination to the source
+				}
+				else	//if the two resources have the same date
+				{
+					return;	//don't do anything
+				}
+			}
+		}
+		final Repository inputRepository, outputRepository;
+		final URFResource inputResourceDescription, outputResourceDescription;
+		switch(resolution)	//see how to resolve the descrepancy; at the point the only options we haven't covered are backup and restore
+		{
+			case BACKUP:
+				inputRepository=sourceRepository;
+				inputResourceDescription=sourceResourceDescription;
+				outputRepository=destinationRepository;
+				outputResourceDescription=destinationResourceDescription;
+				break;
+			case RESTORE:
+				inputRepository=destinationRepository;
+				inputResourceDescription=destinationResourceDescription;
+				outputRepository=sourceRepository;
+				outputResourceDescription=sourceResourceDescription;
+				break;
+			default:
+				throw new AssertionError("Unrecognized resolution "+resolution);
+		}
+		final URI inputResourceURI=inputResourceDescription.getURI();
+		final URI outputResourceURI=outputResourceDescription.getURI();
+		final URFDateTime inputContentModified=getModified(inputResourceDescription);	//get the date of the input resource, if any
+		final InputStream inputStream=inputRepository.getResourceInputStream(inputResourceURI);	//get an input stream to the input resource
+		try
+		{
+			final OutputStream outputStream=outputRepository.getResourceOutputStream(outputResourceURI, inputContentModified);	//get an output stream to the output resource, keeping the content modified datetime as the input resource, if any
+			try
+			{
+				InputStreams.copy(inputStream, outputStream);	//copy the resource
+			}
+			finally
+			{
+				outputStream.close();	//always close the output stream
+			}
+		}
+		finally
+		{
+			inputStream.close();	//always close the input stream
+		}
 	}
 
 }

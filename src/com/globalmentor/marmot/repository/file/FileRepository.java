@@ -20,7 +20,6 @@ import java.io.*;
 import java.net.URI;
 import java.util.*;
 
-import static java.util.Arrays.fill;
 import static java.util.Collections.*;
 
 import static com.globalmentor.io.FileConstants.*;
@@ -197,21 +196,24 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 	}
 
 	/**Gets an output stream to the contents of the resource specified by the given URI.
+	The resource description will be updated with the specified content modified datetime if given.
 	An error is generated if the resource does not exist.
 	For collections, this implementation sets the content of the {@value #COLLECTION_CONTENT_NAME} file, if any.
 	@param resourceURI The URI of the resource to access.
+	@param newContentModified The new content modified datetime for the resource, or <code>null</code> if the content modified datetime should not be updated.
 	@return An output stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the resource.
+	@see Content#MODIFIED_PROPERTY_URI
 	*/
-	public OutputStream getResourceOutputStream(URI resourceURI) throws ResourceIOException	//TODO fix to update modified date
+	public OutputStream getResourceOutputStream(URI resourceURI, URFDateTime newContentModified) throws ResourceIOException
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
 		if(subrepository!=this)	//if the resource URI lies within a subrepository
 		{
-			return subrepository.getResourceOutputStream(resourceURI);	//delegate to the subrepository
+			return subrepository.getResourceOutputStream(resourceURI, newContentModified);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
 		try
@@ -231,7 +233,13 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 			{
 				contentFile=resourceFile;	//use the normal resource file
 			}
-			return getResourceOutputStream(resourceURI, contentFile);	//return an output stream to the content file
+//TODO see if we must rewrite all the properties to keep from losing them			final URFResource resourceDescription=createResourceDescription(createURF(), resourceURI, contentFile);	//get the current description of the resource; after writing the resource we'll have to 
+			if(newContentModified==null)	//because we use the file modified value to keep track of the content modified property, we must *always* update the content modified, if only to keep the modified datetime we already have, because the file system will update this value automatically without our asking
+			{
+				newContentModified=new URFDateTime(contentFile.lastModified());	//get the current last modified date of the file; after the file is written, we'll update it with what it was before
+			}
+			final URFResourceAlteration resourceAlteration=DefaultURFResourceAlteration.createSetPropertiesAlteration(new DefaultURFProperty(Content.MODIFIED_PROPERTY_URI, newContentModified));	//create a resource alteration for setting the content modified property
+			return new DescriptionWriterOutputStreamDecorator(new FileOutputStream(contentFile), resourceURI, resourceAlteration, resourceFile);	//wrap the output stream to the content file in a decorator that will update the properties after the contents are stored
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -470,7 +478,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 				createNewFile(resourceFile);	//create a new file
 			}
 			resourceDescription=ensureModifiedProperties(resourceDescription);	//add the content modified properties as needed
-			return new DescriptionWriterOutputStreamDecorator(new FileOutputStream(contentFile, true), resourceURI, resourceDescription, resourceFile);	//wrap the output stream to the content file in a decorator that will update the properties after the contents are stored
+			return new DescriptionWriterOutputStreamDecorator(new FileOutputStream(contentFile, true), resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), resourceFile);	//wrap the output stream to the content file in a decorator that will update the properties after the contents are stored
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -720,11 +728,13 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 		}
 		setContentLength(resource, contentLength);	//indicate the length of the content
 		setModified(resource, contentModified);	//set the modified timestamp as the last modified date
+/*TODO del; don't use a creation date in the file repository
 		final URFDateTime created=getCreated(resource);	//try to determine the creation date and time; the stored creation time will always trump everything else
 		if(created==null)	//if there is no creation date
 		{
 			setCreated(resource, contentModified);	//set the created time as the last modified date of the file, as Java doesn't allow access to the creation time
 		}
+*/
 		return resource;	//return the resource that respresents the file
 	}
 
@@ -859,11 +869,11 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 			/**@protected The URI of the resource.*/
 			public URI getResourceURI() {return resourceURI;}
 	
-		/**The description of the resource to store.*/
-		private final URFResource resourceDescription;
+		/**The specification of the alterations to be performed on the resource.*/
+		private final URFResourceAlteration resourceAlteration;
 
-			/**@return The description of the resource.*/
-			protected URFResource getResourceDescription() {return resourceDescription;}
+			/**@return The specification of the alterations to be performed on the resource.*/
+			protected URFResourceAlteration getResourceAlteration() {return resourceAlteration;}
 
 		/**The file for updating the properties.*/
 		private final File resourceFile;
@@ -874,15 +884,15 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 		/**Decorates the given output stream.
 		@param outputStream The output stream to decorate
 		@param resourceURI The URI of the resource.
-		@param resourceDescription The description of the resource to store as WebDAV properties.
+		@param resourceAlteration The specification of the alterations to be performed on the resource.
 		@param resourceFile The file for updating the properties.
-		@exception NullPointerException if the given output stream, resourceURI, resource description, and/or resource file is <code>null</code>.
+		@exception NullPointerException if the given output stream, resourceURI, resource alteration, and/or resource file is <code>null</code>.
 		*/
-		public DescriptionWriterOutputStreamDecorator(final OutputStream outputStream, final URI resourceURI, final URFResource resourceDescription, final File resourceFile)
+		public DescriptionWriterOutputStreamDecorator(final OutputStream outputStream, final URI resourceURI, final URFResourceAlteration resourceAlteration, final File resourceFile)
 		{
 			super(outputStream);	//construct the parent class
 			this.resourceURI=checkInstance(resourceURI, "Resource URI cannot be null.");
-			this.resourceDescription=checkInstance(resourceDescription, "Resource description cannot be null.");
+			this.resourceAlteration=checkInstance(resourceAlteration, "Resource alteration cannot be null.");
 			this.resourceFile=checkInstance(resourceFile, "Resource file cannot be null.");
 		}
 	
@@ -894,7 +904,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 	  {
 	  	try
 	  	{
-	  		alterResourceProperties(getResourceURI(), DefaultURFResourceAlteration.createResourceAlteration(getResourceDescription()), resourceFile);	//set the properties using the resource file
+	  		alterResourceProperties(getResourceURI(), getResourceAlteration(), resourceFile);	//alter the properties using the resource file
 			}
 			catch(final IOException ioException)	//if an I/O exception occurs
 			{

@@ -112,7 +112,7 @@ public class MarmotMirror extends Application<Object>
 			return 1;
 		}
 */
-		
+		Debug.info("Mirroring finished.");
 		return 0;	//return no error
 	}
 

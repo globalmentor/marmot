@@ -341,23 +341,26 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 			}
 		}
 	}
-	
+
 	/**Gets an output stream to the contents of the resource specified by the given URI.
+	The resource description will be updated with the specified content modified datetime if given.
 	An error is generated if the resource does not exist.
 	For collections, this implementation stores the content in the {@value #COLLECTION_CONTENT_NAME} file.
 	@param resourceURI The URI of the resource to access.
+	@param newContentModified The new content modified datetime for the resource, or <code>null</code> if the content modified datetime should not be updated.
 	@return An output stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the resource.
+	@see Content#MODIFIED_PROPERTY_URI
 	*/
-	public OutputStream getResourceOutputStream(URI resourceURI) throws ResourceIOException	//TODO fix to update modified
+	public OutputStream getResourceOutputStream(URI resourceURI, final URFDateTime newContentModified) throws ResourceIOException
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
 		if(subrepository!=this)	//if the resource URI lies within a subrepository
 		{
-			return subrepository.getResourceOutputStream(resourceURI);	//delegate to the subrepository
+			return subrepository.getResourceOutputStream(resourceURI, newContentModified);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
@@ -378,7 +381,13 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 			{
 				contentWebDAVResource=webdavResource;	//use the normal WebDAV resource
 			}
-			return contentWebDAVResource.getOutputStream();	//return an output stream to the resource
+			OutputStream outputStream=contentWebDAVResource.getOutputStream();	//get an output stream to the content WebDAV resource
+			if(newContentModified!=null)	//if we should update the content modified datetime
+			{
+				final URFResourceAlteration resourceAlteration=DefaultURFResourceAlteration.createSetPropertiesAlteration(new DefaultURFProperty(Content.MODIFIED_PROPERTY_URI, newContentModified));	//create a resource alteration for setting the content modified property
+				outputStream=new DescriptionWriterOutputStreamDecorator(outputStream, resourceURI, resourceAlteration, webdavResource, passwordAuthentication);	//wrap the output stream in a decorator that will update the WebDAV properties after the contents are stored; this method will erase the provided password, if any, after it completes the resource property updates
+			}
+			return outputStream;	//return the output stream we created
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -386,14 +395,12 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 		}
 		finally
 		{
-/*TODO fix; erasing the password here causes the delayed writing to fail; switch to allowing the WebDAV resource to create a copy of the password and then erase the copy later
-			if(passwordAuthentication!=null)	//if we used password authentication
+			if(newContentModified==null && passwordAuthentication!=null)	//if we didn't do a delayed write we used password authentication
 			{
 				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
 			}
-*/
-		}
-	}
+		}	  		
+}
 	
 	/**Retrieves a description of the resource with the given URI.
 	@param resourceURI The URI of the resource the description of which should be retrieved.
@@ -704,7 +711,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 			}
 			final OutputStream outputStream=contentWebDAVResource.getOutputStream();	//get an output stream to the content WebDAV resource
 			resourceDescription=ensureModifiedProperties(resourceDescription);	//add the content modified properties as needed
-			return new DescriptionWriterOutputStreamDecorator(outputStream, resourceURI, resourceDescription, webdavResource, passwordAuthentication);	//wrap the output stream in a decorator that will update the WebDAV properties after the contents are stored; this method will erase the provided password, if any, after it completes the resource property updates
+			return new DescriptionWriterOutputStreamDecorator(outputStream, resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), webdavResource, passwordAuthentication);	//wrap the output stream in a decorator that will update the WebDAV properties after the contents are stored; this method will erase the provided password, if any, after it completes the resource property updates
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -1378,11 +1385,11 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 			/**@protected The URI of the resource.*/
 			public URI getResourceURI() {return resourceURI;}
 	
-		/**The description of the resource to store as WebDAV properties.*/
-		private final URFResource resourceDescription;
+		/**The specification of the alterations to be performed on the resource.*/
+		private final URFResourceAlteration resourceAlteration;
 
-			/**@return The description of the resource to store as WebDAV properties.*/
-			protected URFResource getResourceDescription() {return resourceDescription;}
+			/**@return The specification of the alterations to be performed on the resource.*/
+			protected URFResourceAlteration getResourceAlteration() {return resourceAlteration;}
 
 		/**The WebDAV resource for updating the WebDAV properties.*/
 		private final WebDAVResource webdavResource;
@@ -1399,16 +1406,16 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 		/**Decorates the given output stream.
 		@param outputStream The output stream to decorate
 		@param resourceURI The URI of the resource.
-		@param resourceDescription The description of the resource to store as WebDAV properties.
+		@param resourceAlteration The specification of the alterations to be performed on the resource.
 		@param webdavResource The WebDAV resource for updating the WebDAV properties.
 		@param passwordAuthentication The password authentication being used, or <code>null</code> if no password authentication is given.
-		@exception NullPointerException if the given output stream, resourceURI, resource description, and/or WebDAV resource is <code>null</code>.
+		@exception NullPointerException if the given output stream, resourceURI, resource alteration, and/or WebDAV resource is <code>null</code>.
 		*/
-		public DescriptionWriterOutputStreamDecorator(final OutputStream outputStream, final URI resourceURI, final URFResource resourceDescription, final WebDAVResource webdavResource, final PasswordAuthentication passwordAuthentication)
+		public DescriptionWriterOutputStreamDecorator(final OutputStream outputStream, final URI resourceURI, final URFResourceAlteration resourceAlteration, final WebDAVResource webdavResource, final PasswordAuthentication passwordAuthentication)
 		{
 			super(outputStream);	//construct the parent class
 			this.resourceURI=checkInstance(resourceURI, "Resource URI cannot be null.");
-			this.resourceDescription=checkInstance(resourceDescription, "Resource description cannot be null.");
+			this.resourceAlteration=checkInstance(resourceAlteration, "Resource alteration cannot be null.");
 			this.webdavResource=checkInstance(webdavResource, "WebDAV resource cannot be null.");
 			this.passwordAuthentication=passwordAuthentication;
 		}
@@ -1421,7 +1428,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 	  {
 	  	try
 	  	{
-	  		alterResourceProperties(getResourceURI(), DefaultURFResourceAlteration.createResourceAlteration(getResourceDescription()), getWebDAVResource());	//set the properties using the WebDAV resource object
+	  		alterResourceProperties(getResourceURI(), getResourceAlteration(), getWebDAVResource());	//alter the properties using the WebDAV resource object
 			}
 			catch(final IOException ioException)	//if an I/O exception occurs
 			{

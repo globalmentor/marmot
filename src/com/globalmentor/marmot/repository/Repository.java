@@ -236,14 +236,29 @@ public interface Repository
 	public InputStream getResourceInputStream(final URI resourceURI) throws ResourceIOException;
 
 	/**Gets an output stream to the contents of the resource specified by the given URI.
+	The content modified datetime is set to the current date and time.
 	An error is generated if the resource does not exist.
 	@param resourceURI The URI of the resource to access.
 	@return An output stream to the resource represented by the given URI.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error accessing the resource.
+	@see Content#MODIFIED_PROPERTY_URI
 	*/
 	public OutputStream getResourceOutputStream(final URI resourceURI) throws ResourceIOException;
+	
+	/**Gets an output stream to the contents of the resource specified by the given URI.
+	The resource description will be updated with the specified content modified datetime if given.
+	An error is generated if the resource does not exist.
+	@param resourceURI The URI of the resource to access.
+	@param newContentModified The new content modified datetime for the resource, or <code>null</code> if the content modified datetime should not be updated.
+	@return An output stream to the resource represented by the given URI.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error accessing the resource.
+	@see Content#MODIFIED_PROPERTY_URI
+	*/
+	public OutputStream getResourceOutputStream(final URI resourceURI, final URFDateTime newContentModified) throws ResourceIOException;
 
 	/**Retrieves a description of the resource with the given URI.
 	@param resourceURI The URI of the resource the description of which should be retrieved.
