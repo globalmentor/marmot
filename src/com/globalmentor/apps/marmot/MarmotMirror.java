@@ -31,8 +31,7 @@ import com.globalmentor.marmot.repository.webdav.WebDAVRepository;
 import com.globalmentor.net.URIs;
 import com.globalmentor.net.http.HTTP;
 import com.globalmentor.net.http.HTTPClient;
-import com.globalmentor.rdf.dublincore.*;
-import com.globalmentor.rdf.version.*;
+import com.globalmentor.urf.dcmi.DCMI;
 import com.globalmentor.util.Application;
 import com.globalmentor.util.Debug;
 
@@ -60,9 +59,9 @@ public class MarmotMirror extends Application
 	public MarmotMirror(final String[] args)
 	{
 		super(MARMOT_MIRROR_URI, args);	//construct the parent class
-		RDFDublinCore.addTitle(this, TITLE); //set the application name
-		RDFVersion.addVersion(this, VERSION);  //set the application version
-		RDFDublinCore.addRights(this, COPYRIGHT); //set the application copyright
+		DCMI.setTitle(this, TITLE); //set the application name
+//TODO convert to URF		RDFVersion.addVersion(this, VERSION);  //set the application version
+		DCMI.setRights(this, COPYRIGHT); //set the application copyright
 	}
 
 	/**The main application method.
