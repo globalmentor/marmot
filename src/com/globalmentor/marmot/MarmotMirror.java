@@ -24,18 +24,15 @@ import static com.globalmentor.java.Characters.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.util.CommandLineArguments.*;
 
-import com.globalmentor.marmot.repository.Repository;
-import com.globalmentor.marmot.repository.RepositorySynchronizer;
+import com.globalmentor.marmot.repository.*;
 import com.globalmentor.marmot.repository.file.FileRepository;
 import com.globalmentor.marmot.repository.webdav.WebDAVRepository;
 import com.globalmentor.net.URIs;
-import com.globalmentor.net.http.HTTP;
-import com.globalmentor.net.http.HTTPClient;
+import com.globalmentor.net.http.*;
 import com.globalmentor.urf.dcmi.DCMI;
-import com.globalmentor.util.Application;
-import com.globalmentor.util.Debug;
+import com.globalmentor.util.*;
 
-/**Marmot synchronization client.
+/**Command-line marmot synchronization utility.
 @author Garret Wilson
 */
 public class MarmotMirror extends Application
@@ -77,26 +74,42 @@ public class MarmotMirror extends Application
 			System.out.println(TITLE);
 			System.out.println(VERSION);
 			System.out.println(COPYRIGHT);
-			System.out.println("Usage: MarmotMirror [-sourceRepository <source repository URI>] -source <source URI> [-destinationRepository <destination repository URI>] -destination <destination>");
+			System.out.println("Usage: MarmotMirror [-sourcerepository <source repository URI>] -source <source URI> [-destinationrepository <destination repository URI>] -destination <destination> [-test] [-verbose]");
+			System.out.println("-test: If specified, no changed will be made.");
+			System.out.println("-verbose: If specified, debug will be turned on to a report level of "+Debug.ReportLevel.INFO+".");
 			return 0;
 		}
-		final String sourceRepositoryString=getParameter(args, "sourceRepository");	//get the source repository parameter
+		if(hasSwitch(args, "verbose"))	//if verbose is turned on
+		{
+			try	//TODO improve
+			{
+				Debug.setDebug(true);	//turn on debug
+				Debug.setMinimumReportLevel(Debug.ReportLevel.INFO);
+			}
+			catch(final IOException ioException)
+			{
+				throw new AssertionError(ioException);
+			}
+			
+		}
+		final String sourceRepositoryString=getParameter(args, "sourcerepository");	//get the source repository parameter
 		final URI sourceResourceURI=guessAbsoluteURI(sourceResourceString);	//get the source URI
 		final URI sourceRepositoryURI=sourceRepositoryString!=null ? guessAbsoluteURI(sourceRepositoryString) : getParentURI(sourceResourceURI);	//if the source repository is not specified, use the parent URI
-		final String destinationRepositoryString=getParameter(args, "destinationRepository");	//get the destination repository parameter
+		final String destinationRepositoryString=getParameter(args, "destinationrepository");	//get the destination repository parameter
 		final URI destinationResourceURI=guessAbsoluteURI(destinationResourceString);	//get the destination URI
 		final URI destinationRepositoryURI=destinationRepositoryString!=null ? guessAbsoluteURI(destinationRepositoryString) : getParentURI(destinationResourceURI);	//if the destination repository is not specified, use the parent URI
 
 		
 		HTTPClient.getInstance().setLogged(Debug.isDebug() && Debug.getReportLevels().contains(Debug.ReportLevel.LOG));	//if debugging is turned on, tell the HTTP client to log its data TODO fix this better---make some sort of flag specifically for communication tracking
 		
-		
-		Debug.info("Mirroring from", sourceRepositoryURI, sourceResourceURI, "to", destinationRepositoryURI, destinationResourceURI);
+		System.out.println("Mirroring from "+sourceResourceURI+" to "+destinationResourceURI+".");
 		final Repository sourceRepository=createRepository(sourceRepositoryURI);	//create the correct type of repository for the source
 		final Repository destinationRepository=createRepository(destinationRepositoryURI);	//create the correct type of repository for the destination
 		try
 		{
-			new RepositorySynchronizer().synchronize(sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//synchronize the resources
+			final RepositorySynchronizer repositorySynchronizer=new RepositorySynchronizer();	//create a new synchronizer
+			repositorySynchronizer.setTest(hasSwitch(args, "test"));	//specify whether this is a test run
+			repositorySynchronizer.synchronize(sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//synchronize the resources
 		}
 		catch(final IOException ioException)	//if there is an error
 		{
@@ -104,14 +117,7 @@ public class MarmotMirror extends Application
 			System.err.println("Error: "+ioException);
 			return 1;
 		}
-/*TODO fix
-		catch(final Throwable throwable)	//TODO del
-		{
-			Debug.error(throwable);	//TODO fix; why doesn't writing to System.err work?
-			return 1;
-		}
-*/
-		Debug.info("Mirroring finished.");
+		System.out.println("Mirroring finished.");
 		return 0;	//return no error
 	}
 

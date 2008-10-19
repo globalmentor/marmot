@@ -46,7 +46,7 @@ However, this property does have some peculiarities:
 	<li>When reading a resource <em>description</em>, if no {@value Content#MODIFIED_PROPERTY_URI} property exists the repository implementation may use the
 		modified value of the underlying file store if present.</li>
 	<li>When writing resource <em>content</em>, if no {@value Content#MODIFIED_PROPERTY_URI} is given in the provided description,
-		a new property will be automatically added with the current date and time.</li>
+		a new property will be automatically added with the current date and time for the API methods that do not have a description parameter.</li>
 </ul>
 <p>Collections should indicated a {@value Content#LENGTH_PROPERTY_URI} of zero unless the collection has content. A content length should never be missing.</p>
 @author Garret Wilson
