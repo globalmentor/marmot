@@ -444,7 +444,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 	}
 
 	/**Determines if the resource at the given URI exists.
-	This implementation returns <code>false</code> for all resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
+	This implementation returns <code>false</code> for all resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource to check.
 	@return <code>true</code> if the resource exists, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -461,7 +461,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 		}
 		checkOpen();	//make sure the repository is open
 		final URI privateResourceURI=getPrivateURI(resourceURI);	//get the resource URI in the private space
-		if(!isPrivateResourcePublic(privateResourceURI))	//if this resource should not be public
+		if(!isPrivateURIResourcePublic(privateResourceURI))	//if this resource should not be public
 		{
 			return false;	//ignore this resource
 		}
@@ -489,7 +489,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 	}
 
 	/**Determines if the resource at a given URI is a collection.
-	This implementation returns <code>false</code> for all resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
+	This implementation returns <code>false</code> for all resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the requested resource.
 	@return <code>true</code> if the resource is a collection, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -506,7 +506,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 		}
 		checkOpen();	//make sure the repository is open
 		final URI privateResourceURI=getPrivateURI(resourceURI);	//get the resource URI in the private space
-		if(!isPrivateResourcePublic(privateResourceURI))	//if this resource should not be public
+		if(!isPrivateURIResourcePublic(privateResourceURI))	//if this resource should not be public
 		{
 			return false;	//ignore this resource
 		}
@@ -530,7 +530,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
   }
 
 	/**Determines whether the resource represented by the given URI has children.
-	This implementation ignores child resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
+	This implementation ignores child resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource.
 	@return <code>true</code> if the specified resource has child resources.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -555,7 +555,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 			for(final NameValuePair<URI, Map<WebDAVPropertyName, WebDAVProperty>> propertyMap:propertyMaps)	//look at each property map
 			{
 				final URI childResourcePrivateURI=propertyMap.getName();	//get the private URI of the child resource this property list represents
-				if(isPrivateResourcePublic(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI))	//if the associated child resource is public and the property list is *not* for this resource
+				if(isPrivateURIResourcePublic(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI))	//if the associated child resource is public and the property list is *not* for this resource
 				{
 					return true;	//this resource has children
 				}
@@ -576,7 +576,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 	}
 
 	/**Retrieves child resources of the resource at the given URI.
-	This implementation does not include child resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
+	This implementation does not include child resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
 	@param resourceFilter The filter that determines whether child resources should be included, or <code>null</code> if the child resources should not be filtered.
 	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
@@ -616,7 +616,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 				for(final NameValuePair<URI, Map<WebDAVPropertyName, WebDAVProperty>> propertyMap:propertyMaps)	//look at each property map
 				{
 					final URI childResourcePrivateURI=propertyMap.getName();	//get the private URI of the child resource this property list represents
-					if(isPrivateResourcePublic(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI))	//if the associated child resource is public and the property list is *not* for this resource
+					if(isPrivateURIResourcePublic(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI))	//if the associated child resource is public and the property list is *not* for this resource
 					{
 						final URI childResourcePublicURI=getPublicURI(childResourcePrivateURI);	//get the public URI of this child resource
 						if(getSubrepository(childResourcePublicURI)==this)	//if this child wouldn't be located in a subrepository (i.e. ignore resources obscured by subrepositories)
@@ -803,7 +803,6 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 
 	/**Alters properties of a given resource.
 	This implementation does not support removing specific properties by value.
-	This implementation does not support adding properties; only setting properties.
 	@param resourceURI The reference URI of the resource.
 	@param resourceAlteration The specification of the alterations to be performed on the resource.
 	@return The updated description of the resource.

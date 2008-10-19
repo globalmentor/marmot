@@ -525,6 +525,16 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	*/
 	public Set<URI> getLivePropertyURIs() {return LIVE_PROPERTY_URIS;}
 
+	/**Determines whether the indicated property is is a live, dynamically determined property.
+	@param propertyURI The URI identifying the property.
+	@return <code>true</code> if the property is a live property.
+	@throws NullPointerException if the given property URI is <code>null</code>.
+	*/
+	public boolean isLivePropertyURI(final URI propertyURI)
+	{
+		return getLivePropertyURIs().contains(checkInstance(propertyURI, "Property URI cannot be null."));
+	}
+
 	/**Gets an output stream to the contents of the resource specified by the given URI.
 	The content modified datetime is set to the current date and time.
 	An error is generated if the resource does not exist.
@@ -1044,7 +1054,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	@return <code>true</code> if the resource should be visible as normal, or <code>false</code> if the resource should not be made available to the public space.
 	@exception NullPointerException if the given URI is <code>null</code>.
 	*/
-	protected boolean isPrivateResourcePublic(final URI privateResourceURI)
+	protected boolean isPrivateURIResourcePublic(final URI privateResourceURI)
 	{
 		final String rawName=getRawName(privateResourceURI);	//get the raw name of the resource
 		if(COLLECTION_CONTENT_NAME.equals(rawName))	//if this is the collection contents

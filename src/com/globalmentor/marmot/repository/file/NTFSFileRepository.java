@@ -27,6 +27,7 @@ import com.globalmentor.urf.URFResource;
 import static com.globalmentor.io.FileConstants.*;
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.net.URIs.isCollectionURI;
+import static com.globalmentor.urf.TURF.TURF_NAME_EXTENSION;
 
 /**Repository stored in an NTFS filesystem.
 This implementation stores resource descriptions in NTFS Alternate Data Streams (ADS).
@@ -97,6 +98,17 @@ public class NTFSFileRepository extends FileRepository
 	protected File getResourceDescriptionFile(final File resourceFile)
 	{
 		return changeName(resourceFile, resourceFile.getName()+NTFS_ADS_DELIMITER+MARMOT_DESCRIPTION_NAME);	//return a file in the form "file.ext:marmot-description"
+	}
+
+	/**Determines whether a resource, identified by its private URI, is a description file.
+	This version always returns <code>null</code>, as NTFS repositories don't use separate files to store descriptions.
+	@param privateResourceURI The private URI of a resource.
+	@return <code>true</code> if the resource is a description file for another resource.
+	@exception NullPointerException if the given URI is <code>null</code>.
+	*/
+	protected boolean isPrivateURIResourceDescription(final URI privateResourceURI)
+	{
+		return false;	//in an NTFS repository there are no separate files for storing descriptions
 	}
 
 	/**Gets an output stream to the contents of the given resource file.

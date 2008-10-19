@@ -207,7 +207,14 @@ public interface Repository
 	@exception IllegalArgumentException if a given path does not represent a collection (i.e. it does not end with a path separator).
 	*/
 	public void setPathRepositories(final Map<URIPath, Repository> pathRepositories);
-	
+
+	/**Determines whether the indicated property is is a live, dynamically determined property.
+	@param propertyURI The URI identifying the property.
+	@return <code>true</code> if the property is a live property.
+	@throws NullPointerException if the given property URI is <code>null</code>.
+	*/
+	public boolean isLivePropertyURI(final URI propertyURI);
+
 	/**Determines the URI of the collection resource of the given URI; either the given resource URI if the resource represents a collection, or the parent resource if not.
 	@param resourceURI The URI of the resource for which the collection resource URI should be returned.
 	@return The URI of the indicated resource's deepest collection resource, or <code>null</code> if the given URI designates a non-collection resource with no collection parent.

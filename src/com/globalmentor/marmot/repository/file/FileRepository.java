@@ -38,14 +38,11 @@ import com.globalmentor.urf.content.Content;
 import static com.globalmentor.urf.TURF.*;
 
 /**Repository stored in a filesystem.
-<p>This repository recognizes the URF type <code>urf.List</code>
-	and creates a directory for each such resource. Directories will be created
-	transparently for other resources with other types and media types as needed
-	to store child resources.</p>
-<p>This implementation uses the file last modified timestamp to store the {@value Content#MODIFIED_PROPERTY_URI} property.</p>
+<p>This implementation uses the file last modified timestamp to store the {@value Content#MODIFIED_PROPERTY_URI} property.
+The content modified property is ignored for collections with no content.</p>
 @author Garret Wilson
 */
-public class FileRepository extends AbstractRepository	//TODO fix content length for collections
+public class FileRepository extends AbstractRepository
 {
 
 		//TODO encode special characters, especially the colon on NTFS
@@ -60,7 +57,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 	public final static String MARMOT_DESCRIPTION_NAME="marmot-description";
 
 	/**The file filter for listing files in a directory.
-	The file filter returns those resources for which {@link #isPrivateResourcePublic(URI)} returns <code>true</code>.
+	The file filter returns those resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>true</code>.
 	*/
 	private final FileFilter fileFilter=new FileFilter()
 			{
@@ -71,12 +68,12 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 				*/
 				public boolean accept(final File pathname)
 				{
-					return isPrivateResourcePublic(pathname.toURI());	//see if the private URI represented by this file should be accepted 
+					return isPrivateURIResourcePublic(pathname.toURI());	//see if the private URI represented by this file should be accepted 
 				}
 			};
 		
 	/**Returns the file filter for listing files in a directory.
-	The file filter returns those resources for which {@link #isPrivateResourcePublic(URI)} returns <code>true</code>.
+	The file filter returns those resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>true</code>.
 	@return The file filter for listing files in a directory.
 	*/
 	protected FileFilter getFileFilter() {return fileFilter;}
@@ -224,7 +221,8 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 				throw new FileNotFoundException("Cannot open output stream to non-existent file "+resourceFile+" in repository.");
 			}
 			final File contentFile;	//determine the file to use for storing content
-			if(isCollectionURI(resourceURI) && isCollection(resourceURI))	//if the resource is a collection (make sure the resource URI is also a collection URI so that we can be sure of resolving the collection content name; file collections should only have collection URIs anyway)
+			final boolean isCollection=isCollectionURI(resourceURI);
+			if(isCollection)	//if the resource is a collection
 			{
 				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
 				contentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection content resource
@@ -233,13 +231,21 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 			{
 				contentFile=resourceFile;	//use the normal resource file
 			}
-//TODO see if we must rewrite all the properties to keep from losing them			final URFResource resourceDescription=createResourceDescription(createURF(), resourceURI, contentFile);	//get the current description of the resource; after writing the resource we'll have to 
-			if(newContentModified==null)	//because we use the file modified value to keep track of the content modified property, we must *always* update the content modified, if only to keep the modified datetime we already have, because the file system will update this value automatically without our asking
+//TODO see if we must rewrite all the properties to keep from losing them			final URFResource resourceDescription=createResourceDescription(createURF(), resourceURI, contentFile);	//get the current description of the resource; after writing the resource we'll have to
+			final OutputStream outputStream=new FileOutputStream(contentFile);	//create an output stream to the content file
+			if(isCollection && contentFile==resourceFile)	//don't update the modified time for collections with no content
 			{
-				newContentModified=new URFDateTime(contentFile.lastModified());	//get the current last modified date of the file; after the file is written, we'll update it with what it was before
+				return outputStream;	//return the output stream with no property alterations
 			}
-			final URFResourceAlteration resourceAlteration=DefaultURFResourceAlteration.createSetPropertiesAlteration(new DefaultURFProperty(Content.MODIFIED_PROPERTY_URI, newContentModified));	//create a resource alteration for setting the content modified property
-			return new DescriptionWriterOutputStreamDecorator(new FileOutputStream(contentFile), resourceURI, resourceAlteration, resourceFile);	//wrap the output stream to the content file in a decorator that will update the properties after the contents are stored
+			else	
+			{
+				if(newContentModified==null)	//because we use the file modified value to keep track of the content modified property, we must *always* update the content modified, if only to keep the modified datetime we already have, because the file system will update this value automatically without our asking
+				{
+					newContentModified=new URFDateTime(contentFile.lastModified());	//get the current last modified date of the file; after the file is written, we'll update it with what it was before
+				}
+				final URFResourceAlteration resourceAlteration=DefaultURFResourceAlteration.createSetPropertiesAlteration(new DefaultURFProperty(Content.MODIFIED_PROPERTY_URI, newContentModified));	//create a resource alteration for setting the content modified property
+				return new DescriptionWriterOutputStreamDecorator(outputStream, resourceURI, resourceAlteration, resourceFile);	//wrap the output stream to the content file in a decorator that will update the properties after the contents are stored
+			}
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -287,7 +293,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 	}
 
 	/**Determines if the resource at the given URI exists.
-	This implementation returns <code>false</code> for all resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
+	This implementation returns <code>false</code> for all resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource to check.
 	@return <code>true</code> if the resource exists, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -304,7 +310,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 		}
 		checkOpen();	//make sure the repository is open
 		final URI privateResourceURI=getPrivateURI(resourceURI);	//get the resource URI in the private space
-		if(!isPrivateResourcePublic(privateResourceURI))	//if this resource should not be public
+		if(!isPrivateURIResourcePublic(privateResourceURI))	//if this resource should not be public
 		{
 			return false;	//ignore this resource
 		}
@@ -314,7 +320,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 	}
 
 	/**Determines if the resource at a given URI is a collection.
-	This implementation returns <code>false</code> for all resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
+	This implementation returns <code>false</code> for all resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the requested resource.
 	@return <code>true</code> if the resource is a collection, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -331,7 +337,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 		}
 		checkOpen();	//make sure the repository is open
 		final URI privateResourceURI=getPrivateURI(resourceURI);	//get the resource URI in the private space
-		if(!isPrivateResourcePublic(privateResourceURI))	//if this resource should not be public
+		if(!isPrivateURIResourcePublic(privateResourceURI))	//if this resource should not be public
 		{
 			return false;	//ignore this resource
 		}
@@ -339,7 +345,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
   }
 
 	/**Determines whether the resource represented by the given URI has children.
-	This implementation ignores child resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
+	This implementation ignores child resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource.
 	@return <code>true</code> if the specified resource has child resources.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -360,7 +366,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 	}
 
 	/**Retrieves child resources of the resource at the given URI.
-	This implementation does not include child resources for which {@link #isPrivateResourcePublic(URI)} returns <code>false</code>.
+	This implementation does not include child resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
 	@param resourceFilter The filter that determines whether child resources should be included, or <code>null</code> if the child resources should not be filtered.
 	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
@@ -702,7 +708,7 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 		final URFResource resource=loadResourceDescription(urf, resourceFile);	//load the resource description, if there is one
 		final String filename=resourceFile.getName();	//get the name of the file
 		long contentLength=0;	//we'll update the content length if we can
-		URFDateTime contentModified=new URFDateTime(resourceFile.lastModified());	//get the last modified date of the file; we'll update this if needed
+		URFDateTime contentModified=null;	//we'll get the content modified from the file or, for a directory, from its content file, if any---but not from a directory itself
 		if(resourceFile.isDirectory())	//if this is a directory
 		{
 			if(isCollection(resourceURI))	//if the resource is a collection (make sure the resource URI is also a collection URI so that we can be sure of resolving the collection contents name; file collections should only have collection URIs anyway)
@@ -724,10 +730,14 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 			addLabel(resource, label); //add the unescaped filename without an extension as a label
 */
 			contentLength=resourceFile.length();	//use the file length
+			contentModified=new URFDateTime(resourceFile.lastModified());	//set the modified timestamp as the last modified date of the resource file			
 //TODO del			updateContentType(resource);	//update the content type information based upon the repository defaults
 		}
 		setContentLength(resource, contentLength);	//indicate the length of the content
-		setModified(resource, contentModified);	//set the modified timestamp as the last modified date
+		if(contentModified!=null)	//if we have a content modified time
+		{
+			setModified(resource, contentModified);	//set the modified timestamp as the last modified date
+		}
 /*TODO del; don't use a creation date in the file repository
 		final URFDateTime created=getCreated(resource);	//try to determine the creation date and time; the stored creation time will always trump everything else
 		if(created==null)	//if there is no creation date
@@ -744,11 +754,55 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 	@param resourceFile The file of a resource.
 	@return A new file designating the location of the resource description.
 	*/
-	protected File getResourceDescriptionFile(final File resourceFile)	//TODO update isPrivateResourcePublic() to hide these description files
+	protected File getResourceDescriptionFile(final File resourceFile)
 	{
 			//TODO only use the UNIX hidden filename prefix for UNIX file systems---probably in a subclass
-			//TODO check to see if this is a directory and, if so, use the format "@.marmot-description.turf"
-		return changeName(resourceFile, addExtension(UNIX_HIDDEN_FILENAME_PREFIX+resourceFile.getName()+EXTENSION_SEPARATOR+MARMOT_DESCRIPTION_NAME, TURF_NAME_EXTENSION));	//return a file in the form ".file.marmot-description.turf"
+		if(resourceFile.isDirectory())	//if this is a directory
+		{
+			return new File(resourceFile, addExtension(addExtension(UNIX_HIDDEN_FILENAME_PREFIX+COLLECTION_CONTENT_NAME, MARMOT_DESCRIPTION_NAME), TURF_NAME_EXTENSION));	//return a file in the form ".@.marmot-description.turf"
+		}
+		else	//if this is not a directory
+		{
+			return changeName(resourceFile, addExtension(addExtension(UNIX_HIDDEN_FILENAME_PREFIX+resourceFile.getName(), MARMOT_DESCRIPTION_NAME), TURF_NAME_EXTENSION));	//return a file in the form ".file.marmot-description.turf"
+		}
+	}
+
+	/**Determines whether a resource, identified by its private URI, is a description file.
+	This version checks for a file beginning with the Unix hidden prefix,
+	containing {@value #MARMOT_DESCRIPTION_NAME},	and ending with the extension for TURF files.
+	@param privateResourceURI The private URI of a resource.
+	@return <code>true</code> if the resource is a description file for another resource.
+	@exception NullPointerException if the given URI is <code>null</code>.
+	*/
+	protected boolean isPrivateURIResourceDescription(final URI privateResourceURI)
+	{
+		if(!isCollectionURI(privateResourceURI))	//description files are not collections
+		{
+			final String name=URIs.getName(privateResourceURI);
+			return name!=null && name.startsWith(UNIX_HIDDEN_FILENAME_PREFIX) && name.endsWith(MARMOT_DESCRIPTION_NAME+EXTENSION_SEPARATOR+TURF_NAME_EXTENSION);	//see if the name matches the pattern TODO use a regex pattern
+		}
+		return false;
+	}
+
+	/**Determines whether a resource, identified by its private URI, should be made available in the public space.
+	If this method returns <code>false</code>, the identified resource will essentially become invisible past the {@link Repository} interface.
+	Such resources are normally used internally with special semantics to the repository implementation.
+	This version removes the following resources from the public space:
+	<ul>
+		<li>Any resource description file, as determined by {@link #isPrivateURIResourceDescription(URI)}.</li>
+	</ul>
+	@param privateResourceURI The private URI of a resource.
+	@return <code>true</code> if the resource should be visible as normal, or <code>false</code> if the resource should not be made available to the public space.
+	@exception NullPointerException if the given URI is <code>null</code>.
+	@see #isPrivateURIResourceDescription(URI)
+	*/
+	protected boolean isPrivateURIResourcePublic(final URI privateResourceURI)
+	{
+		if(isPrivateURIResourceDescription(privateResourceURI))	//if this is a URI for a resource description
+		{
+			return false;	//the resource isn't public
+		}
+		return super.isPrivateURIResourcePublic(privateResourceURI);	//do the default checks
 	}
 
 	/**Loads a resource description for a single file.
@@ -820,7 +874,8 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 		if(modified!=null)	//if a modification timestamp was indicated
 		{
 			final File contentFile;	//determine the file to use for storing content
-			if(isCollectionURI(resourceURI))	//if the resource is a collection
+			final boolean isCollection=isCollectionURI(resourceURI);	//see if this is a collection
+			if(isCollection)	//if the resource is a collection
 			{
 				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
 				final File tempContentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection content resource
@@ -830,9 +885,12 @@ public class FileRepository extends AbstractRepository	//TODO fix content length
 			{
 				contentFile=resourceFile;	//use the normal resource file
 			}
-			if(!contentFile.setLastModified(modified.getTime()))	//update the content file's record of the last modified time
+			if(!isCollection || contentFile!=resourceFile)	//don't update the content modified for collections with no content
 			{
-				throw new IOException("Error updating content modified time of "+resourceFile);
+				if(!contentFile.setLastModified(modified.getTime()))	//update the content file's record of the last modified time
+				{
+					throw new IOException("Error updating content modified time of "+resourceFile);
+				}
 			}
 		}
 	}

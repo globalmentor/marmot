@@ -28,8 +28,11 @@ import com.globalmentor.io.InputStreams;
 import com.globalmentor.marmot.repository.Repository;
 import static com.globalmentor.net.URIs.*;
 
+import com.globalmentor.urf.DefaultURFResourceAlteration;
 import com.globalmentor.urf.URFDateTime;
+import com.globalmentor.urf.URFProperty;
 import com.globalmentor.urf.URFResource;
+import com.globalmentor.urf.URFResourceAlteration;
 import com.globalmentor.util.Debug;
 
 /**Marmot synchronization support.
@@ -51,8 +54,8 @@ public class RepositorySynchronizer
 		IGNORE;
 	}
 
-	/**How to resolve a descrepancy between a source and a destination resource content.*/
-	public enum ContentResolution
+	/**How to resolve a descrepancy between a source and a destination resource content or metadata.*/
+	public enum Resolution
 	{
 		/**The source will overwrite the destination; the destination is intended to be a mirror of the source.*/
 		BACKUP,
@@ -77,17 +80,24 @@ public class RepositorySynchronizer
 		public OrphanResolution getOrphanDestinationResolution() {return orphanDestinationResolution;}
 
 	/**How a content incompatibility between resources will be resolved.*/
-	private ContentResolution contentResolution;
+	private Resolution contentResolution;
 
 		/**@return How a content incompatibility between resources will be resolved.*/
-		public ContentResolution getContentResolution() {return contentResolution;}
+		public Resolution getContentResolution() {return contentResolution;}
+
+	/**How a metadata incompatibility between resources will be resolved.*/
+	private Resolution metadataResolution;
+
+		/**@return How a metadata incompatibility between resources will be resolved.*/
+		public Resolution getMetadataResolution() {return metadataResolution;}
 
 	/**Default constructor with backup settings.*/
 	public RepositorySynchronizer()
 	{
 		orphanSourceResolution=OrphanResolution.COPY;
 		orphanDestinationResolution=OrphanResolution.DELETE;
-		contentResolution=ContentResolution.BACKUP;
+		contentResolution=Resolution.BACKUP;
+		metadataResolution=Resolution.BACKUP;
 	}
 
 	/**Synchronizes two resources in two separate repositories.
@@ -118,7 +128,7 @@ public class RepositorySynchronizer
 	@throws IOException if there is an I/O error whle synchronizing the resources.
 	@throws IllegalArgumentException if one of the resources is a collection and the other is not.
 	*/
-	protected void synchronize(final Repository sourceRepository, final URI sourceBaseURI, final URI sourceResourceURI, final URFResource sourceResourceDescription, final Repository destinationRepository, final URI destinationBaseURI, final URI destinationResourceURI, final URFResource destinationResourceDescription) throws IOException
+	protected void synchronize(final Repository sourceRepository, final URI sourceBaseURI, final URI sourceResourceURI, URFResource sourceResourceDescription, final Repository destinationRepository, final URI destinationBaseURI, final URI destinationResourceURI, URFResource destinationResourceDescription) throws IOException
 	{
 		final boolean isSourceCollection=isCollectionURI(sourceResourceDescription.getURI());	//see if the source is a collection
 		final boolean isDestinationCollection=isCollectionURI(destinationResourceDescription.getURI());	//see if the destination is a collection
@@ -128,58 +138,60 @@ public class RepositorySynchronizer
 			throw new IllegalArgumentException("The resources are of different types: "+sourceResourceDescription.getURI()+", "+destinationResourceDescription.getURI());	//one resource is a collection; the other is a normal resource
 		}
 //Debug.trace("Synchronizing from", sourceResourceURI, "to", destinationResourceURI);
-		final boolean sourceExists=sourceResourceDescription!=null;	//see if the source exists
+		boolean sourceExists=sourceResourceDescription!=null;	//see if the source exists
 //Debug.trace("source exists", sourceExists);
-		final boolean destinationExists=destinationResourceDescription!=null;	//see if the destination exists
+		boolean destinationExists=destinationResourceDescription!=null;	//see if the destination exists
 //Debug.trace("destination exists", destinationExists);
 		if(sourceExists!=destinationExists)	//if one resource exists and the other doesn't
 		{
-			final OrphanResolution resolution;
+			final OrphanResolution orphanResolution;
 			if(sourceExists)	//if the source resource exists but not the destination
 			{
-				resolution=getOrphanSourceResolution();	//determine the resolution
-				Debug.info("Orphan source resource", sourceResourceURI, "performing action", resolution, "for destination resource", destinationResourceURI);
-				resolveOrphan(resolution, sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//perform the correct action when the source exists and the destination does not
-/*TODO del
-				switch(resolution)	//update the descriptions based upon the resolution
+				orphanResolution=getOrphanSourceResolution();	//determine the resolution
+				Debug.info("Orphan source resource", sourceResourceURI, "performing action", orphanResolution, "for destination resource", destinationResourceURI);
+				resolveOrphan(orphanResolution, sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//perform the correct action when the source exists and the destination does not
+				switch(orphanResolution)	//update the descriptions based upon the resolution
 				{
 					case MOVE:	//both move and copy result in a new output; move also removes the input
+						sourceExists=false;
 						sourceResourceDescription=null;
 					case COPY:
-						destinationResourceDescription=destinationRepository.getResourceDescription(destinationResourceURI); 
+						destinationExists=true;
+						destinationResourceDescription=destinationRepository.getResourceDescription(destinationResourceURI);
 						break;
 					case DELETE:
+						sourceExists=false;
 						sourceResourceDescription=null;
 						break;
 					case IGNORE:
 						break;
 					default:
-						throw new AssertionError("Unrecognized resolution "+resolution);
+						throw new AssertionError("Unrecognized resolution "+orphanResolution);
 				}
-*/
 			}
 			else	//if the source resource does not exist but the destination does
 			{
-				resolution=getOrphanDestinationResolution();	//determine the resolution
+				orphanResolution=getOrphanDestinationResolution();	//determine the resolution
 				Debug.info("Performing action", getOrphanDestinationResolution(), "for source resource", sourceResourceURI, "on orphan destination resource", destinationResourceURI);
-				resolveOrphan(resolution, destinationRepository, destinationResourceURI, sourceRepository, sourceResourceURI);	//perform the correct action when the destination exists and the source does not
-/*TODO del
-				switch(resolution)	//update the descriptions based upon the resolution
+				resolveOrphan(orphanResolution, destinationRepository, destinationResourceURI, sourceRepository, sourceResourceURI);	//perform the correct action when the destination exists and the source does not
+				switch(orphanResolution)	//update the descriptions based upon the resolution
 				{
 					case MOVE:	//both move and copy result in a new output; move also removes the input
+						destinationExists=false;
 						destinationResourceDescription=null;
 					case COPY:
+						sourceExists=true;
 						sourceResourceDescription=sourceRepository.getResourceDescription(sourceResourceURI); 
 						break;
 					case DELETE:
+						destinationExists=false;
 						destinationResourceDescription=null;
 						break;
 					case IGNORE:
 						break;
 					default:
-						throw new AssertionError("Unrecognized resolution "+resolution);
+						throw new AssertionError("Unrecognized resolution "+orphanResolution);
 				}
-*/
 			}
 		}
 		else if(sourceExists)	//if both resources exist (we know at this point that either both exist or both don't exist)
@@ -190,10 +202,10 @@ public class RepositorySynchronizer
 				resolveContent(getContentResolution(), sourceRepository, sourceResourceDescription, destinationRepository, destinationResourceDescription);	//resolve the descrepancy between source and destination
 //Debug.trace("done resolving");
 			}
+			final Resolution metadataResolution=getMetadataResolution();
+			resolveMetadata(metadataResolution, sourceRepository, sourceResourceDescription, destinationRepository, destinationResourceDescription);
 		}
-		//TODO synchronize metadata
-//Debug.trace("both exist; we did what we needed to do; nothing more should happen (other than checking collection).");
-		if(isSourceCollection && sourceRepository.resourceExists(sourceResourceURI) && destinationRepository.resourceExists(destinationResourceURI))	//if now have two collections that both exist
+		if(isSourceCollection && sourceExists && destinationExists)	//if now have two collections that both exist, synchronize the children
 		{
 			final Map<URI, URFResource> destinationChildResourceDescriptions=new LinkedHashMap<URI, URFResource>();	//create a map for the destination resources, preserving their iteration order only as a courtesy
 			for(final URFResource destinationChildResourceDescription:destinationRepository.getChildResourceDescriptions(destinationResourceURI))	//prepopulate the destination child resource map to allow quick lookup when we iterate the source child resources
@@ -294,8 +306,8 @@ Debug.info("Resolve orphan:", resolution, orphanRepository, orphanResourceURI, o
 		}		
 	}
 
-	/**Resolves a descrepancy between a source and a destination resource.
-	If the resource dates are not available or are the same, the {@link ContentResolution#SYNCHRONIZE} resolution will have no effect.
+	/**Resolves a content descrepancy between a source and a destination resource.
+	If the resource dates are not available or are the same, the {@link Resolution#SYNCHRONIZE} resolution will have no effect.
 	Both resources must exist.
 	@param resolution How the descrepancy should be resolved
 	@param sourceRepository The source repository.
@@ -305,14 +317,15 @@ Debug.info("Resolve orphan:", resolution, orphanRepository, orphanResourceURI, o
 	@throws NullPointerException if any of the given arguments are <code>null</code>.
 	@throws IOException if there is an I/O error while performing the action.
 	*/
-	protected void resolveContent(ContentResolution resolution, final Repository sourceRepository, final URFResource sourceResourceDescription, final Repository destinationRepository, final URFResource destinationResourceDescription) throws IOException
+	protected void resolveContent(Resolution resolution, final Repository sourceRepository, final URFResource sourceResourceDescription, final Repository destinationRepository, final URFResource destinationResourceDescription) throws IOException
 	{
 Debug.info("Resolve content:", resolution, sourceRepository, sourceResourceDescription.getURI(), destinationRepository, destinationResourceDescription.getURI());
-		if(resolution==ContentResolution.IGNORE)	//if this situation should be ignored
+		if(resolution==Resolution.IGNORE)	//if this situation should be ignored
 		{
 			return;	//don't do anything
 		}
-		if(resolution==ContentResolution.SYNCHRONIZE) {	//if we should synchronize the resource content
+		if(resolution==Resolution.SYNCHRONIZE)	//if we should synchronize the resource content
+		{
 			final Date sourceDate=getModified(sourceResourceDescription);	//get the date of the source
 			final Date destinationDate=getModified(sourceResourceDescription);	//get the date of the destination
 			if(sourceDate!=null && destinationDate!=null)	//if we have dates for the resources
@@ -320,11 +333,11 @@ Debug.info("Resolve content:", resolution, sourceRepository, sourceResourceDescr
 				final int dateComparison=sourceDate.compareTo(destinationDate);	//compare the dates
 				if(dateComparison>0)	//if the destination is older than the source
 				{
-					resolution=ContentResolution.BACKUP;	//copy the source to the destination
+					resolution=Resolution.BACKUP;	//copy the source to the destination
 				}
 				else if(dateComparison<0)	//if the source is older than the destination
 				{
-					resolution=ContentResolution.RESTORE;	//copy the destination to the source
+					resolution=Resolution.RESTORE;	//copy the destination to the source
 				}
 				else	//if the two resources have the same date
 				{
@@ -371,6 +384,93 @@ Debug.info("Resolve content:", resolution, sourceRepository, sourceResourceDescr
 		{
 			inputStream.close();	//always close the input stream
 		}
+	}
+
+	/**Resolves metadata descrepancies between a source and a destination resource.
+	If the resource dates are not available or are the same, the {@link Resolution#SYNCHRONIZE} resolution will have no effect.
+	Both resources must exist.
+	@param resolution How the descrepancy should be resolved
+	@param sourceRepository The source repository.
+	@param sourceResourceDescription The description of the source resource.
+	@param destinationRepository The destination repository.
+	@param destinationResourceDescription The description of the destination resource.
+	@throws NullPointerException if any of the given arguments are <code>null</code>.
+	@throws IOException if there is an I/O error while performing the action.
+	*/
+	protected void resolveMetadata(Resolution resolution, final Repository sourceRepository, final URFResource sourceResourceDescription, final Repository destinationRepository, final URFResource destinationResourceDescription) throws IOException
+	{
+		if(resolution==Resolution.IGNORE)	//if this situation should be ignored
+		{
+			return;	//don't do anything
+		}
+		if(resolution==Resolution.SYNCHRONIZE) {	//if we should synchronize the resource content
+			final Date sourceDate=getModified(sourceResourceDescription);	//get the date of the source
+			final Date destinationDate=getModified(sourceResourceDescription);	//get the date of the destination
+			if(sourceDate!=null && destinationDate!=null)	//if we have dates for the resources
+			{
+				final int dateComparison=sourceDate.compareTo(destinationDate);	//compare the dates
+				if(dateComparison>0)	//if the destination is older than the source
+				{
+					resolution=Resolution.BACKUP;	//copy the source to the destination
+				}
+				else if(dateComparison<0)	//if the source is older than the destination
+				{
+					resolution=Resolution.RESTORE;	//copy the destination to the source
+				}
+				else	//if the two resources have the same date
+				{
+					return;	//don't do anything
+				}
+			}
+		}
+		final Repository inputRepository, outputRepository;
+		final URFResource inputResourceDescription, outputResourceDescription;
+		switch(resolution)	//see how to resolve the descrepancy; at the point the only options we haven't covered are backup and restore
+		{
+			case BACKUP:
+				inputRepository=sourceRepository;
+				inputResourceDescription=sourceResourceDescription;
+				outputRepository=destinationRepository;
+				outputResourceDescription=destinationResourceDescription;
+				break;
+			case RESTORE:
+				inputRepository=destinationRepository;
+				inputResourceDescription=destinationResourceDescription;
+				outputRepository=sourceRepository;
+				outputResourceDescription=sourceResourceDescription;
+				break;
+			default:
+				throw new AssertionError("Unrecognized resolution "+resolution);
+		}
+		final Set<URI> outputPropertyURIRemovals=new HashSet<URI>();
+		final Set<URFProperty> outputPropertyAdditions=new HashSet<URFProperty>();
+		for(final URFProperty inputProperty:inputResourceDescription.getProperties())	//copy input properties not present in the output
+		{
+			if(!outputResourceDescription.hasProperty(inputProperty))	//if this input property is not in the output
+			{
+				final URI inputPropertyURI=inputProperty.getPropertyURI();
+				if(!inputRepository.isLivePropertyURI(inputPropertyURI))	//ignore live properties
+				{
+					outputPropertyURIRemovals.add(inputPropertyURI);	//we'll replace all of these properties in the output
+					outputPropertyAdditions.add(inputProperty);	//we'll add this new property and value to the output
+					Debug.info("Resolve metadata:", resolution, outputResourceDescription.getURI(), "set", inputProperty);
+				}
+			}
+		}
+		for(final URFProperty outputProperty:outputResourceDescription.getProperties())	//remove output properties not present in the input
+		{
+			final URI outputPropertyURI=outputProperty.getPropertyURI();
+			if(!inputResourceDescription.hasProperty(outputPropertyURI))	//if this output property URI is not in the input with any value (if it has some value at all, we've already made to make them the same)
+			{
+				if(!outputRepository.isLivePropertyURI(outputPropertyURI))	//ignore live properties
+				{
+					outputPropertyURIRemovals.add(outputPropertyURI);	//we'll remove all of these properties in the output; if there were any replacements they will have already been added 
+					Debug.info("Resolve metadata:", resolution, outputResourceDescription.getURI(), "remove", outputProperty.getPropertyURI());
+				}
+			}
+		}
+		final URFResourceAlteration outputResourceAlteration=new DefaultURFResourceAlteration(outputPropertyURIRemovals, outputPropertyAdditions);
+		outputRepository.alterResourceProperties(outputResourceDescription.getURI(), outputResourceAlteration);	//alter the output resource properties
 	}
 
 }
