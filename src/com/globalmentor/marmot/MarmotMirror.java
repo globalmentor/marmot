@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.globalmentor.apps.marmot;
+package com.globalmentor.marmot;
 
 import java.io.IOException;
 import java.net.URI;

@@ -373,8 +373,6 @@ public interface Repository
 	If a resource already exists at the given URI it will be replaced.
 	The returned output stream should always be closed.
 	It is unspecified whether the resource description will be updated before or after the resource contents are stored.
-	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
-	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
 	If a resource with no contents is desired, {@link #createResource(URI, URFResource, byte[])} with zero bytes is better suited for this task.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
@@ -402,8 +400,6 @@ public interface Repository
 
 	/**Creates a new resource with the given description and contents.
 	If a resource already exists at the given URI it will be replaced.
-	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
-	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
 	@param resourceContents The contents to store in the resource.

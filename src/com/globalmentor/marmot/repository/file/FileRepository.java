@@ -39,7 +39,7 @@ import static com.globalmentor.urf.TURF.*;
 
 /**Repository stored in a filesystem.
 <p>This implementation uses the file last modified timestamp to store the {@value Content#MODIFIED_PROPERTY_URI} property.
-The content modified property is ignored for collections with no content.</p>
+The content created and modified properties are not saved for collections with no content.</p>
 @author Garret Wilson
 */
 public class FileRepository extends AbstractRepository
@@ -442,8 +442,6 @@ public class FileRepository extends AbstractRepository
 	/**Creates a new resource with the given description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
 	The returned output stream should always be closed.
-	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
-	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
 	If a resource with no contents is desired, {@link #createResource(URI, URFResource, byte[])} with zero bytes is better suited for this task.
 	This implementation updates resource properties before storing the contents of the resource.
 	@param resourceURI The reference URI to use to identify the resource.
@@ -454,7 +452,7 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public OutputStream createResource(URI resourceURI, URFResource resourceDescription) throws ResourceIOException	//TODO fix to prevent resources with special names
+	public OutputStream createResource(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException	//TODO fix to prevent resources with special names
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -483,7 +481,6 @@ public class FileRepository extends AbstractRepository
 				//TODO should we see if a directory exists?
 				createNewFile(resourceFile);	//create a new file
 			}
-			resourceDescription=ensureModifiedProperties(resourceDescription);	//add the content modified properties as needed
 			return new DescriptionWriterOutputStreamDecorator(new FileOutputStream(contentFile, true), resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), resourceFile);	//wrap the output stream to the content file in a decorator that will update the properties after the contents are stored
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
@@ -494,8 +491,6 @@ public class FileRepository extends AbstractRepository
 
 	/**Creates a new resource with the given description and contents.
 	If a resource already exists at the given URI it will be replaced.
-	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
-	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
 	@param resourceContents The contents to store in the resource.
@@ -505,7 +500,7 @@ public class FileRepository extends AbstractRepository
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public URFResource createResource(URI resourceURI, URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException	//TODO fix to prevent resources with special names
+	public URFResource createResource(URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException	//TODO fix to prevent resources with special names
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -546,7 +541,6 @@ public class FileRepository extends AbstractRepository
 					outputStream.close();	//always close the output stream
 				}
 			}
-			resourceDescription=ensureModifiedProperties(resourceDescription);	//add the content modified properties as needed
   		return alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), resourceFile);	//set the properties using the file
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
@@ -839,6 +833,7 @@ public class FileRepository extends AbstractRepository
 	Except for as noted below, the description is saved as given with no modifications.
 	If the {@value Content#MODIFIED_PROPERTY_URI} property is present, it is not saved and the file modified time is updated to match that value.
 	If the {@value Content#CREATED_PROPERTY_URI} property is present and it is identical to the {@value Content#MODIFIED_PROPERTY_URI} property, it is not saved.
+	If the {@value Content#CREATED_PROPERTY_URI} property is present and the resource is a collection with no content, it is not saved.
 	If the resource description file does not exist and there are no properties to save, no resource description file is created.
 	@param resourceDescription The resource description to save.
 	@param resourceFile The file of a resource.
@@ -847,18 +842,37 @@ public class FileRepository extends AbstractRepository
 	*/
 	protected void saveResourceDescription(URFResource resourceDescription, final File resourceFile) throws IOException
 	{
+		final URI resourceURI=getPublicURI(resourceFile.toURI());	//get a public URI to represent the file resource
+		final File contentFile;	//determine the file to use for storing content
+		final boolean isCollection=isCollectionURI(resourceURI);	//see if this is a collection
+		if(isCollection)	//if the resource is a collection
+		{
+			final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+			final File tempContentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection content resource
+			contentFile=tempContentFile.exists() ? tempContentFile : resourceFile;	//if the content file doesn't exist, we can't update its modified time
+		}
+		else	//if the resource is not a collection
+		{
+			contentFile=resourceFile;	//use the normal resource file
+		}
+		final URFDateTime created=getCreated(resourceDescription);	//see if the description indicates the created time
 		final URFDateTime modified=getModified(resourceDescription);	//see if the description indicates the last modified time
-		if(modified!=null)	//if the last modified time was indicated
+		if(created!=null || modified!=null)	//if the created time and/or last modified time was indicated
 		{
 			resourceDescription=new DefaultURFResource(resourceDescription);	//create a copy of the description
-			resourceDescription.removePropertyValues(Content.MODIFIED_PROPERTY_URI);	//remove all last-modified values from the desciption we'll actually save
-			final URFDateTime created=getCreated(resourceDescription);	//see if the description indicates the created date
-			if(created!=null && created.getTime()==modified.getTime())	//if the created time is the same as the modified time
+			if(modified!=null)	//if the last modified time was indicated
 			{
-				resourceDescription.removePropertyValues(Content.CREATED_PROPERTY_URI);	//remove all created timestamp values from the desciption to save, as Java can't distinguish between content created and modified and they'll both be initialized from the same value, anyway, when reading
+				resourceDescription.removePropertyValues(Content.MODIFIED_PROPERTY_URI);	//remove all last-modified values from the desciption we'll actually save
+			}
+			if(created!=null)	//if the created time is present
+			{
+				if((modified!=null && created.getTime()==modified.getTime())	//if the created time is the same as the modified time
+						|| (isCollection || contentFile==resourceFile))	//or if this is a collection with no content
+				{
+					resourceDescription.removePropertyValues(Content.CREATED_PROPERTY_URI);	//remove all created timestamp values from the desciption to save, as Java can't distinguish between content created and modified and they'll both be initialized from the same value, anyway, when reading
+				}
 			}
 		}
-		final URI resourceURI=getPublicURI(resourceFile.toURI());	//get a public URI to represent the file resource
 		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the file for storing the description
 		if(resourceDescription.hasProperties() || resourceDescriptionFile.exists())	//if there are any properties to set (otherwise, don't create an empty properties file) or the description file already exists
 		{
@@ -873,18 +887,6 @@ public class FileRepository extends AbstractRepository
 		}
 		if(modified!=null)	//if a modification timestamp was indicated
 		{
-			final File contentFile;	//determine the file to use for storing content
-			final boolean isCollection=isCollectionURI(resourceURI);	//see if this is a collection
-			if(isCollection)	//if the resource is a collection
-			{
-				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
-				final File tempContentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection content resource
-				contentFile=tempContentFile.exists() ? tempContentFile : resourceFile;	//if the content file doesn't exist, we can't update its modified time
-			}
-			else	//if the resource is not a collection
-			{
-				contentFile=resourceFile;	//use the normal resource file
-			}
 			if(!isCollection || contentFile!=resourceFile)	//don't update the content modified for collections with no content
 			{
 				if(!contentFile.setLastModified(modified.getTime()))	//update the content file's record of the last modified time

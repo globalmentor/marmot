@@ -673,8 +673,6 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 	/**Creates a new resource with the given description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
 	The returned output stream should always be closed.
-	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
-	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
 	If a resource with no contents is desired, {@link #createResource(URI, URFResource, byte[])} with zero bytes is better suited for this task.
 	This implementation updates the resource description after its contents are stored.
 	@param resourceURI The reference URI to use to identify the resource.
@@ -685,7 +683,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public OutputStream createResource(URI resourceURI, URFResource resourceDescription) throws ResourceIOException	//TODO fix to prevent resources with special names
+	public OutputStream createResource(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException	//TODO fix to prevent resources with special names
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -710,7 +708,6 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 				contentWebDAVResource=webdavResource;	//use the normal WebDAV resource
 			}
 			final OutputStream outputStream=contentWebDAVResource.getOutputStream();	//get an output stream to the content WebDAV resource
-			resourceDescription=ensureModifiedProperties(resourceDescription);	//add the content modified properties as needed
 			return new DescriptionWriterOutputStreamDecorator(outputStream, resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), webdavResource, passwordAuthentication);	//wrap the output stream in a decorator that will update the WebDAV properties after the contents are stored; this method will erase the provided password, if any, after it completes the resource property updates
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
@@ -721,8 +718,6 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 
 	/**Creates a new resource with the given description and contents.
 	If a resource already exists at the given URI it will be replaced.
-	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
-	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
 	@param resourceURI The reference URI to use to identify the resource.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
 	@param resourceContents The contents to store in the resource.
@@ -732,7 +727,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if the resource could not be created.
 	*/
-	public URFResource createResource(URI resourceURI, URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException	//TODO fix to prevent resources with special names
+	public URFResource createResource(URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException	//TODO fix to prevent resources with special names
 	{
 		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
@@ -760,7 +755,6 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 			{
 				contentWebDAVResource.put(resourceContents);	//create the content WebDAV resource with the given contents
 			}
-			resourceDescription=ensureModifiedProperties(resourceDescription);	//add the content modified properties as needed
   		return alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), webdavResource);	//set the properties using the WebDAV resource object
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs

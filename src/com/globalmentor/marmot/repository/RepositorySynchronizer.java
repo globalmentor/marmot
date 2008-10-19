@@ -130,12 +130,12 @@ public class RepositorySynchronizer
 	*/
 	protected void synchronize(final Repository sourceRepository, final URI sourceBaseURI, final URI sourceResourceURI, URFResource sourceResourceDescription, final Repository destinationRepository, final URI destinationBaseURI, final URI destinationResourceURI, URFResource destinationResourceDescription) throws IOException
 	{
-		final boolean isSourceCollection=isCollectionURI(sourceResourceDescription.getURI());	//see if the source is a collection
-		final boolean isDestinationCollection=isCollectionURI(destinationResourceDescription.getURI());	//see if the destination is a collection
+		final boolean isSourceCollection=isCollectionURI(sourceResourceURI);	//see if the source is a collection
+		final boolean isDestinationCollection=isCollectionURI(destinationResourceURI);	//see if the destination is a collection
 			//resource/collection
 		if(isSourceCollection!=isDestinationCollection)	//if we have a resource/collection discrepancy
 		{
-			throw new IllegalArgumentException("The resources are of different types: "+sourceResourceDescription.getURI()+", "+destinationResourceDescription.getURI());	//one resource is a collection; the other is a normal resource
+			throw new IllegalArgumentException("The resources are of different types: "+sourceResourceURI+", "+destinationResourceURI);	//one resource is a collection; the other is a normal resource
 		}
 //Debug.trace("Synchronizing from", sourceResourceURI, "to", destinationResourceURI);
 		boolean sourceExists=sourceResourceDescription!=null;	//see if the source exists

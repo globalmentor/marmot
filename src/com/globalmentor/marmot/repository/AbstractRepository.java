@@ -610,7 +610,11 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		{
 			return subrepository.createResource(resourceURI);	//delegate to the subrepository
 		}
-		return createResource(resourceURI, new DefaultURFResource(resourceURI));	//create the resource with a default description
+		final URFResource resourceDescription=new DefaultURFResource(resourceURI);
+		final URFDateTime dateTime=new URFDateTime();	//create a new timestamp representing this instant
+		Content.setCreated(resourceDescription, dateTime);	//set the created and modified times to the current time 
+		Content.setCreated(resourceDescription, dateTime);
+		return createResource(resourceURI, resourceDescription);	//create the resource with the default description
 	}
 
 	/**Creates a new resource with a default description and contents.
@@ -634,7 +638,11 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		{
 			return subrepository.createResource(resourceURI, resourceContents);	//delegate to the subrepository
 		}
-		return createResource(resourceURI, new DefaultURFResource(resourceURI), resourceContents);	//create the resource with a default description
+		final URFResource resourceDescription=new DefaultURFResource(resourceURI);
+		final URFDateTime dateTime=new URFDateTime();	//create a new timestamp representing this instant
+		Content.setCreated(resourceDescription, dateTime);	//set the created and modified times to the current time 
+		Content.setCreated(resourceDescription, dateTime);
+		return createResource(resourceURI, resourceDescription, resourceContents);	//create the resource with the default description
 	}
 
 	/**Retrieves child resources of the resource at the given URI.
@@ -1076,44 +1084,6 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		return throwable instanceof ResourceIOException ? (ResourceIOException)throwable : new ResourceIOException(resourceURI, throwable);	//default to simple exception chaining with a new resource I/O exception, if the throwable isn't already a resourc I/O exception
 	}
 
-	/**Returns a description possibly updated to reflect a created and/or modified date and time.
-	This is a convenience method to allow a repository implementation to add the content creation and modified properties properties when needed.
-	If not already present in the given description and the caller so requests, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
-	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
-	@param resourceDescription The description of the resource.
-	@param updateCreated Whether the {@link Content#CREATED_PROPERTY_URI} will also be updated.
-	@throws NullPointerException if the given description is <code>null</code>.
-	*/
-/*TODO del
-	protected URFResource ensureModifiedProperties(URFResource resourceDescription, final boolean updateCreated)
-	{
-		boolean update=false;
-		boolean setContentModified=!resourceDescription.hasProperty(Content.MODIFIED_PROPERTY_URI);	//see if the description has an indication of when the content was modified
-		boolean setContentCreated=false;	//start out assuming we won't have to set the content created property 
-		if(!setContentModified)	//if the description already indicates when the content was modified
-		{
-			if(updateCreated)	//if we should update the created property
-			{
-				setContentCreated=!resourceDescription.hasProperty(Content.CREATED_PROPERTY_URI);	//see if the description has an indication of when the content was created
-			}
-		}
-		if(setContentCreated || setContentModified)	//if we should set one of the properties
-		{
-			resourceDescription=new DefaultURFResource(resourceDescription);	//make a copy of the description so that we can modify it without changing what was passed to us
-			final URFDateTime dateTime=new URFDateTime();	//create a new timestamp representing this instant
-			if(setContentCreated)	//if we should set the created time
-			{
-				Content.setCreated(resourceDescription, dateTime);
-			}
-			if(setContentModified)	//if we should set the modified time
-			{
-				Content.setCreated(resourceDescription, dateTime);
-			}
-		}
-		return resourceDescription;	//return the description, which we may or may not have copied and modified
-	}
-*/
-
 	/**Determines whether the given resource has properties that are not live.
 	@param resourceDescription The description of the resource.
 	*/
@@ -1123,34 +1093,6 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		
 	}
 */
-
-	/**Returns a description possibly updated to reflect a created and modified date and time.
-	This is a convenience method to allow a repository implementation to add the content created and modified properties properties when needed.
-	If not already present in the given description, the {@link Content#CREATED_PROPERTY_URI} property will be added with the current date and time.
-	If not already present in the given description, the {@link Content#MODIFIED_PROPERTY_URI} property will be added with the current date and time.
-	@param resourceDescription The description of the resource.
-	@throws NullPointerException if the given description is <code>null</code>.
-	*/
-	protected URFResource ensureModifiedProperties(URFResource resourceDescription)
-	{
-		boolean update=false;
-		boolean setContentCreated=!resourceDescription.hasProperty(Content.CREATED_PROPERTY_URI);	//see if the description has an indication of when the content was created
-		boolean setContentModified=!resourceDescription.hasProperty(Content.MODIFIED_PROPERTY_URI);	//see if the description has an indication of when the content was modified
-		if(setContentCreated || setContentModified)	//if we should set one of the properties
-		{
-			resourceDescription=new DefaultURFResource(resourceDescription);	//make a copy of the description so that we can modify it without changing what was passed to us
-			final URFDateTime dateTime=new URFDateTime();	//create a new timestamp representing this instant
-			if(setContentCreated)	//if we should set the created time
-			{
-				Content.setCreated(resourceDescription, dateTime);
-			}
-			if(setContentModified)	//if we should set the modified time
-			{
-				Content.setCreated(resourceDescription, dateTime);
-			}
-		}
-		return resourceDescription;	//return the description, which we may or may not have copied and modified
-	}
 
 	/**Cleans up the object for garbage collection.
 	This version closes the repository.
