@@ -22,16 +22,14 @@ import java.util.*;
 import static java.util.Arrays.*;
 import static java.util.Collections.*;
 
-import javax.mail.internet.ContentType;
-
+import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
-
-import static com.globalmentor.java.Bytes.*;
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.PermissionType;
+import com.globalmentor.net.ContentType;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.net.URIPath;
 import com.globalmentor.urf.*;

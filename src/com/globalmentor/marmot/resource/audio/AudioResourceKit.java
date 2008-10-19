@@ -16,10 +16,10 @@
 
 package com.globalmentor.marmot.resource.audio;
 
-import static com.globalmentor.io.ContentTypeConstants.*;
+import static com.globalmentor.net.ContentTypeConstants.*;
 
-import static com.globalmentor.io.ContentTypes.*;
 import com.globalmentor.marmot.resource.*;
+import com.globalmentor.net.ContentType;
 
 /**Resource kit for handling audio.
 <p>Supported media types:</p>
@@ -34,7 +34,7 @@ public class AudioResourceKit extends AbstractResourceKit
 	/**Default constructor.*/
 	public AudioResourceKit()
 	{
-		super(getContentTypeInstance(AUDIO_PRIMARY_TYPE, MPEG_SUBTYPE));
+		super(ContentType.getInstance(ContentType.AUDIO_PRIMARY_TYPE, MPEG_SUBTYPE));
 	}
 
 }

@@ -16,9 +16,8 @@
 
 package com.globalmentor.marmot.resource;
 
-import javax.mail.internet.ContentType;
-
 import com.globalmentor.marmot.resource.AbstractResourceKit;
+import com.globalmentor.net.ContentType;
 
 /**A default resource kit which can be used for most resources.
 @author Garret Wilson

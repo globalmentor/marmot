@@ -16,17 +16,15 @@
 
 package com.globalmentor.marmot.resource.image;
 
-import javax.mail.internet.ContentType;
-
 import net.marmox.resource.image.ImageScaleFilter;
 
-import static com.globalmentor.io.ContentTypeConstants.*;
 import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.java.Objects.*;
+import static com.globalmentor.net.ContentTypeConstants.*;
 
-import static com.globalmentor.io.ContentTypes.*;
 import com.globalmentor.marmot.resource.*;
 import com.globalmentor.marmot.security.PermissionType;
+import com.globalmentor.net.ContentType;
 
 /**Resource kit for handling images.
 <p>Supported media types:</p>
@@ -43,7 +41,7 @@ public class ImageResourceKit extends AbstractResourceKit
 	/**Default constructor.*/
 	public ImageResourceKit()
 	{
-		super(new ContentType[]{getContentTypeInstance(IMAGE_PRIMARY_TYPE, GIF_SUBTYPE), getContentTypeInstance(IMAGE_PRIMARY_TYPE, JPEG_SUBTYPE), getContentTypeInstance(IMAGE_PRIMARY_TYPE, PNG_SUBTYPE)});
+		super(new ContentType[]{ContentType.getInstance(ContentType.IMAGE_PRIMARY_TYPE, GIF_SUBTYPE), ContentType.getInstance(ContentType.IMAGE_PRIMARY_TYPE, JPEG_SUBTYPE), ContentType.getInstance(ContentType.IMAGE_PRIMARY_TYPE, PNG_SUBTYPE)});
 	}
 
 	/**Initializes a resource description, creating whatever properties are appropriate.

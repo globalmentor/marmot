@@ -20,10 +20,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 
-import javax.mail.internet.ContentType;
-
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.*;
+import com.globalmentor.net.ContentType;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.urf.URFResource;
 import com.globalmentor.urf.maqro.MAQRO;

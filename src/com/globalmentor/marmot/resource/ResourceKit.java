@@ -23,11 +23,10 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.Set;
 
-import javax.mail.internet.ContentType;
-
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.PermissionType;
+import com.globalmentor.net.ContentType;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.urf.URFResource;
 

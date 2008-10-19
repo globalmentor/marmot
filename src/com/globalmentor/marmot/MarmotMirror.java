@@ -19,7 +19,6 @@ package com.globalmentor.marmot;
 import java.io.IOException;
 import java.net.URI;
 
-
 import static com.globalmentor.java.Characters.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.util.CommandLineArguments.*;
@@ -99,10 +98,9 @@ public class MarmotMirror extends Application
 		final URI destinationResourceURI=guessAbsoluteURI(destinationResourceString);	//get the destination URI
 		final URI destinationRepositoryURI=destinationRepositoryString!=null ? guessAbsoluteURI(destinationRepositoryString) : getParentURI(destinationResourceURI);	//if the destination repository is not specified, use the parent URI
 
-		
 		HTTPClient.getInstance().setLogged(Debug.isDebug() && Debug.getReportLevels().contains(Debug.ReportLevel.LOG));	//if debugging is turned on, tell the HTTP client to log its data TODO fix this better---make some sort of flag specifically for communication tracking
 		
-		System.out.println("Mirroring from "+sourceResourceURI+" to "+destinationResourceURI+".");
+		Debug.info("Mirroring from", sourceResourceURI, "to", destinationResourceURI+".");
 		final Repository sourceRepository=createRepository(sourceRepositoryURI);	//create the correct type of repository for the source
 		final Repository destinationRepository=createRepository(destinationRepositoryURI);	//create the correct type of repository for the destination
 		try
@@ -117,7 +115,7 @@ public class MarmotMirror extends Application
 			System.err.println("Error: "+ioException);
 			return 1;
 		}
-		System.out.println("Mirroring finished.");
+		Debug.info("Mirroring finished.");
 		return 0;	//return no error
 	}
 

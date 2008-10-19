@@ -18,11 +18,10 @@ package com.globalmentor.marmot.resource.xhtml;
 
 import java.net.URI;
 
-import javax.mail.internet.ContentType;
-
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.xhtml.AbstractXHTMLResourceKit;
 import com.globalmentor.net.*;
+
 import static com.globalmentor.text.xml.xhtml.XHTML.*;
 
 /**Resource kit for handling folders with XHTML content

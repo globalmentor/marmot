@@ -24,10 +24,7 @@ import java.util.*;
 import static java.util.Arrays.*;
 import static java.util.Collections.*;
 
-import javax.mail.internet.ContentType;
-
-import com.globalmentor.io.Files;
-import com.globalmentor.io.InputStreams;
+import com.globalmentor.io.*;
 import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.net.*;
@@ -35,7 +32,6 @@ import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
 import com.globalmentor.util.*;
 
-import static com.globalmentor.io.ContentTypes.*;
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.Objects.*;
@@ -235,7 +231,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 			final Map<ContentType, Charset> contentTypeCharsetMap=new HashMap<ContentType, Charset>(baseContentTypeCharsetMap.size());	//create a new map to hold actual content type objects
 			for(final Map.Entry<String, Charset> baseContentTypeCharsetEntry:baseContentTypeCharsetMap.entrySet())	//look at each mapping
 			{
-				contentTypeCharsetMap.put(getContentTypeInstance(baseContentTypeCharsetEntry.getKey()), baseContentTypeCharsetEntry.getValue());	//add this mapping to the map
+				contentTypeCharsetMap.put(ContentType.getInstance(baseContentTypeCharsetEntry.getKey()), baseContentTypeCharsetEntry.getValue());	//add this mapping to the map
 			}
 			return unmodifiableMap(contentTypeCharsetMap);	//return a read-only version of the map we created
 		}

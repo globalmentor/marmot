@@ -21,8 +21,6 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.*;
 
-import javax.mail.internet.ContentType;
-
 import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
