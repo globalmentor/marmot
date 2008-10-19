@@ -39,7 +39,7 @@ import com.globalmentor.util.Debug;
 /**Marmot synchronization client.
 @author Garret Wilson
 */
-public class MarmotMirror extends Application<Object>
+public class MarmotMirror extends Application
 {
 
 	/**The application URI.*/
