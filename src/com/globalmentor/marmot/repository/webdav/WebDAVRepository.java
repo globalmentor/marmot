@@ -1117,7 +1117,7 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 			}
 		}
 		final WebDAVProperty webdavContentLengthProperty=contentProperties.get(GET_CONTENT_LENGTH_PROPERTY_NAME);	//get the D:getcontentlength from the content properties
-		long contentLength=0;	//determine the content length
+		long contentLength=isCollection ? 0 : -1;	//determine the content length; default to a content length of zero for collections
 		if(webdavContentLengthProperty!=null)	//if we know a content length property
 		{
 			final WebDAVPropertyValue propertyValue=webdavContentLengthProperty.getValue();	//get the value of the property
@@ -1134,7 +1134,10 @@ public class WebDAVRepository extends AbstractRepository	//TODO fix content leng
 				}
 			}
 		}
-		setContentLength(resource, contentLength);	//set the content length to whatever we determined			
+		if(contentLength>=0)	//if we know a valid content length
+		{
+			setContentLength(resource, contentLength);	//set the content length to whatever we determined
+		}
 		if(isCollection)	//if this is a collection
 		{
 			resource.removePropertyValues(Content.TYPE_PROPERTY_URI);	//remove any content type properties (Apache mod_dav adds a "httpd/unix-directory" pseudo MIME type for collections, for example)

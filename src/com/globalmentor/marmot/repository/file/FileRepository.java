@@ -39,7 +39,7 @@ import static com.globalmentor.urf.TURF.*;
 
 /**Repository stored in a filesystem.
 <p>This implementation uses the file last modified timestamp to store the {@value Content#MODIFIED_PROPERTY_URI} property.
-The content created and modified properties are not saved for collections with no content.</p>
+The content modified property is not saved for collections with no content.</p>
 @author Garret Wilson
 */
 public class FileRepository extends AbstractRepository
@@ -866,8 +866,8 @@ public class FileRepository extends AbstractRepository
 			}
 			if(created!=null)	//if the created time is present
 			{
-				if((modified!=null && created.getTime()==modified.getTime())	//if the created time is the same as the modified time
-						|| (isCollection || contentFile==resourceFile))	//or if this is a collection with no content
+				if((modified!=null && created.getTime()==modified.getTime())	//if the created time is the same as the modified time TODO decide how useful these are
+						|| (isCollection && contentFile==resourceFile))	//or if this is a collection with no content
 				{
 					resourceDescription.removePropertyValues(Content.CREATED_PROPERTY_URI);	//remove all created timestamp values from the desciption to save, as Java can't distinguish between content created and modified and they'll both be initialized from the same value, anyway, when reading
 				}

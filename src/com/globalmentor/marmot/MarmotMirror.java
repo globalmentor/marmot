@@ -49,6 +49,27 @@ public class MarmotMirror extends Application
 	/**The version of the application.*/
 	public final static String VERSION="Alpha Version 0.1 build 2008-10-11";
 
+		//parameters
+	/**The command-line parameter for test mode.*/
+	public final static String TEST_PARAMETER="test";
+	/**The command-line parameter for verbose.*/
+	public final static String VERBOSE_PARAMETER="verbose";
+	/**The command-line parameter for debugging HTTP; requires debug mode on.*/
+	public final static String DEBUGHTTP_PARAMETER="debughttp";
+
+	/**The command-line parameter for the source repository.*/
+	public final static String SOURCE_REPOSITORY_PARAMETER="sourcerepository";
+	/**The command-line parameter for the source repository username.*/
+	public final static String SOURCE_USERNAME_PARAMETER="sourceusername";
+	/**The command-line parameter for the source repository username.*/
+	public final static String SOURCE_PASSWORD_PARAMETER="sourcepassword";
+	/**The command-line parameter for the destination repository.*/
+	public final static String DESTINATION_REPOSITORY_PARAMETER="destinationrepository";
+	/**The command-line parameter for the destination repository username.*/
+	public final static String DESTINATION_USERNAME_PARAMETER="destinationusername";
+	/**The command-line parameter for the destination repository username.*/
+	public final static String DESTINATION_PASSWORD_PARAMETER="destinationpassword";
+
 	/**Argument constructor.
 	@param args The command line arguments.
 	*/
@@ -73,12 +94,17 @@ public class MarmotMirror extends Application
 			System.out.println(TITLE);
 			System.out.println(VERSION);
 			System.out.println(COPYRIGHT);
-			System.out.println("Usage: MarmotMirror [-sourcerepository <source repository URI>] -source <source URI> [-destinationrepository <destination repository URI>] -destination <destination> [-test] [-verbose]");
-			System.out.println("-test: If specified, no changed will be made.");
-			System.out.println("-verbose: If specified, debug will be turned on to a report level of "+Debug.ReportLevel.INFO+".");
+			System.out.println("Usage: MarmotMirror [-sourcerepository <source repository URI>] [-sourceusername <source username>] [-sourcepassword <source password>] -source <source URI> [-destinationrepository <destination repository URI>] [-destinationusername <destination username>] [-destinationpassword <destination password>] -destination <destination> [-test] [-verbose] [-debughttp]");
+			System.out.println("-"+SOURCE_USERNAME_PARAMETER+": The source repository username, if appropriate.");
+			System.out.println("-"+SOURCE_PASSWORD_PARAMETER+": The source repository password, if appropriate.");
+			System.out.println("-"+DESTINATION_USERNAME_PARAMETER+": The destination repository username, if appropriate.");
+			System.out.println("-"+DESTINATION_PASSWORD_PARAMETER+": The destination repository password, if appropriate.");
+			System.out.println("-"+TEST_PARAMETER+": If specified, no changed will be made.");
+			System.out.println("-"+VERBOSE_PARAMETER+": If specified, debug will be turned on to a report level of "+Debug.ReportLevel.INFO+".");
+			System.out.println("-"+DEBUGHTTP_PARAMETER+": Whether HTTP communication is logged; requires debug to be turned on.");
 			return 0;
 		}
-		if(hasSwitch(args, "verbose"))	//if verbose is turned on
+		if(hasParameter(args, VERBOSE_PARAMETER))	//if verbose is turned on
 		{
 			try	//TODO improve
 			{
@@ -89,7 +115,6 @@ public class MarmotMirror extends Application
 			{
 				throw new AssertionError(ioException);
 			}
-			
 		}
 		final String sourceRepositoryString=getParameter(args, "sourcerepository");	//get the source repository parameter
 		final URI sourceResourceURI=guessAbsoluteURI(sourceResourceString);	//get the source URI
@@ -97,16 +122,14 @@ public class MarmotMirror extends Application
 		final String destinationRepositoryString=getParameter(args, "destinationrepository");	//get the destination repository parameter
 		final URI destinationResourceURI=guessAbsoluteURI(destinationResourceString);	//get the destination URI
 		final URI destinationRepositoryURI=destinationRepositoryString!=null ? guessAbsoluteURI(destinationRepositoryString) : getParentURI(destinationResourceURI);	//if the destination repository is not specified, use the parent URI
-
-		HTTPClient.getInstance().setLogged(Debug.isDebug() && Debug.getReportLevels().contains(Debug.ReportLevel.LOG));	//if debugging is turned on, tell the HTTP client to log its data TODO fix this better---make some sort of flag specifically for communication tracking
-		
+		HTTPClient.getInstance().setLogged(Debug.isDebug() && hasParameter(args, DEBUGHTTP_PARAMETER));	//if debugging is turned on, tell the HTTP client to log its data TODO generalize
 		Debug.info("Mirroring from", sourceResourceURI, "to", destinationResourceURI+".");
-		final Repository sourceRepository=createRepository(sourceRepositoryURI);	//create the correct type of repository for the source
-		final Repository destinationRepository=createRepository(destinationRepositoryURI);	//create the correct type of repository for the destination
+		final Repository sourceRepository=createRepository(sourceRepositoryURI, getParameter(args, SOURCE_USERNAME_PARAMETER), getParameter(args, SOURCE_PASSWORD_PARAMETER));	//create the correct type of repository for the source
+		final Repository destinationRepository=createRepository(destinationRepositoryURI, getParameter(args, DESTINATION_USERNAME_PARAMETER), getParameter(args, DESTINATION_PASSWORD_PARAMETER));	//create the correct type of repository for the destination
 		try
 		{
 			final RepositorySynchronizer repositorySynchronizer=new RepositorySynchronizer();	//create a new synchronizer
-			repositorySynchronizer.setTest(hasSwitch(args, "test"));	//specify whether this is a test run
+			repositorySynchronizer.setTest(hasParameter(args, TEST_PARAMETER));	//specify whether this is a test run
 			repositorySynchronizer.synchronize(sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//synchronize the resources
 		}
 		catch(final IOException ioException)	//if there is an error
@@ -135,14 +158,25 @@ public class MarmotMirror extends Application
 		<li>{@value URIs#FILE_SCHEME}</li>
 	</ul>
 	@param repositoryURI The URI of the repository to create.
+	@param username The username of the repository, or <code>null</code> if no username is appropriate.
+	@param password The password of the repository, or <code>null</code> if no password is appropriate.
 	@return A repository for the given URI.
 	@exception IllegalArgumentException if the type of the given repository URI is not recognized.
 	*/
-	protected static Repository createRepository(final URI repositoryURI)
+	protected static Repository createRepository(final URI repositoryURI, final String username, final String password)
 	{
 		if(HTTP.isHTTPURI(repositoryURI))	//if this is an HTTP repository URI
 		{
-			return new WebDAVRepository(repositoryURI);	//create a WebDAV-based repository
+			final WebDAVRepository webDavRepository=new WebDAVRepository(repositoryURI);	//create a WebDAV-based repository
+			if(username!=null)	//set the username if there is one
+			{
+				webDavRepository.setUsername(username);
+			}
+			if(password!=null)	//set the password if there is one
+			{
+				webDavRepository.setPassword(password.toCharArray());
+			}
+			return webDavRepository;
 		}
 		else if(FILE_SCHEME.equals(repositoryURI.getScheme()))	//if this is a file repository URI
 		{
