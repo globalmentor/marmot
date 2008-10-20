@@ -33,6 +33,7 @@ import com.globalmentor.urf.URFDateTime;
 import com.globalmentor.urf.URFProperty;
 import com.globalmentor.urf.URFResource;
 import com.globalmentor.urf.URFResourceAlteration;
+import com.globalmentor.urf.content.Content;
 import com.globalmentor.util.Debug;
 
 /**Marmot synchronization support.
@@ -465,6 +466,8 @@ public class RepositorySynchronizer
 		}
 		final Set<URI> outputPropertyURIRemovals=new HashSet<URI>();
 		final Set<URFProperty> outputPropertyAdditions=new HashSet<URFProperty>();
+		final boolean isCollection=isCollectionURI(outputResourceDescription.getURI());
+		final long contentLength=getContentLength(outputResourceDescription);
 		for(final URFProperty inputProperty:inputResourceDescription.getProperties())	//copy input properties not present in the output
 		{
 			if(!outputResourceDescription.hasProperty(inputProperty))	//if this input property is not in the output
@@ -472,6 +475,13 @@ public class RepositorySynchronizer
 				final URI inputPropertyURI=inputProperty.getPropertyURI();
 				if(!inputRepository.isLivePropertyURI(inputPropertyURI))	//ignore live properties
 				{
+					if(isCollection && contentLength==0)	//ignore content created and content modified for zero-length collections
+					{
+						if(Content.CREATED_PROPERTY_URI.equals(inputPropertyURI) || Content.MODIFIED_PROPERTY_URI.equals(inputPropertyURI))
+						{
+							continue;
+						}
+					}
 					outputPropertyURIRemovals.add(inputPropertyURI);	//we'll replace all of these properties in the output
 					outputPropertyAdditions.add(inputProperty);	//we'll add this new property and value to the output
 					Debug.info("Resolve metadata:", resolution, outputResourceDescription.getURI(), "set", inputProperty);
