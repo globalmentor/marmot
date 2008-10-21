@@ -24,6 +24,7 @@ import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.util.CommandLineArguments.*;
 
 import com.globalmentor.marmot.repository.*;
+import com.globalmentor.marmot.repository.RepositorySynchronizer.Resolution;
 import com.globalmentor.marmot.repository.file.FileRepository;
 import com.globalmentor.marmot.repository.webdav.WebDAVRepository;
 import com.globalmentor.net.URIs;
@@ -50,13 +51,6 @@ public class MarmotMirror extends Application
 	public final static String VERSION="Alpha Version 0.1 build 2008-10-11";
 
 		//parameters
-	/**The command-line parameter for test mode.*/
-	public final static String TEST_PARAMETER="test";
-	/**The command-line parameter for verbose.*/
-	public final static String VERBOSE_PARAMETER="verbose";
-	/**The command-line parameter for debugging HTTP; requires debug mode on.*/
-	public final static String DEBUGHTTP_PARAMETER="debughttp";
-
 	/**The command-line parameter for the source repository.*/
 	public final static String SOURCE_REPOSITORY_PARAMETER="sourcerepository";
 	/**The command-line parameter for the source repository username.*/
@@ -69,6 +63,21 @@ public class MarmotMirror extends Application
 	public final static String DESTINATION_USERNAME_PARAMETER="destinationusername";
 	/**The command-line parameter for the destination repository username.*/
 	public final static String DESTINATION_PASSWORD_PARAMETER="destinationpassword";
+
+	/**The command-line parameter for test mode.*/
+	public final static String TEST_PARAMETER="test";
+	/**The command-line parameter for verbose.*/
+	public final static String VERBOSE_PARAMETER="verbose";
+	/**The command-line parameter for debugging HTTP; requires debug mode on.*/
+	public final static String DEBUGHTTP_PARAMETER="debughttp";
+	/**The command-line parameter for the resolution mode.*/
+	public final static String RESOLUTION_PARAMETER="resolution";
+	/**The command-line parameter for the resource resolution mode.*/
+	public final static String RESOURCE_RESOLUTION_PARAMETER="resourceresolution";
+	/**The command-line parameter for the content resolution mode.*/
+	public final static String CONTENT_RESOLUTION_PARAMETER="contentresolution";
+	/**The command-line parameter for the metadata resolution mode.*/
+	public final static String METADATA_RESOLUTION_PARAMETER="metadataresolution";
 
 	/**Argument constructor.
 	@param args The command line arguments.
@@ -94,11 +103,22 @@ public class MarmotMirror extends Application
 			System.out.println(TITLE);
 			System.out.println(VERSION);
 			System.out.println(COPYRIGHT);
-			System.out.println("Usage: MarmotMirror [-sourcerepository <source repository URI>] [-sourceusername <source username>] [-sourcepassword <source password>] -source <source URI> [-destinationrepository <destination repository URI>] [-destinationusername <destination username>] [-destinationpassword <destination password>] -destination <destination> [-test] [-verbose] [-debughttp]");
-			System.out.println("-"+SOURCE_USERNAME_PARAMETER+": The source repository username, if appropriate.");
+			System.out.println("Usage: MarmotMirror [-sourcerepository <source repository URI>] [-sourceusername <source username>] [-sourcepassword <source password>] -source <source URI> " +
+					"[-destinationrepository <destination repository URI>] [-destinationusername <destination username>] [-destinationpassword <destination password>] -destination <destination> " +
+					"[-resolution] [-resourceresolution] [-contentresolution] [-metadataresolution] [-test] [-verbose] [-debughttp]");
+			System.out.println("");
+			System.out.println("Synchronization occurs on three levels: individual resources (i.e. orphans), metadata, and content, each of which can have a different resolution specified.");
+			System.out.println("");
 			System.out.println("-"+SOURCE_PASSWORD_PARAMETER+": The source repository password, if appropriate.");
 			System.out.println("-"+DESTINATION_USERNAME_PARAMETER+": The destination repository username, if appropriate.");
 			System.out.println("-"+DESTINATION_PASSWORD_PARAMETER+": The destination repository password, if appropriate.");
+			System.out.println("-"+RESOLUTION_PARAMETER+": The default resolution for encountered conditions; defaults to \"backup\".");
+			System.out.println("  backup: The source will overwrite the destination; the destination is intended to be a mirror of the source.");
+			System.out.println("  restore: The destination will overwrite the source; the source is intended to be a mirror of the destination.");
+			System.out.println("  synchronize: Newer information will overwrite older information; the source and destination are intended to be updated with the latest changes from each; for orphan reso");
+			System.out.println("-"+RESOURCE_RESOLUTION_PARAMETER+": How an orphan resource situation (i.e. one resource exists and the other does not) will be resolved.");
+			System.out.println("-"+CONTENT_RESOLUTION_PARAMETER+": How a content discrepancy will be resolved.");
+			System.out.println("-"+METADATA_RESOLUTION_PARAMETER+": How a metadata discrepancy will be resolved.");
 			System.out.println("-"+TEST_PARAMETER+": If specified, no changed will be made.");
 			System.out.println("-"+VERBOSE_PARAMETER+": If specified, debug will be turned on to a report level of "+Debug.ReportLevel.INFO+".");
 			System.out.println("-"+DEBUGHTTP_PARAMETER+": Whether HTTP communication is logged; requires debug to be turned on.");
@@ -129,6 +149,26 @@ public class MarmotMirror extends Application
 		try
 		{
 			final RepositorySynchronizer repositorySynchronizer=new RepositorySynchronizer();	//create a new synchronizer
+			final String resolutionString=getParameter(args, RESOLUTION_PARAMETER);	//set the resolutions if provided
+			if(resolutionString!=null)
+			{
+				repositorySynchronizer.setResolution(Resolution.valueOf(resolutionString.toUpperCase()));
+			}
+			final String resourceResolutionString=getParameter(args, RESOURCE_RESOLUTION_PARAMETER);
+			if(resourceResolutionString!=null)
+			{
+				repositorySynchronizer.setResourceResolution(Resolution.valueOf(resourceResolutionString.toUpperCase()));
+			}
+			final String contentResolutionString=getParameter(args, CONTENT_RESOLUTION_PARAMETER);
+			if(contentResolutionString!=null)
+			{
+				repositorySynchronizer.setContentResolution(Resolution.valueOf(contentResolutionString.toUpperCase()));
+			}
+			final String metadataResolutionString=getParameter(args, METADATA_RESOLUTION_PARAMETER);
+			if(metadataResolutionString!=null)
+			{
+				repositorySynchronizer.setMetadataResolution(Resolution.valueOf(metadataResolutionString.toUpperCase()));
+			}
 			repositorySynchronizer.setTest(hasParameter(args, TEST_PARAMETER));	//specify whether this is a test run
 			repositorySynchronizer.synchronize(sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//synchronize the resources
 		}

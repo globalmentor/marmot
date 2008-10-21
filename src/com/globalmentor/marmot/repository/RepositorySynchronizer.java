@@ -22,47 +22,35 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.*;
 
-import static com.globalmentor.urf.content.Content.*;
-
 import com.globalmentor.io.InputStreams;
+import static com.globalmentor.java.Objects.*;
 import com.globalmentor.marmot.repository.Repository;
 import static com.globalmentor.net.URIs.*;
 
-import com.globalmentor.urf.DefaultURFResourceAlteration;
-import com.globalmentor.urf.URFDateTime;
-import com.globalmentor.urf.URFProperty;
-import com.globalmentor.urf.URFResource;
-import com.globalmentor.urf.URFResourceAlteration;
+import com.globalmentor.urf.*;
+import static com.globalmentor.urf.content.Content.*;
 import com.globalmentor.urf.content.Content;
 import com.globalmentor.util.Debug;
 
 /**Marmot synchronization support.
+Synchronization occurs on three levels: individual resources (i.e. orphans), metadata, and content, each of which can have a different resolution specified.
 @author Garret Wilson
 */
 public class RepositorySynchronizer
 {
 
-	/**The resolution to perform on an orphan source or destination repository that doesn't exist in the other repository.*/
-	public enum OrphanResolution
-	{
-		/**Copy the orphan resource.*/
-		COPY,
-		/**Move the orphan resource.*/
-		MOVE,
-		/**Delete the orphan resource.*/
-		DELETE,
-		/**Do nothing.*/
-		IGNORE;
-	}
-
-	/**How to resolve a descrepancy between a source and a destination resource content or metadata.*/
+	/**How to resolve a descrepancy between a source and a destination resource content or metadata.
+	For orphan resources, {@link Resolution#SYNCHRONIZE} is treated the same as {@link Resolution#BACKUP}.
+	*/
 	public enum Resolution
 	{
 		/**The source will overwrite the destination; the destination is intended to be a mirror of the source.*/
 		BACKUP,
 		/**The destination will overwrite the source; the source is intended to be a mirror of the destination.*/
 		RESTORE,
-		/**Newer resources overwrite older resources; The source and destination are intended to be updated with the latest changes from each.*/
+		/**Newer information will overwrite older information; the source and destination are intended to be updated with the latest changes from each,
+		although for orphan resources this will be consdered the same as {@link #BACKUP}.
+		*/
 		SYNCHRONIZE,
 		/**Nothing will happen.*/
 		IGNORE;
@@ -79,17 +67,17 @@ public class RepositorySynchronizer
 		*/
 		public void setTest(final boolean test) {this.test=test;}
 
-	/**The resolution if there is a source resource and no corresponding destination resource.*/
-	private OrphanResolution orphanSourceResolution;
+	/**How an orphan resource will be resolved.*/
+	private Resolution resourceResolution;
 
-		/**@return The resolution if there is a source resource and no corresponding destination resource.*/
-		public OrphanResolution getOrphanSourceResolution() {return orphanSourceResolution;}
+		/**@return How an orphan resource will be resolved.*/
+		public Resolution getResourceResolution() {return resourceResolution;}
 
-	/**The resolution if there is a destination resource and no corresponding source resource.*/
-	private OrphanResolution orphanDestinationResolution;
-
-		/**@return The resolution if there is a destination resource and no corresponding source resource.*/
-		public OrphanResolution getOrphanDestinationResolution() {return orphanDestinationResolution;}
+		/**Sets the resolution for orphan resources.
+		@param resourceResolution How an orphan resource will be resolved.
+		@throws NullPointerException if the given resolution is <code>null</code>.
+		*/
+		public void setResourceResolution(final Resolution resourceResolution) {this.resourceResolution=checkInstance(resourceResolution, "Resource resolution cannot be null.");}
 
 	/**How a content incompatibility between resources will be resolved.*/
 	private Resolution contentResolution;
@@ -97,17 +85,39 @@ public class RepositorySynchronizer
 		/**@return How a content incompatibility between resources will be resolved.*/
 		public Resolution getContentResolution() {return contentResolution;}
 
+		/**Sets the resolution for content.
+		@param contentResolution How a content incompatibility between resources will be resolved.
+		@throws NullPointerException if the given resolution is <code>null</code>.
+		*/
+		public void setContentResolution(final Resolution contentResolution){this.contentResolution=checkInstance(contentResolution, "Content resolution cannot be null.");}
+
 	/**How a metadata incompatibility between resources will be resolved.*/
 	private Resolution metadataResolution;
 
 		/**@return How a metadata incompatibility between resources will be resolved.*/
 		public Resolution getMetadataResolution() {return metadataResolution;}
 
+		/**Sets the resolution for metadata.
+		@param metadataResolution How a metadata incompatibility between resources will be resolved.
+		@throws NullPointerException if the given resolution is <code>null</code>.
+		*/
+		public void setMetadataResolution(final Resolution metadataResolution) {this.metadataResolution=checkInstance(metadataResolution, "Metadata resolution cannot be null.");}
+
+	/**Sets the resolution at the resource, content, and metadata level.
+	@param resolution How incompatibilities between resources will be resolved.
+	@throws NullPointerException if the given resolution is <code>null</code>.
+	*/
+	public void setResolution(final Resolution resolution)
+	{
+		setResolution(resolution);
+		setContentResolution(resolution);
+		setMetadataResolution(resolution);
+	}
+
 	/**Default constructor with backup settings.*/
 	public RepositorySynchronizer()
 	{
-		orphanSourceResolution=OrphanResolution.COPY;
-		orphanDestinationResolution=OrphanResolution.DELETE;
+		resourceResolution=Resolution.BACKUP;
 		contentResolution=Resolution.BACKUP;
 		metadataResolution=Resolution.BACKUP;
 	}
@@ -156,23 +166,22 @@ public class RepositorySynchronizer
 //Debug.trace("destination exists", destinationExists);
 		if(sourceExists!=destinationExists)	//if one resource exists and the other doesn't
 		{
-			final OrphanResolution orphanResolution;
+			final Resolution orphanResolution=getResourceResolution();
 			if(sourceExists)	//if the source resource exists but not the destination
 			{
-				orphanResolution=getOrphanSourceResolution();	//determine the resolution
-				resolveOrphan(orphanResolution, sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//perform the correct action when the source exists and the destination does not
+				Debug.info("Resolve source orphan:", orphanResolution, sourceResourceURI, destinationResourceURI);
 				if(!isTest())	//if this is not just a test
 				{
 					switch(orphanResolution)	//update the descriptions based upon the resolution
 					{
-						case MOVE:	//both move and copy result in a new output; move also removes the input
-							sourceExists=false;
-							sourceResourceDescription=null;
-						case COPY:
+						case BACKUP:
+						case SYNCHRONIZE:
+							sourceRepository.copyResource(sourceResourceURI, destinationRepository, destinationResourceURI);	//copy the source to the destination
 							destinationExists=true;
 							destinationResourceDescription=destinationRepository.getResourceDescription(destinationResourceURI);
 							break;
-						case DELETE:
+						case RESTORE:
+							sourceRepository.deleteResource(sourceResourceURI);	//delete the source
 							sourceExists=false;
 							sourceResourceDescription=null;
 							break;
@@ -185,22 +194,21 @@ public class RepositorySynchronizer
 			}
 			else	//if the source resource does not exist but the destination does
 			{
-				orphanResolution=getOrphanDestinationResolution();	//determine the resolution
-				resolveOrphan(orphanResolution, destinationRepository, destinationResourceURI, sourceRepository, sourceResourceURI);	//perform the correct action when the destination exists and the source does not
+				Debug.info("Resolve destination orphan:", orphanResolution, sourceResourceURI, destinationResourceURI);
 				if(!isTest())	//if this is not just a test
 				{
 					switch(orphanResolution)	//update the descriptions based upon the resolution
 					{
-						case MOVE:	//both move and copy result in a new output; move also removes the input
+						case BACKUP:
+						case SYNCHRONIZE:
+							destinationRepository.deleteResource(destinationResourceURI);	//delete the destination
 							destinationExists=false;
 							destinationResourceDescription=null;
-						case COPY:
-							sourceExists=true;
-							sourceResourceDescription=sourceRepository.getResourceDescription(sourceResourceURI); 
 							break;
-						case DELETE:
-							destinationExists=false;
-							destinationResourceDescription=null;
+						case RESTORE:
+							destinationRepository.copyResource(destinationResourceURI, sourceRepository, sourceResourceURI);	//copy the destination to the source
+							sourceExists=true;
+							sourceResourceDescription=sourceRepository.getResourceDescription(sourceResourceURI);
 							break;
 						case IGNORE:
 							break;
@@ -215,8 +223,9 @@ public class RepositorySynchronizer
 			final boolean isContentSynchronized=isContentSynchronized(sourceRepository, sourceResourceDescription, destinationRepository, destinationResourceDescription);	//see if the content of the two resources are synchronized
 			if(!isContentSynchronized)//if the source and destination are not synchronized
 			{
-				resolveContent(getContentResolution(), sourceRepository, sourceResourceDescription, destinationRepository, destinationResourceDescription);	//resolve the descrepancy between source and destination
-//Debug.trace("done resolving");
+				final Resolution resolution=getContentResolution();
+				Debug.info("Resolve content:", resolution, sourceResourceDescription.getURI(), destinationResourceDescription.getURI());
+				resolveContent(resolution, sourceRepository, sourceResourceDescription, destinationRepository, destinationResourceDescription);	//resolve the descrepancy between source and destination
 			}
 			final Resolution metadataResolution=getMetadataResolution();
 			resolveMetadata(metadataResolution, sourceRepository, sourceResourceDescription, destinationRepository, destinationResourceDescription);
@@ -293,38 +302,6 @@ public class RepositorySynchronizer
 		return true;	//the resources matched all our tests
 	}
 
-	/**Resolves an orphan situation.
-	@param resolution The action to perform.
-	@param orphanRepository The source repository in this context.
-	@param orphanResourceURI The source resource in this context.
-	@param otherRepository The destination repository in this context.
-	@param otherResourceURI The destination resource in this context.
-	@throws IOException if there is an I/O error while performing the action.
-	*/
-	protected void resolveOrphan(final OrphanResolution resolution, final Repository orphanRepository, final URI orphanResourceURI, final Repository otherRepository, final URI otherResourceURI) throws IOException
-	{
-		Debug.info("Resolve orphan:", resolution, orphanResourceURI, otherResourceURI);
-		if(!isTest())	//if this is not just a test
-		{
-			switch(resolution)	//see what action to take
-			{
-				case COPY:
-					orphanRepository.copyResource(orphanResourceURI, otherRepository, otherResourceURI);	//copy the source to the destination
-					break;
-				case MOVE:
-					orphanRepository.moveResource(orphanResourceURI, otherRepository, otherResourceURI);	//move the source to the destination
-					break;
-				case DELETE:
-					orphanRepository.deleteResource(orphanResourceURI);	//delete the source
-					break;
-				case IGNORE:
-					break;
-				default:
-					throw new AssertionError("Unrecognized resolution "+resolution);
-			}
-		}
-	}
-
 	/**Resolves a content descrepancy between a source and a destination resource.
 	If the resource dates are not available or are the same, the {@link Resolution#SYNCHRONIZE} resolution will have no effect.
 	Both resources must exist.
@@ -338,7 +315,6 @@ public class RepositorySynchronizer
 	*/
 	protected void resolveContent(Resolution resolution, final Repository sourceRepository, final URFResource sourceResourceDescription, final Repository destinationRepository, final URFResource destinationResourceDescription) throws IOException
 	{
-		Debug.info("Resolve content:", resolution, sourceResourceDescription.getURI(), destinationResourceDescription.getURI());
 		if(resolution==Resolution.IGNORE)	//if this situation should be ignored
 		{
 			return;	//don't do anything
