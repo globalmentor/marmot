@@ -26,6 +26,8 @@ import static com.globalmentor.util.CommandLineArguments.*;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.marmot.repository.RepositorySynchronizer.Resolution;
 import com.globalmentor.marmot.repository.file.FileRepository;
+import com.globalmentor.marmot.repository.file.NTFSFileRepository;
+import com.globalmentor.marmot.repository.webdav.SubversionWebDAVRepository;
 import com.globalmentor.marmot.repository.webdav.WebDAVRepository;
 import com.globalmentor.net.URIs;
 import com.globalmentor.net.http.*;
@@ -50,35 +52,58 @@ public class MarmotMirror extends Application
 	/**The version of the application.*/
 	public final static String VERSION="Alpha Version 0.1 build 2008-10-11";
 
-		//parameters
-	/**The command-line parameter for the source repository.*/
-	public final static String SOURCE_REPOSITORY_PARAMETER="sourcerepository";
-	/**The command-line parameter for the source repository username.*/
-	public final static String SOURCE_USERNAME_PARAMETER="sourceusername";
-	/**The command-line parameter for the source repository username.*/
-	public final static String SOURCE_PASSWORD_PARAMETER="sourcepassword";
-	/**The command-line parameter for the destination repository.*/
-	public final static String DESTINATION_REPOSITORY_PARAMETER="destinationrepository";
-	/**The command-line parameter for the destination repository username.*/
-	public final static String DESTINATION_USERNAME_PARAMETER="destinationusername";
-	/**The command-line parameter for the destination repository username.*/
-	public final static String DESTINATION_PASSWORD_PARAMETER="destinationpassword";
+	/**Application command-line parameters.*/
+	public enum Parameter
+	{
+		/**The source repository.*/
+		sourcerepository,
+		/**The source repository type.*/
+		sourcerepositorytype,
+		/**The source resource.*/
+		source,
+		/**The source repository username.*/
+		sourceusername,
+		/**The source repository username.*/
+		sourcepassword,
+		/**The destination repository.*/
+		destinationrepository,
+		/**The destination repository type.*/
+		destinationrepositorytype,
+		/**The destination resource.*/
+		destination,
+		/**The destination repository username.*/
+		destinationusername,
+		/**The destination repository username.*/
+		destinationpassword,
+		/**Test mode.*/
+		test,
+		/**Verbose output.*/
+		verbose,
+		/**Turns on HTTP debugging; requires debug mode on.*/
+		debughttp,
+		/**The resolution mode.*/
+		resolution,
+		/**The resource resolution mode.*/
+		resourceresolution,
+		/**The content resolution mode.*/
+		contentresolution,
+		/**The metadata resolution mode.*/
+		metadataresolution
+	}
 
-	/**The command-line parameter for test mode.*/
-	public final static String TEST_PARAMETER="test";
-	/**The command-line parameter for verbose.*/
-	public final static String VERBOSE_PARAMETER="verbose";
-	/**The command-line parameter for debugging HTTP; requires debug mode on.*/
-	public final static String DEBUGHTTP_PARAMETER="debughttp";
-	/**The command-line parameter for the resolution mode.*/
-	public final static String RESOLUTION_PARAMETER="resolution";
-	/**The command-line parameter for the resource resolution mode.*/
-	public final static String RESOURCE_RESOLUTION_PARAMETER="resourceresolution";
-	/**The command-line parameter for the content resolution mode.*/
-	public final static String CONTENT_RESOLUTION_PARAMETER="contentresolution";
-	/**The command-line parameter for the metadata resolution mode.*/
-	public final static String METADATA_RESOLUTION_PARAMETER="metadataresolution";
-
+	/**The types of repository available.*/
+	public enum RepositoryType
+	{
+		/**A file system-based repository; {@link FileRepository}.*/
+		file,
+		/**An NTFS-based repository; {@link NTFSFileRepository}.*/
+		ntfs,
+		/**A WebDAV-based repository; {@link WebDAVRepository}.*/
+		webdav,
+		/**A Subversion repository over WebDAV; {@link SubversionWebDAVRepository}.*/
+		svn;
+	}
+	
 	/**Argument constructor.
 	@param args The command line arguments.
 	*/
@@ -86,7 +111,7 @@ public class MarmotMirror extends Application
 	{
 		super(MARMOT_MIRROR_URI, args);	//construct the parent class
 		DCMI.setTitle(this, TITLE); //set the application name
-//TODO convert to URF		RDFVersion.addVersion(this, VERSION);  //set the application version
+//TODO set version somehow
 		DCMI.setRights(this, COPYRIGHT); //set the application copyright
 	}
 
@@ -96,37 +121,48 @@ public class MarmotMirror extends Application
 	public int main()
 	{
 		final String[] args=getArgs();	//get the arguments
-		final String sourceResourceString=getParameter(args, "source");	//get the source parameter
-		final String destinationResourceString=getParameter(args, "destination");	//get the destination parameter
+		final String sourceResourceString=getParameter(args, Parameter.source.name());	//get the source parameter
+		final String destinationResourceString=getParameter(args, Parameter.destination.name());	//get the destination parameter
 		if(sourceResourceString==null || destinationResourceString==null)	//if the source and/or destination parameter is missing
 		{
 			System.out.println(TITLE);
 			System.out.println(VERSION);
 			System.out.println(COPYRIGHT);
-			System.out.println("Usage: MarmotMirror [-sourcerepository <source repository URI>] [-sourceusername <source username>] [-sourcepassword <source password>] -source <source URI> " +
-					"[-destinationrepository <destination repository URI>] [-destinationusername <destination username>] [-destinationpassword <destination password>] -destination <destination> " +
+			System.out.println("Usage: MarmotMirror [-sourcerepository <repository URI>] [-sourcerepositorytype <repository type>] [-sourceusername <username>] [-sourcepassword <password>] -source <source URI> " +
+					"[-destinationrepository <repository URI>] [-sourcerepositorytype <repository type>] [-destinationusername <username>] [-destinationpassword <password>] -destination <destination> " +
 					"[-resolution] [-resourceresolution] [-contentresolution] [-metadataresolution] [-test] [-verbose] [-debughttp]");
 			System.out.println("");
 			System.out.println("Synchronization occurs on three levels: individual resources (i.e. orphans), metadata, and content, each of which can have a different resolution specified.");
 			System.out.println("");
-			System.out.println("-"+SOURCE_PASSWORD_PARAMETER+": The source repository password, if appropriate.");
-			System.out.println("-"+DESTINATION_USERNAME_PARAMETER+": The destination repository username, if appropriate.");
-			System.out.println("-"+DESTINATION_PASSWORD_PARAMETER+": The destination repository password, if appropriate.");
-			System.out.println("-"+RESOLUTION_PARAMETER+": The default resolution for encountered conditions; defaults to \"backup\".");
-			System.out.println("  backup: The source will overwrite the destination; the destination is intended to be a mirror of the source.");
-			System.out.println("  restore: The destination will overwrite the source; the source is intended to be a mirror of the destination.");
-			System.out.println("  synchronize: Newer information will overwrite older information; the source and destination are intended to be updated with the latest changes from each; for orphan reso");
-			System.out.println("-"+RESOURCE_RESOLUTION_PARAMETER+": How an orphan resource situation (i.e. one resource exists and the other does not) will be resolved.");
-			System.out.println("-"+CONTENT_RESOLUTION_PARAMETER+": How a content discrepancy will be resolved.");
-			System.out.println("-"+METADATA_RESOLUTION_PARAMETER+": How a metadata discrepancy will be resolved.");
-			System.out.println("-"+TEST_PARAMETER+": If specified, no changed will be made.");
-			System.out.println("-"+VERBOSE_PARAMETER+": If specified, debug will be turned on to a report level of "+Debug.ReportLevel.INFO+".");
-			System.out.println("-"+DEBUGHTTP_PARAMETER+": Whether HTTP communication is logged; requires debug to be turned on.");
+			System.out.println("Available resource types:");
+			System.out.println("");
+			System.out.println("");
+			System.out.println("-"+Parameter.sourcerepository+": The source repository.");
+			System.out.println("-"+Parameter.sourcerepositorytype+": The type of source repository.");
+			System.out.println("-"+Parameter.source+": The source resource to synchronize.");
+			System.out.println("-"+Parameter.sourceusername+": The source repository username, if appropriate.");
+			System.out.println("-"+Parameter.sourcepassword+": The source repository password, if appropriate.");
+			System.out.println("-"+Parameter.destinationrepository+": The destination repository.");
+			System.out.println("-"+Parameter.destinationrepositorytype+": The type of destination repository.");
+			System.out.println("-"+Parameter.destination+": The source destination to synchronize.");
+			System.out.println("-"+Parameter.destinationusername+": The destination repository username, if appropriate.");
+			System.out.println("-"+Parameter.destinationpassword+": The destination repository password, if appropriate.");
+			System.out.println("-"+Parameter.resolution+": The default resolution for encountered conditions; defaults to \"backup\".");
+			System.out.println("  "+RepositorySynchronizer.Resolution.BACKUP.name().toLowerCase()+": The source will overwrite the destination; the destination is intended to be a mirror of the source.");
+			System.out.println("  "+RepositorySynchronizer.Resolution.RESTORE.name().toLowerCase()+": The destination will overwrite the source; the source is intended to be a mirror of the destination.");
+			System.out.println("  "+RepositorySynchronizer.Resolution.SYNCHRONIZE.name().toLowerCase()+": Newer information will overwrite older information; the source and destination are intended to be updated with the latest changes from each, although for orphan resources this will be consdered the same as "+RepositorySynchronizer.Resolution.BACKUP.name().toLowerCase()+".");
+			System.out.println("  "+RepositorySynchronizer.Resolution.IGNORE.name().toLowerCase()+": No action will occur.");
+			System.out.println("-"+Parameter.resourceresolution+": How an orphan resource situation (i.e. one resource exists and the other does not) will be resolved.");
+			System.out.println("-"+Parameter.contentresolution+": How a content discrepancy will be resolved.");
+			System.out.println("-"+Parameter.metadataresolution+": How a metadata discrepancy will be resolved.");
+			System.out.println("-"+Parameter.test+": If specified, no changed will be made.");
+			System.out.println("-"+Parameter.verbose+": If specified, debug will be turned on to a report level of "+Debug.ReportLevel.INFO+".");
+			System.out.println("-"+Parameter.debughttp+": Whether HTTP communication is logged; requires debug to be turned on.");
 			return 0;
 		}
-		if(hasParameter(args, VERBOSE_PARAMETER))	//if verbose is turned on
+		if(hasParameter(args, Parameter.verbose.name()))	//if verbose is turned on
 		{
-			try	//TODO improve
+			try
 			{
 				Debug.setDebug(true);	//turn on debug
 				Debug.setMinimumReportLevel(Debug.ReportLevel.INFO);
@@ -136,40 +172,42 @@ public class MarmotMirror extends Application
 				throw new AssertionError(ioException);
 			}
 		}
-		final String sourceRepositoryString=getParameter(args, "sourcerepository");	//get the source repository parameter
+		final String sourceRepositoryString=getParameter(args, Parameter.sourcerepository.name());	//get the source repository parameter
 		final URI sourceResourceURI=guessAbsoluteURI(sourceResourceString);	//get the source URI
 		final URI sourceRepositoryURI=sourceRepositoryString!=null ? guessAbsoluteURI(sourceRepositoryString) : getParentURI(sourceResourceURI);	//if the source repository is not specified, use the parent URI
-		final String destinationRepositoryString=getParameter(args, "destinationrepository");	//get the destination repository parameter
+		final String destinationRepositoryString=getParameter(args, Parameter.destinationrepository.name());	//get the destination repository parameter
 		final URI destinationResourceURI=guessAbsoluteURI(destinationResourceString);	//get the destination URI
 		final URI destinationRepositoryURI=destinationRepositoryString!=null ? guessAbsoluteURI(destinationRepositoryString) : getParentURI(destinationResourceURI);	//if the destination repository is not specified, use the parent URI
-		HTTPClient.getInstance().setLogged(Debug.isDebug() && hasParameter(args, DEBUGHTTP_PARAMETER));	//if debugging is turned on, tell the HTTP client to log its data TODO generalize
+		HTTPClient.getInstance().setLogged(Debug.isDebug() && hasParameter(args, Parameter.debughttp.name()));	//if debugging is turned on, tell the HTTP client to log its data TODO generalize
 		Debug.info("Mirroring from", sourceResourceURI, "to", destinationResourceURI+".");
-		final Repository sourceRepository=createRepository(sourceRepositoryURI, getParameter(args, SOURCE_USERNAME_PARAMETER), getParameter(args, SOURCE_PASSWORD_PARAMETER));	//create the correct type of repository for the source
-		final Repository destinationRepository=createRepository(destinationRepositoryURI, getParameter(args, DESTINATION_USERNAME_PARAMETER), getParameter(args, DESTINATION_PASSWORD_PARAMETER));	//create the correct type of repository for the destination
+		final String sourceRepositoryTypeString=getParameter(args, Parameter.sourcerepositorytype.name());
+		final Repository sourceRepository=createRepository(sourceRepositoryTypeString!=null ? RepositoryType.valueOf(sourceRepositoryTypeString) : null, sourceRepositoryURI, getParameter(args, Parameter.sourceusername.name()), getParameter(args, Parameter.sourcepassword.name()));	//create the correct type of repository for the source
+		final String destinationRepositoryTypeString=getParameter(args, Parameter.destinationrepositorytype.name());
+		final Repository destinationRepository=createRepository(destinationRepositoryTypeString!=null ? RepositoryType.valueOf(destinationRepositoryTypeString) : null, destinationRepositoryURI, getParameter(args, Parameter.destinationusername.name()), getParameter(args, Parameter.destinationpassword.name()));	//create the correct type of repository for the destination
 		try
 		{
 			final RepositorySynchronizer repositorySynchronizer=new RepositorySynchronizer();	//create a new synchronizer
-			final String resolutionString=getParameter(args, RESOLUTION_PARAMETER);	//set the resolutions if provided
+			final String resolutionString=getParameter(args, Parameter.resolution.name());	//set the resolutions if provided
 			if(resolutionString!=null)
 			{
 				repositorySynchronizer.setResolution(Resolution.valueOf(resolutionString.toUpperCase()));
 			}
-			final String resourceResolutionString=getParameter(args, RESOURCE_RESOLUTION_PARAMETER);
+			final String resourceResolutionString=getParameter(args, Parameter.resourceresolution.name());
 			if(resourceResolutionString!=null)
 			{
 				repositorySynchronizer.setResourceResolution(Resolution.valueOf(resourceResolutionString.toUpperCase()));
 			}
-			final String contentResolutionString=getParameter(args, CONTENT_RESOLUTION_PARAMETER);
+			final String contentResolutionString=getParameter(args, Parameter.contentresolution.name());
 			if(contentResolutionString!=null)
 			{
 				repositorySynchronizer.setContentResolution(Resolution.valueOf(contentResolutionString.toUpperCase()));
 			}
-			final String metadataResolutionString=getParameter(args, METADATA_RESOLUTION_PARAMETER);
+			final String metadataResolutionString=getParameter(args, Parameter.metadataresolution.name());
 			if(metadataResolutionString!=null)
 			{
 				repositorySynchronizer.setMetadataResolution(Resolution.valueOf(metadataResolutionString.toUpperCase()));
 			}
-			repositorySynchronizer.setTest(hasParameter(args, TEST_PARAMETER));	//specify whether this is a test run
+			repositorySynchronizer.setTest(hasParameter(args, Parameter.test.name()));	//specify whether this is a test run
 			repositorySynchronizer.synchronize(sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//synchronize the resources
 		}
 		catch(final IOException ioException)	//if there is an error
@@ -191,41 +229,71 @@ public class MarmotMirror extends Application
 	}
 
 	/**Create the correct type of respository for the given repository URI.
-	<p>The following types of repository schemes are recognized:</p>
-	<ul>
-		<li>{@value HTTP#HTTP_URI_SCHEME}</li>
-		<li>{@value HTTP#HTTPS_SCHEME}</li>
-		<li>{@value URIs#FILE_SCHEME}</li>
-	</ul>
+	<p>If no repository type is specified, a type is guessed.
+	Tthe following repository schemes are recognized:</p>
+	<dl>
+		<dt>{@value HTTP#HTTP_URI_SCHEME}</dt> <dd>{@link RepositoryType#webdav}</dd>
+		<dt>{@value HTTP#HTTPS_SCHEME}</dt> <dd>{@link RepositoryType#webdav}</dd>
+		<dt>{@value URIs#FILE_SCHEME}</dt> <dd>{@link RepositoryType#file}</dd>
+	</dl>
+	@param repositoryType The type of repository to create, or <code>null</code> if the repository type should be guessed.
 	@param repositoryURI The URI of the repository to create.
 	@param username The username of the repository, or <code>null</code> if no username is appropriate.
 	@param password The password of the repository, or <code>null</code> if no password is appropriate.
 	@return A repository for the given URI.
-	@exception IllegalArgumentException if the type of the given repository URI is not recognized.
+	@exception IllegalArgumentException if the type of the given repository URI cannot be determined.
 	*/
-	protected static Repository createRepository(final URI repositoryURI, final String username, final String password)
+	protected static Repository createRepository(RepositoryType repositoryType, final URI repositoryURI, final String username, final String password)
 	{
-		if(HTTP.isHTTPURI(repositoryURI))	//if this is an HTTP repository URI
+		if(repositoryType==null)	//if no repository type was designated
 		{
-			final WebDAVRepository webDavRepository=new WebDAVRepository(repositoryURI);	//create a WebDAV-based repository
-			if(username!=null)	//set the username if there is one
+			if(HTTP.isHTTPURI(repositoryURI))	//if this is an HTTP repository URI
 			{
-				webDavRepository.setUsername(username);
+				repositoryType=RepositoryType.webdav;	//assume a WebDAV repository
 			}
-			if(password!=null)	//set the password if there is one
+			else if(FILE_SCHEME.equals(repositoryURI.getScheme()))	//if this is a file repository URI
 			{
-				webDavRepository.setPassword(password.toCharArray());
+				repositoryType=RepositoryType.file;	//assume a file repository
 			}
-			return webDavRepository;
+			else	//if we don't recognize the repository type
+			{
+				throw new IllegalArgumentException("Unrecognized repository type: "+repositoryURI);
+			}
 		}
-		else if(FILE_SCHEME.equals(repositoryURI.getScheme()))	//if this is a file repository URI
+		switch(repositoryType)	//create the correct type of repository
 		{
-			return new FileRepository(repositoryURI);	//create a file-based repository
+			case file: 
+				return new FileRepository(repositoryURI);	//create a file-based repository
+			case ntfs:
+				return new NTFSFileRepository(repositoryURI);	//create a file-based repository
+			case webdav:
+			{
+				final WebDAVRepository webDavRepository=new WebDAVRepository(repositoryURI);	//create a WebDAV-based repository
+				if(username!=null)	//set the username if there is one
+				{
+					webDavRepository.setUsername(username);
+				}
+				if(password!=null)	//set the password if there is one
+				{
+					webDavRepository.setPassword(password.toCharArray());
+				}
+				return webDavRepository;
+			}
+			case svn:
+			{
+				final SubversionWebDAVRepository webDavRepository=new SubversionWebDAVRepository(repositoryURI);	//create a Subversion-based repository
+				if(username!=null)	//set the username if there is one
+				{
+					webDavRepository.setUsername(username);
+				}
+				if(password!=null)	//set the password if there is one
+				{
+					webDavRepository.setPassword(password.toCharArray());
+				}
+				return webDavRepository;
+			}
+			default:
+				throw new AssertionError("Unrecognized repository type: "+repositoryType);
 		}
-		else	//if we don't recognize the repository type
-		{
-			throw new IllegalArgumentException("Unrecognized repository type: "+repositoryURI);
-		}
-		
 	}
 }
