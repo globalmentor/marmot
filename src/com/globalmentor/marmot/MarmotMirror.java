@@ -60,7 +60,7 @@ public class MarmotMirror extends Application
 		/**The source repository type.*/
 		sourcerepositorytype,
 		/**The source resource.*/
-		source,
+		sourceresource,
 		/**The source repository username.*/
 		sourceusername,
 		/**The source repository username.*/
@@ -70,11 +70,13 @@ public class MarmotMirror extends Application
 		/**The destination repository type.*/
 		destinationrepositorytype,
 		/**The destination resource.*/
-		destination,
+		destinationresource,
 		/**The destination repository username.*/
 		destinationusername,
 		/**The destination repository username.*/
 		destinationpassword,
+		/**A metadata property to ignore.*/
+		ignoreproperty,
 		/**Test mode.*/
 		test,
 		/**Verbose output.*/
@@ -94,11 +96,11 @@ public class MarmotMirror extends Application
 	/**The types of repository available.*/
 	public enum RepositoryType
 	{
-		/**A file system-based repository; {@link FileRepository}.*/
+		/**A file system repository; {@link FileRepository}.*/
 		file,
-		/**An NTFS-based repository; {@link NTFSFileRepository}.*/
+		/**A file system repository using NTFS streams for metadata.; {@link NTFSFileRepository}.*/
 		ntfs,
-		/**A WebDAV-based repository; {@link WebDAVRepository}.*/
+		/**A WebDAV repository; {@link WebDAVRepository}.*/
 		webdav,
 		/**A Subversion repository over WebDAV; {@link SubversionWebDAVRepository}.*/
 		svn;
@@ -121,30 +123,34 @@ public class MarmotMirror extends Application
 	public int main()
 	{
 		final String[] args=getArgs();	//get the arguments
-		final String sourceResourceString=getParameter(args, Parameter.source.name());	//get the source parameter
-		final String destinationResourceString=getParameter(args, Parameter.destination.name());	//get the destination parameter
-		if(sourceResourceString==null || destinationResourceString==null)	//if the source and/or destination parameter is missing
+		final String sourceRepositoryString=getParameter(args, Parameter.sourcerepository.name());	//get the source repository parameter
+		final String destinationRepositoryString=getParameter(args, Parameter.destinationrepository.name());	//get the destination repository parameter
+		if(sourceRepositoryString==null || destinationRepositoryString==null)	//if the source and/or destination repository parameter is missing
 		{
 			System.out.println(TITLE);
 			System.out.println(VERSION);
 			System.out.println(COPYRIGHT);
-			System.out.println("Usage: MarmotMirror [-sourcerepository <repository URI>] [-sourcerepositorytype <repository type>] [-sourceusername <username>] [-sourcepassword <password>] -source <source URI> " +
-					"[-destinationrepository <repository URI>] [-sourcerepositorytype <repository type>] [-destinationusername <username>] [-destinationpassword <password>] -destination <destination> " +
+			System.out.println("Usage: MarmotMirror -sourcerepository <file|URI> [-sourcerepositorytype <repository type>] [-sourceusername <username>] [-sourcepassword <password>] [-sourceresource <file|URI>] " +
+					"-destinationrepository <URI> [-sourcerepositorytype <repository type>] [-destinationusername <username>] [-destinationpassword <password>] [-destinationresource <file|URI>] " +
+					"[-ignoreproperty <URI>]* " +
 					"[-resolution] [-resourceresolution] [-contentresolution] [-metadataresolution] [-test] [-verbose] [-debughttp]");
 			System.out.println("");
 			System.out.println("Synchronization occurs on three levels: individual resources (i.e. orphans), metadata, and content, each of which can have a different resolution specified.");
 			System.out.println("");
-			System.out.println("Available resource types:");
-			System.out.println("");
+			System.out.println("Available repository types:");
+			System.out.println("  "+RepositoryType.file.name().toLowerCase()+": A file system repository.");
+			System.out.println("  "+RepositoryType.ntfs.name().toLowerCase()+": A file system repository using NTFS streams for metadata.");
+			System.out.println("  "+RepositoryType.webdav.name().toLowerCase()+": A WebDAV repository.");
+			System.out.println("  "+RepositoryType.svn.name().toLowerCase()+": A Subversion repository over WebDAV..");
 			System.out.println("");
 			System.out.println("-"+Parameter.sourcerepository+": The source repository.");
 			System.out.println("-"+Parameter.sourcerepositorytype+": The type of source repository.");
-			System.out.println("-"+Parameter.source+": The source resource to synchronize.");
+			System.out.println("-"+Parameter.sourceresource+": The source resource to synchronize; defaults to the source repository root.");
 			System.out.println("-"+Parameter.sourceusername+": The source repository username, if appropriate.");
 			System.out.println("-"+Parameter.sourcepassword+": The source repository password, if appropriate.");
 			System.out.println("-"+Parameter.destinationrepository+": The destination repository.");
 			System.out.println("-"+Parameter.destinationrepositorytype+": The type of destination repository.");
-			System.out.println("-"+Parameter.destination+": The source destination to synchronize.");
+			System.out.println("-"+Parameter.destinationresource+": The destination resource to synchronize; defaults to the destination repository root.");
 			System.out.println("-"+Parameter.destinationusername+": The destination repository username, if appropriate.");
 			System.out.println("-"+Parameter.destinationpassword+": The destination repository password, if appropriate.");
 			System.out.println("-"+Parameter.resolution+": The default resolution for encountered conditions; defaults to \"backup\".");
@@ -155,6 +161,7 @@ public class MarmotMirror extends Application
 			System.out.println("-"+Parameter.resourceresolution+": How an orphan resource situation (i.e. one resource exists and the other does not) will be resolved.");
 			System.out.println("-"+Parameter.contentresolution+": How a content discrepancy will be resolved.");
 			System.out.println("-"+Parameter.metadataresolution+": How a metadata discrepancy will be resolved.");
+			System.out.println("-"+Parameter.ignoreproperty+": A metadata property to ignore.");
 			System.out.println("-"+Parameter.test+": If specified, no changed will be made.");
 			System.out.println("-"+Parameter.verbose+": If specified, debug will be turned on to a report level of "+Debug.ReportLevel.INFO+".");
 			System.out.println("-"+Parameter.debughttp+": Whether HTTP communication is logged; requires debug to be turned on.");
@@ -172,12 +179,12 @@ public class MarmotMirror extends Application
 				throw new AssertionError(ioException);
 			}
 		}
-		final String sourceRepositoryString=getParameter(args, Parameter.sourcerepository.name());	//get the source repository parameter
-		final URI sourceResourceURI=guessAbsoluteURI(sourceResourceString);	//get the source URI
-		final URI sourceRepositoryURI=sourceRepositoryString!=null ? guessAbsoluteURI(sourceRepositoryString) : getParentURI(sourceResourceURI);	//if the source repository is not specified, use the parent URI
-		final String destinationRepositoryString=getParameter(args, Parameter.destinationrepository.name());	//get the destination repository parameter
-		final URI destinationResourceURI=guessAbsoluteURI(destinationResourceString);	//get the destination URI
-		final URI destinationRepositoryURI=destinationRepositoryString!=null ? guessAbsoluteURI(destinationRepositoryString) : getParentURI(destinationResourceURI);	//if the destination repository is not specified, use the parent URI
+		final URI sourceRepositoryURI=guessAbsoluteURI(sourceRepositoryString);	//get the source repository URI
+		final String sourceResourceString=getParameter(args, Parameter.sourceresource.name());	//get the source resource parameter
+		final URI sourceResourceURI=sourceResourceString!=null ? guessAbsoluteURI(sourceResourceString) : sourceRepositoryURI;	//if the source resource is not specified, use the repository URI
+		final URI destinationRepositoryURI=guessAbsoluteURI(destinationRepositoryString);	//get the destination repository URI
+		final String destinationResourceString=getParameter(args, Parameter.destinationresource.name());	//get the destination resource parameter
+		final URI destinationResourceURI=destinationResourceString!=null ? guessAbsoluteURI(destinationResourceString) : destinationRepositoryURI;	//if the destination resource is not specified, use the repository URI
 		HTTPClient.getInstance().setLogged(Debug.isDebug() && hasParameter(args, Parameter.debughttp.name()));	//if debugging is turned on, tell the HTTP client to log its data TODO generalize
 		Debug.info("Mirroring from", sourceResourceURI, "to", destinationResourceURI+".");
 		final String sourceRepositoryTypeString=getParameter(args, Parameter.sourcerepositorytype.name());
@@ -206,6 +213,10 @@ public class MarmotMirror extends Application
 			if(metadataResolutionString!=null)
 			{
 				repositorySynchronizer.setMetadataResolution(Resolution.valueOf(metadataResolutionString.toUpperCase()));
+			}
+			for(final String ignorePropertyURIString:getParameters(args, Parameter.ignoreproperty.name()))	//look at all the properties to ignore
+			{
+				repositorySynchronizer.addIgnorePropertyURI(URI.create(ignorePropertyURIString));	//create a URI from the parameter and add this to the properties to ignore
 			}
 			repositorySynchronizer.setTest(hasParameter(args, Parameter.test.name()));	//specify whether this is a test run
 			repositorySynchronizer.synchronize(sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//synchronize the resources

@@ -103,6 +103,17 @@ public class RepositorySynchronizer
 		*/
 		public void setMetadataResolution(final Resolution metadataResolution) {this.metadataResolution=checkInstance(metadataResolution, "Metadata resolution cannot be null.");}
 
+	/**The set of metadata property URIs to ignore when resolving descrepancies.*/
+	private final Set<URI> ignorePropertyURIs=new HashSet<URI>();
+
+		/**Adds a metadata property to be ignored when resolving descrepancies.
+		@param propertyURI The URI of the metadata property to ignore.
+		*/
+		public void addIgnorePropertyURI(final URI propertyURI)
+		{
+			ignorePropertyURIs.add(propertyURI);
+		}
+
 	/**Sets the resolution at the resource, content, and metadata level.
 	@param resolution How incompatibilities between resources will be resolved.
 	@throws NullPointerException if the given resolution is <code>null</code>.
@@ -449,7 +460,7 @@ public class RepositorySynchronizer
 			if(!outputResourceDescription.hasProperty(inputProperty))	//if this input property is not in the output
 			{
 				final URI inputPropertyURI=inputProperty.getPropertyURI();
-				if(!inputRepository.isLivePropertyURI(inputPropertyURI))	//ignore live properties
+				if(!ignorePropertyURIs.contains(inputPropertyURI) && !inputRepository.isLivePropertyURI(inputPropertyURI))	//ignore specified properties and live properties
 				{
 					if(isCollection && contentLength==0)	//ignore content created and content modified for zero-length collections
 					{
@@ -469,7 +480,7 @@ public class RepositorySynchronizer
 			final URI outputPropertyURI=outputProperty.getPropertyURI();
 			if(!inputResourceDescription.hasProperty(outputPropertyURI))	//if this output property URI is not in the input with any value (if it has some value at all, we've already made to make them the same)
 			{
-				if(!outputRepository.isLivePropertyURI(outputPropertyURI))	//ignore live properties
+				if(!ignorePropertyURIs.contains(outputPropertyURI) && !outputRepository.isLivePropertyURI(outputPropertyURI))	//ignore specified properties and live properties
 				{
 					outputPropertyURIRemovals.add(outputPropertyURI);	//we'll remove all of these properties in the output; if there were any replacements they will have already been added 
 					Debug.info("Resolve metadata:", resolution, outputResourceDescription.getURI(), "remove", outputProperty.getPropertyURI());
