@@ -21,6 +21,7 @@ import java.net.URI;
 import java.util.List;
 
 import static com.globalmentor.java.Characters.*;
+import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.util.CommandLineArguments.*;
 
@@ -57,54 +58,58 @@ public class MarmotMirror extends Application
 	public enum Parameter
 	{
 		/**The source repository.*/
-		sourcerepository,
+		SOURCE_REPOSITORY,
 		/**The source repository type.*/
-		sourcerepositorytype,
+		SOURCE_REPOSITORY_TYPE,
 		/**The source resource.*/
-		sourceresource,
+		SOURCE_RESOURCE,
+		/**A source resource to ignore.*/
+//		ignoresourceresource,
 		/**The source repository username.*/
-		sourceusername,
+		SOURCE_USERNAME,
 		/**The source repository username.*/
-		sourcepassword,
+		SOURCE_PASSWORD,
 		/**The destination repository.*/
-		destinationrepository,
+		DESTINATION_REPOSITORY,
 		/**The destination repository type.*/
-		destinationrepositorytype,
+		DESTINATION_REPOSITORY_TYPE,
 		/**The destination resource.*/
-		destinationresource,
+		DESTINATION_RESOURCE,
+		/**A source resource to ignore.*/
+//		ignoredestinationresource,
 		/**The destination repository username.*/
-		destinationusername,
+		DESTINATION_USERNAME,
 		/**The destination repository username.*/
-		destinationpassword,
+		DESTINATION_PASSWORD,
 		/**A metadata property to ignore.*/
-		ignoreproperty,
+		IGNORE_PROPERTY,
 		/**Test mode.*/
-		test,
+		TEST,
 		/**Verbose output.*/
-		verbose,
+		VERBOSE,
 		/**Turns on HTTP debugging; requires debug mode on.*/
-		debughttp,
+		DEBUG_HTTP,
 		/**The resolution mode.*/
-		resolution,
+		RESOLUTION,
 		/**The resource resolution mode.*/
-		resourceresolution,
+		RESOURCE_RESOLUTION,
 		/**The content resolution mode.*/
-		contentresolution,
+		CONTENT_RESOLUTION,
 		/**The metadata resolution mode.*/
-		metadataresolution
+		METADATA_RESOLUTION
 	}
 
 	/**The types of repository available.*/
 	public enum RepositoryType
 	{
 		/**A file system repository; {@link FileRepository}.*/
-		file,
+		FILE,
 		/**A file system repository using NTFS streams for metadata.; {@link NTFSFileRepository}.*/
-		ntfs,
+		NTFS,
 		/**A WebDAV repository; {@link WebDAVRepository}.*/
-		webdav,
+		WEBDAV,
 		/**A Subversion repository over WebDAV; {@link SubversionWebDAVRepository}.*/
-		svn;
+		SVN;
 	}
 	
 	/**Argument constructor.
@@ -124,8 +129,8 @@ public class MarmotMirror extends Application
 	public int main()
 	{
 		final String[] args=getArgs();	//get the arguments
-		final String sourceRepositoryString=getParameter(args, Parameter.sourcerepository.name());	//get the source repository parameter
-		final String destinationRepositoryString=getParameter(args, Parameter.destinationrepository.name());	//get the destination repository parameter
+		final String sourceRepositoryString=getParameter(args, getSerializationName(Parameter.SOURCE_REPOSITORY));	//get the source repository parameter
+		final String destinationRepositoryString=getParameter(args, getSerializationName(Parameter.DESTINATION_REPOSITORY));	//get the destination repository parameter
 		if(sourceRepositoryString==null || destinationRepositoryString==null)	//if the source and/or destination repository parameter is missing
 		{
 			System.out.println(TITLE);
@@ -139,38 +144,38 @@ public class MarmotMirror extends Application
 			System.out.println("Synchronization occurs on three levels: individual resources (i.e. orphans), metadata, and content, each of which can have a different resolution specified.");
 			System.out.println("");
 			System.out.println("Available repository types:");
-			System.out.println("  "+RepositoryType.file.name().toLowerCase()+": A file system repository.");
-			System.out.println("  "+RepositoryType.ntfs.name().toLowerCase()+": A file system repository using NTFS streams for metadata.");
-			System.out.println("  "+RepositoryType.webdav.name().toLowerCase()+": A WebDAV repository.");
-			System.out.println("  "+RepositoryType.svn.name().toLowerCase()+": A Subversion repository over WebDAV..");
+			System.out.println("  "+getSerializationName(RepositoryType.FILE)+": A file system repository.");
+			System.out.println("  "+getSerializationName(RepositoryType.NTFS)+": A file system repository using NTFS streams for metadata.");
+			System.out.println("  "+getSerializationName(RepositoryType.WEBDAV)+": A WebDAV repository.");
+			System.out.println("  "+getSerializationName(RepositoryType.SVN)+": A Subversion repository over WebDAV..");
 			System.out.println("");
-			System.out.println("-"+Parameter.sourcerepository+": The source repository.");
-			System.out.println("-"+Parameter.sourcerepositorytype+": The type of source repository.");
-			System.out.println("-"+Parameter.sourceresource+": The source resource to synchronize; defaults to the source repository root.");
-			System.out.println("-"+Parameter.sourceusername+": The source repository username, if appropriate.");
-			System.out.println("-"+Parameter.sourcepassword+": The source repository password, if appropriate.");
-			System.out.println("-"+Parameter.destinationrepository+": The destination repository.");
-			System.out.println("-"+Parameter.destinationrepositorytype+": The type of destination repository.");
-			System.out.println("-"+Parameter.destinationresource+": The destination resource to synchronize; defaults to the destination repository root.");
-			System.out.println("-"+Parameter.destinationusername+": The destination repository username, if appropriate.");
-			System.out.println("-"+Parameter.destinationpassword+": The destination repository password, if appropriate.");
-			System.out.println("-"+Parameter.resolution+": The default resolution for encountered conditions; defaults to \"backup\".");
-			System.out.println("  "+RepositorySynchronizer.Resolution.BACKUP.name().toLowerCase()+": The source will overwrite the destination; the destination is intended to be a mirror of the source.");
-			System.out.println("  "+RepositorySynchronizer.Resolution.RESTORE.name().toLowerCase()+": The destination will overwrite the source; the source is intended to be a mirror of the destination.");
-			System.out.println("  "+RepositorySynchronizer.Resolution.PRODUCE.name().toLowerCase()+": The source will overwrite the destination, but missing source information will not cause destination information to be removed.");
-			System.out.println("  "+RepositorySynchronizer.Resolution.CONSUME.name().toLowerCase()+": The destination will overwrite the source; but missing destination information will not cause source information to be removed.");
-			System.out.println("  "+RepositorySynchronizer.Resolution.SYNCHRONIZE.name().toLowerCase()+": Newer information will overwrite older information; the source and destination are intended to be updated with the latest changes from each, although for orphan resources this will be consdered the same as "+RepositorySynchronizer.Resolution.BACKUP.name().toLowerCase()+".");
-			System.out.println("  "+RepositorySynchronizer.Resolution.IGNORE.name().toLowerCase()+": No action will occur.");
-			System.out.println("-"+Parameter.resourceresolution+": How an orphan resource situation (i.e. one resource exists and the other does not) will be resolved.");
-			System.out.println("-"+Parameter.contentresolution+": How a content discrepancy will be resolved.");
-			System.out.println("-"+Parameter.metadataresolution+": How a metadata discrepancy will be resolved.");
-			System.out.println("-"+Parameter.ignoreproperty+": A metadata property to ignore.");
-			System.out.println("-"+Parameter.test+": If specified, no changed will be made.");
-			System.out.println("-"+Parameter.verbose+": If specified, debug will be turned on to a report level of "+Debug.ReportLevel.INFO+".");
-			System.out.println("-"+Parameter.debughttp+": Whether HTTP communication is logged; requires debug to be turned on.");
+			System.out.println("-"+getSerializationName(Parameter.SOURCE_REPOSITORY)+": The source repository.");
+			System.out.println("-"+getSerializationName(Parameter.SOURCE_REPOSITORY_TYPE)+": The type of source repository.");
+			System.out.println("-"+getSerializationName(Parameter.SOURCE_RESOURCE)+": The source resource to synchronize; defaults to the source repository root.");
+			System.out.println("-"+getSerializationName(Parameter.SOURCE_USERNAME)+": The source repository username, if appropriate.");
+			System.out.println("-"+getSerializationName(Parameter.SOURCE_PASSWORD)+": The source repository password, if appropriate.");
+			System.out.println("-"+getSerializationName(Parameter.DESTINATION_REPOSITORY)+": The destination repository.");
+			System.out.println("-"+getSerializationName(Parameter.DESTINATION_REPOSITORY_TYPE)+": The type of destination repository.");
+			System.out.println("-"+getSerializationName(Parameter.DESTINATION_RESOURCE)+": The destination resource to synchronize; defaults to the destination repository root.");
+			System.out.println("-"+getSerializationName(Parameter.DESTINATION_USERNAME)+": The destination repository username, if appropriate.");
+			System.out.println("-"+getSerializationName(Parameter.DESTINATION_PASSWORD)+": The destination repository password, if appropriate.");
+			System.out.println("-"+getSerializationName(Parameter.RESOLUTION)+": The default resolution for encountered conditions; defaults to \"backup\".");
+			System.out.println("  "+getSerializationName(RepositorySynchronizer.Resolution.BACKUP)+": The source will overwrite the destination; the destination is intended to be a mirror of the source.");
+			System.out.println("  "+getSerializationName(RepositorySynchronizer.Resolution.RESTORE)+": The destination will overwrite the source; the source is intended to be a mirror of the destination.");
+			System.out.println("  "+getSerializationName(RepositorySynchronizer.Resolution.PRODUCE)+": The source will overwrite the destination, but missing source information will not cause destination information to be removed.");
+			System.out.println("  "+getSerializationName(RepositorySynchronizer.Resolution.CONSUME)+": The destination will overwrite the source; but missing destination information will not cause source information to be removed.");
+			System.out.println("  "+getSerializationName(RepositorySynchronizer.Resolution.SYNCHRONIZE)+": Newer information will overwrite older information; the source and destination are intended to be updated with the latest changes from each, although for orphan resources this will be consdered the same as "+getSerializationName(RepositorySynchronizer.Resolution.BACKUP)+".");
+			System.out.println("  "+getSerializationName(RepositorySynchronizer.Resolution.IGNORE)+": No action will occur.");
+			System.out.println("-"+getSerializationName(Parameter.RESOURCE_RESOLUTION)+": How an orphan resource situation (i.e. one resource exists and the other does not) will be resolved.");
+			System.out.println("-"+getSerializationName(Parameter.CONTENT_RESOLUTION)+": How a content discrepancy will be resolved.");
+			System.out.println("-"+getSerializationName(Parameter.METADATA_RESOLUTION)+": How a metadata discrepancy will be resolved.");
+			System.out.println("-"+getSerializationName(Parameter.IGNORE_PROPERTY)+": A metadata property to ignore.");
+			System.out.println("-"+getSerializationName(Parameter.TEST)+": If specified, no changed will be made.");
+			System.out.println("-"+getSerializationName(Parameter.VERBOSE)+": If specified, debug will be turned on to a report level of "+Debug.ReportLevel.INFO+".");
+			System.out.println("-"+getSerializationName(Parameter.DEBUG_HTTP)+": Whether HTTP communication is logged; requires debug to be turned on.");
 			return 0;
 		}
-		if(hasParameter(args, Parameter.verbose.name()))	//if verbose is turned on
+		if(hasParameter(args, getSerializationName(Parameter.VERBOSE)))	//if verbose is turned on
 		{
 			try
 			{
@@ -183,41 +188,41 @@ public class MarmotMirror extends Application
 			}
 		}
 		final URI sourceRepositoryURI=guessAbsoluteURI(sourceRepositoryString);	//get the source repository URI
-		final String sourceResourceString=getParameter(args, Parameter.sourceresource.name());	//get the source resource parameter
+		final String sourceResourceString=getParameter(args, getSerializationName(Parameter.SOURCE_RESOURCE));	//get the source resource parameter
 		final URI sourceResourceURI=sourceResourceString!=null ? guessAbsoluteURI(sourceResourceString) : sourceRepositoryURI;	//if the source resource is not specified, use the repository URI
 		final URI destinationRepositoryURI=guessAbsoluteURI(destinationRepositoryString);	//get the destination repository URI
-		final String destinationResourceString=getParameter(args, Parameter.destinationresource.name());	//get the destination resource parameter
+		final String destinationResourceString=getParameter(args, getSerializationName(Parameter.DESTINATION_RESOURCE));	//get the destination resource parameter
 		final URI destinationResourceURI=destinationResourceString!=null ? guessAbsoluteURI(destinationResourceString) : destinationRepositoryURI;	//if the destination resource is not specified, use the repository URI
-		HTTPClient.getInstance().setLogged(Debug.isDebug() && hasParameter(args, Parameter.debughttp.name()));	//if debugging is turned on, tell the HTTP client to log its data TODO generalize
+		HTTPClient.getInstance().setLogged(Debug.isDebug() && hasParameter(args, getSerializationName(Parameter.DEBUG_HTTP)));	//if debugging is turned on, tell the HTTP client to log its data TODO generalize
 		Debug.info("Mirroring from", sourceResourceURI, "to", destinationResourceURI+".");
-		final String sourceRepositoryTypeString=getParameter(args, Parameter.sourcerepositorytype.name());
-		final Repository sourceRepository=createRepository(sourceRepositoryTypeString!=null ? RepositoryType.valueOf(sourceRepositoryTypeString) : null, sourceRepositoryURI, getParameter(args, Parameter.sourceusername.name()), getParameter(args, Parameter.sourcepassword.name()));	//create the correct type of repository for the source
-		final String destinationRepositoryTypeString=getParameter(args, Parameter.destinationrepositorytype.name());
-		final Repository destinationRepository=createRepository(destinationRepositoryTypeString!=null ? RepositoryType.valueOf(destinationRepositoryTypeString) : null, destinationRepositoryURI, getParameter(args, Parameter.destinationusername.name()), getParameter(args, Parameter.destinationpassword.name()));	//create the correct type of repository for the destination
+		final String sourceRepositoryTypeString=getParameter(args, getSerializationName(Parameter.SOURCE_REPOSITORY_TYPE));
+		final Repository sourceRepository=createRepository(sourceRepositoryTypeString!=null ? getSerializedEnum(RepositoryType.class, sourceRepositoryTypeString) : null, sourceRepositoryURI, getParameter(args, getSerializationName(Parameter.SOURCE_USERNAME)), getParameter(args, getSerializationName(Parameter.SOURCE_PASSWORD)));	//create the correct type of repository for the source
+		final String destinationRepositoryTypeString=getParameter(args, getSerializationName(Parameter.DESTINATION_REPOSITORY_TYPE));
+		final Repository destinationRepository=createRepository(destinationRepositoryTypeString!=null ? getSerializedEnum(RepositoryType.class, destinationRepositoryTypeString) : null, destinationRepositoryURI, getParameter(args, getSerializationName(Parameter.DESTINATION_USERNAME)), getParameter(args, getSerializationName(Parameter.DESTINATION_PASSWORD)));	//create the correct type of repository for the destination
 		try
 		{
 			final RepositorySynchronizer repositorySynchronizer=new RepositorySynchronizer();	//create a new synchronizer
-			final String resolutionString=getParameter(args, Parameter.resolution.name());	//set the resolutions if provided
+			final String resolutionString=getParameter(args, getSerializationName(Parameter.RESOLUTION));	//set the resolutions if provided
 			if(resolutionString!=null)
 			{
-				repositorySynchronizer.setResolution(Resolution.valueOf(resolutionString.toUpperCase()));
+				repositorySynchronizer.setResolution(getSerializedEnum(Resolution.class, resolutionString.toUpperCase()));
 			}
-			final String resourceResolutionString=getParameter(args, Parameter.resourceresolution.name());
+			final String resourceResolutionString=getParameter(args, getSerializationName(Parameter.RESOURCE_RESOLUTION));
 			if(resourceResolutionString!=null)
 			{
-				repositorySynchronizer.setResourceResolution(Resolution.valueOf(resourceResolutionString.toUpperCase()));
+				repositorySynchronizer.setResourceResolution(getSerializedEnum(Resolution.class, resourceResolutionString.toUpperCase()));
 			}
-			final String contentResolutionString=getParameter(args, Parameter.contentresolution.name());
+			final String contentResolutionString=getParameter(args, getSerializationName(Parameter.CONTENT_RESOLUTION));
 			if(contentResolutionString!=null)
 			{
-				repositorySynchronizer.setContentResolution(Resolution.valueOf(contentResolutionString.toUpperCase()));
+				repositorySynchronizer.setContentResolution(getSerializedEnum(Resolution.class, contentResolutionString.toUpperCase()));
 			}
-			final String metadataResolutionString=getParameter(args, Parameter.metadataresolution.name());
+			final String metadataResolutionString=getParameter(args, getSerializationName(Parameter.METADATA_RESOLUTION));
 			if(metadataResolutionString!=null)
 			{
-				repositorySynchronizer.setMetadataResolution(Resolution.valueOf(metadataResolutionString.toUpperCase()));
+				repositorySynchronizer.setMetadataResolution(getSerializedEnum(Resolution.class, metadataResolutionString.toUpperCase()));
 			}
-			final List<String> propertyURIParameters=getParameters(args, Parameter.ignoreproperty.name());	//see if there are any properties to ignore
+			final List<String> propertyURIParameters=getParameters(args, getSerializationName(Parameter.IGNORE_PROPERTY));	//see if there are any properties to ignore
 			if(propertyURIParameters!=null)	//if we have properties to ignore
 			{
 				for(final String ignorePropertyURIString:propertyURIParameters)	//look at all the properties to ignore
@@ -225,7 +230,7 @@ public class MarmotMirror extends Application
 					repositorySynchronizer.addIgnorePropertyURI(URI.create(ignorePropertyURIString));	//create a URI from the parameter and add this to the properties to ignore
 				}
 			}
-			repositorySynchronizer.setTest(hasParameter(args, Parameter.test.name()));	//specify whether this is a test run
+			repositorySynchronizer.setTest(hasParameter(args, getSerializationName(Parameter.TEST)));	//specify whether this is a test run
 			repositorySynchronizer.synchronize(sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//synchronize the resources
 		}
 		catch(final IOException ioException)	//if there is an error
@@ -250,9 +255,9 @@ public class MarmotMirror extends Application
 	<p>If no repository type is specified, a type is guessed.
 	Tthe following repository schemes are recognized:</p>
 	<dl>
-		<dt>{@value HTTP#HTTP_URI_SCHEME}</dt> <dd>{@link RepositoryType#webdav}</dd>
-		<dt>{@value HTTP#HTTPS_SCHEME}</dt> <dd>{@link RepositoryType#webdav}</dd>
-		<dt>{@value URIs#FILE_SCHEME}</dt> <dd>{@link RepositoryType#file}</dd>
+		<dt>{@value HTTP#HTTP_URI_SCHEME}</dt> <dd>{@link RepositoryType#WEBDAV}</dd>
+		<dt>{@value HTTP#HTTPS_SCHEME}</dt> <dd>{@link RepositoryType#WEBDAV}</dd>
+		<dt>{@value URIs#FILE_SCHEME}</dt> <dd>{@link RepositoryType#FILE}</dd>
 	</dl>
 	@param repositoryType The type of repository to create, or <code>null</code> if the repository type should be guessed.
 	@param repositoryURI The URI of the repository to create.
@@ -267,11 +272,11 @@ public class MarmotMirror extends Application
 		{
 			if(HTTP.isHTTPURI(repositoryURI))	//if this is an HTTP repository URI
 			{
-				repositoryType=RepositoryType.webdav;	//assume a WebDAV repository
+				repositoryType=RepositoryType.WEBDAV;	//assume a WebDAV repository
 			}
 			else if(FILE_SCHEME.equals(repositoryURI.getScheme()))	//if this is a file repository URI
 			{
-				repositoryType=RepositoryType.file;	//assume a file repository
+				repositoryType=RepositoryType.FILE;	//assume a file repository
 			}
 			else	//if we don't recognize the repository type
 			{
@@ -280,11 +285,11 @@ public class MarmotMirror extends Application
 		}
 		switch(repositoryType)	//create the correct type of repository
 		{
-			case file: 
+			case FILE: 
 				return new FileRepository(repositoryURI);	//create a file-based repository
-			case ntfs:
+			case NTFS:
 				return new NTFSFileRepository(repositoryURI);	//create a file-based repository
-			case webdav:
+			case WEBDAV:
 			{
 				final WebDAVRepository webDavRepository=new WebDAVRepository(repositoryURI);	//create a WebDAV-based repository
 				if(username!=null)	//set the username if there is one
@@ -297,7 +302,7 @@ public class MarmotMirror extends Application
 				}
 				return webDavRepository;
 			}
-			case svn:
+			case SVN:
 			{
 				final SubversionWebDAVRepository webDavRepository=new SubversionWebDAVRepository(repositoryURI);	//create a Subversion-based repository
 				if(username!=null)	//set the username if there is one
