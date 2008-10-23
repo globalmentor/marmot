@@ -64,7 +64,7 @@ public class MarmotMirror extends Application
 		/**The source resource.*/
 		SOURCE_RESOURCE,
 		/**A source resource to ignore.*/
-//		ignoresourceresource,
+		IGNORE_SOURCE_RESOURCE,
 		/**The source repository username.*/
 		SOURCE_USERNAME,
 		/**The source repository username.*/
@@ -75,8 +75,8 @@ public class MarmotMirror extends Application
 		DESTINATION_REPOSITORY_TYPE,
 		/**The destination resource.*/
 		DESTINATION_RESOURCE,
-		/**A source resource to ignore.*/
-//		ignoredestinationresource,
+		/**A destination resource to ignore.*/
+		IGNORE_DESTINATION_RESOURCE,
 		/**The destination repository username.*/
 		DESTINATION_USERNAME,
 		/**The destination repository username.*/
@@ -136,10 +136,10 @@ public class MarmotMirror extends Application
 			System.out.println(TITLE);
 			System.out.println(VERSION);
 			System.out.println(COPYRIGHT);
-			System.out.println("Usage: MarmotMirror -sourcerepository <file|URI> [-sourcerepositorytype <repository type>] [-sourceusername <username>] [-sourcepassword <password>] [-sourceresource <file|URI>] " +
-					"-destinationrepository <URI> [-sourcerepositorytype <repository type>] [-destinationusername <username>] [-destinationpassword <password>] [-destinationresource <file|URI>] " +
-					"[-ignoreproperty <URI>]* " +
-					"[-resolution] [-resourceresolution] [-contentresolution] [-metadataresolution] [-test] [-verbose] [-debughttp]");
+			System.out.println("Usage: MarmotMirror -source-repository <file|URI> [-source-repositorytype <repository type>] [-source-username <username>] [-source-password <password>] [-source-resource <file|URI>] " +
+					"-destination-repository <URI> [-source-repository-type <repository type>] [-destination-username <username>] [-destination-password <password>] [-destination-resource <file|URI>] " +
+					"[-ignore-source-resource <file|URI>] [-ignore-destination-resource <file|URI>] [-ignore-property <URI>]* " +
+					"[-resolution] [-resource-resolution] [-content-resolution] [-metadata-resolution] [-test] [-verbose] [-debug-http]");
 			System.out.println("");
 			System.out.println("Synchronization occurs on three levels: individual resources (i.e. orphans), metadata, and content, each of which can have a different resolution specified.");
 			System.out.println("");
@@ -152,11 +152,13 @@ public class MarmotMirror extends Application
 			System.out.println("-"+getSerializationName(Parameter.SOURCE_REPOSITORY)+": The source repository.");
 			System.out.println("-"+getSerializationName(Parameter.SOURCE_REPOSITORY_TYPE)+": The type of source repository.");
 			System.out.println("-"+getSerializationName(Parameter.SOURCE_RESOURCE)+": The source resource to synchronize; defaults to the source repository root.");
+			System.out.println("-"+getSerializationName(Parameter.IGNORE_SOURCE_RESOURCE)+": A source resource to ignore.");
 			System.out.println("-"+getSerializationName(Parameter.SOURCE_USERNAME)+": The source repository username, if appropriate.");
 			System.out.println("-"+getSerializationName(Parameter.SOURCE_PASSWORD)+": The source repository password, if appropriate.");
 			System.out.println("-"+getSerializationName(Parameter.DESTINATION_REPOSITORY)+": The destination repository.");
 			System.out.println("-"+getSerializationName(Parameter.DESTINATION_REPOSITORY_TYPE)+": The type of destination repository.");
 			System.out.println("-"+getSerializationName(Parameter.DESTINATION_RESOURCE)+": The destination resource to synchronize; defaults to the destination repository root.");
+			System.out.println("-"+getSerializationName(Parameter.IGNORE_DESTINATION_RESOURCE)+": A destination resource to ignore.");
 			System.out.println("-"+getSerializationName(Parameter.DESTINATION_USERNAME)+": The destination repository username, if appropriate.");
 			System.out.println("-"+getSerializationName(Parameter.DESTINATION_PASSWORD)+": The destination repository password, if appropriate.");
 			System.out.println("-"+getSerializationName(Parameter.RESOLUTION)+": The default resolution for encountered conditions; defaults to \"backup\".");
@@ -194,7 +196,7 @@ public class MarmotMirror extends Application
 		final String destinationResourceString=getParameter(args, getSerializationName(Parameter.DESTINATION_RESOURCE));	//get the destination resource parameter
 		final URI destinationResourceURI=destinationResourceString!=null ? guessAbsoluteURI(destinationResourceString) : destinationRepositoryURI;	//if the destination resource is not specified, use the repository URI
 		HTTPClient.getInstance().setLogged(Debug.isDebug() && hasParameter(args, getSerializationName(Parameter.DEBUG_HTTP)));	//if debugging is turned on, tell the HTTP client to log its data TODO generalize
-		Debug.info("Mirroring from", sourceResourceURI, "to", destinationResourceURI+".");
+		Debug.info("Mirroring from", sourceResourceURI, "to", destinationResourceURI);
 		final String sourceRepositoryTypeString=getParameter(args, getSerializationName(Parameter.SOURCE_REPOSITORY_TYPE));
 		final Repository sourceRepository=createRepository(sourceRepositoryTypeString!=null ? getSerializedEnum(RepositoryType.class, sourceRepositoryTypeString) : null, sourceRepositoryURI, getParameter(args, getSerializationName(Parameter.SOURCE_USERNAME)), getParameter(args, getSerializationName(Parameter.SOURCE_PASSWORD)));	//create the correct type of repository for the source
 		final String destinationRepositoryTypeString=getParameter(args, getSerializationName(Parameter.DESTINATION_REPOSITORY_TYPE));
@@ -221,6 +223,22 @@ public class MarmotMirror extends Application
 			if(metadataResolutionString!=null)
 			{
 				repositorySynchronizer.setMetadataResolution(getSerializedEnum(Resolution.class, metadataResolutionString.toUpperCase()));
+			}
+			final List<String> ignoreSourceResourceURIParameters=getParameters(args, getSerializationName(Parameter.IGNORE_SOURCE_RESOURCE));	//see if there are any source resources to ignore
+			if(ignoreSourceResourceURIParameters!=null)	//if we have source resources to ignore
+			{
+				for(final String ignoreSourceResourceURIString:ignoreSourceResourceURIParameters)	//look at all the source resources to ignore
+				{
+					repositorySynchronizer.addIgnoreSourceResourceURI(guessAbsoluteURI(ignoreSourceResourceURIString));	//create a URI from the parameter and add this to the source resources to ignore
+				}
+			}
+			final List<String> ignoreDestinationResourceURIParameters=getParameters(args, getSerializationName(Parameter.IGNORE_DESTINATION_RESOURCE));	//see if there are any destination resources to ignore
+			if(ignoreDestinationResourceURIParameters!=null)	//if we have destination resources to ignore
+			{
+				for(final String ignoreDestinationResourceURIString:ignoreDestinationResourceURIParameters)	//look at all the destination resources to ignore
+				{
+					repositorySynchronizer.addIgnoreDestinationResourceURI(guessAbsoluteURI(ignoreDestinationResourceURIString));	//create a URI from the parameter and add this to the destination resources to ignore
+				}
 			}
 			final List<String> propertyURIParameters=getParameters(args, getSerializationName(Parameter.IGNORE_PROPERTY));	//see if there are any properties to ignore
 			if(propertyURIParameters!=null)	//if we have properties to ignore

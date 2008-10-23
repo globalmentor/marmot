@@ -107,6 +107,28 @@ public class RepositorySynchronizer
 		*/
 		public void setMetadataResolution(final Resolution metadataResolution) {this.metadataResolution=checkInstance(metadataResolution, "Metadata resolution cannot be null.");}
 
+	/**The set of source resource URIs to ignore when resolving descrepancies.*/
+	private final Set<URI> ignoreSourceResourceURIs=new HashSet<URI>();
+
+		/**Adds a source resource to be ignored when resolving descrepancies.
+		@param resourceURI The URI of the source resource to ignore.
+		*/
+		public void addIgnoreSourceResourceURI(final URI resourceURI)
+		{
+			ignoreSourceResourceURIs.add(resourceURI);
+		}
+
+	/**The set of destination resource URIs to ignore when resolving descrepancies.*/
+	private final Set<URI> ignoreDestinationResourceURIs=new HashSet<URI>();
+
+		/**Adds a destination resource to be ignored when resolving descrepancies.
+		@param resourceURI The URI of the destination resource to ignore.
+		*/
+		public void addIgnoreDestinationResourceURI(final URI resourceURI)
+		{
+			ignoreDestinationResourceURIs.add(resourceURI);
+		}
+
 	/**The set of metadata property URIs to ignore when resolving descrepancies.*/
 	private final Set<URI> ignorePropertyURIs=new HashSet<URI>();
 
@@ -154,6 +176,7 @@ public class RepositorySynchronizer
 
 	/**Synchronizes two resources in two separate repositories.
 	If the resources are collections, the child resources will also be synchronized.
+	If either resource is one to be ignored, no action is taken.
 	@param sourceRepository The repository in which the source resource lies.
 	@param sourceBaseURI The base URI in the source repository; the root of the source tree being synchronized.
 	@param sourceResourceURI The URI of the source resource.
@@ -167,6 +190,10 @@ public class RepositorySynchronizer
 	*/
 	protected void synchronize(final Repository sourceRepository, final URI sourceBaseURI, final URI sourceResourceURI, URFResource sourceResourceDescription, final Repository destinationRepository, final URI destinationBaseURI, final URI destinationResourceURI, URFResource destinationResourceDescription) throws IOException
 	{
+		if(ignoreSourceResourceURIs.contains(sourceResourceURI) || ignoreDestinationResourceURIs.contains(destinationResourceURI))	//if this is a resource to ignore
+		{
+			return;	//don't do anything further
+		}
 		final boolean isSourceCollection=isCollectionURI(sourceResourceURI);	//see if the source is a collection
 		final boolean isDestinationCollection=isCollectionURI(destinationResourceURI);	//see if the destination is a collection
 			//resource/collection
