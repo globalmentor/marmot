@@ -19,7 +19,6 @@ package com.globalmentor.marmot.repository.webdav;
 import java.net.*;
 import java.util.Set;
 
-
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.net.URIs;
 import com.globalmentor.net.http.*;
@@ -44,6 +43,18 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 
 	/**The character used to escape URIs to encode them as XML names.*/
 	protected final static char XML_NAME_URI_ESCAPE_CHAR=MIDDLE_DOT_CHAR;
+
+	/**The Subversion version of the synchronization WebDAV get last modified property.*/
+	protected final static WebDAVPropertyName SUBVERSION_SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME=new WebDAVPropertyName(SUBVERSION_CUSTOM_NAMESPACE, SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME.getLocalName());
+
+	/**Determines the WebDAV property name to represent the synchronization WebDAV get last modified property.
+	This version returns a version of the property compatible with Subversion.
+	@return The WebDAV property name to use in representing the synchronization WebDAV get last modified property.
+	*/
+	protected WebDAVPropertyName getSyncWebDAVGetLastModifiedWebDAVPropertyName()
+	{
+		return SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME;
+	}
 
 	/**Repository URI contructor using the default HTTP client.
 	The given repository URI should end in a slash.

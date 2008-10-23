@@ -48,6 +48,10 @@ public class RepositorySynchronizer
 		BACKUP,
 		/**The destination will overwrite the source; the source is intended to be a mirror of the destination.*/
 		RESTORE,
+		/**The source will overwrite the destination, but missing source information will not cause destination information to be removed.*/
+		PRODUCE,
+		/**The destination will overwrite the source; but missing destination information will not cause source information to be removed.*/
+		CONSUME,
 		/**Newer information will overwrite older information; the source and destination are intended to be updated with the latest changes from each,
 		although for orphan resources this will be consdered the same as {@link #BACKUP}.
 		*/
@@ -180,12 +184,16 @@ public class RepositorySynchronizer
 			final Resolution orphanResolution=getResourceResolution();
 			if(sourceExists)	//if the source resource exists but not the destination
 			{
-				Debug.info("Resolve source orphan:", orphanResolution, sourceResourceURI, destinationResourceURI);
+				if(orphanResolution!=Resolution.IGNORE)
+				{
+					Debug.info("Resolve source orphan:", orphanResolution, sourceResourceURI, destinationResourceURI);
+				}
 				if(!isTest())	//if this is not just a test
 				{
 					switch(orphanResolution)	//update the descriptions based upon the resolution
 					{
 						case BACKUP:
+						case PRODUCE:
 						case SYNCHRONIZE:
 							sourceRepository.copyResource(sourceResourceURI, destinationRepository, destinationResourceURI);	//copy the source to the destination
 							destinationExists=true;
@@ -196,6 +204,7 @@ public class RepositorySynchronizer
 							sourceExists=false;
 							sourceResourceDescription=null;
 							break;
+						case CONSUME:
 						case IGNORE:
 							break;
 						default:
@@ -205,12 +214,16 @@ public class RepositorySynchronizer
 			}
 			else	//if the source resource does not exist but the destination does
 			{
-				Debug.info("Resolve destination orphan:", orphanResolution, sourceResourceURI, destinationResourceURI);
+				if(orphanResolution!=Resolution.IGNORE)
+				{
+					Debug.info("Resolve destination orphan:", orphanResolution, sourceResourceURI, destinationResourceURI);
+				}
 				if(!isTest())	//if this is not just a test
 				{
 					switch(orphanResolution)	//update the descriptions based upon the resolution
 					{
 						case BACKUP:
+						case CONSUME:
 						case SYNCHRONIZE:
 							destinationRepository.deleteResource(destinationResourceURI);	//delete the destination
 							destinationExists=false;
@@ -221,6 +234,7 @@ public class RepositorySynchronizer
 							sourceExists=true;
 							sourceResourceDescription=sourceRepository.getResourceDescription(sourceResourceURI);
 							break;
+						case PRODUCE:
 						case IGNORE:
 							break;
 						default:
@@ -235,7 +249,10 @@ public class RepositorySynchronizer
 			if(!isContentSynchronized)//if the source and destination are not synchronized
 			{
 				final Resolution resolution=getContentResolution();
-				Debug.info("Resolve content:", resolution, sourceResourceDescription.getURI(), destinationResourceDescription.getURI());
+				if(resolution!=Resolution.IGNORE)
+				{
+					Debug.info("Resolve content:", resolution, sourceResourceDescription.getURI(), destinationResourceDescription.getURI());
+				}
 				resolveContent(resolution, sourceRepository, sourceResourceDescription, destinationRepository, destinationResourceDescription);	//resolve the descrepancy between source and destination
 			}
 			final Resolution metadataResolution=getMetadataResolution();
@@ -356,12 +373,14 @@ public class RepositorySynchronizer
 		switch(resolution)	//see how to resolve the descrepancy; at the point the only options we haven't covered are backup and restore
 		{
 			case BACKUP:
+			case PRODUCE:
 				inputRepository=sourceRepository;
 				inputResourceDescription=sourceResourceDescription;
 				outputRepository=destinationRepository;
 				outputResourceDescription=destinationResourceDescription;
 				break;
 			case RESTORE:
+			case CONSUME:
 				inputRepository=destinationRepository;
 				inputResourceDescription=destinationResourceDescription;
 				outputRepository=sourceRepository;
@@ -437,12 +456,14 @@ public class RepositorySynchronizer
 		switch(resolution)	//see how to resolve the descrepancy; at the point the only options we haven't covered are backup and restore
 		{
 			case BACKUP:
+			case PRODUCE:
 				inputRepository=sourceRepository;
 				inputResourceDescription=sourceResourceDescription;
 				outputRepository=destinationRepository;
 				outputResourceDescription=destinationResourceDescription;
 				break;
 			case RESTORE:
+			case CONSUME:
 				inputRepository=destinationRepository;
 				inputResourceDescription=destinationResourceDescription;
 				outputRepository=sourceRepository;
@@ -471,26 +492,38 @@ public class RepositorySynchronizer
 					}
 					outputPropertyURIRemovals.add(inputPropertyURI);	//we'll replace all of these properties in the output
 					outputPropertyAdditions.add(inputProperty);	//we'll add this new property and value to the output
-					Debug.info("Resolve metadata:", resolution, outputResourceDescription.getURI(), "set", inputProperty);
+					if(resolution!=Resolution.IGNORE)
+					{
+						Debug.info("Resolve metadata:", resolution, outputResourceDescription.getURI(), "set", inputProperty);
+					}
 				}
 			}
 		}
-		for(final URFProperty outputProperty:outputResourceDescription.getProperties())	//remove output properties not present in the input
+		if(resolution!=Resolution.PRODUCE && resolution!=Resolution.CONSUME)	//produce and consume do not result in removal of information
 		{
-			final URI outputPropertyURI=outputProperty.getPropertyURI();
-			if(!inputResourceDescription.hasProperty(outputPropertyURI))	//if this output property URI is not in the input with any value (if it has some value at all, we've already made to make them the same)
+			for(final URFProperty outputProperty:outputResourceDescription.getProperties())	//remove output properties not present in the input
 			{
-				if(!ignorePropertyURIs.contains(outputPropertyURI) && !outputRepository.isLivePropertyURI(outputPropertyURI))	//ignore specified properties and live properties
+				final URI outputPropertyURI=outputProperty.getPropertyURI();
+				if(!inputResourceDescription.hasProperty(outputPropertyURI))	//if this output property URI is not in the input with any value (if it has some value at all, we've already made to make them the same)
 				{
-					outputPropertyURIRemovals.add(outputPropertyURI);	//we'll remove all of these properties in the output; if there were any replacements they will have already been added 
-					Debug.info("Resolve metadata:", resolution, outputResourceDescription.getURI(), "remove", outputProperty.getPropertyURI());
+					if(!ignorePropertyURIs.contains(outputPropertyURI) && !outputRepository.isLivePropertyURI(outputPropertyURI))	//ignore specified properties and live properties
+					{
+						outputPropertyURIRemovals.add(outputPropertyURI);	//we'll remove all of these properties in the output; if there were any replacements they will have already been added 
+						if(resolution!=Resolution.IGNORE)
+						{
+							Debug.info("Resolve metadata:", resolution, outputResourceDescription.getURI(), "remove", outputProperty.getPropertyURI());
+						}
+					}
 				}
 			}
 		}
-		final URFResourceAlteration outputResourceAlteration=new DefaultURFResourceAlteration(outputPropertyURIRemovals, outputPropertyAdditions);
-		if(!isTest())	//if this is not just a test
+		if(!outputPropertyURIRemovals.isEmpty() || !outputPropertyAdditions.isEmpty())	//if we have something to change
 		{
-			outputRepository.alterResourceProperties(outputResourceDescription.getURI(), outputResourceAlteration);	//alter the output resource properties
+			final URFResourceAlteration outputResourceAlteration=new DefaultURFResourceAlteration(outputPropertyURIRemovals, outputPropertyAdditions);
+			if(!isTest())	//if this is not just a test
+			{
+				outputRepository.alterResourceProperties(outputResourceDescription.getURI(), outputResourceAlteration);	//alter the output resource properties
+			}
 		}
 	}
 

@@ -18,6 +18,7 @@ package com.globalmentor.marmot;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.List;
 
 import static com.globalmentor.java.Characters.*;
 import static com.globalmentor.net.URIs.*;
@@ -50,7 +51,7 @@ public class MarmotMirror extends Application
 	public final static String COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2006-2008 GlobalMentor, Inc. All Rights Reserved.";	//TODO i18n
 
 	/**The version of the application.*/
-	public final static String VERSION="Alpha Version 0.1 build 2008-10-11";
+	public final static String VERSION="Alpha Version 0.4 build 2008-10-22";
 
 	/**Application command-line parameters.*/
 	public enum Parameter
@@ -156,6 +157,8 @@ public class MarmotMirror extends Application
 			System.out.println("-"+Parameter.resolution+": The default resolution for encountered conditions; defaults to \"backup\".");
 			System.out.println("  "+RepositorySynchronizer.Resolution.BACKUP.name().toLowerCase()+": The source will overwrite the destination; the destination is intended to be a mirror of the source.");
 			System.out.println("  "+RepositorySynchronizer.Resolution.RESTORE.name().toLowerCase()+": The destination will overwrite the source; the source is intended to be a mirror of the destination.");
+			System.out.println("  "+RepositorySynchronizer.Resolution.PRODUCE.name().toLowerCase()+": The source will overwrite the destination, but missing source information will not cause destination information to be removed.");
+			System.out.println("  "+RepositorySynchronizer.Resolution.CONSUME.name().toLowerCase()+": The destination will overwrite the source; but missing destination information will not cause source information to be removed.");
 			System.out.println("  "+RepositorySynchronizer.Resolution.SYNCHRONIZE.name().toLowerCase()+": Newer information will overwrite older information; the source and destination are intended to be updated with the latest changes from each, although for orphan resources this will be consdered the same as "+RepositorySynchronizer.Resolution.BACKUP.name().toLowerCase()+".");
 			System.out.println("  "+RepositorySynchronizer.Resolution.IGNORE.name().toLowerCase()+": No action will occur.");
 			System.out.println("-"+Parameter.resourceresolution+": How an orphan resource situation (i.e. one resource exists and the other does not) will be resolved.");
@@ -214,9 +217,13 @@ public class MarmotMirror extends Application
 			{
 				repositorySynchronizer.setMetadataResolution(Resolution.valueOf(metadataResolutionString.toUpperCase()));
 			}
-			for(final String ignorePropertyURIString:getParameters(args, Parameter.ignoreproperty.name()))	//look at all the properties to ignore
+			final List<String> propertyURIParameters=getParameters(args, Parameter.ignoreproperty.name());	//see if there are any properties to ignore
+			if(propertyURIParameters!=null)	//if we have properties to ignore
 			{
-				repositorySynchronizer.addIgnorePropertyURI(URI.create(ignorePropertyURIString));	//create a URI from the parameter and add this to the properties to ignore
+				for(final String ignorePropertyURIString:propertyURIParameters)	//look at all the properties to ignore
+				{
+					repositorySynchronizer.addIgnorePropertyURI(URI.create(ignorePropertyURIString));	//create a URI from the parameter and add this to the properties to ignore
+				}
 			}
 			repositorySynchronizer.setTest(hasParameter(args, Parameter.test.name()));	//specify whether this is a test run
 			repositorySynchronizer.synchronize(sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//synchronize the resources
