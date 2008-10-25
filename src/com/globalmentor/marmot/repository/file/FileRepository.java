@@ -44,6 +44,8 @@ The content modified property is not saved for collections with no content.</p>
 */
 public class FileRepository extends AbstractRepository
 {
+	
+	//TODO see http://lists.apple.com/archives/java-dev/2006/Aug/msg00325.html ; fix non-ASCII characters getting in filename URI
 
 		//TODO encode special characters, especially the colon on NTFS
 
@@ -68,7 +70,7 @@ public class FileRepository extends AbstractRepository
 				*/
 				public boolean accept(final File pathname)
 				{
-					return isPrivateURIResourcePublic(pathname.toURI());	//see if the private URI represented by this file should be accepted 
+					return isPrivateURIResourcePublic(toURI(pathname));	//see if the private URI represented by this file should be accepted 
 				}
 			};
 		
@@ -394,7 +396,7 @@ public class FileRepository extends AbstractRepository
 				final File[] files=resourceDirectory.listFiles(getFileFilter());	//get a list of all files in the directory
 				for(final File file:files)	//for each file in the directory
 				{
-					final URI childResourcePublicURI=getPublicURI(file.toURI());	//get a public URI to represent the file resource
+					final URI childResourcePublicURI=getPublicURI(toURI(file));	//get a public URI to represent the file resource
 					if(getSubrepository(childResourcePublicURI)==this)	//if this child wouldn't be located in a subrepository (i.e. ignore resources obscured by subrepositories)
 					{
 						if(resourceFilter==null || resourceFilter.isPass(childResourcePublicURI))	//if we should include this resource based upon its URI
@@ -406,7 +408,7 @@ public class FileRepository extends AbstractRepository
 							}
 							catch(final IOException ioException)	//if an I/O exception occurs
 							{
-								throw createResourceIOException(getPublicURI(file.toURI()), ioException);	//translate the exception to a resource I/O exception and throw that, using a public URI to represent the file resource
+								throw createResourceIOException(getPublicURI(toURI(file)), ioException);	//translate the exception to a resource I/O exception and throw that, using a public URI to represent the file resource
 							}
 							if(resourceFilter==null || resourceFilter.isPass(childResourceDescription))	//if we should include this resource based upon its description
 							{
@@ -808,7 +810,7 @@ public class FileRepository extends AbstractRepository
 	*/
 	protected URFResource loadResourceDescription(final URF urf, final File resourceFile) throws IOException
 	{
-		final URI resourceURI=getPublicURI(resourceFile.toURI());	//get a public URI to represent the file resource
+		final URI resourceURI=getPublicURI(toURI(resourceFile));	//get a public URI to represent the file resource
 		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the file for storing the description
 		try
 		{
@@ -842,7 +844,7 @@ public class FileRepository extends AbstractRepository
 	*/
 	protected void saveResourceDescription(URFResource resourceDescription, final File resourceFile) throws IOException
 	{
-		final URI resourceURI=getPublicURI(resourceFile.toURI());	//get a public URI to represent the file resource
+		final URI resourceURI=getPublicURI(toURI(resourceFile));	//get a public URI to represent the file resource
 		final File contentFile;	//determine the file to use for storing content
 		final boolean isCollection=isCollectionURI(resourceURI);	//see if this is a collection
 		if(isCollection)	//if the resource is a collection
