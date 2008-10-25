@@ -18,7 +18,6 @@ package com.globalmentor.marmot;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.List;
 
 import static com.globalmentor.java.Characters.*;
 import static com.globalmentor.java.Enums.*;
@@ -52,7 +51,7 @@ public class MarmotMirror extends Application
 	public final static String COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2006-2008 GlobalMentor, Inc. All Rights Reserved.";	//TODO i18n
 
 	/**The version of the application.*/
-	public final static String VERSION="Alpha Version 0.4 build 2008-10-22";
+	public final static String VERSION="Alpha Version 0.5 build 2008-10-25";
 
 	/**Application command-line parameters.*/
 	public enum Parameter
@@ -129,8 +128,8 @@ public class MarmotMirror extends Application
 	public int main()
 	{
 		final String[] args=getArgs();	//get the arguments
-		final String sourceRepositoryString=getParameter(args, getSerializationName(Parameter.SOURCE_REPOSITORY));	//get the source repository parameter
-		final String destinationRepositoryString=getParameter(args, getSerializationName(Parameter.DESTINATION_REPOSITORY));	//get the destination repository parameter
+		final String sourceRepositoryString=getOption(args, getSerializationName(Parameter.SOURCE_REPOSITORY));	//get the source repository parameter
+		final String destinationRepositoryString=getOption(args, getSerializationName(Parameter.DESTINATION_REPOSITORY));	//get the destination repository parameter
 		if(sourceRepositoryString==null || destinationRepositoryString==null)	//if the source and/or destination repository parameter is missing
 		{
 			System.out.println(TITLE);
@@ -177,7 +176,7 @@ public class MarmotMirror extends Application
 			System.out.println("-"+getSerializationName(Parameter.DEBUG_HTTP)+": Whether HTTP communication is logged; requires debug to be turned on.");
 			return 0;
 		}
-		if(hasParameter(args, getSerializationName(Parameter.VERBOSE)))	//if verbose is turned on
+		if(hasFlag(args, getSerializationName(Parameter.VERBOSE)))	//if verbose is turned on
 		{
 			try
 			{
@@ -190,65 +189,53 @@ public class MarmotMirror extends Application
 			}
 		}
 		final URI sourceRepositoryURI=guessAbsoluteURI(sourceRepositoryString);	//get the source repository URI
-		final String sourceResourceString=getParameter(args, getSerializationName(Parameter.SOURCE_RESOURCE));	//get the source resource parameter
+		final String sourceResourceString=getOption(args, getSerializationName(Parameter.SOURCE_RESOURCE));	//get the source resource parameter
 		final URI sourceResourceURI=sourceResourceString!=null ? guessAbsoluteURI(sourceResourceString) : sourceRepositoryURI;	//if the source resource is not specified, use the repository URI
 		final URI destinationRepositoryURI=guessAbsoluteURI(destinationRepositoryString);	//get the destination repository URI
-		final String destinationResourceString=getParameter(args, getSerializationName(Parameter.DESTINATION_RESOURCE));	//get the destination resource parameter
+		final String destinationResourceString=getOption(args, getSerializationName(Parameter.DESTINATION_RESOURCE));	//get the destination resource parameter
 		final URI destinationResourceURI=destinationResourceString!=null ? guessAbsoluteURI(destinationResourceString) : destinationRepositoryURI;	//if the destination resource is not specified, use the repository URI
-		HTTPClient.getInstance().setLogged(Debug.isDebug() && hasParameter(args, getSerializationName(Parameter.DEBUG_HTTP)));	//if debugging is turned on, tell the HTTP client to log its data TODO generalize
+		HTTPClient.getInstance().setLogged(Debug.isDebug() && hasFlag(args, getSerializationName(Parameter.DEBUG_HTTP)));	//if debugging is turned on, tell the HTTP client to log its data TODO generalize
 		Debug.info("Mirroring from", sourceResourceURI, "to", destinationResourceURI);
-		final String sourceRepositoryTypeString=getParameter(args, getSerializationName(Parameter.SOURCE_REPOSITORY_TYPE));
-		final Repository sourceRepository=createRepository(sourceRepositoryTypeString!=null ? getSerializedEnum(RepositoryType.class, sourceRepositoryTypeString) : null, sourceRepositoryURI, getParameter(args, getSerializationName(Parameter.SOURCE_USERNAME)), getParameter(args, getSerializationName(Parameter.SOURCE_PASSWORD)));	//create the correct type of repository for the source
-		final String destinationRepositoryTypeString=getParameter(args, getSerializationName(Parameter.DESTINATION_REPOSITORY_TYPE));
-		final Repository destinationRepository=createRepository(destinationRepositoryTypeString!=null ? getSerializedEnum(RepositoryType.class, destinationRepositoryTypeString) : null, destinationRepositoryURI, getParameter(args, getSerializationName(Parameter.DESTINATION_USERNAME)), getParameter(args, getSerializationName(Parameter.DESTINATION_PASSWORD)));	//create the correct type of repository for the destination
+		final String sourceRepositoryTypeString=getOption(args, getSerializationName(Parameter.SOURCE_REPOSITORY_TYPE));
+		final Repository sourceRepository=createRepository(sourceRepositoryTypeString!=null ? getSerializedEnum(RepositoryType.class, sourceRepositoryTypeString) : null, sourceRepositoryURI, getOption(args, getSerializationName(Parameter.SOURCE_USERNAME)), getOption(args, getSerializationName(Parameter.SOURCE_PASSWORD)));	//create the correct type of repository for the source
+		final String destinationRepositoryTypeString=getOption(args, getSerializationName(Parameter.DESTINATION_REPOSITORY_TYPE));
+		final Repository destinationRepository=createRepository(destinationRepositoryTypeString!=null ? getSerializedEnum(RepositoryType.class, destinationRepositoryTypeString) : null, destinationRepositoryURI, getOption(args, getSerializationName(Parameter.DESTINATION_USERNAME)), getOption(args, getSerializationName(Parameter.DESTINATION_PASSWORD)));	//create the correct type of repository for the destination
 		try
 		{
 			final RepositorySynchronizer repositorySynchronizer=new RepositorySynchronizer();	//create a new synchronizer
-			final String resolutionString=getParameter(args, getSerializationName(Parameter.RESOLUTION));	//set the resolutions if provided
+			final String resolutionString=getOption(args, getSerializationName(Parameter.RESOLUTION));	//set the resolutions if provided
 			if(resolutionString!=null)
 			{
 				repositorySynchronizer.setResolution(getSerializedEnum(Resolution.class, resolutionString.toUpperCase()));
 			}
-			final String resourceResolutionString=getParameter(args, getSerializationName(Parameter.RESOURCE_RESOLUTION));
+			final String resourceResolutionString=getOption(args, getSerializationName(Parameter.RESOURCE_RESOLUTION));
 			if(resourceResolutionString!=null)
 			{
 				repositorySynchronizer.setResourceResolution(getSerializedEnum(Resolution.class, resourceResolutionString.toUpperCase()));
 			}
-			final String contentResolutionString=getParameter(args, getSerializationName(Parameter.CONTENT_RESOLUTION));
+			final String contentResolutionString=getOption(args, getSerializationName(Parameter.CONTENT_RESOLUTION));
 			if(contentResolutionString!=null)
 			{
 				repositorySynchronizer.setContentResolution(getSerializedEnum(Resolution.class, contentResolutionString.toUpperCase()));
 			}
-			final String metadataResolutionString=getParameter(args, getSerializationName(Parameter.METADATA_RESOLUTION));
+			final String metadataResolutionString=getOption(args, getSerializationName(Parameter.METADATA_RESOLUTION));
 			if(metadataResolutionString!=null)
 			{
 				repositorySynchronizer.setMetadataResolution(getSerializedEnum(Resolution.class, metadataResolutionString.toUpperCase()));
 			}
-			final List<String> ignoreSourceResourceURIParameters=getParameters(args, getSerializationName(Parameter.IGNORE_SOURCE_RESOURCE));	//see if there are any source resources to ignore
-			if(ignoreSourceResourceURIParameters!=null)	//if we have source resources to ignore
+			for(final String ignoreSourceResourceURIString:getOptions(args, getSerializationName(Parameter.IGNORE_SOURCE_RESOURCE)))	//look at all the source resources to ignore
 			{
-				for(final String ignoreSourceResourceURIString:ignoreSourceResourceURIParameters)	//look at all the source resources to ignore
-				{
-					repositorySynchronizer.addIgnoreSourceResourceURI(guessAbsoluteURI(ignoreSourceResourceURIString));	//create a URI from the parameter and add this to the source resources to ignore
-				}
+				repositorySynchronizer.addIgnoreSourceResourceURI(guessAbsoluteURI(ignoreSourceResourceURIString));	//create a URI from the parameter and add this to the source resources to ignore
 			}
-			final List<String> ignoreDestinationResourceURIParameters=getParameters(args, getSerializationName(Parameter.IGNORE_DESTINATION_RESOURCE));	//see if there are any destination resources to ignore
-			if(ignoreDestinationResourceURIParameters!=null)	//if we have destination resources to ignore
+			for(final String ignoreDestinationResourceURIString:getOptions(args, getSerializationName(Parameter.IGNORE_DESTINATION_RESOURCE)))	//look at all the destination resources to ignore
 			{
-				for(final String ignoreDestinationResourceURIString:ignoreDestinationResourceURIParameters)	//look at all the destination resources to ignore
-				{
-					repositorySynchronizer.addIgnoreDestinationResourceURI(guessAbsoluteURI(ignoreDestinationResourceURIString));	//create a URI from the parameter and add this to the destination resources to ignore
-				}
+				repositorySynchronizer.addIgnoreDestinationResourceURI(guessAbsoluteURI(ignoreDestinationResourceURIString));	//create a URI from the parameter and add this to the destination resources to ignore
 			}
-			final List<String> propertyURIParameters=getParameters(args, getSerializationName(Parameter.IGNORE_PROPERTY));	//see if there are any properties to ignore
-			if(propertyURIParameters!=null)	//if we have properties to ignore
+			for(final String ignorePropertyURIString:getOptions(args, getSerializationName(Parameter.IGNORE_PROPERTY)))	//look at all the properties to ignore
 			{
-				for(final String ignorePropertyURIString:propertyURIParameters)	//look at all the properties to ignore
-				{
-					repositorySynchronizer.addIgnorePropertyURI(URI.create(ignorePropertyURIString));	//create a URI from the parameter and add this to the properties to ignore
-				}
+				repositorySynchronizer.addIgnorePropertyURI(URI.create(ignorePropertyURIString));	//create a URI from the parameter and add this to the properties to ignore
 			}
-			repositorySynchronizer.setTest(hasParameter(args, getSerializationName(Parameter.TEST)));	//specify whether this is a test run
+			repositorySynchronizer.setTest(hasFlag(args, getSerializationName(Parameter.TEST)));	//specify whether this is a test run
 			repositorySynchronizer.synchronize(sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//synchronize the resources
 		}
 		catch(final IOException ioException)	//if there is an error
