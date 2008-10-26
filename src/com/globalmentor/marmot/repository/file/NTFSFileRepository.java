@@ -19,12 +19,12 @@ package com.globalmentor.marmot.repository.file;
 import java.io.*;
 import java.net.URI;
 
+import com.globalmentor.io.Files;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.net.URIs;
 import com.globalmentor.urf.DefaultURFResourceAlteration;
 import com.globalmentor.urf.URFResource;
 
-import static com.globalmentor.io.FileConstants.*;
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.net.URIs.isCollectionURI;
 import static com.globalmentor.urf.TURF.TURF_NAME_EXTENSION;
@@ -97,7 +97,7 @@ public class NTFSFileRepository extends FileRepository
 	*/
 	protected File getResourceDescriptionFile(final File resourceFile)
 	{
-		return changeName(resourceFile, resourceFile.getName()+NTFS_ADS_DELIMITER+MARMOT_DESCRIPTION_NAME);	//return a file in the form "file.ext:marmot-description"
+		return changeName(resourceFile, resourceFile.getName()+Files.NTFS_ADS_DELIMITER+MARMOT_DESCRIPTION_NAME);	//return a file in the form "file.ext:marmot-description"
 	}
 
 	/**Determines whether a resource, identified by its private URI, is a description file.
