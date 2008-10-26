@@ -35,14 +35,14 @@ import com.globalmentor.net.http.*;
 import com.globalmentor.urf.dcmi.DCMI;
 import com.globalmentor.util.*;
 
-/**Command-line marmot synchronization utility.
+/**Command-line Marmot synchronization utility.
 @author Garret Wilson
 */
 public class MarmotMirror extends Application
 {
 
 	/**The application URI.*/
-	public final static URI MARMOT_MIRROR_URI=URI.create("urn:x-globalmentor:software:/marmotmirror");
+	public final static URI MARMOT_MIRROR_URI=URI.create("http://globalmentor.com/software/marmotmirror");
 
 	/**The application title.*/
 	public final static String TITLE="Marmot Mirror"+TRADE_MARK_SIGN_CHAR;
@@ -51,7 +51,7 @@ public class MarmotMirror extends Application
 	public final static String COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2006-2008 GlobalMentor, Inc. All Rights Reserved.";	//TODO i18n
 
 	/**The version of the application.*/
-	public final static String VERSION="Alpha Version 0.5 build 2008-10-25";
+	public final static String VERSION="1.0 build 2008-10-26";
 
 	/**Application command-line parameters.*/
 	public enum Parameter
@@ -86,6 +86,8 @@ public class MarmotMirror extends Application
 		TEST,
 		/**Verbose output.*/
 		VERBOSE,
+		/**Quiet output.*/
+		QUIET,
 		/**Turns on HTTP debugging; requires debug mode on.*/
 		DEBUG_HTTP,
 		/**The resolution mode.*/
@@ -172,21 +174,32 @@ public class MarmotMirror extends Application
 			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.METADATA_RESOLUTION)+": How a metadata discrepancy will be resolved.");
 			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.IGNORE_PROPERTY)+": A metadata property to ignore.");
 			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.TEST)+": If specified, no changed will be made.");
-			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.VERBOSE)+": If specified, debug will be turned on to a report level of "+Debug.ReportLevel.INFO+".");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.VERBOSE)+": If specified, debug will be set to a minimum report level of "+Debug.ReportLevel.INFO+"; otherwise, the report level will be "+Debug.ReportLevel.LOG+".");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.QUIET)+": If specified, debug will be set to a minimum report level of "+Debug.ReportLevel.WARN+"; otherwise, the report level will be "+Debug.ReportLevel.LOG+".");
 			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.DEBUG_HTTP)+": Whether HTTP communication is logged; requires debug to be turned on.");
 			return 0;
 		}
-		if(hasFlag(args, getSerializationName(Parameter.VERBOSE)))	//if verbose is turned on
+		try
 		{
-			try
+			Debug.setDebug(true);	//turn on debug
+			final Debug.ReportLevel minimumReportLevel;	//determine the minimum report level
+			if(hasFlag(args, getSerializationName(Parameter.VERBOSE)))
 			{
-				Debug.setDebug(true);	//turn on debug
-				Debug.setMinimumReportLevel(Debug.ReportLevel.INFO);
+				minimumReportLevel=Debug.ReportLevel.INFO;
 			}
-			catch(final IOException ioException)
+			else if(hasFlag(args, getSerializationName(Parameter.QUIET)))
 			{
-				throw new AssertionError(ioException);
+				minimumReportLevel=Debug.ReportLevel.WARN;
 			}
+			else
+			{
+				minimumReportLevel=Debug.ReportLevel.LOG;
+			}
+			Debug.setMinimumReportLevel(minimumReportLevel);
+		}
+		catch(final IOException ioException)
+		{
+			throw new AssertionError(ioException);
 		}
 		final URI sourceRepositoryURI=guessAbsoluteURI(sourceRepositoryString);	//get the source repository URI
 		final String sourceResourceString=getOption(args, getSerializationName(Parameter.SOURCE_RESOURCE));	//get the source resource parameter
@@ -195,7 +208,6 @@ public class MarmotMirror extends Application
 		final String destinationResourceString=getOption(args, getSerializationName(Parameter.DESTINATION_RESOURCE));	//get the destination resource parameter
 		final URI destinationResourceURI=destinationResourceString!=null ? guessAbsoluteURI(destinationResourceString) : destinationRepositoryURI;	//if the destination resource is not specified, use the repository URI
 		HTTPClient.getInstance().setLogged(Debug.isDebug() && hasFlag(args, getSerializationName(Parameter.DEBUG_HTTP)));	//if debugging is turned on, tell the HTTP client to log its data TODO generalize
-		Debug.info("Mirroring from", sourceResourceURI, "to", destinationResourceURI);
 		final String sourceRepositoryTypeString=getOption(args, getSerializationName(Parameter.SOURCE_REPOSITORY_TYPE));
 		final Repository sourceRepository=createRepository(sourceRepositoryTypeString!=null ? getSerializedEnum(RepositoryType.class, sourceRepositoryTypeString) : null, sourceRepositoryURI, getOption(args, getSerializationName(Parameter.SOURCE_USERNAME)), getOption(args, getSerializationName(Parameter.SOURCE_PASSWORD)));	//create the correct type of repository for the source
 		final String destinationRepositoryTypeString=getOption(args, getSerializationName(Parameter.DESTINATION_REPOSITORY_TYPE));
@@ -243,7 +255,6 @@ public class MarmotMirror extends Application
 			displayError(ioException);
 			return 1;
 		}
-		Debug.info("Mirroring finished.");
 		return 0;	//return no error
 	}
 

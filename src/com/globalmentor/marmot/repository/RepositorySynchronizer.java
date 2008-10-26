@@ -172,9 +172,11 @@ public class RepositorySynchronizer
 	*/
 	public void synchronize(final Repository sourceRepository, final URI sourceResourceURI, final Repository destinationRepository, final URI destinationResourceURI) throws IOException
 	{
+		Debug.log(getTestStatus(), "Synchronization starting, source:", sourceResourceURI, "destination:", destinationResourceURI, "resource-resolution:", getResourceResolution(), "content-resolution:", getContentResolution(), "metadata-resolution:", getMetadataResolution());
 		final URFResource sourceResourceDescription=sourceRepository.resourceExists(sourceResourceURI) ? sourceRepository.getResourceDescription(sourceResourceURI) : null;	//get the description of the source resource if it exists
 		final URFResource destinationResourceDescription=destinationRepository.resourceExists(destinationResourceURI) ? destinationRepository.getResourceDescription(destinationResourceURI) : null;	//get the description of the destination resource if it exists
 		synchronize(sourceRepository, sourceResourceURI, sourceResourceURI, sourceResourceDescription, destinationRepository, destinationResourceURI, destinationResourceURI, destinationResourceDescription);	//synchronize using the descriptions and the initial URIs as the base URIs
+		Debug.log(getTestStatus(), "Synchronization finished.");
 	}
 
 	/**Synchronizes two resources in two separate repositories.
@@ -193,6 +195,7 @@ public class RepositorySynchronizer
 	*/
 	protected void synchronize(final Repository sourceRepository, final URI sourceBaseURI, final URI sourceResourceURI, URFResource sourceResourceDescription, final Repository destinationRepository, final URI destinationBaseURI, final URI destinationResourceURI, URFResource destinationResourceDescription) throws IOException
 	{
+		Debug.info(getTestStatus(), "Synchronizing", sourceResourceURI);
 		if(ignoreSourceResourceURIs.contains(sourceResourceURI) || ignoreDestinationResourceURIs.contains(destinationResourceURI))	//if this is a resource to ignore
 		{
 			return;	//don't do anything further
@@ -216,7 +219,7 @@ public class RepositorySynchronizer
 			{
 				if(orphanResolution!=Resolution.IGNORE)
 				{
-					Debug.info(getTestStatus(), "Resolve source orphan:", orphanResolution, sourceResourceURI, destinationResourceURI);
+					Debug.log(getTestStatus(), "Resolve source orphan:", orphanResolution, sourceResourceURI, destinationResourceURI);
 				}
 				if(!isTest())	//if this is not just a test
 				{
@@ -246,7 +249,7 @@ public class RepositorySynchronizer
 			{
 				if(orphanResolution!=Resolution.IGNORE)
 				{
-					Debug.info(getTestStatus(), "Resolve destination orphan:", orphanResolution, sourceResourceURI, destinationResourceURI);
+					Debug.log(getTestStatus(), "Resolve destination orphan:", orphanResolution, sourceResourceURI, destinationResourceURI);
 				}
 				if(!isTest())	//if this is not just a test
 				{
@@ -283,7 +286,7 @@ public class RepositorySynchronizer
 				final Resolution resolution=getContentResolution();
 				if(resolution!=Resolution.IGNORE)
 				{
-					Debug.info(getTestStatus(), "Resolve content:", resolution, sourceResourceDescription.getURI(), destinationResourceDescription.getURI());
+					Debug.log(getTestStatus(), "Resolve content:", resolution, sourceResourceDescription.getURI(), destinationResourceDescription.getURI());
 				}
 				resolveContent(resolution, sourceRepository, sourceResourceDescription, sourceContentModified, destinationRepository, destinationResourceDescription, destinationContentModified);	//resolve the descrepancy between source and destination
 			}
@@ -586,7 +589,7 @@ public class RepositorySynchronizer
 					}
 					if(resolution!=Resolution.IGNORE)
 					{
-						Debug.info(getTestStatus(), "Resolve metadata:", resolution, "set property", outputResourceDescription.getURI(), inputProperty);
+						Debug.log(getTestStatus(), "Resolve metadata:", resolution, "set property", outputResourceDescription.getURI(), inputProperty);
 						outputPropertyURIRemovals.add(inputPropertyURI);	//we'll replace all of these properties in the output
 						outputPropertyAdditions.add(inputProperty);	//we'll add this new property and value to the output
 					}
@@ -615,7 +618,7 @@ public class RepositorySynchronizer
 						}
 						if(resolution!=Resolution.IGNORE)
 						{
-							Debug.info(getTestStatus(), "Resolve metadata:", resolution, "remove property", outputResourceDescription.getURI(), outputProperty.getPropertyURI());
+							Debug.log(getTestStatus(), "Resolve metadata:", resolution, "remove property", outputResourceDescription.getURI(), outputProperty.getPropertyURI());
 							outputPropertyURIRemovals.add(outputPropertyURI);	//we'll remove all of these properties in the output; if there were any replacements they will have already been added 
 						}
 					}
