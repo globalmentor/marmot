@@ -140,13 +140,16 @@ public class RepositorySynchronizer
 			ignorePropertyURIs.add(propertyURI);
 		}
 
-	/**Sets the resolution at the resource, content, and metadata level.
+	/**Convience method that sets the resolution at the resource, content, and metadata level.
 	@param resolution How incompatibilities between resources will be resolved.
 	@throws NullPointerException if the given resolution is <code>null</code>.
+	@see #setResolution(Resolution)
+	@see #setContentResolution(Resolution)
+	@see #setMetadataResolution(Resolution)
 	*/
 	public void setResolution(final Resolution resolution)
 	{
-		setResolution(resolution);
+		setResourceResolution(resolution);
 		setContentResolution(resolution);
 		setMetadataResolution(resolution);
 	}
