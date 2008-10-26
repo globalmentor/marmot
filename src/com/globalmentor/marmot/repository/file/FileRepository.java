@@ -39,6 +39,7 @@ import static com.globalmentor.urf.TURF.*;
 /**Repository stored in a filesystem.
 <p>This implementation uses the file last modified timestamp to store the {@value Content#MODIFIED_PROPERTY_URI} property.
 The content modified property is not saved for collections with no content.</p>
+<p>This implementation ignores hidden files when considering child resources.</p>
 @author Garret Wilson
 */
 public class FileRepository extends AbstractRepository
@@ -63,13 +64,21 @@ public class FileRepository extends AbstractRepository
 	private final FileFilter fileFilter=new FileFilter()
 			{
 				/**Tests whether or not the specified abstract pathname is one of the file types we recognize.
-				This implementation delegates to #is
-				@param pathname The abstract pathname to be tested.
-				@return <code>true</code> if and only if <code>pathname</code> should be included.
+				This implementation ignores hidden files.
+				This implementation delegates to {@link FileRepository#isPrivateURIResourcePublic(URI)}.
+				@param file The abstract pathname to be tested.
+				@return <code>true</code> if and only if the indicated file should be included.
+				@throws NullPointerException if the given file is <code>null</code>.
+				@see File#isHidden()
+				@see FileRepository#isPrivateURIResourcePublic(URI)
 				*/
-				public boolean accept(final File pathname)
+				public boolean accept(final File file)
 				{
-					return isPrivateURIResourcePublic(toURI(pathname));	//see if the private URI represented by this file should be accepted 
+					if(file.isHidden())	//ignore hidden files
+					{
+						return false;
+					}
+					return isPrivateURIResourcePublic(toURI(file));	//see if the private URI represented by this file should be accepted 
 				}
 			};
 		
