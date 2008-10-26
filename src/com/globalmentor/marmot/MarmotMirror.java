@@ -135,10 +135,10 @@ public class MarmotMirror extends Application
 			System.out.println(TITLE);
 			System.out.println(VERSION);
 			System.out.println(COPYRIGHT);
-			System.out.println("Usage: MarmotMirror -source-repository <file|URI> [-source-repositorytype <repository type>] [-source-username <username>] [-source-password <password>] [-source-resource <file|URI>] " +
-					"-destination-repository <URI> [-source-repository-type <repository type>] [-destination-username <username>] [-destination-password <password>] [-destination-resource <file|URI>] " +
-					"[-ignore-source-resource <file|URI>] [-ignore-destination-resource <file|URI>] [-ignore-property <URI>]* " +
-					"[-resolution] [-resource-resolution] [-content-resolution] [-metadata-resolution] [-test] [-verbose] [-debug-http]");
+			System.out.println("Usage: MarmotMirror --source-repository <file|URI> [--source-repositorytype <repository type>] [--source-username <username>] [--source-password <password>] [--source-resource <file|URI>] " +
+					"--destination-repository <URI> [--source-repository-type <repository type>] [--destination-username <username>] [--destination-password <password>] [--destination-resource <file|URI>] " +
+					"[--ignore-source-resource <file|URI>]* [--ignore-destination-resource <file|URI>]* [--ignore-property <URI>]* " +
+					"[--resolution] [--resource-resolution] [--content-resolution] [--metadata-resolution] [--test] [--verbose] [--debug-http]");
 			System.out.println("");
 			System.out.println("Synchronization occurs on three levels: individual resources (i.e. orphans), metadata, and content, each of which can have a different resolution specified.");
 			System.out.println("");
@@ -148,32 +148,32 @@ public class MarmotMirror extends Application
 			System.out.println("  "+getSerializationName(RepositoryType.WEBDAV)+": A WebDAV repository.");
 			System.out.println("  "+getSerializationName(RepositoryType.SVN)+": A Subversion repository over WebDAV..");
 			System.out.println("");
-			System.out.println("-"+getSerializationName(Parameter.SOURCE_REPOSITORY)+": The source repository.");
-			System.out.println("-"+getSerializationName(Parameter.SOURCE_REPOSITORY_TYPE)+": The type of source repository.");
-			System.out.println("-"+getSerializationName(Parameter.SOURCE_RESOURCE)+": The source resource to synchronize; defaults to the source repository root.");
-			System.out.println("-"+getSerializationName(Parameter.IGNORE_SOURCE_RESOURCE)+": A source resource to ignore.");
-			System.out.println("-"+getSerializationName(Parameter.SOURCE_USERNAME)+": The source repository username, if appropriate.");
-			System.out.println("-"+getSerializationName(Parameter.SOURCE_PASSWORD)+": The source repository password, if appropriate.");
-			System.out.println("-"+getSerializationName(Parameter.DESTINATION_REPOSITORY)+": The destination repository.");
-			System.out.println("-"+getSerializationName(Parameter.DESTINATION_REPOSITORY_TYPE)+": The type of destination repository.");
-			System.out.println("-"+getSerializationName(Parameter.DESTINATION_RESOURCE)+": The destination resource to synchronize; defaults to the destination repository root.");
-			System.out.println("-"+getSerializationName(Parameter.IGNORE_DESTINATION_RESOURCE)+": A destination resource to ignore.");
-			System.out.println("-"+getSerializationName(Parameter.DESTINATION_USERNAME)+": The destination repository username, if appropriate.");
-			System.out.println("-"+getSerializationName(Parameter.DESTINATION_PASSWORD)+": The destination repository password, if appropriate.");
-			System.out.println("-"+getSerializationName(Parameter.RESOLUTION)+": The default resolution for encountered conditions; defaults to \"backup\".");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.SOURCE_REPOSITORY)+": The source repository.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.SOURCE_REPOSITORY_TYPE)+": The type of source repository.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.SOURCE_RESOURCE)+": The source resource to synchronize; defaults to the source repository root.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.IGNORE_SOURCE_RESOURCE)+": A source resource to ignore.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.SOURCE_USERNAME)+": The source repository username, if appropriate.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.SOURCE_PASSWORD)+": The source repository password, if appropriate.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.DESTINATION_REPOSITORY)+": The destination repository.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.DESTINATION_REPOSITORY_TYPE)+": The type of destination repository.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.DESTINATION_RESOURCE)+": The destination resource to synchronize; defaults to the destination repository root.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.IGNORE_DESTINATION_RESOURCE)+": A destination resource to ignore.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.DESTINATION_USERNAME)+": The destination repository username, if appropriate.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.DESTINATION_PASSWORD)+": The destination repository password, if appropriate.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.RESOLUTION)+": The default resolution for encountered conditions; defaults to \"backup\".");
 			System.out.println("  "+getSerializationName(RepositorySynchronizer.Resolution.BACKUP)+": The source will overwrite the destination; the destination is intended to be a mirror of the source.");
 			System.out.println("  "+getSerializationName(RepositorySynchronizer.Resolution.RESTORE)+": The destination will overwrite the source; the source is intended to be a mirror of the destination.");
 			System.out.println("  "+getSerializationName(RepositorySynchronizer.Resolution.PRODUCE)+": The source will overwrite the destination, but missing source information will not cause destination information to be removed.");
 			System.out.println("  "+getSerializationName(RepositorySynchronizer.Resolution.CONSUME)+": The destination will overwrite the source; but missing destination information will not cause source information to be removed.");
 			System.out.println("  "+getSerializationName(RepositorySynchronizer.Resolution.SYNCHRONIZE)+": Newer information will overwrite older information; the source and destination are intended to be updated with the latest changes from each, although for orphan resources this will be consdered the same as "+getSerializationName(RepositorySynchronizer.Resolution.BACKUP)+".");
 			System.out.println("  "+getSerializationName(RepositorySynchronizer.Resolution.IGNORE)+": No action will occur.");
-			System.out.println("-"+getSerializationName(Parameter.RESOURCE_RESOLUTION)+": How an orphan resource situation (i.e. one resource exists and the other does not) will be resolved.");
-			System.out.println("-"+getSerializationName(Parameter.CONTENT_RESOLUTION)+": How a content discrepancy will be resolved.");
-			System.out.println("-"+getSerializationName(Parameter.METADATA_RESOLUTION)+": How a metadata discrepancy will be resolved.");
-			System.out.println("-"+getSerializationName(Parameter.IGNORE_PROPERTY)+": A metadata property to ignore.");
-			System.out.println("-"+getSerializationName(Parameter.TEST)+": If specified, no changed will be made.");
-			System.out.println("-"+getSerializationName(Parameter.VERBOSE)+": If specified, debug will be turned on to a report level of "+Debug.ReportLevel.INFO+".");
-			System.out.println("-"+getSerializationName(Parameter.DEBUG_HTTP)+": Whether HTTP communication is logged; requires debug to be turned on.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.RESOURCE_RESOLUTION)+": How an orphan resource situation (i.e. one resource exists and the other does not) will be resolved.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.CONTENT_RESOLUTION)+": How a content discrepancy will be resolved.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.METADATA_RESOLUTION)+": How a metadata discrepancy will be resolved.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.IGNORE_PROPERTY)+": A metadata property to ignore.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.TEST)+": If specified, no changed will be made.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.VERBOSE)+": If specified, debug will be turned on to a report level of "+Debug.ReportLevel.INFO+".");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.DEBUG_HTTP)+": Whether HTTP communication is logged; requires debug to be turned on.");
 			return 0;
 		}
 		if(hasFlag(args, getSerializationName(Parameter.VERBOSE)))	//if verbose is turned on
@@ -240,8 +240,7 @@ public class MarmotMirror extends Application
 		}
 		catch(final IOException ioException)	//if there is an error
 		{
-			Debug.error(ioException);	//TODO fix; why doesn't writing to System.err work?
-			System.err.println("Error: "+ioException);
+			displayError(ioException);
 			return 1;
 		}
 		Debug.info("Mirroring finished.");
