@@ -213,7 +213,7 @@ public class RepositorySynchronizer
 			{
 				if(orphanResolution!=Resolution.IGNORE)
 				{
-					Debug.info("Resolve source orphan:", orphanResolution, sourceResourceURI, destinationResourceURI);
+					Debug.info(getTestStatus(), "Resolve source orphan:", orphanResolution, sourceResourceURI, destinationResourceURI);
 				}
 				if(!isTest())	//if this is not just a test
 				{
@@ -243,7 +243,7 @@ public class RepositorySynchronizer
 			{
 				if(orphanResolution!=Resolution.IGNORE)
 				{
-					Debug.info("Resolve destination orphan:", orphanResolution, sourceResourceURI, destinationResourceURI);
+					Debug.info(getTestStatus(), "Resolve destination orphan:", orphanResolution, sourceResourceURI, destinationResourceURI);
 				}
 				if(!isTest())	//if this is not just a test
 				{
@@ -272,18 +272,20 @@ public class RepositorySynchronizer
 		}
 		else if(sourceExists)	//if both resources exist (we know at this point that either both exist or both don't exist)
 		{
-			final boolean isContentSynchronized=isContentSynchronized(sourceRepository, sourceResourceDescription, destinationRepository, destinationResourceDescription);	//see if the content of the two resources are synchronized
+			final Date sourceContentModified=getModified(sourceResourceDescription);	//get the date of the source
+			final Date destinationContentModified=getModified(destinationResourceDescription);	//get the date of the destination
+			final boolean isContentSynchronized=isContentSynchronized(sourceRepository, sourceResourceDescription, sourceContentModified, destinationRepository, destinationResourceDescription, destinationContentModified);	//see if the content of the two resources are synchronized
 			if(!isContentSynchronized)//if the source and destination are not synchronized
 			{
 				final Resolution resolution=getContentResolution();
 				if(resolution!=Resolution.IGNORE)
 				{
-					Debug.info("Resolve content:", resolution, sourceResourceDescription.getURI(), destinationResourceDescription.getURI());
+					Debug.info(getTestStatus(), "Resolve content:", resolution, sourceResourceDescription.getURI(), destinationResourceDescription.getURI());
 				}
-				resolveContent(resolution, sourceRepository, sourceResourceDescription, destinationRepository, destinationResourceDescription);	//resolve the descrepancy between source and destination
+				resolveContent(resolution, sourceRepository, sourceResourceDescription, sourceContentModified, destinationRepository, destinationResourceDescription, destinationContentModified);	//resolve the descrepancy between source and destination
 			}
 			final Resolution metadataResolution=getMetadataResolution();
-			resolveMetadata(metadataResolution, sourceRepository, sourceResourceDescription, destinationRepository, destinationResourceDescription);
+			resolveMetadata(metadataResolution, sourceRepository, sourceResourceDescription, sourceContentModified, destinationRepository, destinationResourceDescription, destinationContentModified);
 		}
 		if(isSourceCollection && sourceExists && destinationExists)	//if now have two collections that both exist, synchronize the children
 		{
@@ -317,14 +319,16 @@ public class RepositorySynchronizer
 	Two collections with the same relevant individual properties are considered mirrors; child resources are not examined.
 	@param sourceRepository The repository in which the source resource lies.
 	@param sourceResourceDescription The source resource
+	@param sourceContentModified The date and time at which the content of the source was modified, or <code>null</code> if not known.
 	@param destinationRepository The repository in which the destination resource lies.
 	@param destinationResourceDescription The destination resource.
+	@param destinationContentModified The date and time at which the content of the destination was modified, or <code>null</code> if not known.
 	@return <code>true</code> If both resources are of the same type and have the same relevant properties, such as size and content.
 	@throws NullPointerException if one of the repositories and/or resources is <code>null</code>.
 	@throws IOException if there is a problem accessing one of the resources.
 	@throws IllegalArgumentException if one of the resources is a collection and the other is not.
 	*/
-	public boolean isContentSynchronized(final Repository sourceRepository, final URFResource sourceResourceDescription, final Repository destinationRepository, final URFResource destinationResourceDescription) throws IOException
+	public boolean isContentSynchronized(final Repository sourceRepository, final URFResource sourceResourceDescription, final Date sourceContentModified, final Repository destinationRepository, final URFResource destinationResourceDescription, final Date destinationContentModified) throws IOException
 	{
 		final boolean isSourceCollection=isCollectionURI(sourceResourceDescription.getURI());	//see if the source is a collection
 		final boolean isDestinationCollection=isCollectionURI(destinationResourceDescription.getURI());	//see if the destination is a collection
@@ -358,17 +362,21 @@ public class RepositorySynchronizer
 	}
 
 	/**Resolves a content descrepancy between a source and a destination resource.
-	If the resource dates are not available or are the same, the {@link Resolution#SYNCHRONIZE} resolution will have no effect.
+	If the resource dates are the same, the {@link Resolution#SYNCHRONIZE} resolution will have no effect.
+	If only one of the resource dates is available, it is considered newer for the purpose of the {@link Resolution#SYNCHRONIZE} resolution.
+	If neither resource date is available, the {@link Resolution#SYNCHRONIZE} resolution will be considered the same as the {@link Resolution#BACKUP} resolution.
 	Both resources must exist.
 	@param resolution How the descrepancy should be resolved
 	@param sourceRepository The source repository.
 	@param sourceResourceDescription The description of the source resource.
+	@param sourceContentModified The date and time at which the content of the source was modified, or <code>null</code> if not known.
 	@param destinationRepository The destination repository.
 	@param destinationResourceDescription The description of the destination resource.
+	@param destinationContentModified The date and time at which the content of the destination was modified, or <code>null</code> if not known.
 	@throws NullPointerException if any of the given arguments are <code>null</code>.
 	@throws IOException if there is an I/O error while performing the action.
 	*/
-	protected void resolveContent(Resolution resolution, final Repository sourceRepository, final URFResource sourceResourceDescription, final Repository destinationRepository, final URFResource destinationResourceDescription) throws IOException
+	protected void resolveContent(Resolution resolution, final Repository sourceRepository, final URFResource sourceResourceDescription, final Date sourceContentModified, final Repository destinationRepository, final URFResource destinationResourceDescription, final Date destinationContentModified) throws IOException
 	{
 		if(resolution==Resolution.IGNORE)	//if this situation should be ignored
 		{
@@ -376,22 +384,38 @@ public class RepositorySynchronizer
 		}
 		if(resolution==Resolution.SYNCHRONIZE)	//if we should synchronize the resource content
 		{
-			final Date sourceDate=getModified(sourceResourceDescription);	//get the date of the source
-			final Date destinationDate=getModified(sourceResourceDescription);	//get the date of the destination
-			if(sourceDate!=null && destinationDate!=null)	//if we have dates for the resources
+			if(sourceContentModified!=null)	//if there is a source date
 			{
-				final int dateComparison=sourceDate.compareTo(destinationDate);	//compare the dates
-				if(dateComparison>0)	//if the destination is older than the source
+				if(destinationContentModified!=null)	//if we have dates for both resources
 				{
-					resolution=Resolution.BACKUP;	//copy the source to the destination
+					final int dateComparison=sourceContentModified.compareTo(destinationContentModified);	//compare the dates
+					if(dateComparison>0)	//if the destination is older than the source
+					{
+						resolution=Resolution.BACKUP;	//copy the source to the destination
+					}
+					else if(dateComparison<0)	//if the source is older than the destination
+					{
+						resolution=Resolution.RESTORE;	//copy the destination to the source
+					}
+					else	//if the two resources have the same date
+					{
+						return;	//don't do anything
+					}
 				}
-				else if(dateComparison<0)	//if the source is older than the destination
+				else	//if we only have a source date
 				{
-					resolution=Resolution.RESTORE;	//copy the destination to the source
+					resolution=Resolution.BACKUP;	//assume the source is newer; back it up
 				}
-				else	//if the two resources have the same date
+			}
+			else	//if there is no source date
+			{
+				if(destinationContentModified!=null)	//if there is only a destination date
 				{
-					return;	//don't do anything
+					resolution=Resolution.RESTORE;	//assume the destination is newer; restore it
+				}
+				else	//if neither resource has a date
+				{
+					resolution=Resolution.BACKUP;	//bias toward backup
 				}
 			}
 		}
@@ -442,39 +466,78 @@ public class RepositorySynchronizer
 	}
 
 	/**Resolves metadata descrepancies between a source and a destination resource.
+	If the resource dates are the same, the {@link Resolution#SYNCHRONIZE} resolution will be considered the same as the {@link Resolution#BACKUP} resolution.
+	If only one of the resource dates is available, it is considered newer for the purpose of the {@link Resolution#SYNCHRONIZE} resolution.
+	If neither resource date is available, the {@link Resolution#SYNCHRONIZE} resolution will be considered the same as the {@link Resolution#BACKUP} resolution.
+	The content modified date is ignored for zero-length collections for determining the correct {@link Resolution#SYNCHRONIZE} resolution.
+	 * 
+	 * 
 	If the resource dates are not available or are the same, the {@link Resolution#SYNCHRONIZE} resolution will have no effect.
 	Both resources must exist.
 	@param resolution How the descrepancy should be resolved
 	@param sourceRepository The source repository.
 	@param sourceResourceDescription The description of the source resource.
+	@param sourceContentModified The date and time at which the content of the source was modified, or <code>null</code> if not known.
 	@param destinationRepository The destination repository.
 	@param destinationResourceDescription The description of the destination resource.
+	@param destinationContentModified The date and time at which the content of the destination was modified, or <code>null</code> if not known.
 	@throws NullPointerException if any of the given arguments are <code>null</code>.
 	@throws IOException if there is an I/O error while performing the action.
 	*/
-	protected void resolveMetadata(Resolution resolution, final Repository sourceRepository, final URFResource sourceResourceDescription, final Repository destinationRepository, final URFResource destinationResourceDescription) throws IOException
+	protected void resolveMetadata(Resolution resolution, final Repository sourceRepository, final URFResource sourceResourceDescription, Date sourceContentModified, final Repository destinationRepository, final URFResource destinationResourceDescription, Date destinationContentModified) throws IOException
 	{
 		if(resolution==Resolution.IGNORE)	//if this situation should be ignored
 		{
 			return;	//don't do anything
 		}
-		if(resolution==Resolution.SYNCHRONIZE) {	//if we should synchronize the resource content
-			final Date sourceDate=getModified(sourceResourceDescription);	//get the date of the source
-			final Date destinationDate=getModified(sourceResourceDescription);	//get the date of the destination
-			if(sourceDate!=null && destinationDate!=null)	//if we have dates for the resources
+		final boolean isCollection=isCollectionURI(sourceResourceDescription.getURI());
+		final long sourceContentLength=getContentLength(sourceResourceDescription);
+		final long destinationContentLength=getContentLength(destinationResourceDescription);
+		if(isCollection)	//ignore content created and content modified for zero-length or unknown-length collections
+		{
+			if(sourceContentLength<=0)	
 			{
-				final int dateComparison=sourceDate.compareTo(destinationDate);	//compare the dates
-				if(dateComparison>0)	//if the destination is older than the source
+				sourceContentModified=null;
+			}
+			if(destinationContentLength<=0)	
+			{
+				destinationContentModified=null;
+			}
+		}
+		if(resolution==Resolution.SYNCHRONIZE)	//if we should synchronize the metadata
+		{
+			if(sourceContentModified!=null)	//if there is a source date
+			{
+				if(destinationContentModified!=null)	//if we have dates for both resources
 				{
-					resolution=Resolution.BACKUP;	//copy the source to the destination
+					final int dateComparison=sourceContentModified.compareTo(destinationContentModified);	//compare the dates
+					if(dateComparison>0)	//if the destination is older than the source
+					{
+						resolution=Resolution.BACKUP;	//copy the source to the destination
+					}
+					else if(dateComparison<0)	//if the source is older than the destination
+					{
+						resolution=Resolution.RESTORE;	//copy the destination to the source
+					}
+					else	//if the two resources have the same date
+					{
+						resolution=Resolution.BACKUP;	//copy the source to the destination
+					}
 				}
-				else if(dateComparison<0)	//if the source is older than the destination
+				else	//if we only have a source date
 				{
-					resolution=Resolution.RESTORE;	//copy the destination to the source
+					resolution=Resolution.BACKUP;	//assume the source is newer; back it up
 				}
-				else	//if the two resources have the same date
+			}
+			else	//if there is no source date
+			{
+				if(destinationContentModified!=null)	//if there is only a destination date
 				{
-					return;	//don't do anything
+					resolution=Resolution.RESTORE;	//assume the destination is newer; restore it
+				}
+				else	//if neither resource has a date
+				{
+					resolution=Resolution.BACKUP;	//bias toward backup
 				}
 			}
 		}
@@ -501,8 +564,6 @@ public class RepositorySynchronizer
 		}
 		final Set<URI> outputPropertyURIRemovals=new HashSet<URI>();
 		final Set<URFProperty> outputPropertyAdditions=new HashSet<URFProperty>();
-		final boolean isCollection=isCollectionURI(outputResourceDescription.getURI());
-		final long contentLength=getContentLength(outputResourceDescription);
 		for(final URFProperty inputProperty:inputResourceDescription.getProperties())	//copy input properties not present in the output
 		{
 			if(!outputResourceDescription.hasProperty(inputProperty))	//if this input property is not in the output
@@ -510,18 +571,18 @@ public class RepositorySynchronizer
 				final URI inputPropertyURI=inputProperty.getPropertyURI();
 				if(!ignorePropertyURIs.contains(inputPropertyURI) && !inputRepository.isLivePropertyURI(inputPropertyURI))	//ignore specified properties and live properties
 				{
-					if(isCollection && contentLength==0)	//ignore content created and content modified for zero-length collections
+					if(isCollection && (sourceContentLength<=0 || destinationContentLength<=0))	//ignore content created and content modified for zero-length or unknown-length collections
 					{
 						if(Content.CREATED_PROPERTY_URI.equals(inputPropertyURI) || Content.MODIFIED_PROPERTY_URI.equals(inputPropertyURI))
 						{
 							continue;
 						}
 					}
-					outputPropertyURIRemovals.add(inputPropertyURI);	//we'll replace all of these properties in the output
-					outputPropertyAdditions.add(inputProperty);	//we'll add this new property and value to the output
 					if(resolution!=Resolution.IGNORE)
 					{
-						Debug.info("Resolve metadata:", resolution, outputResourceDescription.getURI(), "set", inputProperty);
+						Debug.info(getTestStatus(), "Resolve metadata:", resolution, "set property", outputResourceDescription.getURI(), inputProperty);
+						outputPropertyURIRemovals.add(inputPropertyURI);	//we'll replace all of these properties in the output
+						outputPropertyAdditions.add(inputProperty);	//we'll add this new property and value to the output
 					}
 				}
 			}
@@ -535,10 +596,17 @@ public class RepositorySynchronizer
 				{
 					if(!ignorePropertyURIs.contains(outputPropertyURI) && !outputRepository.isLivePropertyURI(outputPropertyURI))	//ignore specified properties and live properties
 					{
-						outputPropertyURIRemovals.add(outputPropertyURI);	//we'll remove all of these properties in the output; if there were any replacements they will have already been added 
+						if(isCollection && (sourceContentLength<=0 || destinationContentLength<=0))	//ignore content created and content modified for zero-length or unknown-length collections
+						{
+							if(Content.CREATED_PROPERTY_URI.equals(outputPropertyURI) || Content.MODIFIED_PROPERTY_URI.equals(outputPropertyURI))
+							{
+								continue;
+							}
+						}
 						if(resolution!=Resolution.IGNORE)
 						{
-							Debug.info("Resolve metadata:", resolution, outputResourceDescription.getURI(), "remove", outputProperty.getPropertyURI());
+							Debug.info(getTestStatus(), "Resolve metadata:", resolution, "remove property", outputResourceDescription.getURI(), outputProperty.getPropertyURI());
+							outputPropertyURIRemovals.add(outputPropertyURI);	//we'll remove all of these properties in the output; if there were any replacements they will have already been added 
 						}
 					}
 				}
@@ -552,6 +620,12 @@ public class RepositorySynchronizer
 				outputRepository.alterResourceProperties(outputResourceDescription.getURI(), outputResourceAlteration);	//alter the output resource properties
 			}
 		}
+	}
+
+	/**@return A status string indicating whether synchronization is in test mode.*/
+	protected String getTestStatus()
+	{
+		return isTest() ? "(test)" : "*";
 	}
 
 }

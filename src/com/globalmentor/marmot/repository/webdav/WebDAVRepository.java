@@ -34,7 +34,6 @@ import static com.globalmentor.util.Locales.*;
 
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.net.URIs.*;
-import static com.globalmentor.net.http.webdav.ApacheWebDAV.*;
 import static com.globalmentor.net.http.webdav.WebDAV.*;
 
 import com.globalmentor.io.*;
@@ -111,6 +110,16 @@ public class WebDAVRepository extends AbstractRepository
 		*/
 		protected Set<String> getIgnoredWebDAVNamespaces() {return ignoredWebDAVNamespaces;}
 
+	/**The WebDAV properties that are not automatically added as URF properties, although some of these properties may be explicitly used.*/
+//TODO del if not needed	private final Set<String> ignoredWebDAVProperties=new HashSet<String>();
+
+		/**Returns the WebDAV properties that are not automatically added as URF properties.
+		Some of these properties may be explicitly used.
+		The returned map is not thread-safe; it can be used for reading, but should not be modified after repository construction.
+		@return The WebDAV properties that are not automatically added as URF properties.
+		*/
+//TODO del if not needed		protected Set<String> getIgnoredWebDAVProperties() {return ignoredWebDAVProperties;}
+
 	/**Repository URI contructor using the default HTTP client.
 	The given repository URI should end in a slash.
 	@param repositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
@@ -153,7 +162,10 @@ public class WebDAVRepository extends AbstractRepository
 		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO=(URFResourceTURFIO<URFResource>)getDescriptionIO();	//get the description I/O
 		urfResourceDescriptionIO.setBOMWritten(false);	//turn off BOM generation
 		urfResourceDescriptionIO.setFormatted(false);	//turn off formatting
-		getIgnoredWebDAVNamespaces().add(APACHE_WEBDAV_PROPERTY_NAMESPACE_URI.toString());	//by default ignore properties in the Apache WebDAV namespace
+		getIgnoredWebDAVNamespaces().add(WEBDAV_NAMESPACE.toString());	//we only access WebDAV-specific properties explictly
+		getIgnoredWebDAVNamespaces().add(MARMOT_WEBDAV_REPOSITORY_NAMESPACE_URI.toString());	//we only access Marmot WebDAV repository properties explictly
+		getIgnoredWebDAVNamespaces().add(ApacheWebDAV.APACHE_WEBDAV_PROPERTY_NAMESPACE_URI.toString());	//by default ignore properties in the Apache WebDAV namespace
+		getIgnoredWebDAVNamespaces().add(SRTWebDAV.SRT_WEBDAV_PROPERTY_NAMESPACE_URI.toString());	//ignore South River Tech properties, which duplicate URF properties, unless we ask for them specifically to guess at a the last modified time
 	}
 	
 	/**Creates a repository of the same type as this repository with the same access privileges as this one.
@@ -1260,6 +1272,7 @@ public class WebDAVRepository extends AbstractRepository
 			}
 		}
 		URFDateTime created=getCreated(resource);	//try to determine the creation date and time; the stored creation time will always trump everything else
+/*TODO del automatic content.created update 
 		if(created==null)	//if no creation time is specified
 		{
 			final WebDAVProperty srtCreationTimeProperty=properties.get(SRTWebDAV.DEPRECATED_CREATION_TIME_PROPERTY_NAME);	//check for the SRT creation date which, if set by WebDrive, will trump the WebDAV creation date
@@ -1304,6 +1317,7 @@ public class WebDAVRepository extends AbstractRepository
 				setCreated(resource, created);	//set the created date time
 			}
 		}
+*/
 		URFDateTime webdavGetLastModified=null;	//try to determine the modified date and time as WebDAV reports it
 		final WebDAVProperty webdavLastModifiedProperty=contentProperties.get(GET_LAST_MODIFIED_PROPERTY_NAME);	//D:getlastmodified
 		if(webdavLastModifiedProperty!=null)
