@@ -470,9 +470,8 @@ public class RepositorySynchronizer
 	If only one of the resource dates is available, it is considered newer for the purpose of the {@link Resolution#SYNCHRONIZE} resolution.
 	If neither resource date is available, the {@link Resolution#SYNCHRONIZE} resolution will be considered the same as the {@link Resolution#BACKUP} resolution.
 	The content modified date is ignored for zero-length collections for determining the correct {@link Resolution#SYNCHRONIZE} resolution.
-	 * 
-	 * 
 	If the resource dates are not available or are the same, the {@link Resolution#SYNCHRONIZE} resolution will have no effect.
+	This method ignores the {@link Content#MODIFIED_PROPERTY_URI} property.
 	Both resources must exist.
 	@param resolution How the descrepancy should be resolved
 	@param sourceRepository The source repository.
@@ -571,9 +570,13 @@ public class RepositorySynchronizer
 				final URI inputPropertyURI=inputProperty.getPropertyURI();
 				if(!ignorePropertyURIs.contains(inputPropertyURI) && !inputRepository.isLivePropertyURI(inputPropertyURI))	//ignore specified properties and live properties
 				{
-					if(isCollection && (sourceContentLength<=0 || destinationContentLength<=0))	//ignore content created and content modified for zero-length or unknown-length collections
+					if(Content.MODIFIED_PROPERTY_URI.equals(inputPropertyURI))	//content modified only gets updated when we update content
 					{
-						if(Content.CREATED_PROPERTY_URI.equals(inputPropertyURI) || Content.MODIFIED_PROPERTY_URI.equals(inputPropertyURI))
+						continue;
+					}
+					if(isCollection && (sourceContentLength<=0 || destinationContentLength<=0))	//ignore content created for zero-length or unknown-length collections
+					{
+						if(Content.CREATED_PROPERTY_URI.equals(inputPropertyURI))
 						{
 							continue;
 						}
@@ -596,9 +599,13 @@ public class RepositorySynchronizer
 				{
 					if(!ignorePropertyURIs.contains(outputPropertyURI) && !outputRepository.isLivePropertyURI(outputPropertyURI))	//ignore specified properties and live properties
 					{
-						if(isCollection && (sourceContentLength<=0 || destinationContentLength<=0))	//ignore content created and content modified for zero-length or unknown-length collections
+						if(Content.MODIFIED_PROPERTY_URI.equals(outputPropertyURI))	//content modified only gets updated when we update content
 						{
-							if(Content.CREATED_PROPERTY_URI.equals(outputPropertyURI) || Content.MODIFIED_PROPERTY_URI.equals(outputPropertyURI))
+							continue;
+						}
+						if(isCollection && (sourceContentLength<=0 || destinationContentLength<=0))	//ignore content created for zero-length or unknown-length collections
+						{
+							if(Content.CREATED_PROPERTY_URI.equals(outputPropertyURI))
 							{
 								continue;
 							}
