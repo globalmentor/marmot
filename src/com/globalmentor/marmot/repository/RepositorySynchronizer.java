@@ -207,72 +207,73 @@ public class RepositorySynchronizer
 		{
 			throw new IllegalArgumentException("The resources are of different types: "+sourceResourceURI+", "+destinationResourceURI);	//one resource is a collection; the other is a normal resource
 		}
-//Debug.trace("Synchronizing from", sourceResourceURI, "to", destinationResourceURI);
 		boolean sourceExists=sourceResourceDescription!=null;	//see if the source exists
-//Debug.trace("source exists", sourceExists);
 		boolean destinationExists=destinationResourceDescription!=null;	//see if the destination exists
-//Debug.trace("destination exists", destinationExists);
 		if(sourceExists!=destinationExists)	//if one resource exists and the other doesn't
 		{
 			final Resolution orphanResolution=getResourceResolution();
 			if(sourceExists)	//if the source resource exists but not the destination
 			{
-				if(orphanResolution!=Resolution.IGNORE)
+				switch(orphanResolution)	//update the descriptions based upon the resolution
 				{
-					Debug.log(getTestStatus(), "Resolve source orphan:", orphanResolution, sourceResourceURI, destinationResourceURI);
-				}
-				if(!isTest())	//if this is not just a test
-				{
-					switch(orphanResolution)	//update the descriptions based upon the resolution
-					{
-						case BACKUP:
-						case PRODUCE:
-						case SYNCHRONIZE:
+					case BACKUP:
+					case PRODUCE:
+					case SYNCHRONIZE:
+						Debug.log(getTestStatus(), "Resolve source orphan:", orphanResolution, "copy", sourceResourceURI, destinationResourceURI);
+						if(!isTest())	//if this is not just a test
+						{
 							sourceRepository.copyResource(sourceResourceURI, destinationRepository, destinationResourceURI);	//copy the source to the destination
 							destinationExists=true;
 							destinationResourceDescription=destinationRepository.getResourceDescription(destinationResourceURI);
-							break;
-						case RESTORE:
+						}
+						break;
+					case RESTORE:
+						Debug.log(getTestStatus(), "Resolve source orphan:", orphanResolution, "delete", sourceResourceURI);
+						if(!isTest())	//if this is not just a test
+						{
 							sourceRepository.deleteResource(sourceResourceURI);	//delete the source
 							sourceExists=false;
 							sourceResourceDescription=null;
-							break;
-						case CONSUME:
-						case IGNORE:
-							break;
-						default:
-							throw new AssertionError("Unrecognized resolution "+orphanResolution);
-					}
+						}
+						break;
+					case CONSUME:
+						Debug.log(getTestStatus(), "Resolve source orphan:", orphanResolution, "ignore", sourceResourceURI, destinationResourceURI);
+					case IGNORE:
+						break;
+					default:
+						throw new AssertionError("Unrecognized resolution "+orphanResolution);
 				}
 			}
 			else	//if the source resource does not exist but the destination does
 			{
-				if(orphanResolution!=Resolution.IGNORE)
+				switch(orphanResolution)	//update the descriptions based upon the resolution
 				{
-					Debug.log(getTestStatus(), "Resolve destination orphan:", orphanResolution, sourceResourceURI, destinationResourceURI);
-				}
-				if(!isTest())	//if this is not just a test
-				{
-					switch(orphanResolution)	//update the descriptions based upon the resolution
-					{
-						case BACKUP:
-						case CONSUME:
-						case SYNCHRONIZE:
+					case BACKUP:
+					case CONSUME:
+					case SYNCHRONIZE:
+						Debug.log(getTestStatus(), "Resolve destination orphan:", orphanResolution, "delete", destinationResourceURI);
+						if(!isTest())	//if this is not just a test
+						{
 							destinationRepository.deleteResource(destinationResourceURI);	//delete the destination
 							destinationExists=false;
 							destinationResourceDescription=null;
-							break;
-						case RESTORE:
+						}
+						break;
+					case RESTORE:
+						Debug.log(getTestStatus(), "Resolve destination orphan:", orphanResolution, "copy", destinationResourceURI, sourceResourceURI);
+						if(!isTest())	//if this is not just a test
+						{
 							destinationRepository.copyResource(destinationResourceURI, sourceRepository, sourceResourceURI);	//copy the destination to the source
 							sourceExists=true;
 							sourceResourceDescription=sourceRepository.getResourceDescription(sourceResourceURI);
-							break;
-						case PRODUCE:
-						case IGNORE:
-							break;
-						default:
-							throw new AssertionError("Unrecognized resolution "+orphanResolution);
-					}
+						}
+						break;
+					case PRODUCE:
+						Debug.log(getTestStatus(), "Resolve destination orphan:", orphanResolution, "ignore", sourceResourceURI, destinationResourceURI);
+					case IGNORE:
+						break;
+					default:
+						throw new AssertionError("Unrecognized resolution "+orphanResolution);
 				}
 			}
 		}
@@ -284,10 +285,6 @@ public class RepositorySynchronizer
 			if(!isContentSynchronized)//if the source and destination are not synchronized
 			{
 				final Resolution resolution=getContentResolution();
-				if(resolution!=Resolution.IGNORE)
-				{
-					Debug.log(getTestStatus(), "Resolve content:", resolution, sourceResourceDescription.getURI(), destinationResourceDescription.getURI());
-				}
 				resolveContent(resolution, sourceRepository, sourceResourceDescription, sourceContentModified, destinationRepository, destinationResourceDescription, destinationContentModified);	//resolve the descrepancy between source and destination
 			}
 			final Resolution metadataResolution=getMetadataResolution();
@@ -448,6 +445,7 @@ public class RepositorySynchronizer
 		}
 		final URI inputResourceURI=inputResourceDescription.getURI();
 		final URI outputResourceURI=outputResourceDescription.getURI();
+		Debug.log(getTestStatus(), "Resolve content:", resolution, "copy", inputResourceURI, outputResourceURI);
 		if(!isTest())	//if this is not just a test
 		{
 			final URFDateTime inputContentModified=getModified(inputResourceDescription);	//get the date of the input resource, if any
