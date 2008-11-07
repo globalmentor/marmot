@@ -51,7 +51,7 @@ public class MarmotMirror extends Application
 	public final static String COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2006-2008 GlobalMentor, Inc. All Rights Reserved.";	//TODO i18n
 
 	/**The version of the application.*/
-	public final static String VERSION="1.0 build 2008-10-27";
+	public final static String VERSION="1.0 build 2008-11-06";
 
 	/**Application command-line parameters.*/
 	public enum Parameter
@@ -82,6 +82,8 @@ public class MarmotMirror extends Application
 		DESTINATION_PASSWORD,
 		/**A metadata property to ignore.*/
 		IGNORE_PROPERTY,
+		/**Whether the content modified property should be updated if requested even if content is not updated.*/
+		FORCE_CONTENT_MODIFIED_PROPERTY,
 		/**Test mode.*/
 		TEST,
 		/**Verbose output.*/
@@ -139,7 +141,7 @@ public class MarmotMirror extends Application
 			System.out.println(COPYRIGHT);
 			System.out.println("Usage: MarmotMirror --source-repository <file|URI> [--source-repositorytype <repository type>] [--source-username <username>] [--source-password <password>] [--source-resource <file|URI>] " +
 					"--destination-repository <URI> [--source-repository-type <repository type>] [--destination-username <username>] [--destination-password <password>] [--destination-resource <file|URI>] " +
-					"[--ignore-source-resource <file|URI>]* [--ignore-destination-resource <file|URI>]* [--ignore-property <URI>]* " +
+					"[--ignore-source-resource <file|URI>]* [--ignore-destination-resource <file|URI>]* [--ignore-property <URI>]* [--force-content-modified-property]" +
 					"[--resolution] [--resource-resolution] [--content-resolution] [--metadata-resolution] [--test] [--verbose] [--debug-http]");
 			System.out.println("");
 			System.out.println("Synchronization occurs on three levels: individual resources (i.e. orphans), metadata, and content, each of which can have a different resolution specified.");
@@ -148,7 +150,7 @@ public class MarmotMirror extends Application
 			System.out.println("  "+getSerializationName(RepositoryType.FILE)+": A file system repository.");
 			System.out.println("  "+getSerializationName(RepositoryType.NTFS)+": A file system repository using NTFS streams for metadata.");
 			System.out.println("  "+getSerializationName(RepositoryType.WEBDAV)+": A WebDAV repository.");
-			System.out.println("  "+getSerializationName(RepositoryType.SVN)+": A Subversion repository over WebDAV..");
+			System.out.println("  "+getSerializationName(RepositoryType.SVN)+": A Subversion repository over WebDAV.");
 			System.out.println("");
 			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.SOURCE_REPOSITORY)+": The source repository.");
 			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.SOURCE_REPOSITORY_TYPE)+": The type of source repository.");
@@ -173,6 +175,7 @@ public class MarmotMirror extends Application
 			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.CONTENT_RESOLUTION)+": How a content discrepancy will be resolved.");
 			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.METADATA_RESOLUTION)+": How a metadata discrepancy will be resolved.");
 			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.IGNORE_PROPERTY)+": A metadata property to ignore.");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.FORCE_CONTENT_MODIFIED_PROPERTY)+": Whether the content modified property should be updated if requested even if content is not updated.");
 			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.TEST)+": If specified, no changed will be made.");
 			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.VERBOSE)+": If specified, debug will be set to a minimum report level of "+Debug.ReportLevel.INFO+"; otherwise, the report level will be "+Debug.ReportLevel.LOG+".");
 			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.QUIET)+": If specified, debug will be set to a minimum report level of "+Debug.ReportLevel.WARN+"; otherwise, the report level will be "+Debug.ReportLevel.LOG+".");
@@ -247,6 +250,7 @@ public class MarmotMirror extends Application
 			{
 				repositorySynchronizer.addIgnorePropertyURI(URI.create(ignorePropertyURIString));	//create a URI from the parameter and add this to the properties to ignore
 			}
+			repositorySynchronizer.setForceContentModifiedProperty(hasFlag(args, getSerializationName(Parameter.FORCE_CONTENT_MODIFIED_PROPERTY)));	//specify whether the content modified property should be forced
 			repositorySynchronizer.setTest(hasFlag(args, getSerializationName(Parameter.TEST)));	//specify whether this is a test run
 			repositorySynchronizer.synchronize(sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//synchronize the resources
 		}

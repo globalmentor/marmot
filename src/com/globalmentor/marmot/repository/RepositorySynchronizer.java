@@ -107,6 +107,17 @@ public class RepositorySynchronizer
 		*/
 		public void setMetadataResolution(final Resolution metadataResolution) {this.metadataResolution=checkInstance(metadataResolution, "Metadata resolution cannot be null.");}
 
+	/**Whether the {@value Content#MODIFIED_PROPERTY_URI} property should be updated if requested even if content is not updated.*/
+	private boolean forceContentModifiedProperty=false;
+
+		/**Whether the {@value Content#MODIFIED_PROPERTY_URI} property should be updated if requested even if content is not updated.*/
+		public boolean isForceContentModifiedProperty() {return forceContentModifiedProperty;}
+
+		/**Sets whether the {@value Content#MODIFIED_PROPERTY_URI} property should be updated if requested even if content is not updated.
+		@param forceContentModified Whether the {@value Content#MODIFIED_PROPERTY_URI} property should be updated if requested even if content is not updated.
+		*/
+		public void setForceContentModifiedProperty(final boolean forceContentModified) {this.forceContentModifiedProperty=forceContentModified;}
+		
 	/**The set of source resource URIs to ignore when resolving descrepancies.*/
 	private final Set<URI> ignoreSourceResourceURIs=new HashSet<URI>();
 
@@ -574,7 +585,7 @@ public class RepositorySynchronizer
 				final URI inputPropertyURI=inputProperty.getPropertyURI();
 				if(!ignorePropertyURIs.contains(inputPropertyURI) && !inputRepository.isLivePropertyURI(inputPropertyURI))	//ignore specified properties and live properties
 				{
-					if(Content.MODIFIED_PROPERTY_URI.equals(inputPropertyURI))	//content modified only gets updated when we update content
+					if(Content.MODIFIED_PROPERTY_URI.equals(inputPropertyURI) && !isForceContentModifiedProperty())	//content modified only gets updated when we update content, unless we are forcing this property
 					{
 						continue;
 					}
@@ -603,7 +614,7 @@ public class RepositorySynchronizer
 				{
 					if(!ignorePropertyURIs.contains(outputPropertyURI) && !outputRepository.isLivePropertyURI(outputPropertyURI))	//ignore specified properties and live properties
 					{
-						if(Content.MODIFIED_PROPERTY_URI.equals(outputPropertyURI))	//content modified only gets updated when we update content
+						if(Content.MODIFIED_PROPERTY_URI.equals(outputPropertyURI) && !isForceContentModifiedProperty())	//content modified only gets updated when we update content, unless we are forcing this property
 						{
 							continue;
 						}
