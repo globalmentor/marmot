@@ -51,7 +51,7 @@ public class MarmotMirror extends Application
 	public final static String COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2006-2008 GlobalMentor, Inc. All Rights Reserved.";	//TODO i18n
 
 	/**The version of the application.*/
-	public final static String VERSION="1.0 build 2008-11-06";
+	public final static String VERSION="1.0 build 2008-11-07";
 
 	/**Application command-line parameters.*/
 	public enum Parameter
