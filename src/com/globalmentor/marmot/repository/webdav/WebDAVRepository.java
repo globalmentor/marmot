@@ -166,6 +166,7 @@ public class WebDAVRepository extends AbstractRepository
 		getIgnoredWebDAVNamespaces().add(MARMOT_WEBDAV_REPOSITORY_NAMESPACE_URI.toString());	//we only access Marmot WebDAV repository properties explictly
 		getIgnoredWebDAVNamespaces().add(ApacheWebDAV.APACHE_WEBDAV_PROPERTY_NAMESPACE_URI.toString());	//by default ignore properties in the Apache WebDAV namespace
 		getIgnoredWebDAVNamespaces().add(SRTWebDAV.SRT_WEBDAV_PROPERTY_NAMESPACE_URI.toString());	//ignore South River Tech properties, which duplicate URF properties, unless we ask for them specifically to guess at a the last modified time
+		getIgnoredWebDAVNamespaces().add(MicrosoftWebDAV.MICROSOFT_WEBDAV_PROPERTY_NAMESPACE_URI.toString());	//ignore Microsoft properties placed by Windows Vista; although these properties might have been useful, they forego millisecond precision by using RFC 1123 instead of RFC 3339
 	}
 	
 	/**Creates a repository of the same type as this repository with the same access privileges as this one.
