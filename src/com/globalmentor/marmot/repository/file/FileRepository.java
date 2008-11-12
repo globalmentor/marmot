@@ -241,21 +241,15 @@ public class FileRepository extends AbstractRepository
 			{
 				contentFile=resourceFile;	//use the normal resource file
 			}
-//TODO see if we must rewrite all the properties to keep from losing them			final URFResource resourceDescription=createResourceDescription(createURF(), resourceURI, contentFile);	//get the current description of the resource; after writing the resource we'll have to
+			if(newContentModified==null)	//because we use the file modified value to keep track of the content modified property, we must *always* update the content modified, if only to keep the modified datetime we already have, because the file system will update this value automatically without our asking
+			{
+				newContentModified=new URFDateTime(contentFile.lastModified());	//get the current last modified date of the file; after the file is written, we'll update it with what it was before
+			}
+			final URF urf=createURF();	//create a new URF data model
+			final URFResource resourceDescription=createResourceDescription(urf, resourceURI, resourceFile);	//get a description from a file created from the URI from the private namespace
+			setModified(resourceDescription, newContentModified);	//update the content modified of the description
 			final OutputStream outputStream=new FileOutputStream(contentFile);	//create an output stream to the content file
-			if(isCollection && contentFile==resourceFile)	//don't update the modified time for collections with no content
-			{
-				return outputStream;	//return the output stream with no property alterations
-			}
-			else	
-			{
-				if(newContentModified==null)	//because we use the file modified value to keep track of the content modified property, we must *always* update the content modified, if only to keep the modified datetime we already have, because the file system will update this value automatically without our asking
-				{
-					newContentModified=new URFDateTime(contentFile.lastModified());	//get the current last modified date of the file; after the file is written, we'll update it with what it was before
-				}
-				final URFResourceAlteration resourceAlteration=DefaultURFResourceAlteration.createSetPropertiesAlteration(new DefaultURFProperty(Content.MODIFIED_PROPERTY_URI, newContentModified));	//create a resource alteration for setting the content modified property
-				return new DescriptionWriterOutputStreamDecorator(outputStream, resourceURI, resourceAlteration, resourceFile);	//wrap the output stream to the content file in a decorator that will update the properties after the contents are stored
-			}
+			return new DescriptionWriterOutputStreamDecorator(outputStream, resourceURI, resourceDescription, resourceFile);	//wrap the output stream to the content file in a decorator that will write the properties after the contents are stored
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -491,7 +485,7 @@ public class FileRepository extends AbstractRepository
 				//TODO should we see if a directory exists?
 				createNewFile(resourceFile);	//create a new file
 			}
-			return new DescriptionWriterOutputStreamDecorator(new FileOutputStream(contentFile, true), resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), resourceFile);	//wrap the output stream to the content file in a decorator that will update the properties after the contents are stored
+			return new DescriptionWriterOutputStreamDecorator(new FileOutputStream(contentFile, true), resourceURI, resourceDescription, resourceFile);	//wrap the output stream to the content file in a decorator that will write the properties after the contents are stored
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -594,13 +588,8 @@ public class FileRepository extends AbstractRepository
 		{
 			final URFResource resourceDescription=createResourceDescription(urf, resourceURI, resourceFile);	//get a description from a file created from the URI from the private namespace
 			resourceDescription.alter(resourceAlteration);	//alter the resource according to the specification
-			final URFResource tempDescription=new DefaultURFResource(resourceDescription);	//create a temporary resource so that we can remove the live properties
-			for(final URI livePropertyURI:getLivePropertyURIs())	//look at all live properties
-			{
-				tempDescription.removePropertyValues(livePropertyURI);	//remove all values for this live property
-			}
-			saveResourceDescription(tempDescription, resourceFile);	//save the resource description
-			return resourceDescription;	//return the updated description
+			saveResourceDescription(resourceDescription, resourceFile);	//save the altered resource description
+			return createResourceDescription(urf, resourceURI, resourceFile);	//get a new description from the file, because the live properties might have changed
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -840,7 +829,7 @@ public class FileRepository extends AbstractRepository
 	}
 
 	/**Saves a resource description for a single file.
-	Except for as noted below, the description is saved as given with no modifications.
+	Live properties are ignored.
 	If the {@value Content#MODIFIED_PROPERTY_URI} property is present, it is not saved and the file modified time is updated to match that value.
 	If the {@value Content#CREATED_PROPERTY_URI} property is present and it is identical to the {@value Content#MODIFIED_PROPERTY_URI} property, it is not saved.
 	If the {@value Content#CREATED_PROPERTY_URI} property is present and the resource is a collection with no content, it is not saved.
@@ -853,6 +842,11 @@ public class FileRepository extends AbstractRepository
 	protected void saveResourceDescription(URFResource resourceDescription, final File resourceFile) throws IOException
 	{
 		final URI resourceURI=getPublicURI(toURI(resourceFile));	//get a public URI to represent the file resource
+		resourceDescription=new DefaultURFResource(resourceDescription);	//create a temporary resource so that we can remove the live properties
+		for(final URI livePropertyURI:getLivePropertyURIs())	//look at all live properties
+		{
+			resourceDescription.removePropertyValues(livePropertyURI);	//remove all values for this live property
+		}
 		final File contentFile;	//determine the file to use for storing content
 		final boolean isCollection=isCollectionURI(resourceURI);	//see if this is a collection
 		if(isCollection)	//if the resource is a collection
@@ -865,22 +859,18 @@ public class FileRepository extends AbstractRepository
 		{
 			contentFile=resourceFile;	//use the normal resource file
 		}
-		final URFDateTime created=getCreated(resourceDescription);	//see if the description indicates the created time
 		final URFDateTime modified=getModified(resourceDescription);	//see if the description indicates the last modified time
-		if(created!=null || modified!=null)	//if the created time and/or last modified time was indicated
+		if(modified!=null)	//if the last modified time was indicated
 		{
-			resourceDescription=new DefaultURFResource(resourceDescription);	//create a copy of the description
-			if(modified!=null)	//if the last modified time was indicated
+			resourceDescription.removePropertyValues(Content.MODIFIED_PROPERTY_URI);	//remove all last-modified values from the desciption we'll actually save
+		}
+		final URFDateTime created=getCreated(resourceDescription);	//see if the description indicates the created time
+		if(created!=null)	//if the created time is present
+		{
+			if((modified!=null && created.getTime()==modified.getTime())	//if the created time is the same as the modified time TODO decide how useful these are
+					|| (isCollection && contentFile==resourceFile))	//or if this is a collection with no content
 			{
-				resourceDescription.removePropertyValues(Content.MODIFIED_PROPERTY_URI);	//remove all last-modified values from the desciption we'll actually save
-			}
-			if(created!=null)	//if the created time is present
-			{
-				if((modified!=null && created.getTime()==modified.getTime())	//if the created time is the same as the modified time TODO decide how useful these are
-						|| (isCollection && contentFile==resourceFile))	//or if this is a collection with no content
-				{
-					resourceDescription.removePropertyValues(Content.CREATED_PROPERTY_URI);	//remove all created timestamp values from the desciption to save, as Java can't distinguish between content created and modified and they'll both be initialized from the same value, anyway, when reading
-				}
+				resourceDescription.removePropertyValues(Content.CREATED_PROPERTY_URI);	//remove all created timestamp values from the desciption to save, as Java can't distinguish between content created and modified and they'll both be initialized from the same value, anyway, when reading
 			}
 		}
 		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the file for storing the description
@@ -928,7 +918,8 @@ public class FileRepository extends AbstractRepository
 		}
 	}
 
-	/**Creates an output stream that updates the properties of a file after its contents are stored.
+	/**Creates an output stream that saves the properties of a file after its contents are stored.
+	@see FileRepository#saveResourceDescription(URFResource, File)
 	@author Garret Wilson
 	*/
 	protected class DescriptionWriterOutputStreamDecorator extends OutputStreamDecorator<OutputStream>
@@ -939,11 +930,11 @@ public class FileRepository extends AbstractRepository
 			/**@protected The URI of the resource.*/
 			public URI getResourceURI() {return resourceURI;}
 	
-		/**The specification of the alterations to be performed on the resource.*/
-		private final URFResourceAlteration resourceAlteration;
+		/**The description of the resource to store.*/
+		private final URFResource resourceDescription;
 
-			/**@return The specification of the alterations to be performed on the resource.*/
-			protected URFResourceAlteration getResourceAlteration() {return resourceAlteration;}
+			/**@return The description of the resource.*/
+			protected URFResource getResourceDescription() {return resourceDescription;}
 
 		/**The file for updating the properties.*/
 		private final File resourceFile;
@@ -954,15 +945,15 @@ public class FileRepository extends AbstractRepository
 		/**Decorates the given output stream.
 		@param outputStream The output stream to decorate
 		@param resourceURI The URI of the resource.
-		@param resourceAlteration The specification of the alterations to be performed on the resource.
+		@param resourceDescription The description of the resource to store.
 		@param resourceFile The file for updating the properties.
-		@exception NullPointerException if the given output stream, resourceURI, resource alteration, and/or resource file is <code>null</code>.
+		@exception NullPointerException if the given output stream, resourceURI, resource description, and/or resource file is <code>null</code>.
 		*/
-		public DescriptionWriterOutputStreamDecorator(final OutputStream outputStream, final URI resourceURI, final URFResourceAlteration resourceAlteration, final File resourceFile)
+		public DescriptionWriterOutputStreamDecorator(final OutputStream outputStream, final URI resourceURI, final URFResource resourceDescription, final File resourceFile)
 		{
 			super(outputStream);	//construct the parent class
 			this.resourceURI=checkInstance(resourceURI, "Resource URI cannot be null.");
-			this.resourceAlteration=checkInstance(resourceAlteration, "Resource alteration cannot be null.");
+			this.resourceDescription=checkInstance(resourceDescription, "Resource description cannot be null.");
 			this.resourceFile=checkInstance(resourceFile, "Resource file cannot be null.");
 		}
 	
@@ -974,7 +965,7 @@ public class FileRepository extends AbstractRepository
 	  {
 	  	try
 	  	{
-	  		alterResourceProperties(getResourceURI(), getResourceAlteration(), resourceFile);	//alter the properties using the resource file
+				saveResourceDescription(getResourceDescription(), getResourceFile());	//save the resource description
 			}
 			catch(final IOException ioException)	//if an I/O exception occurs
 			{
