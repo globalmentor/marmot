@@ -82,7 +82,8 @@ public class MarmoxResourceCache extends AbstractCache<MarmoxResourceCache.Resou
 		if(cachedModifiedTime!=null)	//if we know the modified time of the cached resource
 		{
 			final URFDateTime modifiedDateTime=getModified(resource);	//get the current modified date time of the resource
-			return !cachedModifiedTime.equals(modifiedDateTime);	//if the modified time doesn't match our record, the cache is stale
+//Debug.trace("cache: is stale?", resourceURI, "cached modified time", new URFDateTime(cachedModifiedTime), "resource modified time", modifiedDateTime, !cachedModifiedTime.equals(modifiedDateTime));
+			return !cachedModifiedTime.equals(modifiedDateTime);	//if the modified time doesn't match our record, the cache is stale; we don't have to worry about whether there is millisecond precision, as both values being compared should be coming from the same resource in the same repository
 		}
 		return false;	//we couldn't find a reason that the cached information is stale 
 	}
@@ -124,8 +125,11 @@ Debug.log("Starting to fetch resource", key.getResourceURI());
 		final String cacheBaseName=encodeCrossPlatformFilename(resourceLocator.getResourcePath()+baseName);	//create a base name by encoding the resource's relative path from the user with no extension
 			//TODO important: check for null extension
 		File cacheFile=new File(cacheUserDirectory, cacheBaseName+FILENAME_EXTENSION_SEPARATOR+extension);	//create a filename in the form cacheDir/user/encodedResourceURI.ext
-		if(modifiedDateTime==null || !cacheFile.exists() || modifiedDateTime.getTime()>cacheFile.lastModified())	//if we don't know when the resource was modified, or if there is no such cached file, or if the real resource was modified after the cached version
+//Debug.trace("cache: fetching resource", resourceURI, "resource modified", modifiedDateTime, "cache file", cacheFile, "cache file exists", cacheFile.exists(), "cache file modified", new URFDateTime(cacheFile.lastModified()));
+//Debug.trace("modifiedTime", modifiedDateTime.getTime(), "cacheModifiedTime", cacheFile.lastModified(), "delta", modifiedDateTime.getTime()-cacheFile.lastModified());
+		if(modifiedDateTime==null || !cacheFile.exists() || modifiedDateTime.getTime()-cacheFile.lastModified()>=1000)	//if we don't know when the resource was modified, or if there is no such cached file, or if the real resource was modified after the cached version (some file systems only have second precision, so ignore milliseconds)
 		{
+//Debug.trace("cache: don't have existing cache");
 			final InputStream inputStream=new BufferedInputStream(repository.getResourceInputStream(resourceURI));	//get a stream to the resource
 			try
 			{
@@ -149,7 +153,7 @@ Debug.log("Starting to fetch resource", key.getResourceURI());
 			{
 					//create a new cache file for the aspect; leave the original non-aspect cache file in case it is requested in the future
 				final File aspectCacheFile=new File(cacheUserDirectory, cacheBaseName+FILENAME_EXTENSION_SEPARATOR+aspectID+FILENAME_EXTENSION_SEPARATOR+extension);	//create a filename in the form cacheDir/user/encodedResourceURI.aspectID.ext
-				if(modifiedDateTime==null || !aspectCacheFile.exists() || modifiedDateTime.getTime()>aspectCacheFile.lastModified())	//if we don't know when the resource was modified, or if there is no such cached file, or if the real resource was modified after the cached version
+				if(modifiedDateTime==null || !aspectCacheFile.exists() || modifiedDateTime.getTime()-aspectCacheFile.lastModified()>=1000)	//if we don't know when the resource was modified, or if there is no such cached file, or if the real resource was modified after the cached version (some file systems only have second precision, so ignore milliseconds)
 				{
 					for(int filterIndex=0; filterIndex<filterCount; ++filterIndex)	//for each filter
 					{
