@@ -249,7 +249,7 @@ public class FileRepository extends AbstractRepository
 			final URFResource resourceDescription=createResourceDescription(urf, resourceURI, resourceFile);	//get a description from a file created from the URI from the private namespace
 			setModified(resourceDescription, newContentModified);	//update the content modified of the description
 			final OutputStream outputStream=new FileOutputStream(contentFile);	//create an output stream to the content file
-			return new DescriptionWriterOutputStreamDecorator(outputStream, resourceURI, resourceDescription, resourceFile);	//wrap the output stream to the content file in a decorator that will write the properties after the contents are stored
+			return new DescriptionWriterOutputStreamDecorator(outputStream, resourceDescription, resourceFile);	//wrap the output stream to the content file in a decorator that will write the properties after the contents are stored
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -485,7 +485,7 @@ public class FileRepository extends AbstractRepository
 				//TODO should we see if a directory exists?
 				createNewFile(resourceFile);	//create a new file
 			}
-			return new DescriptionWriterOutputStreamDecorator(new FileOutputStream(contentFile, true), resourceURI, resourceDescription, resourceFile);	//wrap the output stream to the content file in a decorator that will write the properties after the contents are stored
+			return new DescriptionWriterOutputStreamDecorator(new FileOutputStream(contentFile, true), resourceDescription, resourceFile);	//wrap the output stream to the content file in a decorator that will write the properties after the contents are stored
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -834,7 +834,7 @@ public class FileRepository extends AbstractRepository
 	If the {@value Content#CREATED_PROPERTY_URI} property is present and it is identical to the {@value Content#MODIFIED_PROPERTY_URI} property, it is not saved.
 	If the {@value Content#CREATED_PROPERTY_URI} property is present and the resource is a collection with no content, it is not saved.
 	If the resource description file does not exist and there are no properties to save, no resource description file is created.
-	@param resourceDescription The resource description to save.
+	@param resourceDescription The resource description to save; the resource URI is ignored.
 	@param resourceFile The file of a resource.
 	@exception IOException if there is an error save the resource description.
 	@see #getResourceDescriptionFile(File)
@@ -842,7 +842,7 @@ public class FileRepository extends AbstractRepository
 	protected void saveResourceDescription(URFResource resourceDescription, final File resourceFile) throws IOException
 	{
 		final URI resourceURI=getPublicURI(toURI(resourceFile));	//get a public URI to represent the file resource
-		resourceDescription=new DefaultURFResource(resourceDescription);	//create a temporary resource so that we can remove the live properties
+		resourceDescription=new DefaultURFResource(resourceDescription, resourceURI);	//create a temporary resource so that we can remove the live properties and to make sure we use the correct URI
 		for(final URI livePropertyURI:getLivePropertyURIs())	//look at all live properties
 		{
 			resourceDescription.removePropertyValues(livePropertyURI);	//remove all values for this live property
@@ -924,12 +924,6 @@ public class FileRepository extends AbstractRepository
 	*/
 	protected class DescriptionWriterOutputStreamDecorator extends OutputStreamDecorator<OutputStream>
 	{
-		/**The URI of the resource.*/
-		private final URI resourceURI;
-
-			/**@protected The URI of the resource.*/
-			public URI getResourceURI() {return resourceURI;}
-	
 		/**The description of the resource to store.*/
 		private final URFResource resourceDescription;
 
@@ -944,21 +938,19 @@ public class FileRepository extends AbstractRepository
 
 		/**Decorates the given output stream.
 		@param outputStream The output stream to decorate
-		@param resourceURI The URI of the resource.
-		@param resourceDescription The description of the resource to store.
+		@param resourceDescription The description of the resource to store; the URI of the description is ignored.
 		@param resourceFile The file for updating the properties.
 		@exception NullPointerException if the given output stream, resourceURI, resource description, and/or resource file is <code>null</code>.
 		*/
-		public DescriptionWriterOutputStreamDecorator(final OutputStream outputStream, final URI resourceURI, final URFResource resourceDescription, final File resourceFile)
+		public DescriptionWriterOutputStreamDecorator(final OutputStream outputStream, final URFResource resourceDescription, final File resourceFile)
 		{
 			super(outputStream);	//construct the parent class
-			this.resourceURI=checkInstance(resourceURI, "Resource URI cannot be null.");
 			this.resourceDescription=checkInstance(resourceDescription, "Resource description cannot be null.");
 			this.resourceFile=checkInstance(resourceFile, "Resource file cannot be null.");
 		}
 	
 	  /**Called after the stream is successfully closed.
-		This version updates the WebDAV properties to reflect the given resource description.
+		This version updates the file properties to reflect the given resource description.
 		@exception ResourceIOException if an I/O error occurs.
 		*/
 	  protected void afterClose() throws ResourceIOException
@@ -969,7 +961,7 @@ public class FileRepository extends AbstractRepository
 			}
 			catch(final IOException ioException)	//if an I/O exception occurs
 			{
-				throw createResourceIOException(getResourceURI(), ioException);	//translate the exception to a resource I/O exception and throw that
+				throw createResourceIOException(getPublicURI(toURI(getResourceFile())), ioException);	//translate the exception to a resource I/O exception and throw that
 			}
 	  }
 
