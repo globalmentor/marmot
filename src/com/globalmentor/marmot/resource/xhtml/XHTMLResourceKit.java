@@ -37,7 +37,7 @@ import org.w3c.dom.*;
 /**Resource kit for handling XHTML resources.
 <p>Supported media types:</p>
 <ul>
-	<li>{@value XHTML#XHTML_NAMESPACE_URI}</li>
+	<li>{@value XHTML#XHTML_CONTENT_TYPE}</li>
 </ul>
 <p>Default extension:</p>
 <ul>
