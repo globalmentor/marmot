@@ -395,7 +395,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 			namespaceURIResourceFactoryMap.remove(typeNamespaceURI);
 		}
 
-	/**URI contructor with no separate private URI namespace.
+	/**URI constructor with no separate private URI namespace.
 	@param repositoryURI The URI identifying the location of this repository.
 	@exception NullPointerException if the given respository URI is <code>null</code>.
 	*/
@@ -404,7 +404,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		this(repositoryURI, repositoryURI);	//use the same repository URI as the public and private namespaces
 	}
 
-	/**Public repository URI and private repository URI contructor.
+	/**Public repository URI and private repository URI constructor.
 	A {@link URFResourceTURFIO} description I/O is created and initialized.
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
@@ -418,7 +418,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 //TODO del		urfResourceDescriptionIO.setFormatted(false);	//turn off formatting
 	}
 
-	/**Public repository URI and private repository URI contructor.
+	/**Public repository URI and private repository URI constructor.
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
 	@param descriptionIO The I/O implementation that writes and reads a resource with the same reference URI as its base URI.

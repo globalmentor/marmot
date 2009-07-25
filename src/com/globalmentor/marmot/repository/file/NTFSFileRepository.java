@@ -37,7 +37,7 @@ This implementation stores resource descriptions in NTFS Alternate Data Streams 
 public class NTFSFileRepository extends FileRepository
 {
 
-	/**File contructor with no separate private URI namespace.
+	/**File constructor with no separate private URI namespace.
 	@param repositoryDirectory The file identifying the directory of this repository.
 	@exception NullPointerException if the given respository directory is <code>null</code>.
 	*/
@@ -46,7 +46,7 @@ public class NTFSFileRepository extends FileRepository
 		super(repositoryDirectory);	//construct the parent class
 	}
 
-	/**URI contructor with no separate private URI namespace.
+	/**URI constructor with no separate private URI namespace.
 	The given repository URI should end in a slash.
 	@param repositoryURI The URI identifying the location of this repository.
 	@exception NullPointerException if the given respository URI is <code>null</code>.
@@ -57,7 +57,7 @@ public class NTFSFileRepository extends FileRepository
 		this(repositoryURI, repositoryURI);	//use the same repository URI as the public and private namespaces
 	}
 
-	/**Public repository URI and private repository directory contructor.
+	/**Public repository URI and private repository directory constructor.
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryDirectory The file identifying the private directory of the repository.
 	@exception NullPointerException if the given respository URI and/or the given directory is <code>null</code>.
@@ -67,7 +67,7 @@ public class NTFSFileRepository extends FileRepository
 		this(publicRepositoryURI, getDirectoryURI(privateRepositoryDirectory));	//get a directory URI from the private repository directory and use it as the base repository URI
 	}
 
-	/**Public repository URI and private repository URI contructor.
+	/**Public repository URI and private repository URI constructor.
 	The given private repository URI should end in a slash.
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.

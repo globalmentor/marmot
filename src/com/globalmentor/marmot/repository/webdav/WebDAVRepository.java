@@ -120,7 +120,7 @@ public class WebDAVRepository extends AbstractRepository
 		*/
 //TODO del if not needed		protected Set<String> getIgnoredWebDAVProperties() {return ignoredWebDAVProperties;}
 
-	/**Repository URI contructor using the default HTTP client.
+	/**Repository URI constructor using the default HTTP client.
 	The given repository URI should end in a slash.
 	@param repositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
 	*/
@@ -129,7 +129,7 @@ public class WebDAVRepository extends AbstractRepository
 		this(repositoryURI, HTTPClient.getInstance());	//construct the class using the default HTTP client		
 	}
 	
-	/**Repository URI and HTTP client contructor.
+	/**Repository URI and HTTP client constructor.
 	The given repository URI should end in a slash.
 	@param repositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
 	@param httpClient The HTTP client used to create a connection to this resource.	
@@ -139,7 +139,7 @@ public class WebDAVRepository extends AbstractRepository
 		this(repositoryURI, repositoryURI, httpClient);	//use the same repository URI as the public and private namespaces
 	}
 
-	/**Public repository URI and private repository URI contructor using the default HTTP client.
+	/**Public repository URI and private repository URI constructor using the default HTTP client.
 	The given private repository URI should end in a slash.
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
@@ -149,7 +149,7 @@ public class WebDAVRepository extends AbstractRepository
 		this(publicRepositoryURI, privateRepositoryURI, HTTPClient.getInstance());	//construct the class using the default HTTP client				
 	}
 
-	/**Public repository URI, private repository URI, and HTTP client contructor.
+	/**Public repository URI, private repository URI, and HTTP client constructor.
 	The given private repository URI should end in a slash.
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
