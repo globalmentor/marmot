@@ -615,6 +615,11 @@ public class FileRepository extends AbstractRepository
 		{
 			subrepository.copyResource(resourceURI, destinationURI, overwrite);	//delegate to the subrepository
 		}
+		final Repository destinationRepository=getSubrepository(destinationURI);	//see if the destination URI lies within a subrepository
+		if(destinationRepository!=this)	//if the destination URI lies within a subrepository
+		{
+			copyResource(resourceURI, destinationRepository, destinationURI, overwrite);	//copy between repositories
+		}
 		checkOpen();	//make sure the repository is open
 		throw new UnsupportedOperationException();	//TODO implement
 	}

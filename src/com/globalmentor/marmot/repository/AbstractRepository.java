@@ -271,7 +271,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		public Repository registerPathRepository(final URIPath path, final Repository repository)
 		{
 			repository.setPublicRepositoryURI(resolve(getURI(), path));	//update the public URI of the repository to match its location in the repository
-			if(!URIPath.ROOT_URI_PATH.equals(path))	//if this is not the root path (it's not normal to map the root path to another repository, but check for it anyway
+			if(!URIPath.ROOT_URI_PATH.equals(path))	//if this is not the root path (it's not normal to map the root path to another repository, but check for it anyway)
 			{
 				final URIPath parentPath=path.getParentPath();	//get the parent path
 				parentPathRepositoryMap.addItem(parentPath, repository);	//associate this repository with the parent path

@@ -47,6 +47,7 @@ However, this property does have some peculiarities:
 		a new property will be automatically added with the current date and time for the API methods that do not have a description parameter.</li>
 </ul>
 <p>Collections should indicated a {@value Content#LENGTH_PROPERTY_URI} of zero unless the collection has content. A content length should never be missing.</p>
+<p>Repositories that are read-only should throw {@link ResourceForbiddenException}s for accesses that attempt to modify resources.</p>
 @author Garret Wilson
 */
 public interface Repository
