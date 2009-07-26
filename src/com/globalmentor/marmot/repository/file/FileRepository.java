@@ -177,7 +177,7 @@ public class FileRepository extends AbstractRepository
 		checkOpen();	//make sure the repository is open
 		try
 		{
-			if(isCollectionURI(resourceURI) && isCollection(resourceURI))	//if the resource is a collection (make sure the resource URI is also a collection URI so that we can be sure of resolving the collection contents name; file collections should only have collection URIs anyway)
+			if(isCollectionURI(resourceURI))	//if the resource is a collection
 			{
 				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
 				final File contentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection content resource
@@ -322,31 +322,6 @@ public class FileRepository extends AbstractRepository
 		final File file=new File(privateResourceURI);	//get the file object for this resource
 		return file.exists() && (isCollectionURI || !file.isDirectory());	//see if the file of the private URI exists; don't allow a non-collection URI to find a non-directory URI, though (file systems usually don't allow both a file and a directory of the same name, so they allow the ending-slash form to be optional)
 	}
-
-	/**Determines if the resource at a given URI is a collection.
-	This implementation returns <code>false</code> for all resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
-	@param resourceURI The URI of the requested resource.
-	@return <code>true</code> if the resource is a collection, else <code>false</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the repository.
-	*/
-	public boolean isCollection(URI resourceURI) throws ResourceIOException
-  {
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.isCollection(resourceURI);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
-		final URI privateResourceURI=getPrivateURI(resourceURI);	//get the resource URI in the private space
-		if(!isPrivateURIResourcePublic(privateResourceURI))	//if this resource should not be public
-		{
-			return false;	//ignore this resource
-		}
-		return isCollectionURI(resourceURI) && new File(privateResourceURI).isDirectory();	//see if the file of the private URI is a directory; don't allow a non-collection URI to find a non-directory URI, though (file systems usually don't allow both a file and a directory of the same name, so they allow the ending-slash form to be optional)
-  }
 
 	/**Determines whether the resource represented by the given URI has children.
 	This implementation ignores child resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
@@ -700,6 +675,7 @@ public class FileRepository extends AbstractRepository
 	@param resourceFile The file for which a resource should be created.
 	@return A resource description of the given file.
 	@exception IOException if there is an error creating the resource description.
+	@throws IllegalArgumentException if a non-collection URI is given to access a directory.
 	*/
 	protected URFResource createResourceDescription(final URF urf, final URI resourceURI, final File resourceFile) throws IOException
 	{
@@ -709,15 +685,16 @@ public class FileRepository extends AbstractRepository
 		URFDateTime contentModified=null;	//we'll get the content modified from the file or, for a directory, from its content file, if any---but not from a directory itself
 		if(resourceFile.isDirectory())	//if this is a directory
 		{
-			if(isCollection(resourceURI))	//if the resource is a collection (make sure the resource URI is also a collection URI so that we can be sure of resolving the collection contents name; file collections should only have collection URIs anyway)
+			if(!isCollectionURI(resourceURI))	//if a non-collection URI was used for the directory
 			{
-				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
-				final File contentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection content resource
-				if(contentFile.exists())	//if there is a special collection content resource
-				{
-					contentLength=contentFile.length();	//use the length of the special collection content resource
-					contentModified=new URFDateTime(contentFile.lastModified());	//set the modified timestamp as the last modified date of the content file			
-				}
+				throw new IllegalArgumentException("Non-collection URI "+resourceURI+" used for directory "+resourceFile);
+			}
+			final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+			final File contentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection content resource
+			if(contentFile.exists())	//if there is a special collection content resource
+			{
+				contentLength=contentFile.length();	//use the length of the special collection content resource
+				contentModified=new URFDateTime(contentFile.lastModified());	//set the modified timestamp as the last modified date of the content file			
 			}
 		}
 		else	//if this file is not a directory

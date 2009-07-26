@@ -174,7 +174,7 @@ public abstract class AbstractHTTPRepository extends AbstractRepository
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
-			if(isCollectionURI(resourceURI) && isCollection(resourceURI))	//if the resource is a collection (make sure the resource URI is also a collection URI so that we can be sure of resolving the collection content name; WebDAV collections should only have collection URIs anyway) TODO remove distinction between URI collection and WebDAV collection
+			if(isCollectionURI(resourceURI))	//if the resource is a collection
 			{
 				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
 				final HTTPResource contentHTTPResource=createHTTPResource(getPrivateURI(contentURI), passwordAuthentication);	//create a resource for special collection content resource

@@ -341,7 +341,7 @@ public class WebDAVRepository extends AbstractRepository
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
-			if(isCollectionURI(resourceURI) && isCollection(resourceURI))	//if the resource is a collection (make sure the resource URI is also a collection URI so that we can be sure of resolving the collection content name; WebDAV collections should only have collection URIs anyway)
+			if(isCollectionURI(resourceURI))	//if the resource is a collection
 			{
 				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
 				final WebDAVResource contentWebDAVResource=new WebDAVResource(getPrivateURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource TODO cache these resources, maybe
@@ -403,7 +403,7 @@ public class WebDAVRepository extends AbstractRepository
 				throw new ResourceNotFoundException(resourceURI, "Cannot open output stream to non-existent resource "+resourceURI);
 			}
 			final WebDAVResource contentWebDAVResource;	//determine the WebDAV resource for accessing the content file
-			if(isCollectionURI(resourceURI) && isCollection(resourceURI))	//if the resource is a collection (make sure the resource URI is also a collection URI so that we can be sure of resolving the collection content name; WebDAV collections should only have collection URIs anyway)
+			if(isCollectionURI(resourceURI))	//if the resource is a collection
 			{
 				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
 				contentWebDAVResource=new WebDAVResource(getPrivateURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource
@@ -518,47 +518,6 @@ public class WebDAVRepository extends AbstractRepository
 			}
 		}
 	}
-
-	/**Determines if the resource at a given URI is a collection.
-	This implementation returns <code>false</code> for all resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
-	@param resourceURI The URI of the requested resource.
-	@return <code>true</code> if the resource is a collection, else <code>false</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the repository.
-	*/
-	public boolean isCollection(URI resourceURI) throws ResourceIOException
-  {
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.isCollection(resourceURI);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
-		final URI privateResourceURI=getPrivateURI(resourceURI);	//get the resource URI in the private space
-		if(!isPrivateURIResourcePublic(privateResourceURI))	//if this resource should not be public
-		{
-			return false;	//ignore this resource
-		}
-		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
-		try
-		{
-			final WebDAVResource webdavResource=new WebDAVResource(privateResourceURI, getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
-			return webdavResource.isCollection();	//see if the WebDAV resource is a collection		
-		}
-		catch(final IOException ioException)	//if an I/O exception occurs
-		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
-		}
-		finally
-		{
-			if(passwordAuthentication!=null)	//if we used password authentication
-			{
-				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
-			}
-		}
-  }
 
 	/**Determines whether the resource represented by the given URI has children.
 	This implementation ignores child resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.

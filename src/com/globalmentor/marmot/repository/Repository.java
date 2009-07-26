@@ -284,15 +284,6 @@ public interface Repository
 	*/
 	public boolean resourceExists(final URI resourceURI) throws ResourceIOException;
 
-	/**Determines if the resource at a given URI is a collection.
-	@param resourceURI The URI of the requested resource.
-	@return <code>true</code> if the resource is a collection, else <code>false</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the repository.
-	*/
-	public boolean isCollection(final URI resourceURI) throws ResourceIOException;
-
 	/**Determines whether the resource represented by the given URI has children.
 	@param resourceURI The URI of the resource.
 	@return <code>true</code> if the specified resource has child resources.
