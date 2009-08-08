@@ -25,6 +25,7 @@ import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
 
+import com.globalmentor.cache.AbstractCache;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.net.URIPath;
 import com.globalmentor.net.URIs;
@@ -32,9 +33,11 @@ import com.globalmentor.urf.*;
 import com.globalmentor.util.*;
 
 /**An abstract implementation of a manager of cached Marmot resources.
+@param <Q> The type of query used to request data from the cache.
+@param <K> The type of key used to look up data in the cache.
 @author Garret Wilson
 */
-public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResourceCache.MarmotResourceCacheKey, Q extends AbstractMarmotResourceCache.AbstractMarmotResourceCacheQuery<K>> extends AbstractCache<K, Q, File, AbstractMarmotResourceCache.CachedResourceInfo>
+public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResourceCache.MarmotResourceCacheKey, Q extends AbstractMarmotResourceCache.AbstractMarmotResourceCacheQuery<K>> extends AbstractCache<K, Q, File, AbstractMarmotResourceCache.CachedResourceInfo> implements MarmotResourceCache<Q>
 {
 	
 	/**Constructor.
@@ -45,6 +48,43 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	{
 		super(fetchSynchronous, expiration);
 	}
+
+	/**Retrieves a value from the cache.
+	Values are fetched from the backing store if needed, and this method blocks until the data is fetched.
+	@param repository The repository in which the resource is stored.
+	@param resourceURI The URI of the resource.
+	@return The cached value.
+	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@exception IOException if there was an error fetching the value from the backing store.
+	@see #get(Object)
+	*/
+	public final File get(final Repository repository, final URI resourceURI) throws IOException
+	{
+		return get(repository, resourceURI, false);	//get without deferring fetching
+	}
+	
+	/**Retrieves a value from the cache.
+	Values are fetched from the backing store if needed, with fetching optionally deferred until later.
+	@param repository The repository in which the resource is stored.
+	@param resourceURI The URI of the resource.
+	@param deferFetch Whether fetching, if needed, should be deffered and performed in an asynchronous thread.
+	@return The cached value, or <code>null</code> if fetching was deferred.
+	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@exception IOException if there was an error fetching the value from the backing store.
+	@see #get(Object, boolean)
+	*/
+	public final File get(final Repository repository, final URI resourceURI, final boolean deferFetch) throws IOException
+	{
+		return get(createQuery(repository, resourceURI), deferFetch);	//create a query and perform the fetch
+	}
+
+	/**Creates a query from the given repository and resource URI.
+	@param repository The repository in which the resource is stored.
+	@param resourceURI The URI of the resource.
+	@return A query for for requesting the resource from the cache.
+	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	*/
+	protected abstract Q createQuery(final Repository repository, final URI resourceURI);
 
 	/**Determines if a given cached value is stale.
 	This version checks to see if the last modified time of the resource has changed.
