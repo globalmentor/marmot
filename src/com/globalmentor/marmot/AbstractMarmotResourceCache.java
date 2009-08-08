@@ -25,7 +25,7 @@ import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
 
-import com.globalmentor.cache.AbstractCache;
+import com.globalmentor.cache.AbstractFileCache;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.net.URIPath;
 import com.globalmentor.net.URIs;
@@ -37,7 +37,7 @@ import com.globalmentor.util.*;
 @param <K> The type of key used to look up data in the cache.
 @author Garret Wilson
 */
-public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResourceCache.MarmotResourceCacheKey, Q extends AbstractMarmotResourceCache.AbstractMarmotResourceCacheQuery<K>> extends AbstractCache<K, Q, File, AbstractMarmotResourceCache.CachedResourceInfo> implements MarmotResourceCache<Q>
+public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResourceCache.MarmotResourceCacheKey, Q extends AbstractMarmotResourceCache.AbstractMarmotResourceCacheQuery<K>> extends AbstractFileCache<K, Q> implements MarmotResourceCache<Q>
 {
 	
 	/**Constructor.
@@ -93,7 +93,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	@return <code>true</code> if the cached information has become stale.
 	@exception IOException if there was an error checking the cached information for staleness.
 	*/
-	public boolean isStale(final Q query, final CachedResourceInfo cachedInfo) throws IOException
+	public boolean isStale(final Q query, final CachedFileInfo cachedInfo) throws IOException
 	{
 		if(super.isStale(query, cachedInfo))	//if the default stale checks think the information is stale
 		{
@@ -125,7 +125,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	@return New information to cache.
 	@exception IOException if there was an error fetching the value from the backing store.
 	*/
-	public final CachedResourceInfo fetch(final Q query) throws IOException
+	public final CachedFileInfo fetch(final Q query) throws IOException
 	{
 //Debug.log("Starting to fetch resource", key.getResourceURI());
 		final Repository repository=query.getRepository();	//get the repository
@@ -145,7 +145,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	@return New information to cache.
 	@exception IOException if there was an error fetching the value from the backing store.
 	*/
-	protected CachedResourceInfo fetch(final Q query, final URFResource resource, final File cacheDirectory, final String cacheBaseName) throws IOException
+	protected CachedFileInfo fetch(final Q query, final URFResource resource, final File cacheDirectory, final String cacheBaseName) throws IOException
 	{
 		final Repository repository=query.getRepository();	//get the repository
 		final URI resourceURI=query.getResourceURI();	//get the resource URI				
@@ -172,7 +172,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 				cacheFile.setLastModified(modifiedDateTime.getTime());	//update the cached file's modified time so that we will know when the resource was modified
 			}
 		}
-		return new CachedResourceInfo(cacheFile, modifiedDateTime);	//return the cached file, which may have been filtered
+		return new CachedFileInfo(cacheFile, modifiedDateTime);	//return the cached file, which may have been filtered
 	}
 
 	/**Performs any operations that need to be done when cached information is discarded (for example, if the cached information is stale).
@@ -260,30 +260,6 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 			this.resourceURI=checkInstance(resourceURI, "Resource URI cannot be null.");	//save the resource URI
 		}
 
-	}
-
-	/**Class for storing cached resource file information.
-	If no modified time is known, this will not influence the staleness determination of cached information.
-	@author Garret Wilson
-	*/
-	public static class CachedResourceInfo extends AbstractCache.CachedInfo<File>
-	{
-
-		/**The last known modified time of the resource represented, or <code>null</code> if the last modified time is not known.*/
-		private final Date modifiedTime;
-
-			/**@return The last known modified time of the resource represented, or <code>null</code> if the last modified time is not known.*/
-			public Date getModifiedTime() {return modifiedTime;}
-
-		/**File constructor.
-		@param file The file to store.
-		@param modifiedTime The last known modified time of the resource represented, or <code>null</code> if the last modified time is not known.
-		*/
-		public CachedResourceInfo(final File value, final Date modifiedTime)
-		{
-			super(value);	//construct the parent class
-			this.modifiedTime=modifiedTime;
-		}
 	}
 
 }
