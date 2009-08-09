@@ -20,6 +20,7 @@ import static com.globalmentor.urf.URF.*;
 
 import java.net.URI;
 
+import com.globalmentor.config.Configurator;
 import com.globalmentor.urf.URFResource;
 
 /**Constant values and utilities used by Marmot.
@@ -27,6 +28,15 @@ import com.globalmentor.urf.URFResource;
 */
 public class Marmot
 {
+
+	static	//configure the default Marmot configuration to return a default Marmot resource cache
+	{
+		Configurator.setDefaultConfiguration(new MarmotConfiguration()
+			{
+				private final MarmotResourceCache<?> resourceCache=new DefaultMarmotResourceCache();
+				@Override public MarmotResourceCache<?> getResourceCache() {return resourceCache;}
+			});
+	}
 
 		//predefined users
 	/**The principal wildcard character, '*'.*/

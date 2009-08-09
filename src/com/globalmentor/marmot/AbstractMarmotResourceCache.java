@@ -206,15 +206,23 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 			/**@return The URI of the resource.*/
 			public URI getResourceURI() {return resourceURI;}
 
-		/**Repository and resource URI constructor.
+		/**A key for looking up data for the query.*/
+		private final KK key;
+
+			/**@return A key for looking up data for the query.*/ 
+			public KK getKey() {return key;}
+
+		/**Repository, resource URI, and key constructor.
 		@param repository The repository in which the resource is stored.
 		@param resourceURI The URI of the resource.
-		@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
+		@param key The key for looking up data for the query.
+		@exception NullPointerException if the given repository, resource URI, and/or key is <code>null</code>.
 		*/
-		public AbstractMarmotResourceCacheQuery(final Repository repository, final URI resourceURI)
+		public AbstractMarmotResourceCacheQuery(final Repository repository, final URI resourceURI, final KK key)
 		{
 			this.repository=checkInstance(repository, "Repository cannot be null.");
 			this.resourceURI=resourceURI;	//save the resource URI
+			this.key=checkInstance(key, "Key cannot be null.");
 		}		
 	}
 
