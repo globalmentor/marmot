@@ -29,13 +29,9 @@ import com.globalmentor.urf.URFResource;
 public class Marmot
 {
 
-	static	//configure the default Marmot configuration to return a default Marmot resource cache
+	static
 	{
-		Configurator.setDefaultConfiguration(new MarmotConfiguration()
-			{
-				private final MarmotResourceCache<?> resourceCache=new DefaultMarmotResourceCache();
-				@Override public MarmotResourceCache<?> getResourceCache() {return resourceCache;}
-			});
+		Configurator.setDefaultConfiguration(new DefaultMarmotConfiguration());	//configure the default Marmot configuration to return a default Marmot resource cache
 	}
 
 		//predefined users
