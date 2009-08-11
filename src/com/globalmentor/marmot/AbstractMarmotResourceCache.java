@@ -135,8 +135,9 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		final String filename=getRawName(resourceURI);	//get the filename of the resource
 		final String baseName=removeNameExtension(filename);	//get the base name to use	TODO important encode the name so that it can work on the file system
 		final URI resourceParentURI=getParentURI(resourceURI);	//get the parent URI of the resource
-		final URIPath resourceParentPath=new URIPath(repository.getPublicRepositoryURI().relativize(resourceParentURI));	//construct the locator using the parent resource's relative path to the repository
-		final String cacheBaseName=encodeCrossPlatformFilename(resourceParentPath+baseName);	//create a base name by encoding the resource's relative path from the user with no extension
+		final Repository rootRepository=repository.getRootRepository();	//get the root repository so that we create a relative path that is consistent across subrepositories (parent repository URIs should be base URIs to subrepository URIs)
+		final URIPath resourceParentRootPath=new URIPath(rootRepository.getPublicRepositoryURI().relativize(resourceParentURI));	//construct the locator using the parent resource's relative path to the root repository
+		final String cacheBaseName=encodeCrossPlatformFilename(resourceParentRootPath+baseName);	//create a base name by encoding the resource's relative path from the user with no extension
 		return fetch(query, resource, getCacheDirectory(query), cacheBaseName);
 	}
 
