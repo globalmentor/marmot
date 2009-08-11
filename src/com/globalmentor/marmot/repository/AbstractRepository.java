@@ -88,6 +88,42 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		}
 	}
 
+	/**The parent repository, or <code>null</code> if this repository has not been registered as a subrepository of another repository.*/
+	private Repository parent=null;
+	
+		/**@return The parent repository, or <code>null</code> if this repository has not been registered as a subrepository of another repository.*/
+		public Repository getParentRepository() {return parent;}
+
+		/**Sets the parent of this repository.
+		This method is used internally when a subrepository is set, and is not intended to be called by normal code. 
+		@param newParent The new parent of the repository, or <code>null</code> if the repository is being unregistered.
+		@throws IllegalStateException if the new parent is non-<code>null</code> and the repository already has a parent.
+		@see #registerPathRepository(URIPath, Repository)
+		*/
+		public void setParentRepository(final Repository newParent)
+		{
+			if(newParent!=null && newParent!=parent)	//if the parent is being changed without first removing the old parent
+			{
+				throw new IllegalStateException("Repository parent cannot be changed without first unregistering.");
+			}
+			parent=newParent;
+		}
+
+		/**Determines the root of a hierararchy of subrepositories.
+		If this repository has no parent, this method will return this repository.
+		@return The root parent of all the repositories.
+		*/
+		public Repository getRootRepository()
+		{
+			Repository rootRepository=this;
+			Repository parentRepository;
+			while((parentRepository=rootRepository)!=null)	//walk up the chain until we run out of parent repositories
+			{
+				rootRepository=parentRepository;	//move the root up a level
+			}
+			return rootRepository;	//return whatever root repository we determined
+		}
+
 	/**Whether the repository has been opened for access.*/
 	private boolean open=false;
 
@@ -276,7 +312,10 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 				final URIPath parentPath=path.getParentPath();	//get the parent path
 				parentPathRepositoryMap.addItem(parentPath, repository);	//associate this repository with the parent path
 			}
-			return pathRepositoryMap.put(path.checkRelative().checkCollection(), checkInstance(repository, "Repository cannot be null."));
+			final Repository oldRepository=pathRepositoryMap.put(path.checkRelative().checkCollection(), checkInstance(repository, "Repository cannot be null."));
+			//TODO unregister the old repository
+			repository.setParentRepository(this);	//indicate that this is now the parent of the registered subrepository
+			return oldRepository;	//return the previous repository, if any, registered for the given path
 		}
 
 		/**Returns the repository associated with the given path.

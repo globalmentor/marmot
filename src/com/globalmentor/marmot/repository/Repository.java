@@ -75,6 +75,23 @@ public interface Repository
 	*/
 	public void setPublicRepositoryURI(final URI publicRepositoryURI);
 
+	/**@return The parent repository, or <code>null</code> if this repository has not been registered as a subrepository of another repository.*/
+	public Repository getParentRepository();
+
+	/**Sets the parent of this repository.
+	This method is used internally when a subrepository is set, and is not intended to be called by normal code. 
+	@param newParent The new parent of the repository, or <code>null</code> if the repository is being unregistered.
+	@throws IllegalStateException if the new parent is non-<code>null</code> and the repository already has a parent.
+	@see #registerPathRepository(URIPath, Repository)
+	*/
+	public void setParentRepository(final Repository newParent);
+
+	/**Determines the root of a hierararchy of subrepositories.
+	If this repository has no parent, this method will return this repository.
+	@return The root parent of all the repositories.
+	*/
+	public Repository getRootRepository();	
+
 	/**Creates a repository of the same type as this repository with the same access privileges as this one.
 	This factory method is commonly used to use a parent repository as a factory for other repositories in its namespace.
 	This method resolves the private repository path to the current public repository URI.
