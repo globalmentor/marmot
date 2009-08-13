@@ -16,11 +16,10 @@
 
 package com.globalmentor.marmot;
 
-import static com.globalmentor.urf.URF.*;
-
 import java.net.URI;
 
 import com.globalmentor.config.Configurator;
+import static com.globalmentor.urf.URF.*;
 import com.globalmentor.urf.URFResource;
 
 /**Constant values and utilities used by Marmot.
@@ -31,7 +30,16 @@ public class Marmot
 
 	static
 	{
-		Configurator.setDefaultConfiguration(new DefaultMarmotConfiguration());	//configure the default Marmot configuration to return a default Marmot resource cache
+		Configurator.setDefaultConfiguration(MarmotConfiguration.class, new DefaultMarmotConfiguration());	//configure the default Marmot configuration to return a default Marmot resource cache
+	}
+
+	/**Returns the configured Marmot configuration for the current context.
+	@return The configured Marmot configuration for the current context.
+	@see Configurator#getConfiguration(Class)
+	*/
+	public static MarmotConfiguration getConfiguration()
+	{
+		return Configurator.getConfiguration(MarmotConfiguration.class);
 	}
 
 		//predefined users
