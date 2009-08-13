@@ -78,6 +78,34 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		return get(createQuery(repository, resourceURI), deferFetch);	//create a query and perform the fetch
 	}
 
+	
+	/**Retrieves data from the cache.
+	Data is fetched from the backing store if needed, and this method blocks until the data is fetched.
+	@param repository The repository in which the resource is stored.
+	@param resourceURI The URI of the resource.
+	@return The cached data.
+	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@exception IOException if there was an error fetching the data from the backing store.
+	@see #getData(Object)
+	*/
+	public final Data<File> getData(final Repository repository, final URI resourceURI) throws IOException {
+		return getData(repository, resourceURI, false);	//get without deferring fetching
+	}
+	
+	/**Retrieves data from the cache.
+	Data is fetched from the backing store if needed, with fetching optionally deferred until later.
+	@param repository The repository in which the resource is stored.
+	@param resourceURI The URI of the resource.
+	@param deferFetch Whether fetching, if needed, should be deffered and performed in an asynchronous thread.
+	@return The cached data, or <code>null</code> if fetching was deferred.
+	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@exception IOException if there was an error fetching the data from the backing store.
+	@see #getData(Object, boolean)
+	*/
+	public final Data<File> getData(final Repository repository, final URI resourceURI, final boolean deferFetch) throws IOException {
+		return getData(createQuery(repository, resourceURI), deferFetch);	//create a query and perform the fetch
+	}
+	
 	/**Creates a query from the given repository and resource URI.
 	@param repository The repository in which the resource is stored.
 	@param resourceURI The URI of the resource.
@@ -93,9 +121,9 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	@return <code>true</code> if the cached information has become stale.
 	@exception IOException if there was an error checking the cached information for staleness.
 	*/
-	public boolean isStale(final Q query, final CachedFileInfo cachedInfo) throws IOException
+	public boolean isStaleData(final Q query, final FileData cachedInfo) throws IOException
 	{
-		if(super.isStale(query, cachedInfo))	//if the default stale checks think the information is stale
+		if(super.isStaleData(query, cachedInfo))	//if the default stale checks think the information is stale
 		{
 			return true;	//the information is stale
 		}
@@ -125,7 +153,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	@return New information to cache.
 	@exception IOException if there was an error fetching the value from the backing store.
 	*/
-	public final CachedFileInfo fetch(final Q query) throws IOException
+	public final FileData fetchData(final Q query) throws IOException
 	{
 //Debug.log("Starting to fetch resource", key.getResourceURI());
 		final Repository repository=query.getRepository();	//get the repository
@@ -146,7 +174,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	@return New information to cache.
 	@exception IOException if there was an error fetching the value from the backing store.
 	*/
-	protected CachedFileInfo fetch(final Q query, final URFResource resource, final File cacheDirectory, final String cacheBaseName) throws IOException
+	protected FileData fetch(final Q query, final URFResource resource, final File cacheDirectory, final String cacheBaseName) throws IOException
 	{
 		final Repository repository=query.getRepository();	//get the repository
 		final URI resourceURI=query.getResourceURI();	//get the resource URI				
@@ -173,7 +201,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 				cacheFile.setLastModified(modifiedDateTime.getTime());	//update the cached file's modified time so that we will know when the resource was modified
 			}
 		}
-		return new CachedFileInfo(cacheFile, modifiedDateTime);	//return the cached file, which may have been filtered
+		return new FileData(cacheFile, modifiedDateTime);	//return the cached file, which may have been filtered
 	}
 
 	/**Performs any operations that need to be done when cached information is discarded (for example, if the cached information is stale).
