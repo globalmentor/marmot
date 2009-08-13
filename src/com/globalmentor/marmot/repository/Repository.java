@@ -53,6 +53,9 @@ However, this property does have some peculiarities:
 public interface Repository
 {
 
+	/**The value indicating an infinite depth when retriving child resource descriptions.*/
+	public static int INFINITE_DEPTH=-1;
+
 	/**@return The URI identifying the location of this repository.*/
 	public URI getURI();
 
@@ -331,7 +334,7 @@ public interface Repository
 
 	/**Retrieves child resources of the resource at the given URI.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
-	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
+	@param depth The zero-based depth of child resources which should recursively be retrieved, or {@link #INFINITE_DEPTH} for an infinite depth.
 	@return A list of sub-resource descriptions under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
@@ -342,7 +345,7 @@ public interface Repository
 	/**Retrieves child resources of the resource at the given URI.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
 	@param resourceFilter The filter that determines whether child resources should be included, or <code>null</code> if the child resources should not be filtered.
-	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
+	@param depth The zero-based depth of child resources which should recursively be retrieved, or {@link #INFINITE_DEPTH} for an infinite depth.
 	@return A list of sub-resource descriptions under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.

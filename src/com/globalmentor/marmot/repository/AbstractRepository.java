@@ -102,7 +102,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		*/
 		public void setParentRepository(final Repository newParent)
 		{
-			if(newParent!=null && newParent!=parent)	//if the parent is being changed without first removing the old parent
+			if(parent!=null && newParent!=null && newParent!=parent)	//if the parent is being changed without first removing the old parent
 			{
 				throw new IllegalStateException("Repository parent cannot be changed without first unregistering.");
 			}
@@ -117,7 +117,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		{
 			Repository rootRepository=this;
 			Repository parentRepository;
-			while((parentRepository=rootRepository)!=null)	//walk up the chain until we run out of parent repositories
+			while((parentRepository=rootRepository.getParentRepository())!=null)	//walk up the chain until we run out of parent repositories
 			{
 				rootRepository=parentRepository;	//move the root up a level
 			}
@@ -162,7 +162,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		}
 
 		/**Translates a public URI in the repository to the equivalent private URI in the private URI namespace.
-		@param publicURI The URI in the public URI namesapce.
+		@param publicURI The URI in the public URI namespace.
 		@return A URI equivalent to the public URI in the private URI namespace.
 		*/
 		protected URI getPrivateURI(final URI publicURI)
@@ -171,7 +171,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		}
 
 		/**Translates a private URI to the equivalent public URI in the public repository URI namespace.
-		@param privateURI The URI in the private URI namesapce.
+		@param privateURI The URI in the private URI namespace.
 		@return A URI equivalent to the private URI in the public repository URI namespace.
 		*/
 		protected URI getPublicURI(final URI privateURI)
@@ -722,7 +722,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	/**Retrieves child resources of the resource at the given URI.
 	This implementation retrieves an unfiltered list of child resources by delegating to {@link #getChildResourceDescriptions(URI, ResourceFilter, int)}.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
-	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
+	@param depth The zero-based depth of child resources which should recursively be retrieved, or {@link Repository#INFINITE_DEPTH} for an infinite depth.
 	@return A list of sub-resource descriptions under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
@@ -842,7 +842,10 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
 		if(subrepository!=this)	//if the resource URI lies within a subrepository
 		{
-			return subrepository.getParentResourceURI(resourceURI);	//delegate to the subrepository
+			if(!subrepository.getURI().equals(resourceURI))	//don't ask the subrepository's root URI for a parent resource URI, as the repository has no parent URI in terms of that repository
+			{
+				return subrepository.getParentResourceURI(resourceURI);	//delegate to the subrepository
+			}
 		}
 		checkOpen();	//make sure the repository is open
 		if(resourceURI.equals(getPublicRepositoryURI()))	//if the resource is the repository URI

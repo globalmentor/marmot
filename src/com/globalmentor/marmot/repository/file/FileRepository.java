@@ -348,7 +348,7 @@ public class FileRepository extends AbstractRepository
 	This implementation does not include child resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
 	@param resourceFilter The filter that determines whether child resources should be included, or <code>null</code> if the child resources should not be filtered.
-	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
+	@param depth The zero-based depth of child resources which should recursively be retrieved, or {@link Repository#INFINITE_DEPTH} for an infinite depth.
 	@return A list of sub-resource descriptions under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
@@ -392,7 +392,7 @@ public class FileRepository extends AbstractRepository
 								childResourceList.add(childResourceDescription);	//add the resource to our list
 								if(depth!=0 && file.isDirectory())	//if this file is a directory and we haven't reached the bottom
 								{
-									final int newDepth=depth>0 ? depth-1 : depth;	//reduce the depth by one, unless we're using the unlimited depth value
+									final int newDepth=depth!=INFINITE_DEPTH ? depth-1 : depth;	//reduce the depth by one, unless we're using the unlimited depth value
 									childResourceList.addAll(getChildResourceDescriptions(childResourcePublicURI, resourceFilter, newDepth));	//get a list of child descriptions for the resource we just created and add them to the list
 								}
 							}
@@ -404,9 +404,9 @@ public class FileRepository extends AbstractRepository
 				{
 					final URI childSubrepositoryURI=childSubrepository.getURI();	//get the URI of the subrepository
 					childResourceList.add(childSubrepository.getResourceDescription(childSubrepositoryURI));	//get a description of the subrepository root resource
-					if(depth==-1 || depth>0)	//if we should get child resources lower in the hierarchy
+					if(depth==INFINITE_DEPTH || depth>0)	//if we should get child resources lower in the hierarchy
 					{
-						childResourceList.addAll(childSubrepository.getChildResourceDescriptions(childSubrepositoryURI, resourceFilter, depth==-1 ? depth : depth-1));	//get descriptions of subrepository children
+						childResourceList.addAll(childSubrepository.getChildResourceDescriptions(childSubrepositoryURI, resourceFilter, depth==INFINITE_DEPTH ? depth : depth-1));	//get descriptions of subrepository children
 					}
 				}
 			}

@@ -569,7 +569,7 @@ public class WebDAVRepository extends AbstractRepository
 	This implementation does not include child resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
 	@param resourceFilter The filter that determines whether child resources should be included, or <code>null</code> if the child resources should not be filtered.
-	@param depth The zero-based depth of child resources which should recursively be retrieved, or <code>-1</code> for an infinite depth.
+	@param depth The zero-based depth of child resources which should recursively be retrieved, or {@link Repository#INFINITE_DEPTH} for an infinite depth.
 	@return A list of sub-resource descriptions under the given resource.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
@@ -594,7 +594,7 @@ public class WebDAVRepository extends AbstractRepository
 				final Depth webdavDepth;	//we'll get the depth based upon the value passed
 				try
 				{
-					webdavDepth=depth==-1 ? Depth.INFINITY : Depth.values()[depth];	//get the depth based upon the value passed
+					webdavDepth=depth==INFINITE_DEPTH ? Depth.INFINITY : Depth.values()[depth];	//get the depth based upon the value passed
 				}
 				catch(final IndexOutOfBoundsException indexOutOfBoundsException)	//if an illegal depth was passed
 				{
@@ -627,9 +627,9 @@ public class WebDAVRepository extends AbstractRepository
 				{
 					final URI childSubrepositoryURI=childSubrepository.getURI();	//get the URI of the subrepository
 					childResourceList.add(childSubrepository.getResourceDescription(childSubrepositoryURI));	//get a description of the subrepository root resource
-					if(depth==-1 || depth>0)	//if we should get child resources lower in the hierarchy
+					if(depth==INFINITE_DEPTH || depth>0)	//if we should get child resources lower in the hierarchy
 					{
-						childResourceList.addAll(childSubrepository.getChildResourceDescriptions(childSubrepositoryURI, resourceFilter, depth==-1 ? depth : depth-1));	//get descriptions of subrepository children
+						childResourceList.addAll(childSubrepository.getChildResourceDescriptions(childSubrepositoryURI, resourceFilter, depth==INFINITE_DEPTH ? depth : depth-1));	//get descriptions of subrepository children
 					}
 				}
 				
