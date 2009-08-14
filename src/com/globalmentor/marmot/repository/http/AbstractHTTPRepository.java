@@ -51,7 +51,7 @@ import com.globalmentor.util.*;
 /**Abstract repository accessed via HTTP.
 @author Garret Wilson
 */
-public abstract class AbstractHTTPRepository extends AbstractRepository
+public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceRepository
 {
 
 		//TODO the current technique of erasing the password after each call may become obsolete when the HTTP client supports persistent connections

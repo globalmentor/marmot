@@ -42,7 +42,7 @@ The content modified property is not saved for collections with no content.</p>
 <p>This implementation ignores hidden files when considering child resources.</p>
 @author Garret Wilson
 */
-public class FileRepository extends AbstractRepository
+public class FileRepository extends AbstractHierarchicalSourceRepository
 {
 	
 	//TODO see http://lists.apple.com/archives/java-dev/2006/Aug/msg00325.html ; fix non-ASCII characters getting in filename URI
@@ -88,14 +88,13 @@ public class FileRepository extends AbstractRepository
 	*/
 	protected FileFilter getFileFilter() {return fileFilter;}
 
-	/**Default constructor with no settings.
-	Settings must be configured before repository is opened.
+	/**Default constructor with no root URI defined.
+	The root URI must be defined before the repository is opened.
 	*/
-/*TODO del if not needed
 	public FileRepository()
 	{
+		this((URI)null);
 	}
-*/
 
 	/**File constructor with no separate private URI namespace.
 	@param repositoryDirectory The file identifying the directory of this repository.
@@ -124,7 +123,7 @@ public class FileRepository extends AbstractRepository
 	*/
 	public FileRepository(final URI publicRepositoryURI, final File privateRepositoryDirectory)
 	{
-		this(publicRepositoryURI, getDirectoryURI(privateRepositoryDirectory));	//get a directory URI from the private repository directory and use it as the base repository URI
+		this(publicRepositoryURI, privateRepositoryDirectory!=null ? getDirectoryURI(privateRepositoryDirectory) : null);	//get a directory URI from the private repository directory and use it as the base repository URI
 	}
 
 	/**Public repository URI and private repository URI constructor.
@@ -402,7 +401,7 @@ public class FileRepository extends AbstractRepository
 					//aggregate any mapped subrepositories
 				for(final Repository childSubrepository:getChildSubrepositories(resourceURI))	//see if any subrepositories are mapped as children of this repository
 				{
-					final URI childSubrepositoryURI=childSubrepository.getURI();	//get the URI of the subrepository
+					final URI childSubrepositoryURI=childSubrepository.getPublicRepositoryURI();	//get the URI of the subrepository
 					childResourceList.add(childSubrepository.getResourceDescription(childSubrepositoryURI));	//get a description of the subrepository root resource
 					if(depth==INFINITE_DEPTH || depth>0)	//if we should get child resources lower in the hierarchy
 					{

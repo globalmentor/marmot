@@ -61,7 +61,7 @@ import org.w3c.dom.*;
 	and {@link #alterResourceProperties(URI, URFResourceAlteration)} in that simultaneous additions could clobber all the additions but the last one.</p>
 @author Garret Wilson
 */
-public class WebDAVRepository extends AbstractRepository
+public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 {
 
 	/**The URI to the Marmot WebDAV repository namespace.*/
@@ -119,6 +119,14 @@ public class WebDAVRepository extends AbstractRepository
 		@return The WebDAV properties that are not automatically added as URF properties.
 		*/
 //TODO del if not needed		protected Set<String> getIgnoredWebDAVProperties() {return ignoredWebDAVProperties;}
+
+	/**Default constructor with no root URI defined.
+	The root URI must be defined before the repository is opened.
+	*/
+	public WebDAVRepository()
+	{
+		this(null);
+	}
 
 	/**Repository URI constructor using the default HTTP client.
 	The given repository URI should end in a slash.
@@ -625,7 +633,7 @@ public class WebDAVRepository extends AbstractRepository
 					//aggregate any mapped subrepositories
 				for(final Repository childSubrepository:getChildSubrepositories(resourceURI))	//see if any subrepositories are mapped as children of this repository
 				{
-					final URI childSubrepositoryURI=childSubrepository.getURI();	//get the URI of the subrepository
+					final URI childSubrepositoryURI=childSubrepository.getPublicRepositoryURI();	//get the URI of the subrepository
 					childResourceList.add(childSubrepository.getResourceDescription(childSubrepositoryURI));	//get a description of the subrepository root resource
 					if(depth==INFINITE_DEPTH || depth>0)	//if we should get child resources lower in the hierarchy
 					{

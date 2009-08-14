@@ -57,7 +57,7 @@ public interface Repository
 	public static int INFINITE_DEPTH=-1;
 
 	/**@return The URI identifying the location of this repository.*/
-	public URI getURI();
+//TODO bring back	public URI getURI();
 
 	/**@return The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository.*/
 	public URI getPrivateRepositoryURI();

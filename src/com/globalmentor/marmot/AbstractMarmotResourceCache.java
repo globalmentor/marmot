@@ -280,7 +280,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		*/
 		public MarmotResourceCacheKey(final Repository repository, final URI resourceURI)
 		{
-			this(repository, resourceURI, repository.getURI(), resourceURI);
+			this(repository, resourceURI, repository.getPublicRepositoryURI(), resourceURI);
 		}
 
 		/**Repository, resource URI, and hash objects constructor.
@@ -293,7 +293,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		protected MarmotResourceCacheKey(final Repository repository, final URI resourceURI, final Object... objects)
 		{
 			super(objects);
-			this.repositoryURI=repository.getURI();	//TODO ensure not null
+			this.repositoryURI=repository.getPublicRepositoryURI();	//TODO ensure not null
 			this.resourceURI=checkInstance(resourceURI, "Resource URI cannot be null.");	//save the resource URI
 		}
 

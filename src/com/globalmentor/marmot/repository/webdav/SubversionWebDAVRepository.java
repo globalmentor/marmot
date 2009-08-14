@@ -56,6 +56,14 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 		return SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME;
 	}
 
+	/**Default constructor with no root URI defined.
+	The root URI must be defined before the repository is opened.
+	*/
+	public SubversionWebDAVRepository()
+	{
+		this(null);
+	}
+
 	/**Repository URI constructor using the default HTTP client.
 	The given repository URI should end in a slash.
 	@param repositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.

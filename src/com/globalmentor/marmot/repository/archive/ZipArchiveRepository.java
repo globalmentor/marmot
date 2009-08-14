@@ -26,7 +26,6 @@ import java.util.zip.ZipFile;
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.CharSequences.*;
 import com.globalmentor.marmot.repository.*;
-import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.net.*;
 import static com.globalmentor.net.URIs.*;
 import com.globalmentor.urf.*;
@@ -38,7 +37,15 @@ import static com.globalmentor.urf.content.Content.*;
 */
 public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 {
-	
+
+	/**Default constructor with no root URI defined.
+	The root URI must be defined before the repository is opened.
+	*/
+	public ZipArchiveRepository()
+	{
+		this(null);
+	}
+
 	/**URI constructor with no separate private URI namespace.
 	@param repositoryURI The URI identifying the location of this repository.
 	@throws NullPointerException if the given respository URI is <code>null</code>.
@@ -52,24 +59,22 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 	A {@link URFResourceTURFIO} description I/O is created and initialized.
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	@throws NullPointerException if one of the given respository URIs is <code>null</code>.
+	@exception NullPointerException if one of the given respository URIs is <code>null</code>.
 	*/
 	public ZipArchiveRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
 	{
-		this(publicRepositoryURI, privateRepositoryURI, new URFResourceTURFIO<URFResource>(URFResource.class, URI.create("")));	//create a default resource description I/O using TURF
-		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO=(URFResourceTURFIO<URFResource>)getDescriptionIO();	//get the description I/O we created
-		urfResourceDescriptionIO.addNamespaceURI(MarmotSecurity.MARMOT_SECURITY_NAMESPACE_URI);	//tell the I/O about the security namespace
+		this(publicRepositoryURI, privateRepositoryURI, createDefaultURFResourceDescriptionIO());	//create a default resource description I/O using TURF
 	}
 
 	/**Public repository URI and private repository URI constructor.
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
 	@param descriptionIO The I/O implementation that writes and reads a resource with the same reference URI as its base URI.
-	@throws NullPointerException if one of the given respository URIs and/or the description I/O is <code>null</code>.
+	@exception NullPointerException if one of the given respository URIs and/or the description I/O is <code>null</code>.
 	*/
 	public ZipArchiveRepository(final URI publicRepositoryURI, final URI privateRepositoryURI, final URFIO<URFResource> descriptionIO)
 	{
-		super(publicRepositoryURI, privateRepositoryURI, descriptionIO);	//construct the parent class
+		super(publicRepositoryURI, privateRepositoryURI, descriptionIO);
 	}
 
 	/**Creates a repository of the same type as this repository with the same access privileges as this one.
@@ -381,7 +386,7 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 						//aggregate any mapped subrepositories
 					for(final Repository childSubrepository:getChildSubrepositories(resourceURI))	//see if any subrepositories are mapped as children of this repository
 					{
-						final URI childSubrepositoryURI=childSubrepository.getURI();	//get the URI of the subrepository
+						final URI childSubrepositoryURI=childSubrepository.getPublicRepositoryURI();	//get the URI of the subrepository
 						childResourceList.add(childSubrepository.getResourceDescription(childSubrepositoryURI));	//get a description of the subrepository root resource
 						if(depth==INFINITE_DEPTH || depth>0)	//if we should get child resources lower in the hierarchy
 						{

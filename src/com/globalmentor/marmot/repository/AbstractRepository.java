@@ -40,7 +40,7 @@ import static com.globalmentor.marmot.security.MarmotSecurity.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
 
-/**Abstract implementation of a repository class with typical features.
+/**Abstract implementation of a repository with typical features.
 <p>This implementation uses the special name {@value #COLLECTION_CONTENT_NAME} to represent the contents (as opposed to the contained resources) of a collection resource.</p>
 <p>Resource access methods should call {@link #checkResourceURI(URI)} as a security check to ensure the given URI is within the repository.</p>
 <p>This implementation considers the following properties to be live properties:</p>
@@ -51,7 +51,7 @@ import static com.globalmentor.urf.content.Content.*;
 <p>This implementation initializes the map of extension contents to {@link Files#FILE_EXTENSION_CONTENT_TYPE_MAP}.</p>
 @author Garret Wilson
 */
-public abstract class AbstractRepository extends DefaultURFResource implements Repository
+public abstract class AbstractRepository implements Repository
 {
 
 	/**The resource factory for resources in the Marmot namespace.*/
@@ -78,15 +78,17 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	If there currently is no private repository URI, it will be updated to match the given public repository URI.
 	@param uri The new URI, or <code>null</code> if there is no URI.
 	*/
+/*TODO fix
 	protected void setURI(final URI uri)
 	{
 			//TODO check for the URI being set to null
-		super.setURI(uri);	//set the URI normally
+//TODO bring back		super.setURI(uri);	//set the URI normally
 		if(getPrivateRepositoryURI()==null)	//if there is no private repository URI
 		{
 			setPrivateRepositoryURI(uri);	//update the private repository URI to match
 		}
 	}
+*/
 
 	/**The parent repository, or <code>null</code> if this repository has not been registered as a subrepository of another repository.*/
 	private Repository parent=null;
@@ -142,8 +144,11 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 			this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI must not be null.").normalize();
 		}
 
-		/**@return The base URI of the public URI namespace being managed; equivalent to {@link #getURI()}.*/
-		public URI getPublicRepositoryURI() {return getURI();}
+	/**The base URI of the public URI namespace being managed.*/
+	private URI publicRepositoryURI=null;
+		
+		/**@return The base URI of the public URI namespace being managed.*/
+		public URI getPublicRepositoryURI() {return publicRepositoryURI;}
 
 		/**Sets the base URI of the public URI namespace being managed, reference URI of the repository.
 		If there currently is no private repository URI, it will be updated to match the given public repository URI.
@@ -154,29 +159,11 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		*/
 		public void setPublicRepositoryURI(final URI publicRepositoryURI)
 		{
-			setURI(checkInstance(publicRepositoryURI, "Public repository URI must not be null.").normalize());
+			this.publicRepositoryURI=checkInstance(publicRepositoryURI, "Public repository URI must not be null.").normalize();
 			for(final Map.Entry<URIPath, Repository> pathRepositoryEntry:pathRepositoryMap.entrySet())	//look at each path to repository mapping
 			{
-				pathRepositoryEntry.getValue().setPublicRepositoryURI(resolve(getURI(), pathRepositoryEntry.getKey()));	//update the public URI of the repository to match its location in the repository
+				pathRepositoryEntry.getValue().setPublicRepositoryURI(resolve(getPublicRepositoryURI(), pathRepositoryEntry.getKey()));	//update the public URI of the repository to match its location in the repository
 			}
-		}
-
-		/**Translates a public URI in the repository to the equivalent private URI in the private URI namespace.
-		@param publicURI The URI in the public URI namespace.
-		@return A URI equivalent to the public URI in the private URI namespace.
-		*/
-		protected URI getPrivateURI(final URI publicURI)
-		{
-			return changeBase(publicURI, getURI(), getPrivateRepositoryURI());	//change the base of the URI from the public URI namespace to the private URI namespace
-		}
-
-		/**Translates a private URI to the equivalent public URI in the public repository URI namespace.
-		@param privateURI The URI in the private URI namespace.
-		@return A URI equivalent to the private URI in the public repository URI namespace.
-		*/
-		protected URI getPublicURI(final URI privateURI)
-		{
-			return changeBase(privateURI, getPrivateRepositoryURI(), getURI());	//change the base of the URI from the private URI namespace to the public URI namespace
 		}
 
 	/**Whether the repository should automatically be opened when needed.*/
@@ -306,7 +293,10 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		*/
 		public Repository registerPathRepository(final URIPath path, final Repository repository)
 		{
-			repository.setPublicRepositoryURI(resolve(getURI(), path));	//update the public URI of the repository to match its location in the repository
+			if(getPublicRepositoryURI()!=null)	//if the root URI has been initialized
+			{
+				repository.setPublicRepositoryURI(resolve(getPublicRepositoryURI(), path));	//update the public URI of the repository to match its location in the repository
+			}
 			if(!URIPath.ROOT_URI_PATH.equals(path))	//if this is not the root path (it's not normal to map the root path to another repository, but check for it anyway)
 			{
 				final URIPath parentPath=path.getParentPath();	//get the parent path
@@ -365,9 +355,9 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	protected URI checkResourceURI(URI resourceURI)
 	{
 		resourceURI=checkInstance(resourceURI, "Resource URI cannot be null.").normalize();	//normalize the URI
-		if(!isChild(getURI(), resourceURI))	//if the given resource URI does not designate a resource within this repository's URI namespace (this will normalize the URI, but as we need to return a normalized form it's better to normalize first so that actual normalization changes won't have to be done twice)
+		if(!isChild(getPublicRepositoryURI(), resourceURI))	//if the given resource URI does not designate a resource within this repository's URI namespace (this will normalize the URI, but as we need to return a normalized form it's better to normalize first so that actual normalization changes won't have to be done twice)
 		{
-			throw new IllegalArgumentException(resourceURI+" does not designate a resource within the repository "+getURI());
+			throw new IllegalArgumentException(resourceURI+" does not designate a resource within the repository "+getPublicRepositoryURI());
 		}
 		return resourceURI;	//return the normalized form of the resource URI
 	}
@@ -381,7 +371,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	*/
 	protected Repository getSubrepository(final URI resourceURI)
 	{
-		final URI repositoryURI=getURI();	//get the URI of the repository
+		final URI repositoryURI=getPublicRepositoryURI();	//get the URI of the repository
 		final URIPath resourcePath=new URIPath(repositoryURI.relativize(resourceURI));	//get the path of the resource relative to the resource
 		URIPath levelPath=resourcePath.getCurrentLevel();	//walk up the levels, starting at the current level
 		while(!levelPath.isEmpty())	//while the resource path isn't empty
@@ -406,7 +396,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	@SuppressWarnings("unchecked")
 	protected Set<Repository> getChildSubrepositories(final URI parentResourceURI)
 	{
-		final URI repositoryURI=getURI();	//get the URI of the repository
+		final URI repositoryURI=getPublicRepositoryURI();	//get the URI of the repository
 		final URIPath resourcePath=new URIPath(repositoryURI.relativize(parentResourceURI));	//get the path of the resource relative to the resource
 		final Set<Repository> childSubrepositories=parentPathRepositoryMap.get(resourcePath);	//see if there are any subrepositories mapped under the given parent resource URI
 		return childSubrepositories!=null ? unmodifiableSet(childSubrepositories) : (Set<Repository>)EMPTY_SET;	//return an unmodifiablel set of the subrepositories, if there are any
@@ -434,6 +424,25 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 			namespaceURIResourceFactoryMap.remove(typeNamespaceURI);
 		}
 
+	/**Creates and initializes default I/O for URF resource descriptions.
+	@return Default URF resource description I/O.
+	*/
+	protected static URFIO<URFResource> createDefaultURFResourceDescriptionIO()
+	{
+		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO=new URFResourceTURFIO<URFResource>(URFResource.class, URI.create(""));	//create a default resource description I/O using TURF
+		urfResourceDescriptionIO.addNamespaceURI(MarmotSecurity.MARMOT_SECURITY_NAMESPACE_URI);	//tell the I/O about the security namespace
+	//TODO del		urfResourceDescriptionIO.setFormatted(false);	//turn off formatting
+		return urfResourceDescriptionIO;
+	}
+
+	/**Default constructor with no root URI defined.
+	The root URI must be defined before the repository is opened.
+	*/
+	public AbstractRepository()
+	{
+		this(null);
+	}
+
 	/**URI constructor with no separate private URI namespace.
 	@param repositoryURI The URI identifying the location of this repository.
 	@exception NullPointerException if the given respository URI is <code>null</code>.
@@ -451,10 +460,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	*/
 	public AbstractRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
 	{
-		this(publicRepositoryURI, privateRepositoryURI, new URFResourceTURFIO<URFResource>(URFResource.class, URI.create("")));	//create a default resource description I/O using TURF
-		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO=(URFResourceTURFIO<URFResource>)getDescriptionIO();	//get the description I/O we created
-		urfResourceDescriptionIO.addNamespaceURI(MarmotSecurity.MARMOT_SECURITY_NAMESPACE_URI);	//tell the I/O about the security namespace
-//TODO del		urfResourceDescriptionIO.setFormatted(false);	//turn off formatting
+		this(publicRepositoryURI, privateRepositoryURI, createDefaultURFResourceDescriptionIO());	//create a default resource description I/O using TURF
 	}
 
 	/**Public repository URI and private repository URI constructor.
@@ -465,8 +471,10 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 	*/
 	public AbstractRepository(final URI publicRepositoryURI, final URI privateRepositoryURI, final URFIO<URFResource> descriptionIO)
 	{
-		super(checkInstance(publicRepositoryURI, "Public repository URI cannot be null.").normalize());	//construct the parent class with the public reference URI
-		this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI cannot be null.").normalize();
+//TODO bring back		super(checkInstance(publicRepositoryURI, "Public repository URI cannot be null.").normalize());	//construct the parent class with the public reference URI
+		this.publicRepositoryURI=publicRepositoryURI!=null ? publicRepositoryURI.normalize() : null;
+		this.privateRepositoryURI=privateRepositoryURI!=null ? privateRepositoryURI.normalize() : null;
+//TODO del; update null-related documentation		this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI cannot be null.").normalize();
 		this.descriptionIO=checkInstance(descriptionIO, "Description I/O cannot be null.");	//save the description I/O
 		registerResourceFactory(MARMOT_NAMESPACE_URI, MARMOT_RESOURCE_FACTORY);	//register the Marmot factory
 		registerResourceFactory(MARMOT_SECURITY_NAMESPACE_URI, MARMOT_SECURITY_RESOURCE_FACTORY);	//register the Marmot resource factory
@@ -842,7 +850,7 @@ public abstract class AbstractRepository extends DefaultURFResource implements R
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
 		if(subrepository!=this)	//if the resource URI lies within a subrepository
 		{
-			if(!subrepository.getURI().equals(resourceURI))	//don't ask the subrepository's root URI for a parent resource URI, as the repository has no parent URI in terms of that repository
+			if(!subrepository.getPublicRepositoryURI().equals(resourceURI))	//don't ask the subrepository's root URI for a parent resource URI, as the repository has no parent URI in terms of that repository
 			{
 				return subrepository.getParentResourceURI(resourceURI);	//delegate to the subrepository
 			}

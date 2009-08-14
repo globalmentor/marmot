@@ -27,7 +27,6 @@ import com.globalmentor.urf.URFResource;
 
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.net.URIs.isCollectionURI;
-import static com.globalmentor.urf.TURF.TURF_NAME_EXTENSION;
 
 /**Repository stored in an NTFS filesystem.
 This implementation stores resource descriptions in NTFS Alternate Data Streams (ADS).
@@ -36,6 +35,14 @@ This implementation stores resource descriptions in NTFS Alternate Data Streams 
 */
 public class NTFSFileRepository extends FileRepository
 {
+
+	/**Default constructor with no root URI defined.
+	The root URI must be defined before the repository is opened.
+	*/
+	public NTFSFileRepository()
+	{
+		this((URI)null);
+	}
 
 	/**File constructor with no separate private URI namespace.
 	@param repositoryDirectory The file identifying the directory of this repository.
@@ -64,7 +71,7 @@ public class NTFSFileRepository extends FileRepository
 	*/
 	public NTFSFileRepository(final URI publicRepositoryURI, final File privateRepositoryDirectory)
 	{
-		this(publicRepositoryURI, getDirectoryURI(privateRepositoryDirectory));	//get a directory URI from the private repository directory and use it as the base repository URI
+		this(publicRepositoryURI, privateRepositoryDirectory!=null ? getDirectoryURI(privateRepositoryDirectory) : null);	//get a directory URI from the private repository directory and use it as the base repository URI
 	}
 
 	/**Public repository URI and private repository URI constructor.

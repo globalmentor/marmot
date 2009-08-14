@@ -23,9 +23,7 @@ import com.globalmentor.cache.Cache;
 import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.MarmotResourceCache;
 import com.globalmentor.marmot.repository.*;
-import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.urf.*;
-import com.globalmentor.urf.content.Content;
 
 /**Abstract implementation of a repository backed by an archive resource.
 @param <A> The type objct representing a source archive.
@@ -33,7 +31,15 @@ import com.globalmentor.urf.content.Content;
 */
 public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepository
 {
-	
+
+	/**Default constructor with no root URI defined.
+	The root URI must be defined before the repository is opened.
+	*/
+	public AbstractArchiveRepository()
+	{
+		this(null);
+	}
+
 	/**URI constructor with no separate private URI namespace.
 	@param repositoryURI The URI identifying the location of this repository.
 	@exception NullPointerException if the given respository URI is <code>null</code>.
@@ -51,9 +57,7 @@ public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepos
 	*/
 	public AbstractArchiveRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
 	{
-		this(publicRepositoryURI, privateRepositoryURI, new URFResourceTURFIO<URFResource>(URFResource.class, URI.create("")));	//create a default resource description I/O using TURF
-		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO=(URFResourceTURFIO<URFResource>)getDescriptionIO();	//get the description I/O we created
-		urfResourceDescriptionIO.addNamespaceURI(MarmotSecurity.MARMOT_SECURITY_NAMESPACE_URI);	//tell the I/O about the security namespace
+		this(publicRepositoryURI, privateRepositoryURI, createDefaultURFResourceDescriptionIO());	//create a default resource description I/O using TURF
 	}
 
 	/**Public repository URI and private repository URI constructor.
@@ -64,7 +68,7 @@ public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepos
 	*/
 	public AbstractArchiveRepository(final URI publicRepositoryURI, final URI privateRepositoryURI, final URFIO<URFResource> descriptionIO)
 	{
-		super(publicRepositoryURI, privateRepositoryURI, descriptionIO);	//construct the parent class
+		super(publicRepositoryURI, privateRepositoryURI, descriptionIO);
 	}
 
 	/**Determines the source repository for accessing the source archive.
