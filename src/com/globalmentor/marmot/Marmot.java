@@ -66,6 +66,12 @@ public class Marmot
 		return Configurator.getConfiguration(MarmotConfiguration.class);
 	}
 
+	/**@return The cache configured for use by Marmot for the appropriate configuration.*/
+	public static MarmotResourceCache<?> getResourceCache()
+	{
+		return getConfiguration().getResourceCache();
+	}
+
 		//predefined users
 	/**The principal wildcard character, '*'.*/
 //TODO del	public final static char WILDCARD_PRINCIPAL_CHAR='*';
