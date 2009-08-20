@@ -18,9 +18,9 @@ package com.globalmentor.marmot.repository;
 
 import java.net.URI;
 
+import com.globalmentor.model.Filter;
 import com.globalmentor.net.URIs;
 import com.globalmentor.urf.URFResource;
-import com.globalmentor.util.Filter;
 
 /**A resource filter that allows two levels of filtering: one on the resource URI, and one on the resource description in general.
 An operation using the filter will typically filter based upon the resource URI using {@link #isPass(URI)}

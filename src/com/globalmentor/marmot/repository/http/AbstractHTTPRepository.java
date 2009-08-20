@@ -32,9 +32,9 @@ import static com.globalmentor.urf.TURF.*;
 import static com.globalmentor.urf.URF.*;
 import static com.globalmentor.urf.content.Content.*;
 import static com.globalmentor.urf.dcmi.DCMI.*;
-import static com.globalmentor.util.Locales.*;
 
 import static com.globalmentor.java.Bytes.*;
+import static com.globalmentor.model.Locales.*;
 import static com.globalmentor.net.URIs.*;
 
 import com.globalmentor.io.*;

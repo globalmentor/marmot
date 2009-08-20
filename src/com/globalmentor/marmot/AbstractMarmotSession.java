@@ -16,6 +16,8 @@
 
 package com.globalmentor.marmot;
 
+import com.globalmentor.collections.CollectionMap;
+import com.globalmentor.collections.CopyOnWriteArrayListConcurrentHashMap;
 import com.globalmentor.io.Files;
 import java.net.*;
 import java.nio.charset.Charset;

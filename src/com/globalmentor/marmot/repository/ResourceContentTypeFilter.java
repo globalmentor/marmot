@@ -18,11 +18,11 @@ package com.globalmentor.marmot.repository;
 
 import java.net.URI;
 
+import static com.globalmentor.collections.Arrays.*;
 import static com.globalmentor.java.Objects.*;
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.net.ContentType;
 import com.globalmentor.urf.URFResource;
-import static com.globalmentor.util.Arrays.*;
 
 /**A resource filter that filters on resource content type.
 This class automatically filters on collection and non-collection status.

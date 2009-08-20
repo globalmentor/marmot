@@ -30,17 +30,20 @@ import static com.globalmentor.urf.TURF.*;
 import static com.globalmentor.urf.URF.*;
 import static com.globalmentor.urf.content.Content.*;
 import static com.globalmentor.urf.dcmi.DCMI.*;
-import static com.globalmentor.util.Locales.*;
 
 import static com.globalmentor.java.Bytes.*;
+import static com.globalmentor.model.Locales.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.net.http.webdav.WebDAV.*;
 
+import com.globalmentor.collections.CollectionMap;
+import com.globalmentor.collections.HashSetHashMap;
 import com.globalmentor.io.*;
 import static com.globalmentor.io.Charsets.*;
 import com.globalmentor.java.Strings;
 import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.repository.*;
+import com.globalmentor.model.NameValuePair;
 import com.globalmentor.net.*;
 import com.globalmentor.net.http.*;
 import com.globalmentor.net.http.webdav.*;

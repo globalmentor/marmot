@@ -27,6 +27,7 @@ import static com.globalmentor.urf.content.Content.*;
 
 import com.globalmentor.cache.AbstractFileCache;
 import com.globalmentor.marmot.repository.Repository;
+import com.globalmentor.model.AbstractHashObject;
 import com.globalmentor.net.URIPath;
 import com.globalmentor.net.URIs;
 import com.globalmentor.urf.*;

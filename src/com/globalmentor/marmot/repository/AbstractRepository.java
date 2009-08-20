@@ -24,6 +24,8 @@ import java.util.*;
 import static java.util.Arrays.*;
 import static java.util.Collections.*;
 
+import com.globalmentor.collections.CollectionMap;
+import com.globalmentor.collections.HashSetHashMap;
 import com.globalmentor.io.*;
 import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.security.MarmotSecurity;

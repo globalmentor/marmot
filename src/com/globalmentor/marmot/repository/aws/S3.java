@@ -22,12 +22,13 @@ import java.util.*;
 
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.io.Charsets.*;
+
+import com.globalmentor.model.NameValuePair;
 import com.globalmentor.net.URIPath;
 import com.globalmentor.net.http.HTTPRequest;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.net.http.HTTP.*;
 import static com.globalmentor.security.MessageDigests.*;
-import com.globalmentor.util.NameValuePair;
 
 /**Constants and utilities for Amazon Simple Storage Service (S3).
 @author Garret Wilson
