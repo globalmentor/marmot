@@ -95,7 +95,7 @@ public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepos
 	{
 		final MarmotResourceCache<?> marmotCache=Marmot.getResourceCache();
 		//TODO change to using a sourceArchiveURI instead of a privateRepositoryURI; create a subclass of AbstractRepository for repositories that have parallel private URI hierarchies
-		Cache.Data<File> sourceArchiveFileData=marmotCache.getData(getSourceRepository(), getPrivateRepositoryURI());	//retrieve the archive file data, using a cached version if possible TODO rename getPrivateRepositoryURI() to getSourceURI()
+		Cache.Data<File> sourceArchiveFileData=marmotCache.getData(getSourceRepository(), getSourceURI());	//retrieve the archive file data, using a cached version if possible TODO rename getPrivateRepositoryURI() to getSourceURI()
 		if(sourceArchiveFileData!=this.sourceArchiveFileData || sourceArchive==null)	//if we have new file data from the cache (or we've never created a source archive), we need to update the actual archive
 		{
 			sourceArchive=createSourceArchive(sourceArchiveFileData.getValue());	//create a new source archive from the file

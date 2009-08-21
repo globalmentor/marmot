@@ -355,7 +355,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			if(isCollectionURI(resourceURI))	//if the resource is a collection
 			{
 				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
-				final WebDAVResource contentWebDAVResource=new WebDAVResource(getPrivateURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource TODO cache these resources, maybe
+				final WebDAVResource contentWebDAVResource=new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource TODO cache these resources, maybe
 				if(contentWebDAVResource.exists())	//if there is a special collection content resource
 				{
 					return contentWebDAVResource.getInputStream();	//return an input stream to the collection content resource
@@ -367,7 +367,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			}
 			else	//if the resource is not a collection
 			{
-				final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+				final WebDAVResource webdavResource=new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 				return webdavResource.getInputStream();	//return an input stream to the resource
 			}
 		}
@@ -408,7 +408,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
-			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource TODO cache these resources, maybe
+			final WebDAVResource webdavResource=new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource TODO cache these resources, maybe
 			if(!webdavResource.exists())	//if the resource doesn't already exist
 			{
 				throw new ResourceNotFoundException(resourceURI, "Cannot open output stream to non-existent resource "+resourceURI);
@@ -417,7 +417,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			if(isCollectionURI(resourceURI))	//if the resource is a collection
 			{
 				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
-				contentWebDAVResource=new WebDAVResource(getPrivateURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource
+				contentWebDAVResource=new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource
 			}
 			else	//if the resource is not a collection
 			{
@@ -464,7 +464,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
-			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			final WebDAVResource webdavResource=new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			final Map<WebDAVPropertyName, WebDAVProperty> properties=webdavResource.propFind();	//get the properties of this resource
 			return createResourceDescription(urf, resourceURI, properties);	//create a resource from this URI and property list
 		}
@@ -486,7 +486,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	}
 
 	/**Determines if the resource at the given URI exists.
-	This implementation returns <code>false</code> for all resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
+	This implementation returns <code>false</code> for all resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource to check.
 	@return <code>true</code> if the resource exists, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -502,8 +502,8 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			return subrepository.resourceExists(resourceURI);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		final URI privateResourceURI=getPrivateURI(resourceURI);	//get the resource URI in the private space
-		if(!isPrivateURIResourcePublic(privateResourceURI))	//if this resource should not be public
+		final URI privateResourceURI=getSourceResourceURI(resourceURI);	//get the resource URI in the private space
+		if(!isSourceResourcePublic(privateResourceURI))	//if this resource should not be public
 		{
 			return false;	//ignore this resource
 		}
@@ -531,7 +531,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	}
 
 	/**Determines whether the resource represented by the given URI has children.
-	This implementation ignores child resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
+	This implementation ignores child resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource.
 	@return <code>true</code> if the specified resource has child resources.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -547,7 +547,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			return subrepository.hasChildren(resourceURI);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		final URI privateResourceURI=getPrivateURI(resourceURI);	//get the URI of the resource in the private namespace
+		final URI privateResourceURI=getSourceResourceURI(resourceURI);	//get the URI of the resource in the private namespace
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
@@ -556,7 +556,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			for(final NameValuePair<URI, Map<WebDAVPropertyName, WebDAVProperty>> propertyMap:propertyMaps)	//look at each property map
 			{
 				final URI childResourcePrivateURI=propertyMap.getName();	//get the private URI of the child resource this property list represents
-				if(isPrivateURIResourcePublic(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI))	//if the associated child resource is public and the property list is *not* for this resource
+				if(isSourceResourcePublic(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI))	//if the associated child resource is public and the property list is *not* for this resource
 				{
 					return true;	//this resource has children
 				}
@@ -577,7 +577,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	}
 
 	/**Retrieves child resources of the resource at the given URI.
-	This implementation does not include child resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
+	This implementation does not include child resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
 	@param resourceFilter The filter that determines whether child resources should be included, or <code>null</code> if the child resources should not be filtered.
 	@param depth The zero-based depth of child resources which should recursively be retrieved, or {@link Repository#INFINITE_DEPTH} for an infinite depth.
@@ -597,7 +597,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		checkOpen();	//make sure the repository is open
 		if(depth!=0)	//a depth of zero means don't get child resources
 		{
-			final URI privateResourceURI=getPrivateURI(resourceURI);	//get the URI of the resource in the private namespace
+			final URI privateResourceURI=getSourceResourceURI(resourceURI);	//get the URI of the resource in the private namespace
 			final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 			try
 			{
@@ -617,9 +617,9 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 				for(final NameValuePair<URI, Map<WebDAVPropertyName, WebDAVProperty>> propertyMap:propertyMaps)	//look at each property map
 				{
 					final URI childResourcePrivateURI=propertyMap.getName();	//get the private URI of the child resource this property list represents
-					if(isPrivateURIResourcePublic(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI))	//if the associated child resource is public and the property list is *not* for this resource
+					if(isSourceResourcePublic(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI))	//if the associated child resource is public and the property list is *not* for this resource
 					{
-						final URI childResourcePublicURI=getPublicURI(childResourcePrivateURI);	//get the public URI of this child resource
+						final URI childResourcePublicURI=getRepositoryResourceURI(childResourcePrivateURI);	//get the public URI of this child resource
 						if(getSubrepository(childResourcePublicURI)==this)	//if this child wouldn't be located in a subrepository (i.e. ignore resources obscured by subrepositories)
 						{
 							if(resourceFilter==null || resourceFilter.isPass(childResourcePublicURI))	//if we should include this resource based upon its URI
@@ -636,7 +636,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 					//aggregate any mapped subrepositories
 				for(final Repository childSubrepository:getChildSubrepositories(resourceURI))	//see if any subrepositories are mapped as children of this repository
 				{
-					final URI childSubrepositoryURI=childSubrepository.getPublicRepositoryURI();	//get the URI of the subrepository
+					final URI childSubrepositoryURI=childSubrepository.getRootURI();	//get the URI of the subrepository
 					childResourceList.add(childSubrepository.getResourceDescription(childSubrepositoryURI));	//get a description of the subrepository root resource
 					if(depth==INFINITE_DEPTH || depth>0)	//if we should get child resources lower in the hierarchy
 					{
@@ -696,13 +696,13 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
-			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			final WebDAVResource webdavResource=new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			final WebDAVResource contentWebDAVResource;	//determine the WebDAV resource for accessing the content file
 			if(isCollectionURI(resourceURI))	//if this is a collection
 			{
 				webdavResource.mkCol();	//create the collection
 				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
-				contentWebDAVResource=new WebDAVResource(getPrivateURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource
+				contentWebDAVResource=new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource
 			}
 			else	//if this is not a collection
 			{
@@ -740,13 +740,13 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
-			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			final WebDAVResource webdavResource=new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			final WebDAVResource contentWebDAVResource;	//determine the WebDAV resource for accessing the content file
 			if(isCollectionURI(resourceURI))	//if this is a collection
 			{
 				webdavResource.mkCol();	//create the collection
 				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
-				contentWebDAVResource=new WebDAVResource(getPrivateURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource
+				contentWebDAVResource=new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource
 			}
 			else	//if this is not a collection
 			{
@@ -818,7 +818,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
-			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			final WebDAVResource webdavResource=new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			return alterResourceProperties(resourceURI, resourceAlteration, webdavResource);	//alter the properties of the resource
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
@@ -989,8 +989,8 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
-			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
-			webdavResource.copy(getPrivateURI(destinationURI), overwrite);	//copy the resource with an infinite depth, overwriting the destination resource only if requested
+			final WebDAVResource webdavResource=new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			webdavResource.copy(getSourceResourceURI(destinationURI), overwrite);	//copy the resource with an infinite depth, overwriting the destination resource only if requested
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -1021,14 +1021,14 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			subrepository.deleteResource(resourceURI);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		if(resourceURI.normalize().equals(getPublicRepositoryURI()))	//if they try to delete the root URI
+		if(resourceURI.normalize().equals(getRootURI()))	//if they try to delete the root URI
 		{
 			throw new IllegalArgumentException("Cannot delete repository base URI "+resourceURI);
 		}
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
-			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			final WebDAVResource webdavResource=new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 			webdavResource.delete();	//delete the resource		
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
@@ -1064,15 +1064,15 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			subrepository.moveResource(resourceURI, destinationURI, overwrite);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		if(resourceURI.normalize().equals(getPublicRepositoryURI()))	//if they try to move the root URI
+		if(resourceURI.normalize().equals(getRootURI()))	//if they try to move the root URI
 		{
 			throw new IllegalArgumentException("Cannot move repository base URI "+resourceURI);
 		}
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
-			final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
-			webdavResource.move(getPrivateURI(destinationURI), overwrite);	//move the resource with an infinite depth, overwriting the destination resource only if requested
+			final WebDAVResource webdavResource=new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+			webdavResource.move(getSourceResourceURI(destinationURI), overwrite);	//move the resource with an infinite depth, overwriting the destination resource only if requested
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -1146,7 +1146,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 				try
 				{
 					final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
-					final WebDAVResource contentWebDAVResource=new WebDAVResource(getPrivateURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource TODO cache these resources, maybe
+					final WebDAVResource contentWebDAVResource=new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource TODO cache these resources, maybe
 					if(contentWebDAVResource.exists())	//if there is a special collection content resource
 					{
 						contentProperties=contentWebDAVResource.propFind();	//get the properties of the content file TODO only ask for the appropriate property if we can
@@ -1223,7 +1223,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 								final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 								try
 								{
-									final WebDAVResource webdavResource=new WebDAVResource(getPrivateURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
+									final WebDAVResource webdavResource=new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource
 									webdavResource.removeProperties(propertyName);	//remove the bad properties
 								}
 								catch(final IOException ioException2)	//if an I/O exception occurs

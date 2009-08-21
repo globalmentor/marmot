@@ -59,18 +59,18 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	public final static String MARMOT_DESCRIPTION_NAME="marmot-description";
 
 	/**The file filter for listing files in a directory.
-	The file filter returns those resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>true</code>.
+	The file filter returns those resources for which {@link #isSourceResourcePublic(URI)} returns <code>true</code>.
 	*/
 	private final FileFilter fileFilter=new FileFilter()
 			{
 				/**Tests whether or not the specified abstract pathname is one of the file types we recognize.
 				This implementation ignores hidden files.
-				This implementation delegates to {@link FileRepository#isPrivateURIResourcePublic(URI)}.
+				This implementation delegates to {@link FileRepository#isSourceResourcePublic(URI)}.
 				@param file The abstract pathname to be tested.
 				@return <code>true</code> if and only if the indicated file should be included.
 				@throws NullPointerException if the given file is <code>null</code>.
 				@see File#isHidden()
-				@see FileRepository#isPrivateURIResourcePublic(URI)
+				@see FileRepository#isSourceResourcePublic(URI)
 				*/
 				public boolean accept(final File file)
 				{
@@ -78,12 +78,12 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 					{
 						return false;
 					}
-					return isPrivateURIResourcePublic(toURI(file));	//see if the private URI represented by this file should be accepted 
+					return isSourceResourcePublic(toURI(file));	//see if the private URI represented by this file should be accepted 
 				}
 			};
 		
 	/**Returns the file filter for listing files in a directory.
-	The file filter returns those resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>true</code>.
+	The file filter returns those resources for which {@link #isSourceResourcePublic(URI)} returns <code>true</code>.
 	@return The file filter for listing files in a directory.
 	*/
 	protected FileFilter getFileFilter() {return fileFilter;}
@@ -179,7 +179,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			if(isCollectionURI(resourceURI))	//if the resource is a collection
 			{
 				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
-				final File contentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection content resource
+				final File contentFile=new File(getSourceResourceURI(contentURI));	//create a file object from the private URI of the special collection content resource
 				if(contentFile.exists())	//if there is a special collection content resource
 				{
 					return new FileInputStream(contentFile);	//return an input stream to the file
@@ -191,7 +191,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			}
 			else	//if the resource is not a collection
 			{
-				final File file=new File(getPrivateURI(resourceURI));	//create a file object from the private URI
+				final File file=new File(getSourceResourceURI(resourceURI));	//create a file object from the private URI
 				return new FileInputStream(file);	//return an input stream to the file
 			}
 		}
@@ -224,7 +224,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		checkOpen();	//make sure the repository is open
 		try
 		{
-			final File resourceFile=new File(getPrivateURI(resourceURI));	//get a file for the resource
+			final File resourceFile=new File(getSourceResourceURI(resourceURI));	//get a file for the resource
 			if(!resourceFile.exists())	//if the file doesn't exist
 			{
 				throw new FileNotFoundException("Cannot open output stream to non-existent file "+resourceFile+" in repository.");
@@ -234,7 +234,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			if(isCollection)	//if the resource is a collection
 			{
 				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
-				contentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection content resource
+				contentFile=new File(getSourceResourceURI(contentURI));	//create a file object from the private URI of the special collection content resource
 			}
 			else	//if the resource is not a collection
 			{
@@ -287,7 +287,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		final URF urf=createURF();	//create a new URF data model
 		try
 		{
-			return createResourceDescription(urf, resourceURI, new File(getPrivateURI(resourceURI)));	//create and return a description from a file created from the URI from the private namespace
+			return createResourceDescription(urf, resourceURI, new File(getSourceResourceURI(resourceURI)));	//create and return a description from a file created from the URI from the private namespace
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
@@ -296,7 +296,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	}
 
 	/**Determines if the resource at the given URI exists.
-	This implementation returns <code>false</code> for all resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
+	This implementation returns <code>false</code> for all resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource to check.
 	@return <code>true</code> if the resource exists, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -312,8 +312,8 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			return subrepository.resourceExists(resourceURI);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		final URI privateResourceURI=getPrivateURI(resourceURI);	//get the resource URI in the private space
-		if(!isPrivateURIResourcePublic(privateResourceURI))	//if this resource should not be public
+		final URI privateResourceURI=getSourceResourceURI(resourceURI);	//get the resource URI in the private space
+		if(!isSourceResourcePublic(privateResourceURI))	//if this resource should not be public
 		{
 			return false;	//ignore this resource
 		}
@@ -323,7 +323,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	}
 
 	/**Determines whether the resource represented by the given URI has children.
-	This implementation ignores child resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
+	This implementation ignores child resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource.
 	@return <code>true</code> if the specified resource has child resources.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -339,12 +339,12 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			return subrepository.hasChildren(resourceURI);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
+		final File resourceFile=new File(getSourceResourceURI(resourceURI));	//create a file object for the resource
 		return isCollectionURI(resourceURI) && resourceFile.isDirectory() && resourceFile.listFiles(getFileFilter()).length>0;	//see if this is a directory and there is more than one file in this directory
 	}
 
 	/**Retrieves child resources of the resource at the given URI.
-	This implementation does not include child resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
+	This implementation does not include child resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
 	@param resourceFilter The filter that determines whether child resources should be included, or <code>null</code> if the child resources should not be filtered.
 	@param depth The zero-based depth of child resources which should recursively be retrieved, or {@link Repository#INFINITE_DEPTH} for an infinite depth.
@@ -364,7 +364,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		checkOpen();	//make sure the repository is open
 		if(depth!=0)	//a depth of zero means don't get child resources
 		{
-			final File resourceDirectory=new File(getPrivateURI(resourceURI));	//create a file object for the resource
+			final File resourceDirectory=new File(getSourceResourceURI(resourceURI));	//create a file object for the resource
 			final List<URFResource> childResourceList=new ArrayList<URFResource>();	//create a list to hold the files that are not directories	
 			if(isCollectionURI(resourceURI) && resourceDirectory.isDirectory())	//if there is a directory for this resource
 			{
@@ -372,7 +372,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 				final File[] files=resourceDirectory.listFiles(getFileFilter());	//get a list of all files in the directory
 				for(final File file:files)	//for each file in the directory
 				{
-					final URI childResourcePublicURI=getPublicURI(toURI(file));	//get a public URI to represent the file resource
+					final URI childResourcePublicURI=getRepositoryResourceURI(toURI(file));	//get a public URI to represent the file resource
 					if(getSubrepository(childResourcePublicURI)==this)	//if this child wouldn't be located in a subrepository (i.e. ignore resources obscured by subrepositories)
 					{
 						if(resourceFilter==null || resourceFilter.isPass(childResourcePublicURI))	//if we should include this resource based upon its URI
@@ -384,7 +384,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 							}
 							catch(final IOException ioException)	//if an I/O exception occurs
 							{
-								throw createResourceIOException(getPublicURI(toURI(file)), ioException);	//translate the exception to a resource I/O exception and throw that, using a public URI to represent the file resource
+								throw createResourceIOException(getRepositoryResourceURI(toURI(file)), ioException);	//translate the exception to a resource I/O exception and throw that, using a public URI to represent the file resource
 							}
 							if(resourceFilter==null || resourceFilter.isPass(childResourceDescription))	//if we should include this resource based upon its description
 							{
@@ -401,7 +401,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 					//aggregate any mapped subrepositories
 				for(final Repository childSubrepository:getChildSubrepositories(resourceURI))	//see if any subrepositories are mapped as children of this repository
 				{
-					final URI childSubrepositoryURI=childSubrepository.getPublicRepositoryURI();	//get the URI of the subrepository
+					final URI childSubrepositoryURI=childSubrepository.getRootURI();	//get the URI of the subrepository
 					childResourceList.add(childSubrepository.getResourceDescription(childSubrepositoryURI));	//get a description of the subrepository root resource
 					if(depth==INFINITE_DEPTH || depth>0)	//if we should get child resources lower in the hierarchy
 					{
@@ -441,7 +441,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		checkOpen();	//make sure the repository is open
 		try
 		{
-			final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
+			final File resourceFile=new File(getSourceResourceURI(resourceURI));	//create a file object for the resource
 			if(resourceFile.exists())	//if the resource file already exists (either as a file or a directory)
 			{
 				delete(resourceFile, true);	//delete the file/directory and all its children, if any
@@ -450,7 +450,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			if(isCollectionURI(resourceURI))	//if the resource is a collection
 			{
 				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
-				contentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection content resource
+				contentFile=new File(getSourceResourceURI(contentURI));	//create a file object from the private URI of the special collection content resource
 				mkdir(resourceFile);	//create the directory
 			}
 			else	//if the resource is not a collection
@@ -489,7 +489,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		checkOpen();	//make sure the repository is open
 		try
 		{
-			final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
+			final File resourceFile=new File(getSourceResourceURI(resourceURI));	//create a file object for the resource
 			if(resourceFile.exists())	//if the resource file already exists (either as a file or a directory)
 			{
 				delete(resourceFile, true);	//delete the file/directory and all its children, if any
@@ -498,7 +498,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			if(isCollectionURI(resourceURI))	//if the resource is a collection
 			{
 				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
-				contentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection content resource
+				contentFile=new File(getSourceResourceURI(contentURI));	//create a file object from the private URI of the special collection content resource
 				mkdir(resourceFile);	//create the directory
 			}
 			else	//if the resource is not a collection
@@ -543,7 +543,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			return subrepository.alterResourceProperties(resourceURI, resourceAlteration);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		return alterResourceProperties(resourceURI, resourceAlteration, new File(getPrivateURI(resourceURI)));	//create a file object and alter the properties for the file
+		return alterResourceProperties(resourceURI, resourceAlteration, new File(getSourceResourceURI(resourceURI)));	//create a file object and alter the properties for the file
 	}
 
 	/**Alters properties of a given resource.
@@ -616,11 +616,11 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		checkOpen();	//make sure the repository is open
 		try
 		{
-			if(resourceURI.normalize().equals(getPublicRepositoryURI()))	//if they try to delete the root URI
+			if(resourceURI.normalize().equals(getRootURI()))	//if they try to delete the root URI
 			{
 				throw new IllegalArgumentException("Cannot delete repository base URI "+resourceURI);
 			}
-			final File resourceFile=new File(getPrivateURI(resourceURI));	//create a file object for the resource
+			final File resourceFile=new File(getSourceResourceURI(resourceURI));	//create a file object for the resource
 			/*TODO del any associated directories
 			if(resourceFile.isFile())	//if this is a file and not a directory
 			{
@@ -659,7 +659,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			subrepository.moveResource(resourceURI, destinationURI, overwrite);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		if(resourceURI.normalize().equals(getPublicRepositoryURI()))	//if they try to move the root URI
+		if(resourceURI.normalize().equals(getRootURI()))	//if they try to move the root URI
 		{
 			throw new IllegalArgumentException("Cannot move repository base URI "+resourceURI);
 		}
@@ -689,7 +689,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 				throw new IllegalArgumentException("Non-collection URI "+resourceURI+" used for directory "+resourceFile);
 			}
 			final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
-			final File contentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection content resource
+			final File contentFile=new File(getSourceResourceURI(contentURI));	//create a file object from the private URI of the special collection content resource
 			if(contentFile.exists())	//if there is a special collection content resource
 			{
 				contentLength=contentFile.length();	//use the length of the special collection content resource
@@ -770,13 +770,13 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	@exception NullPointerException if the given URI is <code>null</code>.
 	@see #isPrivateURIResourceDescription(URI)
 	*/
-	protected boolean isPrivateURIResourcePublic(final URI privateResourceURI)
+	protected boolean isSourceResourcePublic(final URI privateResourceURI)
 	{
 		if(isPrivateURIResourceDescription(privateResourceURI))	//if this is a URI for a resource description
 		{
 			return false;	//the resource isn't public
 		}
-		return super.isPrivateURIResourcePublic(privateResourceURI);	//do the default checks
+		return super.isSourceResourcePublic(privateResourceURI);	//do the default checks
 	}
 
 	/**Loads a resource description for a single file.
@@ -788,7 +788,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	*/
 	protected URFResource loadResourceDescription(final URF urf, final File resourceFile) throws IOException
 	{
-		final URI resourceURI=getPublicURI(toURI(resourceFile));	//get a public URI to represent the file resource
+		final URI resourceURI=getRepositoryResourceURI(toURI(resourceFile));	//get a public URI to represent the file resource
 		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the file for storing the description
 		try
 		{
@@ -822,7 +822,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	*/
 	protected void saveResourceDescription(URFResource resourceDescription, final File resourceFile) throws IOException
 	{
-		final URI resourceURI=getPublicURI(toURI(resourceFile));	//get a public URI to represent the file resource
+		final URI resourceURI=getRepositoryResourceURI(toURI(resourceFile));	//get a public URI to represent the file resource
 		resourceDescription=new DefaultURFResource(resourceDescription, resourceURI);	//create a temporary resource so that we can remove the live properties and to make sure we use the correct URI
 		for(final URI livePropertyURI:getLivePropertyURIs())	//look at all live properties
 		{
@@ -833,7 +833,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		if(isCollection)	//if the resource is a collection
 		{
 			final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
-			final File tempContentFile=new File(getPrivateURI(contentURI));	//create a file object from the private URI of the special collection content resource
+			final File tempContentFile=new File(getSourceResourceURI(contentURI));	//create a file object from the private URI of the special collection content resource
 			contentFile=tempContentFile.exists() ? tempContentFile : resourceFile;	//if the content file doesn't exist, we can't update its modified time
 		}
 		else	//if the resource is not a collection
@@ -942,7 +942,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			}
 			catch(final IOException ioException)	//if an I/O exception occurs
 			{
-				throw createResourceIOException(getPublicURI(toURI(getResourceFile())), ioException);	//translate the exception to a resource I/O exception and throw that
+				throw createResourceIOException(getRepositoryResourceURI(toURI(getResourceFile())), ioException);	//translate the exception to a resource I/O exception and throw that
 			}
 	  }
 

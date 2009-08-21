@@ -165,7 +165,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		final String baseName=removeNameExtension(filename);	//get the base name to use	TODO important encode the name so that it can work on the file system
 		final URI resourceParentURI=getParentURI(resourceURI);	//get the parent URI of the resource
 		final Repository rootRepository=repository.getRootRepository();	//get the root repository so that we create a relative path that is consistent across subrepositories (parent repository URIs should be base URIs to subrepository URIs)
-		final URIPath resourceParentRootPath=new URIPath(rootRepository.getPublicRepositoryURI().relativize(resourceParentURI));	//construct the locator using the parent resource's relative path to the root repository
+		final URIPath resourceParentRootPath=new URIPath(rootRepository.getRootURI().relativize(resourceParentURI));	//construct the locator using the parent resource's relative path to the root repository
 		final String cacheBaseName=encodeCrossPlatformFilename(resourceParentRootPath+baseName);	//create a base name by encoding the resource's relative path from the user with no extension
 		return fetch(query, resource, getCacheDirectory(query), cacheBaseName);
 	}
@@ -281,7 +281,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		*/
 		public MarmotResourceCacheKey(final Repository repository, final URI resourceURI)
 		{
-			this(repository, resourceURI, repository.getPublicRepositoryURI(), resourceURI);
+			this(repository, resourceURI, repository.getRootURI(), resourceURI);
 		}
 
 		/**Repository, resource URI, and hash objects constructor.
@@ -294,7 +294,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		protected MarmotResourceCacheKey(final Repository repository, final URI resourceURI, final Object... objects)
 		{
 			super(objects);
-			this.repositoryURI=repository.getPublicRepositoryURI();	//TODO ensure not null
+			this.repositoryURI=repository.getRootURI();	//TODO ensure not null
 			this.resourceURI=checkInstance(resourceURI, "Resource URI cannot be null.");	//save the resource URI
 		}
 

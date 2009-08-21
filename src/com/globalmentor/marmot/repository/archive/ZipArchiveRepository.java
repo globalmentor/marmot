@@ -107,7 +107,7 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 	protected URI getPublicURI(final ZipEntry zipEntry)
 	{
 		final String zipEntryName=zipEntry.getName();
-		return getPublicRepositoryURI().resolve(URIPath.createURIPathURI(URIPath.encode(zipEntryName)));	//encode the zip entry name and resolve it to the repository URI
+		return getRootURI().resolve(URIPath.createURIPathURI(URIPath.encode(zipEntryName)));	//encode the zip entry name and resolve it to the repository URI
 	}
 	
 	/**Retrieves zip entries to a cached source archive file representing the resource identified by the given resource UI.
@@ -122,7 +122,7 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 	*/
 	protected ZipEntry getZipEntry(final ZipFile zipFile, final URI resourceURI) throws IOException
 	{
-		final URIPath uriPath=relativize(getPublicRepositoryURI(), resourceURI);	//get the path within the zip file
+		final URIPath uriPath=relativize(getRootURI(), resourceURI);	//get the path within the zip file
 		final boolean isCollection=uriPath.isCollection();
 		String uriPathString=uriPath.toDecodedString();	//get the decoded string form of the path
 		if(isCollection)
@@ -151,7 +151,7 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 	*/
 	protected List<ZipEntry> getChildZipEntries(final ZipFile zipFile, final URI resourceURI, final int depth) throws IOException
 	{
-		final ZipEntry resourceZipEntry=getPublicRepositoryURI().equals(resourceURI) ? null : getZipEntry(zipFile, resourceURI);	//get the zip entry for this resource URI, to make sure it exists and to get its name; if this is the URI of the repository itself, use null to specify the root
+		final ZipEntry resourceZipEntry=getRootURI().equals(resourceURI) ? null : getZipEntry(zipFile, resourceURI);	//get the zip entry for this resource URI, to make sure it exists and to get its name; if this is the URI of the repository itself, use null to specify the root
 		return getChildZipEntries(zipFile, resourceZipEntry, depth);	//get the child zip entries for this zip entry
 	}
 	
@@ -256,7 +256,7 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 		final URF urf=createURF();	//create a new URF data model
 		try
 		{
-			final ZipEntry resourceZipEntry=getPublicRepositoryURI().equals(resourceURI) ? null : getZipEntry(getSourceArchive(), resourceURI);	//get the zip entry for this resource URI, or null if this is the root resource URI
+			final ZipEntry resourceZipEntry=getRootURI().equals(resourceURI) ? null : getZipEntry(getSourceArchive(), resourceURI);	//get the zip entry for this resource URI, or null if this is the root resource URI
 			return createResourceDescription(urf, resourceURI, resourceZipEntry);	//create and return a description from a zip entry from the archive
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
@@ -266,7 +266,7 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 	}
 
 	/**Determines if the resource at the given URI exists.
-	This implementation returns <code>false</code> for all resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
+	This implementation returns <code>false</code> for all resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource to check.
 	@return <code>true</code> if the resource exists, else <code>false</code>.
 	@throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -282,7 +282,7 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 			return subrepository.resourceExists(resourceURI);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		if(getPublicRepositoryURI().equals(resourceURI))	//the root resource always exists
+		if(getRootURI().equals(resourceURI))	//the root resource always exists
 		{
 			return true;
 		}
@@ -302,7 +302,7 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 	}
 
 	/**Determines whether the resource represented by the given URI has children.
-	This implementation ignores child resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
+	This implementation ignores child resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource.
 	@return <code>true</code> if the specified resource has child resources.
 	@throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -329,7 +329,7 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 	}
 
 	/**Retrieves child resources of the resource at the given URI.
-	This implementation does not include child resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
+	This implementation does not include child resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource for which sub-resources should be returned.
 	@param resourceFilter The filter that determines whether child resources should be included, or <code>null</code> if the child resources should not be filtered.
 	@param depth The zero-based depth of child resources which should recursively be retrieved, or {@link Repository#INFINITE_DEPTH} for an infinite depth.
@@ -352,7 +352,7 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 			try
 			{
 				final ZipFile zipFile=getSourceArchive();
-				final ZipEntry resourceZipEntry=getPublicRepositoryURI().equals(resourceURI) ? null : getZipEntry(zipFile, resourceURI);	//get the zip entry for the resource, or null if this is the root resource URI
+				final ZipEntry resourceZipEntry=getRootURI().equals(resourceURI) ? null : getZipEntry(zipFile, resourceURI);	//get the zip entry for the resource, or null if this is the root resource URI
 				final List<ZipEntry> childZipEntries=getChildZipEntries(zipFile, resourceZipEntry, depth);	//get the child zip entries for the resource; the depth is taken care of so we don't have to manually recurse in this method
 				assert isCollectionURI(resourceURI)==(resourceZipEntry==null || resourceZipEntry.isDirectory());	//whether the zip entry is a directory should match whether the zip entry is a directory (or the root)
 				final List<URFResource> childResourceList=new ArrayList<URFResource>();	//create a list to hold the child resources	
@@ -386,7 +386,7 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 						//aggregate any mapped subrepositories
 					for(final Repository childSubrepository:getChildSubrepositories(resourceURI))	//see if any subrepositories are mapped as children of this repository
 					{
-						final URI childSubrepositoryURI=childSubrepository.getPublicRepositoryURI();	//get the URI of the subrepository
+						final URI childSubrepositoryURI=childSubrepository.getRootURI();	//get the URI of the subrepository
 						childResourceList.add(childSubrepository.getResourceDescription(childSubrepositoryURI));	//get a description of the subrepository root resource
 						if(depth==INFINITE_DEPTH || depth>0)	//if we should get child resources lower in the hierarchy
 						{

@@ -56,27 +56,24 @@ public interface Repository
 	/**The value indicating an infinite depth when retriving child resource descriptions.*/
 	public static int INFINITE_DEPTH=-1;
 
-	/**@return The URI identifying the location of this repository.*/
-//TODO bring back	public URI getURI();
-
 	/**@return The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository.*/
-	public URI getPrivateRepositoryURI();
+	public URI getSourceURI();
 
 	/**Sets the base URI of the private URI namespace being managed.
 	@param privateRepositoryURI The base URI of the private URI namespace being managed.
 	@exception NullPointerException if the given URI is <code>null</code>.
 	*/
-	public void setPrivateRepositoryURI(final URI privateRepositoryURI);
+	public void setSourceURI(final URI privateRepositoryURI);
 	
-	/**@return The base URI of the public URI namespace being managed; equivalent to {@link #getURI()}.*/
-	public URI getPublicRepositoryURI();
+	/**@return The base URI of the public URI namespace being managed.*/
+	public URI getRootURI();
 
 	/**Sets the base URI of the public URI namespace being managed, reference URI of the repository.
 	If there currently is no private repository URI, it will be updated to match the given public repository URI.
 	@param publicRepositoryURI The base URI of the public URI namespace being managed.
 	@exception NullPointerException if the given URI is <code>null</code>.
 	*/
-	public void setPublicRepositoryURI(final URI publicRepositoryURI);
+	public void setRootURI(final URI publicRepositoryURI);
 
 	/**@return The parent repository, or <code>null</code> if this repository has not been registered as a subrepository of another repository.*/
 	public Repository getParentRepository();

@@ -57,7 +57,7 @@ public class ResourceLocator
 	{
 		this.repository=checkInstance(repository, "Repository cannot be null.");
 		this.resourcePath=resourcePath.checkRelative();
-		this.resourceURI=repository.getPublicRepositoryURI().resolve(resourcePath.toURI());	//resolve the resource path to the repository
+		this.resourceURI=repository.getRootURI().resolve(resourcePath.toURI());	//resolve the resource path to the repository
 	}
 
 }

@@ -51,7 +51,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType permissionType) throws ResourceIOException
 	{
 //Debug.trace("getting allowed for permission", permissionType, "for user", user!=null ? user.getName() : "(none)");
-		if(repository.getPublicRepositoryURI().equals(resourceURI))	//if this is the repository URI
+		if(repository.getRootURI().equals(resourceURI))	//if this is the repository URI
 		{
 			if(permissionType==PermissionType.DELETE || permissionType==PermissionType.RENAME)	//if they are asking to delete or rename the repository
 			{

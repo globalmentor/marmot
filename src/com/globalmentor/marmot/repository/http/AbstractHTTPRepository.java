@@ -177,7 +177,7 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 			if(isCollectionURI(resourceURI))	//if the resource is a collection
 			{
 				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
-				final HTTPResource contentHTTPResource=createHTTPResource(getPrivateURI(contentURI), passwordAuthentication);	//create a resource for special collection content resource
+				final HTTPResource contentHTTPResource=createHTTPResource(getSourceResourceURI(contentURI), passwordAuthentication);	//create a resource for special collection content resource
 				if(contentHTTPResource.exists())	//if there is a special collection content resource
 				{
 					return contentHTTPResource.getInputStream();	//return an input stream to the collection content resource
@@ -189,7 +189,7 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 			}
 			else	//if the resource is not a collection
 			{
-				final HTTPResource httpResource=createHTTPResource(getPrivateURI(resourceURI), passwordAuthentication);	//create an HTTP resource
+				final HTTPResource httpResource=createHTTPResource(getSourceResourceURI(resourceURI), passwordAuthentication);	//create an HTTP resource
 				return httpResource.getInputStream();	//return an input stream to the resource
 			}
 		}
@@ -269,7 +269,7 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 */
 	
 	/**Determines if the resource at the given URI exists.
-	This implementation returns <code>false</code> for all resources for which {@link #isPrivateURIResourcePublic(URI)} returns <code>false</code>.
+	This implementation returns <code>false</code> for all resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
 	@param resourceURI The URI of the resource to check.
 	@return <code>true</code> if the resource exists, else <code>false</code>.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
@@ -285,8 +285,8 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 			return subrepository.resourceExists(resourceURI);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		final URI privateResourceURI=getPrivateURI(resourceURI);	//get the resource URI in the private space
-		if(!isPrivateURIResourcePublic(privateResourceURI))	//if this resource should not be public
+		final URI privateResourceURI=getSourceResourceURI(resourceURI);	//get the resource URI in the private space
+		if(!isSourceResourcePublic(privateResourceURI))	//if this resource should not be public
 		{
 			return false;	//ignore this resource
 		}
@@ -437,14 +437,14 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 			subrepository.deleteResource(resourceURI);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		if(resourceURI.normalize().equals(getPublicRepositoryURI()))	//if they try to delete the root URI
+		if(resourceURI.normalize().equals(getRootURI()))	//if they try to delete the root URI
 		{
 			throw new IllegalArgumentException("Cannot delete repository base URI "+resourceURI);
 		}
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
-			final HTTPResource httpResource=createHTTPResource(getPrivateURI(resourceURI), passwordAuthentication);	//create an HTTP resource
+			final HTTPResource httpResource=createHTTPResource(getSourceResourceURI(resourceURI), passwordAuthentication);	//create an HTTP resource
 			httpResource.delete();	//delete the resource		
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs

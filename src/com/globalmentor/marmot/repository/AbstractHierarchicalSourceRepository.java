@@ -31,18 +31,18 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	@param publicURI The URI in the public URI namespace.
 	@return A URI equivalent to the public URI in the private URI namespace.
 	*/
-	protected URI getPrivateURI(final URI publicURI)
+	protected URI getSourceResourceURI(final URI publicURI)
 	{
-		return changeBase(publicURI, getPublicRepositoryURI(), getPrivateRepositoryURI());	//change the base of the URI from the public URI namespace to the private URI namespace
+		return changeBase(publicURI, getRootURI(), getSourceURI());	//change the base of the URI from the public URI namespace to the private URI namespace
 	}
 
 	/**Translates a private URI to the equivalent public URI in the public repository URI namespace.
-	@param privateURI The URI in the private URI namespace.
+	@param sourceURI The URI in the private URI namespace.
 	@return A URI equivalent to the private URI in the public repository URI namespace.
 	*/
-	protected URI getPublicURI(final URI privateURI)
+	protected URI getRepositoryResourceURI(final URI sourceURI)
 	{
-		return changeBase(privateURI, getPrivateRepositoryURI(), getPublicRepositoryURI());	//change the base of the URI from the private URI namespace to the public URI namespace
+		return changeBase(sourceURI, getSourceURI(), getRootURI());	//change the base of the URI from the private URI namespace to the public URI namespace
 	}
 
 	/**URI constructor with no separate private URI namespace.

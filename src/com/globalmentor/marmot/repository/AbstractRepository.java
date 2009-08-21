@@ -32,7 +32,6 @@ import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
-import com.globalmentor.util.*;
 
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Bytes.*;
@@ -132,39 +131,39 @@ public abstract class AbstractRepository implements Repository
 	private boolean open=false;
 
 	/**The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository.*/
-	private URI privateRepositoryURI=null;
+	private URI sourceURI=null;
 
 		/**@return The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository.*/
-		public URI getPrivateRepositoryURI() {return privateRepositoryURI;}
+		public URI getSourceURI() {return sourceURI;}
 
 		/**Sets the base URI of the private URI namespace being managed.
-		@param privateRepositoryURI The base URI of the private URI namespace being managed.
+		@param sourceURI The base URI of the private URI namespace being managed.
 		@exception NullPointerException if the given URI is <code>null</code>.
 		*/
-		public void setPrivateRepositoryURI(final URI privateRepositoryURI)
+		public void setSourceURI(final URI sourceURI)
 		{
-			this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI must not be null.").normalize();
+			this.sourceURI=checkInstance(sourceURI, "Source URI must not be null.").normalize();
 		}
 
 	/**The base URI of the public URI namespace being managed.*/
-	private URI publicRepositoryURI=null;
+	private URI rootURI=null;
 		
 		/**@return The base URI of the public URI namespace being managed.*/
-		public URI getPublicRepositoryURI() {return publicRepositoryURI;}
+		public URI getRootURI() {return rootURI;}
 
 		/**Sets the base URI of the public URI namespace being managed, reference URI of the repository.
 		If there currently is no private repository URI, it will be updated to match the given public repository URI.
 		The public URIs of the sub-repositories will be updated accordingly.
-		@param publicRepositoryURI The base URI of the public URI namespace being managed.
+		@param rootURI The base URI of the public URI namespace being managed.
 		@exception NullPointerException if the given URI is <code>null</code>.
 		@see #getPathRepositories()
 		*/
-		public void setPublicRepositoryURI(final URI publicRepositoryURI)
+		public void setRootURI(final URI rootURI)
 		{
-			this.publicRepositoryURI=checkInstance(publicRepositoryURI, "Public repository URI must not be null.").normalize();
+			this.rootURI=checkInstance(rootURI, "Root URI must not be null.").normalize();
 			for(final Map.Entry<URIPath, Repository> pathRepositoryEntry:pathRepositoryMap.entrySet())	//look at each path to repository mapping
 			{
-				pathRepositoryEntry.getValue().setPublicRepositoryURI(resolve(getPublicRepositoryURI(), pathRepositoryEntry.getKey()));	//update the public URI of the repository to match its location in the repository
+				pathRepositoryEntry.getValue().setRootURI(resolve(getRootURI(), pathRepositoryEntry.getKey()));	//update the public URI of the repository to match its location in the repository
 			}
 		}
 
@@ -295,9 +294,9 @@ public abstract class AbstractRepository implements Repository
 		*/
 		public Repository registerPathRepository(final URIPath path, final Repository repository)
 		{
-			if(getPublicRepositoryURI()!=null)	//if the root URI has been initialized
+			if(getRootURI()!=null)	//if the root URI has been initialized
 			{
-				repository.setPublicRepositoryURI(resolve(getPublicRepositoryURI(), path));	//update the public URI of the repository to match its location in the repository
+				repository.setRootURI(resolve(getRootURI(), path));	//update the public URI of the repository to match its location in the repository
 			}
 			if(!URIPath.ROOT_URI_PATH.equals(path))	//if this is not the root path (it's not normal to map the root path to another repository, but check for it anyway)
 			{
@@ -357,9 +356,9 @@ public abstract class AbstractRepository implements Repository
 	protected URI checkResourceURI(URI resourceURI)
 	{
 		resourceURI=checkInstance(resourceURI, "Resource URI cannot be null.").normalize();	//normalize the URI
-		if(!isChild(getPublicRepositoryURI(), resourceURI))	//if the given resource URI does not designate a resource within this repository's URI namespace (this will normalize the URI, but as we need to return a normalized form it's better to normalize first so that actual normalization changes won't have to be done twice)
+		if(!isChild(getRootURI(), resourceURI))	//if the given resource URI does not designate a resource within this repository's URI namespace (this will normalize the URI, but as we need to return a normalized form it's better to normalize first so that actual normalization changes won't have to be done twice)
 		{
-			throw new IllegalArgumentException(resourceURI+" does not designate a resource within the repository "+getPublicRepositoryURI());
+			throw new IllegalArgumentException(resourceURI+" does not designate a resource within the repository "+getRootURI());
 		}
 		return resourceURI;	//return the normalized form of the resource URI
 	}
@@ -373,7 +372,7 @@ public abstract class AbstractRepository implements Repository
 	*/
 	protected Repository getSubrepository(final URI resourceURI)
 	{
-		final URI repositoryURI=getPublicRepositoryURI();	//get the URI of the repository
+		final URI repositoryURI=getRootURI();	//get the URI of the repository
 		final URIPath resourcePath=new URIPath(repositoryURI.relativize(resourceURI));	//get the path of the resource relative to the resource
 		URIPath levelPath=resourcePath.getCurrentLevel();	//walk up the levels, starting at the current level
 		while(!levelPath.isEmpty())	//while the resource path isn't empty
@@ -398,7 +397,7 @@ public abstract class AbstractRepository implements Repository
 	@SuppressWarnings("unchecked")
 	protected Set<Repository> getChildSubrepositories(final URI parentResourceURI)
 	{
-		final URI repositoryURI=getPublicRepositoryURI();	//get the URI of the repository
+		final URI repositoryURI=getRootURI();	//get the URI of the repository
 		final URIPath resourcePath=new URIPath(repositoryURI.relativize(parentResourceURI));	//get the path of the resource relative to the resource
 		final Set<Repository> childSubrepositories=parentPathRepositoryMap.get(resourcePath);	//see if there are any subrepositories mapped under the given parent resource URI
 		return childSubrepositories!=null ? unmodifiableSet(childSubrepositories) : (Set<Repository>)EMPTY_SET;	//return an unmodifiablel set of the subrepositories, if there are any
@@ -474,8 +473,8 @@ public abstract class AbstractRepository implements Repository
 	public AbstractRepository(final URI publicRepositoryURI, final URI privateRepositoryURI, final URFIO<URFResource> descriptionIO)
 	{
 //TODO bring back		super(checkInstance(publicRepositoryURI, "Public repository URI cannot be null.").normalize());	//construct the parent class with the public reference URI
-		this.publicRepositoryURI=publicRepositoryURI!=null ? publicRepositoryURI.normalize() : null;
-		this.privateRepositoryURI=privateRepositoryURI!=null ? privateRepositoryURI.normalize() : null;
+		this.rootURI=publicRepositoryURI!=null ? publicRepositoryURI.normalize() : null;
+		this.sourceURI=privateRepositoryURI!=null ? privateRepositoryURI.normalize() : null;
 //TODO del; update null-related documentation		this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI cannot be null.").normalize();
 		this.descriptionIO=checkInstance(descriptionIO, "Description I/O cannot be null.");	//save the description I/O
 		registerResourceFactory(MARMOT_NAMESPACE_URI, MARMOT_RESOURCE_FACTORY);	//register the Marmot factory
@@ -491,7 +490,7 @@ public abstract class AbstractRepository implements Repository
 	*/
 	public final Repository createSubrepository(final URIPath subrepositoryPath)
 	{
-		return createSubrepository(getPublicRepositoryURI().resolve(subrepositoryPath.checkRelative().checkCollection().toURI()), subrepositoryPath);	//resolve the subrepository path to the public repository URI		
+		return createSubrepository(getRootURI().resolve(subrepositoryPath.checkRelative().checkCollection().toURI()), subrepositoryPath);	//resolve the subrepository path to the public repository URI		
 	}
 	
 	/**Creates a repository of the same type as this repository with the same access privileges as this one.
@@ -503,7 +502,7 @@ public abstract class AbstractRepository implements Repository
 	*/
 	public final Repository createSubrepository(final URI publicRepositoryURI, final URIPath privateSubrepositoryPath)
 	{
-		return createSubrepository(publicRepositoryURI, getPrivateRepositoryURI().resolve(privateSubrepositoryPath.checkRelative().checkCollection().toURI()));	//resolve the subrepository path to the private repository URI		
+		return createSubrepository(publicRepositoryURI, getSourceURI().resolve(privateSubrepositoryPath.checkRelative().checkCollection().toURI()));	//resolve the subrepository path to the private repository URI		
 	}
 
 	/**Creates a repository of the same type as this repository with the same access privileges as this one.
@@ -541,11 +540,11 @@ public abstract class AbstractRepository implements Repository
 	{
 		if(!isOpen())	//if the repository isn't yet open TODO synchronize
 		{
-			if(getPrivateRepositoryURI()==null)	//if the private repository URI is not set
+			if(getSourceURI()==null)	//if the private repository URI is not set
 			{
 				throw new IllegalStateException("Cannot open repository without private repository URI specified.");
 			}
-			if(getPublicRepositoryURI()==null)	//if the public repository URI is not set
+			if(getRootURI()==null)	//if the public repository URI is not set
 			{
 				throw new IllegalStateException("Cannot open repository without public repository URI specified.");
 			}
@@ -620,7 +619,7 @@ public abstract class AbstractRepository implements Repository
 			return subrepository.createParentResources(resourceURI);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		if(resourceURI.equals(getPublicRepositoryURI()))	//if this is the resource URI
+		if(resourceURI.equals(getRootURI()))	//if this is the resource URI
 		{
 			return null;	//we didn't have to create anything
 		}
@@ -852,13 +851,13 @@ public abstract class AbstractRepository implements Repository
 		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
 		if(subrepository!=this)	//if the resource URI lies within a subrepository
 		{
-			if(!subrepository.getPublicRepositoryURI().equals(resourceURI))	//don't ask the subrepository's root URI for a parent resource URI, as the repository has no parent URI in terms of that repository
+			if(!subrepository.getRootURI().equals(resourceURI))	//don't ask the subrepository's root URI for a parent resource URI, as the repository has no parent URI in terms of that repository
 			{
 				return subrepository.getParentResourceURI(resourceURI);	//delegate to the subrepository
 			}
 		}
 		checkOpen();	//make sure the repository is open
-		if(resourceURI.equals(getPublicRepositoryURI()))	//if the resource is the repository URI
+		if(resourceURI.equals(getRootURI()))	//if the resource is the repository URI
 		{
 			return null;	//the repository level has no parent
 		}
@@ -1049,7 +1048,7 @@ public abstract class AbstractRepository implements Repository
 		}
 		else	//if the resource is being moved to another repository
 		{
-			if(resourceURI.normalize().equals(getPublicRepositoryURI()))	//if they try to move the root URI
+			if(resourceURI.normalize().equals(getRootURI()))	//if they try to move the root URI
 			{
 				throw new IllegalArgumentException("Cannot move repository base URI "+resourceURI);
 			}
@@ -1110,7 +1109,7 @@ public abstract class AbstractRepository implements Repository
 	@return <code>true</code> if the resource should be visible as normal, or <code>false</code> if the resource should not be made available to the public space.
 	@exception NullPointerException if the given URI is <code>null</code>.
 	*/
-	protected boolean isPrivateURIResourcePublic(final URI privateResourceURI)
+	protected boolean isSourceResourcePublic(final URI privateResourceURI)	//TODO maybe change to a path to allow non-hierarchical source repositories to use, or transfer to AbstractHierarchicalSourceRepository
 	{
 		final String rawName=getRawName(privateResourceURI);	//get the raw name of the resource
 		if(COLLECTION_CONTENT_NAME.equals(rawName))	//if this is the collection contents
