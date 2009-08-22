@@ -56,15 +56,6 @@ public interface Repository
 	/**The value indicating an infinite depth when retriving child resource descriptions.*/
 	public static int INFINITE_DEPTH=-1;
 
-	/**@return The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository.*/
-	public URI getSourceURI();
-
-	/**Sets the base URI of the private URI namespace being managed.
-	@param privateRepositoryURI The base URI of the private URI namespace being managed.
-	@exception NullPointerException if the given URI is <code>null</code>.
-	*/
-	public void setSourceURI(final URI privateRepositoryURI);
-	
 	/**@return The base URI of the public URI namespace being managed.*/
 	public URI getRootURI();
 

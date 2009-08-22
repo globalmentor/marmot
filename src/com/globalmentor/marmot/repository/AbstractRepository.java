@@ -130,21 +130,6 @@ public abstract class AbstractRepository implements Repository
 	/**Whether the repository has been opened for access.*/
 	private boolean open=false;
 
-	/**The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository.*/
-	private URI sourceURI=null;
-
-		/**@return The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository.*/
-		public URI getSourceURI() {return sourceURI;}
-
-		/**Sets the base URI of the private URI namespace being managed.
-		@param sourceURI The base URI of the private URI namespace being managed.
-		@exception NullPointerException if the given URI is <code>null</code>.
-		*/
-		public void setSourceURI(final URI sourceURI)
-		{
-			this.sourceURI=checkInstance(sourceURI, "Source URI must not be null.").normalize();
-		}
-
 	/**The base URI of the public URI namespace being managed.*/
 	private URI rootURI=null;
 		
@@ -445,73 +430,26 @@ public abstract class AbstractRepository implements Repository
 	}
 
 	/**URI constructor with no separate private URI namespace.
-	@param repositoryURI The URI identifying the location of this repository.
-	@exception NullPointerException if the given respository URI is <code>null</code>.
-	*/
-	public AbstractRepository(final URI repositoryURI)
-	{
-		this(repositoryURI, repositoryURI);	//use the same repository URI as the public and private namespaces
-	}
-
-	/**Public repository URI and private repository URI constructor.
 	A {@link URFResourceTURFIO} description I/O is created and initialized.
-	@param publicRepositoryURI The URI identifying the location of this repository.
-	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	@exception NullPointerException if one of the given respository URIs is <code>null</code>.
+	@param rootURI The URI identifying the location of this repository.
 	*/
-	public AbstractRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
+	public AbstractRepository(final URI rootURI)
 	{
-		this(publicRepositoryURI, privateRepositoryURI, createDefaultURFResourceDescriptionIO());	//create a default resource description I/O using TURF
+		this(rootURI, createDefaultURFResourceDescriptionIO());	//create a default resource description I/O using TURF
 	}
 
 	/**Public repository URI and private repository URI constructor.
-	@param publicRepositoryURI The URI identifying the location of this repository.
-	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
+	@param rootURI The URI identifying the location of this repository.
 	@param descriptionIO The I/O implementation that writes and reads a resource with the same reference URI as its base URI.
-	@exception NullPointerException if one of the given respository URIs and/or the description I/O is <code>null</code>.
+	@exception NullPointerException if the description I/O is <code>null</code>.
 	*/
-	public AbstractRepository(final URI publicRepositoryURI, final URI privateRepositoryURI, final URFIO<URFResource> descriptionIO)
+	public AbstractRepository(final URI rootURI, final URFIO<URFResource> descriptionIO)
 	{
-//TODO bring back		super(checkInstance(publicRepositoryURI, "Public repository URI cannot be null.").normalize());	//construct the parent class with the public reference URI
-		this.rootURI=publicRepositoryURI!=null ? publicRepositoryURI.normalize() : null;
-		this.sourceURI=privateRepositoryURI!=null ? privateRepositoryURI.normalize() : null;
-//TODO del; update null-related documentation		this.privateRepositoryURI=checkInstance(privateRepositoryURI, "Private repository URI cannot be null.").normalize();
+		this.rootURI=rootURI!=null ? rootURI.normalize() : null;
 		this.descriptionIO=checkInstance(descriptionIO, "Description I/O cannot be null.");	//save the description I/O
 		registerResourceFactory(MARMOT_NAMESPACE_URI, MARMOT_RESOURCE_FACTORY);	//register the Marmot factory
 		registerResourceFactory(MARMOT_SECURITY_NAMESPACE_URI, MARMOT_SECURITY_RESOURCE_FACTORY);	//register the Marmot resource factory
 	}
-
-	/**Creates a repository of the same type as this repository with the same access privileges as this one.
-	This factory method is commonly used to use a parent repository as a factory for other repositories in its namespace.
-	This method resolves the private repository path to the current public repository URI.
-	@param subrepositoryPath The private path relative to the private URI of this repository.
-	@throws NullPointerException if the given private repository path is <code>null</code>.
-	@throws IllegalArgumentException if the given subrepository path is absolute and/or is not a collection.
-	*/
-	public final Repository createSubrepository(final URIPath subrepositoryPath)
-	{
-		return createSubrepository(getRootURI().resolve(subrepositoryPath.checkRelative().checkCollection().toURI()), subrepositoryPath);	//resolve the subrepository path to the public repository URI		
-	}
-	
-	/**Creates a repository of the same type as this repository with the same access privileges as this one.
-	This factory method is commonly used to use a parent repository as a factory for other repositories in its namespace.
-	@param publicRepositoryURI The public URI identifying the location of the new repository.
-	@param privateSubrepositoryPath The private path relative to the private URI of this repository.
-	@throws NullPointerException if the given public repository URI and/or private repository path is <code>null</code>.
-	@throws IllegalArgumentException if the given private repository path is absolute and/or is not a collection.
-	*/
-	public final Repository createSubrepository(final URI publicRepositoryURI, final URIPath privateSubrepositoryPath)
-	{
-		return createSubrepository(publicRepositoryURI, getSourceURI().resolve(privateSubrepositoryPath.checkRelative().checkCollection().toURI()));	//resolve the subrepository path to the private repository URI		
-	}
-
-	/**Creates a repository of the same type as this repository with the same access privileges as this one.
-	This factory method is commonly used to use a parent repository as a factory for other repositories in its namespace.
-	@param publicRepositoryURI The public URI identifying the location of the new repository.
-	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	@throws NullPointerException if the given public repository URI and/or private repository URI is <code>null</code>.
-	*/
-	protected abstract Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI);
 
 	/**Creates a default empty URF data model.
 	The correct resource factories will be installed to create appropriate classes in the Marmot namespace.
@@ -532,7 +470,7 @@ public abstract class AbstractRepository implements Repository
 
 	/**Opens the repository for access.
 	If the repository is already open, no action occurs.
-	At a minimum the respository must have a public and a private URI specified, even though these may both be the same URI.
+	The respository must have root URI specified.
 	@exception IllegalStateException if the settings of this repository are inadequate to open the repository.
 	@exception ResourceIOException if there is an error opening the repository.
 	*/
@@ -540,10 +478,6 @@ public abstract class AbstractRepository implements Repository
 	{
 		if(!isOpen())	//if the repository isn't yet open TODO synchronize
 		{
-			if(getSourceURI()==null)	//if the private repository URI is not set
-			{
-				throw new IllegalStateException("Cannot open repository without private repository URI specified.");
-			}
 			if(getRootURI()==null)	//if the public repository URI is not set
 			{
 				throw new IllegalStateException("Cannot open repository without public repository URI specified.");

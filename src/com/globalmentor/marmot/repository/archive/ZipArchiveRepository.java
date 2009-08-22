@@ -47,45 +47,32 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 	}
 
 	/**URI constructor with no separate private URI namespace.
-	@param repositoryURI The URI identifying the location of this repository.
-	@throws NullPointerException if the given respository URI is <code>null</code>.
+	@param rootURI The URI identifying the location of this repository.
 	*/
-	public ZipArchiveRepository(final URI repositoryURI)
+	public ZipArchiveRepository(final URI rootURI)
 	{
-		this(repositoryURI, repositoryURI);	//use the same repository URI as the public and private namespaces
+		this(rootURI, rootURI);	//use the same repository URI as the public and private namespaces
 	}
 
 	/**Public repository URI and private repository URI constructor.
 	A {@link URFResourceTURFIO} description I/O is created and initialized.
-	@param publicRepositoryURI The URI identifying the location of this repository.
-	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	@exception NullPointerException if one of the given respository URIs is <code>null</code>.
+	@param rootURI The URI identifying the location of this repository.
+	@param sourceResourceURI The URI identifying the private namespace managed by this repository.
 	*/
-	public ZipArchiveRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
+	public ZipArchiveRepository(final URI rootURI, final URI sourceResourceURI)
 	{
-		this(publicRepositoryURI, privateRepositoryURI, createDefaultURFResourceDescriptionIO());	//create a default resource description I/O using TURF
+		this(rootURI, sourceResourceURI, createDefaultURFResourceDescriptionIO());	//create a default resource description I/O using TURF
 	}
 
 	/**Public repository URI and private repository URI constructor.
-	@param publicRepositoryURI The URI identifying the location of this repository.
-	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
+	@param rootURI The URI identifying the location of this repository.
+	@param sourceResourceURI The URI identifying the private namespace managed by this repository.
 	@param descriptionIO The I/O implementation that writes and reads a resource with the same reference URI as its base URI.
-	@exception NullPointerException if one of the given respository URIs and/or the description I/O is <code>null</code>.
+	@exception NullPointerException if the given description I/O is <code>null</code>.
 	*/
-	public ZipArchiveRepository(final URI publicRepositoryURI, final URI privateRepositoryURI, final URFIO<URFResource> descriptionIO)
+	public ZipArchiveRepository(final URI rootURI, final URI sourceResourceURI, final URFIO<URFResource> descriptionIO)
 	{
-		super(publicRepositoryURI, privateRepositoryURI, descriptionIO);
-	}
-
-	/**Creates a repository of the same type as this repository with the same access privileges as this one.
-	This factory method is commonly used to use a parent repository as a factory for other repositories in its namespace.
-	@param publicRepositoryURI The public URI identifying the location of the new repository.
-	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	@throws NullPointerException if the given public repository URI and/or private repository URI is <code>null</code>.
-	*/
-	protected Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
-	{
-		return new ZipArchiveRepository(publicRepositoryURI, privateRepositoryURI);	//create and return a new file repository
+		super(rootURI, sourceResourceURI, descriptionIO);
 	}
 
 	/**Creates an object to represent the source archive from the given source archive file.

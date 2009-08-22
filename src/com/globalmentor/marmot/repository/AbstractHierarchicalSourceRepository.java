@@ -18,7 +18,11 @@ package com.globalmentor.marmot.repository;
 
 import java.net.*;
 
+import com.globalmentor.net.ResourceIOException;
+import com.globalmentor.net.URIPath;
 import com.globalmentor.urf.*;
+
+import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
 
 /**Abstract implementation of a repository that is backed by a source that users a hierarchy of URIs paralleling the URIs of the resources in the repository.
@@ -26,6 +30,54 @@ import static com.globalmentor.net.URIs.*;
 */
 public abstract class AbstractHierarchicalSourceRepository extends AbstractRepository
 {
+
+	/**The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository.*/
+	private URI sourceURI=null;
+
+		/**@return The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository.*/
+		public URI getSourceURI() {return sourceURI;}
+
+		/**Sets the base URI of the private URI namespace being managed.
+		@param sourceURI The base URI of the private URI namespace being managed.
+		@exception NullPointerException if the given URI is <code>null</code>.
+		@throws IllegalArgumentException if the given source resource URI is not absolute or is not a collection URI.
+		*/
+		public void setSourceURI(final URI sourceURI)
+		{
+			this.sourceURI=checkCollectionURI(checkAbsolute(checkInstance(sourceURI, "Source URI must not be null.")).normalize());
+		}
+
+	/**URI constructor with no separate private URI namespace.
+	@param rootURI The URI identifying the location of this repository.
+	*/
+	public AbstractHierarchicalSourceRepository(final URI rootURI)
+	{
+		this(rootURI, rootURI);	//use the same repository URI as the public and private namespaces
+	}
+
+	/**Public repository URI and private repository URI constructor.
+	A {@link URFResourceTURFIO} description I/O is created and initialized.
+	@param rootURI The URI identifying the location of this repository.
+	@param sourceURI The URI identifying the private namespace managed by this repository.
+	@throws IllegalArgumentException if the given source URI is not absolute or is not a collection URI.
+	*/
+	public AbstractHierarchicalSourceRepository(final URI rootURI, final URI sourceURI)
+	{
+		this(rootURI, sourceURI, createDefaultURFResourceDescriptionIO());	//create a default resource description I/O using TURF
+	}
+
+	/**Public repository URI, private repository URI, and description I/O constructor.
+	@param rootURI The URI identifying the location of this repository.
+	@param sourceURI The URI identifying the private namespace managed by this repository.
+	@param descriptionIO The I/O implementation that writes and reads a resource with the same reference URI as its base URI.
+	@exception NullPointerException the given description I/O is <code>null</code>.
+	@throws IllegalArgumentException if the given source URI is not absolute or is not a collection URI.
+	*/
+	public AbstractHierarchicalSourceRepository(final URI rootURI, final URI sourceURI, final URFIO<URFResource> descriptionIO)
+	{
+		super(rootURI, descriptionIO);
+		this.sourceURI=sourceURI!=null ? checkCollectionURI(checkAbsolute(sourceURI.normalize())) : null;
+	}
 
 	/**Translates a public URI in the repository to the equivalent private URI in the private URI namespace.
 	@param publicURI The URI in the public URI namespace.
@@ -45,35 +97,53 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 		return changeBase(sourceURI, getSourceURI(), getRootURI());	//change the base of the URI from the private URI namespace to the public URI namespace
 	}
 
-	/**URI constructor with no separate private URI namespace.
-	@param repositoryURI The URI identifying the location of this repository.
-	@exception NullPointerException if the given respository URI is <code>null</code>.
+	/**Creates a repository of the same type as this repository with the same access privileges as this one.
+	This factory method is commonly used to use a parent repository as a factory for other repositories in its namespace.
+	This method resolves the private repository path to the current public repository URI.
+	@param subrepositoryPath The private path relative to the private URI of this repository.
+	@throws NullPointerException if the given private repository path is <code>null</code>.
+	@throws IllegalArgumentException if the given subrepository path is absolute and/or is not a collection.
 	*/
-	public AbstractHierarchicalSourceRepository(final URI repositoryURI)
+	public final Repository createSubrepository(final URIPath subrepositoryPath)
 	{
-		this(repositoryURI, repositoryURI);	//use the same repository URI as the public and private namespaces
+		return createSubrepository(getRootURI().resolve(subrepositoryPath.checkRelative().checkCollection().toURI()), subrepositoryPath);	//resolve the subrepository path to the public repository URI		
+	}
+	
+	/**Creates a repository of the same type as this repository with the same access privileges as this one.
+	This factory method is commonly used to use a parent repository as a factory for other repositories in its namespace.
+	@param publicRepositoryURI The public URI identifying the location of the new repository.
+	@param privateSubrepositoryPath The private path relative to the private URI of this repository.
+	@throws NullPointerException if the given public repository URI and/or private repository path is <code>null</code>.
+	@throws IllegalArgumentException if the given private repository path is absolute and/or is not a collection.
+	*/
+	public final Repository createSubrepository(final URI publicRepositoryURI, final URIPath privateSubrepositoryPath)
+	{
+		return createSubrepository(publicRepositoryURI, getSourceURI().resolve(privateSubrepositoryPath.checkRelative().checkCollection().toURI()));	//resolve the subrepository path to the private repository URI		
 	}
 
-	/**Public repository URI and private repository URI constructor.
-	A {@link URFResourceTURFIO} description I/O is created and initialized.
-	@param publicRepositoryURI The URI identifying the location of this repository.
+	/**Creates a repository of the same type as this repository with the same access privileges as this one.
+	This factory method is commonly used to use a parent repository as a factory for other repositories in its namespace.
+	@param publicRepositoryURI The public URI identifying the location of the new repository.
 	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	@exception NullPointerException if one of the given respository URIs is <code>null</code>.
+	@throws NullPointerException if the given public repository URI and/or private repository URI is <code>null</code>.
 	*/
-	public AbstractHierarchicalSourceRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
-	{
-		this(publicRepositoryURI, privateRepositoryURI, createDefaultURFResourceDescriptionIO());	//create a default resource description I/O using TURF
-	}
+	protected abstract Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI);
 
-	/**Public repository URI and private repository URI constructor.
-	@param publicRepositoryURI The URI identifying the location of this repository.
-	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	@param descriptionIO The I/O implementation that writes and reads a resource with the same reference URI as its base URI.
-	@exception NullPointerException if one of the given respository URIs and/or the description I/O is <code>null</code>.
+	/**Opens the repository for access.
+	If the repository is already open, no action occurs.
+	The respository must have source URI specified.
+	@exception IllegalStateException if the settings of this repository are inadequate to open the repository.
+	@exception ResourceIOException if there is an error opening the repository.
 	*/
-	public AbstractHierarchicalSourceRepository(final URI publicRepositoryURI, final URI privateRepositoryURI, final URFIO<URFResource> descriptionIO)
+	public void open() throws ResourceIOException
 	{
-		super(publicRepositoryURI, privateRepositoryURI, descriptionIO);
+		if(!isOpen())	//if the repository isn't yet open TODO synchronize
+		{
+			if(getSourceURI()==null)	//if the repository source URI is not set
+			{
+				throw new IllegalStateException("Cannot open repository without private repository URI specified.");
+			}
+			super.open();
+		}
 	}
-
 }

@@ -16,13 +16,20 @@
 
 package com.globalmentor.marmot.repository.archive;
 
+import static com.globalmentor.java.Objects.checkInstance;
+
 import java.io.*;
 import java.net.URI;
 
 import com.globalmentor.cache.Cache;
+import com.globalmentor.config.ConfigurationException;
 import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.MarmotResourceCache;
 import com.globalmentor.marmot.repository.*;
+import com.globalmentor.net.URIPath;
+
+import static com.globalmentor.net.URIs.*;
+
 import com.globalmentor.urf.*;
 
 /**Abstract implementation of a repository backed by an archive resource.
@@ -31,6 +38,22 @@ import com.globalmentor.urf.*;
 */
 public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepository
 {
+
+	/**The URI of the resource in another repository indicating the source of this repository's information.*/
+	private URI sourceResourceURI=null;
+
+		/**@return The URI of the resource in another repository indicating the source of this repository's information.*/
+		public URI getSourceResourceURI() {return sourceResourceURI;}
+
+		/**Sets the source resource of this repository's information in another repository.
+		@param sourceResourceURI The source resource for this repository.
+		@exception NullPointerException if the given resource URI is <code>null</code>.
+		@throws IllegalArgumentException if the given source resource URI is not absolute or is a collection URI.
+		*/
+		public void setSourceResourceURI(final URI sourceResourceURI)
+		{
+			this.sourceResourceURI=checkNotCollectionURI(checkAbsolute(checkInstance(sourceResourceURI, "Source resource URI must not be null.").normalize()));
+		}
 
 	/**Default constructor with no root URI defined.
 	The root URI must be defined before the repository is opened.
@@ -41,43 +64,74 @@ public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepos
 	}
 
 	/**URI constructor with no separate private URI namespace.
-	@param repositoryURI The URI identifying the location of this repository.
-	@exception NullPointerException if the given respository URI is <code>null</code>.
+	@param rootURI The URI identifying the location of this repository.
 	*/
-	public AbstractArchiveRepository(final URI repositoryURI)
+	public AbstractArchiveRepository(final URI rootURI)
 	{
-		this(repositoryURI, repositoryURI);	//use the same repository URI as the public and private namespaces
+		this(rootURI, rootURI);	//use the same repository URI as the public and private namespaces
 	}
 
 	/**Public repository URI and private repository URI constructor.
 	A {@link URFResourceTURFIO} description I/O is created and initialized.
-	@param publicRepositoryURI The URI identifying the location of this repository.
-	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	@exception NullPointerException if one of the given respository URIs is <code>null</code>.
+	@param rootURI The URI identifying the location of this repository.
+	@param sourceResourceURI The URI identifying the resource from which this resource gets its information.
+	@throws IllegalArgumentException if the given source resource URI is not absolute or is a collection URI.
 	*/
-	public AbstractArchiveRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
+	public AbstractArchiveRepository(final URI rootURI, final URI sourceResourceURI)
 	{
-		this(publicRepositoryURI, privateRepositoryURI, createDefaultURFResourceDescriptionIO());	//create a default resource description I/O using TURF
+		this(rootURI, sourceResourceURI, createDefaultURFResourceDescriptionIO());	//create a default resource description I/O using TURF
 	}
 
-	/**Public repository URI and private repository URI constructor.
-	@param publicRepositoryURI The URI identifying the location of this repository.
-	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
+	/**Root URI descipriont I/O constructor.
+	@param rootURI The URI identifying the location of this repository.
+	@param sourceResourceURI The URI identifying the private namespace managed by this repository.
 	@param descriptionIO The I/O implementation that writes and reads a resource with the same reference URI as its base URI.
-	@exception NullPointerException if one of the given respository URIs and/or the description I/O is <code>null</code>.
+	@exception NullPointerException the given description I/O is <code>null</code>.
+	@throws IllegalArgumentException if the given source resource URI is not absolute or is a collection URI.
 	*/
-	public AbstractArchiveRepository(final URI publicRepositoryURI, final URI privateRepositoryURI, final URFIO<URFResource> descriptionIO)
+	public AbstractArchiveRepository(final URI rootURI, final URI sourceResourceURI, final URFIO<URFResource> descriptionIO)
 	{
-		super(publicRepositoryURI, privateRepositoryURI, descriptionIO);
+		super(rootURI, descriptionIO);
+		this.sourceResourceURI=sourceResourceURI!=null ? checkNotCollectionURI(checkAbsolute(sourceResourceURI.normalize())) : null;
+	}
+
+	/**Creates a repository of the same type as this repository with the same access privileges as this one.
+	This factory method is commonly used to use a parent repository as a factory for other repositories in its namespace.
+	This method resolves the private repository path to the current public repository URI.
+	@param subrepositoryPath The private path relative to the private URI of this repository.
+	@throws NullPointerException if the given private repository path is <code>null</code>.
+	@throws IllegalArgumentException if the given subrepository path is absolute and/or is not a collection.
+	*/
+	public final Repository createSubrepository(final URIPath subrepositoryPath)
+	{
+		throw new UnsupportedOperationException("Archive repositories don't allow automatic creation of subrepositories.");		
+	}
+	
+	/**Creates a repository of the same type as this repository with the same access privileges as this one.
+	This factory method is commonly used to use a parent repository as a factory for other repositories in its namespace.
+	@param publicRepositoryURI The public URI identifying the location of the new repository.
+	@param privateSubrepositoryPath The private path relative to the private URI of this repository.
+	@throws NullPointerException if the given public repository URI and/or private repository path is <code>null</code>.
+	@throws IllegalArgumentException if the given private repository path is absolute and/or is not a collection.
+	*/
+	public final Repository createSubrepository(final URI publicRepositoryURI, final URIPath privateSubrepositoryPath)
+	{
+		throw new UnsupportedOperationException("Archive repositories don't allow automatic creation of subrepositories.");		
 	}
 
 	/**Determines the source repository for accessing the source archive.
-	This implementation returns the root repository.
+	This implementation returns the parent repository.
 	@return The source repository for accessing the source archive.
+	@throws ConfigurationException if this resource has no parent resource.
 	*/
-	protected Repository getSourceRepository()	//TODO allow customization
+	public Repository getSourceRepository() throws ConfigurationException	//TODO allow customization
 	{
-		return getRootRepository();
+		final Repository sourceRepository=getParentRepository();
+		if(sourceRepository==null)
+		{
+			throw new ConfigurationException("Repository has no parent repository to serve as its source.");
+		}
+		return sourceRepository;
 	}
 
 	/**The last source archive file retrieved from the cache, or <code>null</code> if the source archive file has not been retrieved from the cache.*/
@@ -94,8 +148,7 @@ public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepos
 	protected A getSourceArchive() throws IOException
 	{
 		final MarmotResourceCache<?> marmotCache=Marmot.getResourceCache();
-		//TODO change to using a sourceArchiveURI instead of a privateRepositoryURI; create a subclass of AbstractRepository for repositories that have parallel private URI hierarchies
-		Cache.Data<File> sourceArchiveFileData=marmotCache.getData(getSourceRepository(), getSourceURI());	//retrieve the archive file data, using a cached version if possible TODO rename getPrivateRepositoryURI() to getSourceURI()
+		Cache.Data<File> sourceArchiveFileData=marmotCache.getData(getSourceRepository(), getSourceResourceURI());	//retrieve the archive file data, using a cached version if possible
 		if(sourceArchiveFileData!=this.sourceArchiveFileData || sourceArchive==null)	//if we have new file data from the cache (or we've never created a source archive), we need to update the actual archive
 		{
 			sourceArchive=createSourceArchive(sourceArchiveFileData.getValue());	//create a new source archive from the file
