@@ -135,7 +135,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		if(cachedModifiedTime!=null)	//if we know the modified time of the cached resource
 		{
 			final URFDateTime modifiedDateTime=getModified(resource);	//get the current modified date time of the resource
-//Debug.trace("cache: is stale?", resourceURI, "cached modified time", new URFDateTime(cachedModifiedTime), "resource modified time", modifiedDateTime, !cachedModifiedTime.equals(modifiedDateTime));
+//Log.trace("cache: is stale?", resourceURI, "cached modified time", new URFDateTime(cachedModifiedTime), "resource modified time", modifiedDateTime, !cachedModifiedTime.equals(modifiedDateTime));
 			return !cachedModifiedTime.equals(modifiedDateTime);	//if the modified time doesn't match our record, the cache is stale; we don't have to worry about whether there is millisecond precision, as both values being compared should be coming from the same resource in the same repository
 		}
 		return false;	//we couldn't find a reason that the cached information is stale 
@@ -156,7 +156,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	*/
 	public final FileData fetchData(final Q query) throws IOException
 	{
-//Debug.log("Starting to fetch resource", key.getResourceURI());
+//Log.info("Starting to fetch resource", key.getResourceURI());
 		final Repository repository=query.getRepository();	//get the repository
 		final URI resourceURI=query.getResourceURI();	//get the resource URI				
 		final URFResource resource=repository.getResourceDescription(resourceURI);	//get a description of the resource
@@ -183,11 +183,11 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		final String extension=URIs.getNameExtension(resourceURI);	//get the extension to use TODO important: check for a collection, as it may be possible to cache collection content in the future
 			//TODO important: check for null extension
 		File cacheFile=new File(cacheDirectory, cacheBaseName+FILENAME_EXTENSION_SEPARATOR+extension);	//create a filename in the form cacheDir/cacheBaseName.ext
-//Debug.trace("cache: fetching resource", resourceURI, "resource modified", modifiedDateTime, "cache file", cacheFile, "cache file exists", cacheFile.exists(), "cache file modified", new URFDateTime(cacheFile.lastModified()));
-//Debug.trace("modifiedTime", modifiedDateTime.getTime(), "cacheModifiedTime", cacheFile.lastModified(), "delta", modifiedDateTime.getTime()-cacheFile.lastModified());
+//Log.trace("cache: fetching resource", resourceURI, "resource modified", modifiedDateTime, "cache file", cacheFile, "cache file exists", cacheFile.exists(), "cache file modified", new URFDateTime(cacheFile.lastModified()));
+//Log.trace("modifiedTime", modifiedDateTime.getTime(), "cacheModifiedTime", cacheFile.lastModified(), "delta", modifiedDateTime.getTime()-cacheFile.lastModified());
 		if(modifiedDateTime==null || !cacheFile.exists() || modifiedDateTime.getTime()-cacheFile.lastModified()>=1000)	//if we don't know when the resource was modified, or if there is no such cached file, or if the real resource was modified after the cached version (some file systems only have second precision, so ignore milliseconds)
 		{
-//Debug.trace("cache: don't have existing cache");
+//Log.trace("cache: don't have existing cache");
 			final InputStream inputStream=new BufferedInputStream(repository.getResourceInputStream(resourceURI));	//get a stream to the resource
 			try
 			{

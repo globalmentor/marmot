@@ -937,7 +937,7 @@ public abstract class AbstractRepository implements Repository
 		{
 			try
 			{
-	//TODO del Debug.trace("ready to create resource", destinationURI, "in destination repository", destinationRepository.getReferenceURI());
+	//TODO del Log.trace("ready to create resource", destinationURI, "in destination repository", destinationRepository.getReferenceURI());
 				final boolean isCollection=isCollectionURI(resourceURI);	//see if the resource is a collection
 				final URFResource resourceDescription=getResourceDescription(resourceURI);	//get a description of the resource
 				final long contentLength=getContentLength(resourceDescription);	//get the size of the resource content

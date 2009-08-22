@@ -50,7 +50,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 	*/
 	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType permissionType) throws ResourceIOException
 	{
-//Debug.trace("getting allowed for permission", permissionType, "for user", user!=null ? user.getName() : "(none)");
+//Log.trace("getting allowed for permission", permissionType, "for user", user!=null ? user.getName() : "(none)");
 		if(repository.getRootURI().equals(resourceURI))	//if this is the repository URI
 		{
 			if(permissionType==PermissionType.DELETE || permissionType==PermissionType.RENAME)	//if they are asking to delete or rename the repository
@@ -96,7 +96,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 /*TODO del if not needed
 	protected Boolean getAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final URI permissionTypeURI) throws ResourceIOException
 	{
-//Debug.trace("trying to get allowed for resource", resourceURI);
+//Log.trace("trying to get allowed for resource", resourceURI);
 		if(checkInstance(owner, "Owner cannot be null.").equals(user))	//if the user is the owner
 		{
 			return Boolean.TRUE;	//allow the owner to do anything
@@ -114,7 +114,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 	*/
 	public Set<PermissionType> getAllowedPermissionTypes(final Repository repository, final URI resourceURI, final Principal user) throws ResourceIOException
 	{
-//Debug.trace("trying to get allowed permissions for resource", resourceURI, "with user", user!=null ? user.getName() : "(none)");
+//Log.trace("trying to get allowed permissions for resource", resourceURI, "with user", user!=null ? user.getName() : "(none)");
 		if(checkInstance(repository, "Repository cannot be null.").resourceExists(checkInstance(resourceURI, "Resource URI cannot be null.")))	//see if the resource exists; if not, consider it to have inherited access
 		{
 			final URFResource resource=repository.getResourceDescription(resourceURI);	//get the resource description
@@ -124,11 +124,11 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 				for(final AccessRule accessRule:access)	//for each access rule
 				{
 					final Selector selector=accessRule.getSelector();	//get the selector, if any
-//Debug.trace("trying selector", RDFUtilities.toString(selector));
+//Log.trace("trying selector", RDFUtilities.toString(selector));
 					if(selector!=null && selector.selects(user))	//if this access rule's selector applies to this user
 					{
 						final AccessLevel accessLevel=accessRule.getAccessLevel();	//get the access level
-//Debug.trace("this selector matches; access level is", accessLevel);
+//Log.trace("this selector matches; access level is", accessLevel);
 						if(accessLevel!=null)	//if there is an access level
 						{
 							final AccessLevelType accessLevelType=accessLevel.getAccessLevelType();	//get the access level type

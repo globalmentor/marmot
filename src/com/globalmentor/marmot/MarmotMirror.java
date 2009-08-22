@@ -24,6 +24,7 @@ import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.util.CommandLineArguments.*;
 
+import com.globalmentor.log.Log;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.marmot.repository.RepositorySynchronizer.Resolution;
 import com.globalmentor.marmot.repository.file.FileRepository;
@@ -177,40 +178,19 @@ public class MarmotMirror extends Application
 			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.IGNORE_PROPERTY)+": A metadata property to ignore.");
 			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.FORCE_CONTENT_MODIFIED_PROPERTY)+": Whether the content modified property should be updated if requested even if content is not updated.");
 			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.TEST)+": If specified, no changed will be made.");
-			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.VERBOSE)+": If specified, debug will be set to a minimum report level of "+Debug.ReportLevel.INFO+"; otherwise, the report level will be "+Debug.ReportLevel.LOG+".");
-			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.QUIET)+": If specified, debug will be set to a minimum report level of "+Debug.ReportLevel.WARN+"; otherwise, the report level will be "+Debug.ReportLevel.LOG+".");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.VERBOSE)+": If specified, debug will be set to a minimum report level of "+Log.Level.DEBUG+"; otherwise, the report level will be "+Log.Level.INFO+".");
+			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.QUIET)+": If specified, debug will be set to a minimum report level of "+Log.Level.WARN+"; otherwise, the report level will be "+Log.Level.INFO+".");
 			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.DEBUG_HTTP)+": Whether HTTP communication is logged; requires debug to be turned on.");
 			return 0;
 		}
-		try
-		{
-			Debug.setDebug(true);	//turn on debug
-			final Debug.ReportLevel minimumReportLevel;	//determine the minimum report level
-			if(hasFlag(args, getSerializationName(Parameter.VERBOSE)))
-			{
-				minimumReportLevel=Debug.ReportLevel.INFO;
-			}
-			else if(hasFlag(args, getSerializationName(Parameter.QUIET)))
-			{
-				minimumReportLevel=Debug.ReportLevel.WARN;
-			}
-			else
-			{
-				minimumReportLevel=Debug.ReportLevel.LOG;
-			}
-			Debug.setMinimumReportLevel(minimumReportLevel);
-		}
-		catch(final IOException ioException)
-		{
-			throw new AssertionError(ioException);
-		}
+		configureLog(args);	//configure logging
 		final URI sourceRepositoryURI=guessAbsoluteURI(sourceRepositoryString);	//get the source repository URI
 		final String sourceResourceString=getOption(args, getSerializationName(Parameter.SOURCE_RESOURCE));	//get the source resource parameter
 		final URI sourceResourceURI=sourceResourceString!=null ? guessAbsoluteURI(sourceResourceString) : sourceRepositoryURI;	//if the source resource is not specified, use the repository URI
 		final URI destinationRepositoryURI=guessAbsoluteURI(destinationRepositoryString);	//get the destination repository URI
 		final String destinationResourceString=getOption(args, getSerializationName(Parameter.DESTINATION_RESOURCE));	//get the destination resource parameter
 		final URI destinationResourceURI=destinationResourceString!=null ? guessAbsoluteURI(destinationResourceString) : destinationRepositoryURI;	//if the destination resource is not specified, use the repository URI
-		HTTPClient.getInstance().setLogged(Debug.isDebug() && hasFlag(args, getSerializationName(Parameter.DEBUG_HTTP)));	//if debugging is turned on, tell the HTTP client to log its data TODO generalize
+		HTTPClient.getInstance().setLogged(hasFlag(args, getSerializationName(Parameter.DEBUG_HTTP)));	//tell the HTTP client to log its data TODO generalize
 		final String sourceRepositoryTypeString=getOption(args, getSerializationName(Parameter.SOURCE_REPOSITORY_TYPE));
 		final Repository sourceRepository=createRepository(sourceRepositoryTypeString!=null ? getSerializedEnum(RepositoryType.class, sourceRepositoryTypeString) : null, sourceRepositoryURI, getOption(args, getSerializationName(Parameter.SOURCE_USERNAME)), getOption(args, getSerializationName(Parameter.SOURCE_PASSWORD)));	//create the correct type of repository for the source
 		final String destinationRepositoryTypeString=getOption(args, getSerializationName(Parameter.DESTINATION_REPOSITORY_TYPE));

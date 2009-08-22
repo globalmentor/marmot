@@ -24,13 +24,13 @@ import java.util.*;
 
 import com.globalmentor.io.InputStreams;
 import static com.globalmentor.java.Objects.*;
+import com.globalmentor.log.Log;
 import com.globalmentor.marmot.repository.Repository;
 import static com.globalmentor.net.URIs.*;
 
 import com.globalmentor.urf.*;
 import static com.globalmentor.urf.content.Content.*;
 import com.globalmentor.urf.content.Content;
-import com.globalmentor.util.Debug;
 
 /**Marmot synchronization support.
 Synchronization occurs on three levels: individual resources (i.e. orphans), metadata, and content, each of which can have a different resolution specified.
@@ -183,11 +183,11 @@ public class RepositorySynchronizer
 	*/
 	public void synchronize(final Repository sourceRepository, final URI sourceResourceURI, final Repository destinationRepository, final URI destinationResourceURI) throws IOException
 	{
-		Debug.log(getTestStatus(), "Synchronization starting, source:", sourceResourceURI, "destination:", destinationResourceURI, "resource-resolution:", getResourceResolution(), "content-resolution:", getContentResolution(), "metadata-resolution:", getMetadataResolution());
+		Log.info(getTestStatus(), "Synchronization starting, source:", sourceResourceURI, "destination:", destinationResourceURI, "resource-resolution:", getResourceResolution(), "content-resolution:", getContentResolution(), "metadata-resolution:", getMetadataResolution());
 		final URFResource sourceResourceDescription=sourceRepository.resourceExists(sourceResourceURI) ? sourceRepository.getResourceDescription(sourceResourceURI) : null;	//get the description of the source resource if it exists
 		final URFResource destinationResourceDescription=destinationRepository.resourceExists(destinationResourceURI) ? destinationRepository.getResourceDescription(destinationResourceURI) : null;	//get the description of the destination resource if it exists
 		synchronize(sourceRepository, sourceResourceURI, sourceResourceURI, sourceResourceDescription, destinationRepository, destinationResourceURI, destinationResourceURI, destinationResourceDescription);	//synchronize using the descriptions and the initial URIs as the base URIs
-		Debug.log(getTestStatus(), "Synchronization finished.");
+		Log.info(getTestStatus(), "Synchronization finished.");
 	}
 
 	/**Synchronizes two resources in two separate repositories.
@@ -206,7 +206,7 @@ public class RepositorySynchronizer
 	*/
 	protected void synchronize(final Repository sourceRepository, final URI sourceBaseURI, final URI sourceResourceURI, URFResource sourceResourceDescription, final Repository destinationRepository, final URI destinationBaseURI, final URI destinationResourceURI, URFResource destinationResourceDescription) throws IOException
 	{
-		Debug.info(getTestStatus(), "Synchronizing", sourceResourceURI);
+		Log.debug(getTestStatus(), "Synchronizing", sourceResourceURI);
 		if(ignoreSourceResourceURIs.contains(sourceResourceURI) || ignoreDestinationResourceURIs.contains(destinationResourceURI))	//if this is a resource to ignore
 		{
 			return;	//don't do anything further
@@ -230,7 +230,7 @@ public class RepositorySynchronizer
 					case BACKUP:
 					case PRODUCE:
 					case SYNCHRONIZE:
-						Debug.log(getTestStatus(), "Resolve source orphan:", orphanResolution, "copy", sourceResourceURI, destinationResourceURI);
+						Log.info(getTestStatus(), "Resolve source orphan:", orphanResolution, "copy", sourceResourceURI, destinationResourceURI);
 						if(!isTest())	//if this is not just a test
 						{
 							sourceRepository.copyResource(sourceResourceURI, destinationRepository, destinationResourceURI);	//copy the source to the destination
@@ -239,7 +239,7 @@ public class RepositorySynchronizer
 						}
 						break;
 					case RESTORE:
-						Debug.log(getTestStatus(), "Resolve source orphan:", orphanResolution, "delete", sourceResourceURI);
+						Log.info(getTestStatus(), "Resolve source orphan:", orphanResolution, "delete", sourceResourceURI);
 						if(!isTest())	//if this is not just a test
 						{
 							sourceRepository.deleteResource(sourceResourceURI);	//delete the source
@@ -248,7 +248,7 @@ public class RepositorySynchronizer
 						}
 						break;
 					case CONSUME:
-						Debug.log(getTestStatus(), "Resolve source orphan:", orphanResolution, "ignore", sourceResourceURI, destinationResourceURI);
+						Log.info(getTestStatus(), "Resolve source orphan:", orphanResolution, "ignore", sourceResourceURI, destinationResourceURI);
 					case IGNORE:
 						break;
 					default:
@@ -262,7 +262,7 @@ public class RepositorySynchronizer
 					case BACKUP:
 					case CONSUME:
 					case SYNCHRONIZE:
-						Debug.log(getTestStatus(), "Resolve destination orphan:", orphanResolution, "delete", destinationResourceURI);
+						Log.info(getTestStatus(), "Resolve destination orphan:", orphanResolution, "delete", destinationResourceURI);
 						if(!isTest())	//if this is not just a test
 						{
 							destinationRepository.deleteResource(destinationResourceURI);	//delete the destination
@@ -271,7 +271,7 @@ public class RepositorySynchronizer
 						}
 						break;
 					case RESTORE:
-						Debug.log(getTestStatus(), "Resolve destination orphan:", orphanResolution, "copy", destinationResourceURI, sourceResourceURI);
+						Log.info(getTestStatus(), "Resolve destination orphan:", orphanResolution, "copy", destinationResourceURI, sourceResourceURI);
 						if(!isTest())	//if this is not just a test
 						{
 							destinationRepository.copyResource(destinationResourceURI, sourceRepository, sourceResourceURI);	//copy the destination to the source
@@ -280,7 +280,7 @@ public class RepositorySynchronizer
 						}
 						break;
 					case PRODUCE:
-						Debug.log(getTestStatus(), "Resolve destination orphan:", orphanResolution, "ignore", sourceResourceURI, destinationResourceURI);
+						Log.info(getTestStatus(), "Resolve destination orphan:", orphanResolution, "ignore", sourceResourceURI, destinationResourceURI);
 					case IGNORE:
 						break;
 					default:
@@ -456,7 +456,7 @@ public class RepositorySynchronizer
 		}
 		final URI inputResourceURI=inputResourceDescription.getURI();
 		final URI outputResourceURI=outputResourceDescription.getURI();
-		Debug.log(getTestStatus(), "Resolve content:", resolution, "copy", inputResourceURI, outputResourceURI);
+		Log.info(getTestStatus(), "Resolve content:", resolution, "copy", inputResourceURI, outputResourceURI);
 		if(!isTest())	//if this is not just a test
 		{
 			final URFDateTime inputContentModified=getModified(inputResourceDescription);	//get the date of the input resource, if any
@@ -598,7 +598,7 @@ public class RepositorySynchronizer
 					}
 					if(resolution!=Resolution.IGNORE)
 					{
-						Debug.log(getTestStatus(), "Resolve metadata:", resolution, "set property", outputResourceDescription.getURI(), inputProperty);
+						Log.info(getTestStatus(), "Resolve metadata:", resolution, "set property", outputResourceDescription.getURI(), inputProperty);
 						outputPropertyURIRemovals.add(inputPropertyURI);	//we'll replace all of these properties in the output
 						outputPropertyAdditions.add(inputProperty);	//we'll add this new property and value to the output
 					}
@@ -627,7 +627,7 @@ public class RepositorySynchronizer
 						}
 						if(resolution!=Resolution.IGNORE)
 						{
-							Debug.log(getTestStatus(), "Resolve metadata:", resolution, "remove property", outputResourceDescription.getURI(), outputProperty.getPropertyURI());
+							Log.info(getTestStatus(), "Resolve metadata:", resolution, "remove property", outputResourceDescription.getURI(), outputProperty.getPropertyURI());
 							outputPropertyURIRemovals.add(outputPropertyURI);	//we'll remove all of these properties in the output; if there were any replacements they will have already been added 
 						}
 					}

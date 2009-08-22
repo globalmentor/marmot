@@ -42,7 +42,6 @@ import com.globalmentor.marmot.resource.ResourceContentFilter;
 import com.globalmentor.marmot.resource.image.ImageAspect;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.urf.URFResource;
-import com.globalmentor.util.Debug;
 
 import com.guiseframework.geometry.*;
 
@@ -82,7 +81,7 @@ public class ImageScaleFilter implements ResourceContentFilter
 	*/
 	public URFResource filter(final URFResource resource, final InputStream inputStream, final OutputStream outputStream) throws ResourceIOException	//TODO review http://archives.java.sun.com/cgi-bin/wa?A2=ind0311&L=jai-interest&F=&S=&P=15036 and http://www.leptonica.com/scaling.html
 	{
-//TODO del Debug.trace("ready to scale to aspect", imageAspect);
+//TODO del Log.trace("ready to scale to aspect", imageAspect);
 		final Dimensions aspectDimensions;	//determine the aspect dimensions
 		switch(getImageAspect())	//see what image aspect is called for
 		{
@@ -96,7 +95,7 @@ public class ImageScaleFilter implements ResourceContentFilter
 				throw new AssertionError("Unrecognized image aspect: "+getImageAspect());
 		}
 
-//TODO del Debug.trace("aspect dimensions:", scaledDimension);
+//TODO del Log.trace("aspect dimensions:", scaledDimension);
 		try
 		{
 			final ImageInputStream imageInputStream=ImageIO.createImageInputStream(inputStream);	//create an image input stream from the input stream
@@ -126,7 +125,7 @@ public class ImageScaleFilter implements ResourceContentFilter
 //TODO del when works			final BufferedImage bufferedImage=ImageIO.read(inputStream);	//read the image
 			final int originalWidth=bufferedImage.getWidth();
 			final int originalHeight=bufferedImage.getHeight();
-	//TODO del Debug.trace("original image dimension", originalDimension);
+	//TODO del Log.trace("original image dimension", originalDimension);
       final BufferedImage newImage;
 				//the multi-resizing technique described at http://today.java.net/pub/a/today/2007/04/03/perils-of-image-getscaledinstance.html produces many black lines for normal JAI scaling
 			if(originalWidth>aspectDimensions.getWidth().getValue() || originalHeight>aspectDimensions.getHeight().getValue())	//if this image needs scaled
@@ -137,7 +136,7 @@ public class ImageScaleFilter implements ResourceContentFilter
 				final int newWidth=(int)newDimensions.getWidth().getValue();
 				final int newHeight=(int)newDimensions.getHeight().getValue();
 /*JAI method
-	//TODO del Debug.trace("scaling to dimension", newDimension);
+	//TODO del Log.trace("scaling to dimension", newDimension);
 				final ParameterBlock parameterBlock=new ParameterBlock();
 				parameterBlock.addSource(bufferedImage);
 	
@@ -213,9 +212,9 @@ public class ImageScaleFilter implements ResourceContentFilter
 	/*TODO fix so that we can copy the data unchanged; we've already used up the input stream at this point, though
 			else	//if the image doesn't need scaled
 			{
-	Debug.trace("copy the data verbatim");
+	Log.trace("copy the data verbatim");
 				copy(inputStream, outputStream);	//copy the input stream to the output stream unmodified
-	Debug.trace("done copying");
+	Log.trace("done copying");
 			}
 	*/
 		}
@@ -254,7 +253,7 @@ public class ImageScaleFilter implements ResourceContentFilter
 	    final ImagePlus ip = new ImagePlus(inputFile.getPath());
 			final int originalWidth=ip.getWidth();
 			final int originalHeight=ip.getHeight();
-	//TODO del Debug.trace("original image dimension", originalDimension);
+	//TODO del Log.trace("original image dimension", originalDimension);
 			if(originalWidth>aspectDimensions.getWidth().getValue() || originalHeight>aspectDimensions.getHeight().getValue())	//if this image needs scaled
 			{
 				final Dimensions originalDimensions=new Dimensions(originalWidth, originalHeight, Unit.PIXEL);	//find the original dimensions of the image

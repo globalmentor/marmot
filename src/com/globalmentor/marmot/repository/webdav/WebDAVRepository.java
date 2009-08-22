@@ -41,6 +41,7 @@ import com.globalmentor.collections.HashSetHashMap;
 import com.globalmentor.io.*;
 import static com.globalmentor.io.Charsets.*;
 import com.globalmentor.java.Strings;
+import com.globalmentor.log.Log;
 import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.model.NameValuePair;
@@ -1195,9 +1196,9 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			final WebDAVPropertyValue propertyValue=webdavProperty.getValue();	//get the value of the property
 			if(!ignoredWebDAVNamespaces.contains(propertyNamespace))	//if this is not a namespace to ignore
 			{
-//Debug.trace("looking at non-WebDAV property", propertyName);
+//Log.trace("looking at non-WebDAV property", propertyName);
 				final URI urfPropertyURI=getURFPropertyURI(propertyName);	//get the URI of the corresponding URF property, if any
-//Debug.trace("URF property URI", urfPropertyURI);
+//Log.trace("URF property URI", urfPropertyURI);
 				if(urfPropertyURI!=null && propertyValue!=null)	//if there is a corresponding URF property and there is an actual value specified (URF does not define a null value) TODO fix null
 				{
 
@@ -1218,7 +1219,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 							catch(final IOException ioException)	//TODO improve; comment
 							{
 //TODO fix								throw new DataException(ioException);
-								Debug.warn("Error parsing resource; removing", resourceURI, "property", urfPropertyURI, "with value", propertyTextValue, ioException);
+								Log.warn("Error parsing resource; removing", resourceURI, "property", urfPropertyURI, "with value", propertyTextValue, ioException);
 									//TODO eventually leave the bad property; for now, it's probably an anomaly from older development versions, so remove it
 								final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 								try
@@ -1228,7 +1229,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 								}
 								catch(final IOException ioException2)	//if an I/O exception occurs
 								{
-									Debug.error(ioException2);	//just log the error; we shouldn't bring the application down over this
+									Log.error(ioException2);	//just log the error; we shouldn't bring the application down over this
 								}
 								finally
 								{
@@ -1264,7 +1265,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 					}
 					catch(final IllegalArgumentException illegalArgumentException)	//if the SRT creation date does not have the correct syntax, just log a warning; the SRT properties shouldn't break things if they aren't correct
 					{
-						Debug.warn("Invalid "+CREATION_DATE_PROPERTY_NAME.getLocalName()+" value: "+creationDateString, illegalArgumentException);
+						Log.warn("Invalid "+CREATION_DATE_PROPERTY_NAME.getLocalName()+" value: "+creationDateString, illegalArgumentException);
 					}
 				}
 			}
@@ -1375,7 +1376,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 									}
 									catch(final IllegalArgumentException illegalArgumentException)	//if the SRT timestamp does not have the correct syntax, just log a warning; the SRT properties shouldn't break things if they aren't correct
 									{
-										Debug.warn("Invalid "+SRTWebDAV.DEPRECATED_TIMESTAMP_PROPERTY_NAME.getLocalName()+" value: "+srtTimestampString, illegalArgumentException);
+										Log.warn("Invalid "+SRTWebDAV.DEPRECATED_TIMESTAMP_PROPERTY_NAME.getLocalName()+" value: "+srtTimestampString, illegalArgumentException);
 									}
 								}
 							}
@@ -1383,7 +1384,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 					}
 					catch(final IllegalArgumentException illegalArgumentException)	//if the SRT modification date does not have the correct syntax, just log a warning; the SRT properties shouldn't break things if they aren't correct
 					{
-						Debug.warn("Invalid "+SRTWebDAV.DEPRECATED_MODIFIED_TIME_PROPERTY_NAME.getLocalName()+" value: "+srtModifiedTimeString, illegalArgumentException);
+						Log.warn("Invalid "+SRTWebDAV.DEPRECATED_MODIFIED_TIME_PROPERTY_NAME.getLocalName()+" value: "+srtModifiedTimeString, illegalArgumentException);
 					}
 				}
 			}
@@ -1406,7 +1407,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			//TODO fix filename encoding/decoding---there's no way to know what operating system the server is using
 		
 			//TODO encode in UTF-8
-//		Debug.trace("ready to return resource description:", URF.toString(resource));
+//		Log.trace("ready to return resource description:", URF.toString(resource));
 		return resource;	//return the resource that respresents the file
 	}
 
