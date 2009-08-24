@@ -141,6 +141,22 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		return false;	//we couldn't find a reason that the cached information is stale 
 	}
 
+	/**Fetches data from the backing store.
+	@param query The query for requesting a value from the cache.
+	@return New information to cache.
+	@exception IOException if there was an error fetching the value from the backing store.
+	@see #getCacheDirectory(AbstractMarmotResourceCacheQuery)
+	@see #getCacheBaseName(AbstractMarmotResourceCacheQuery)
+	*/
+	public final FileData fetchData(final Q query) throws IOException
+	{
+//Log.info("Starting to fetch resource", key.getResourceURI());
+		final Repository repository=query.getRepository();	//get the repository
+		final URI resourceURI=query.getResourceURI();	//get the resource URI				
+		final URFResource resource=repository.getResourceDescription(resourceURI);	//get a description of the resource
+		return fetch(query, resource, getCacheDirectory(query), getCacheBaseName(query));
+	}
+
 	/**Determines the directory in which to store cached information for the given query.
 	The returned directory will already be created if needed.
 	@param query The query for requesting a value from the cache.
@@ -149,29 +165,21 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	*/
 	protected abstract File getCacheDirectory(final Q query) throws IOException;
 
-	/**Fetches data from the backing store.
+	/**Determines the base name to use for storing the resource specified by the query.
+	<p>This implementation removes the resource URI extension and encodes the entire URI for use as a filename.</p>
 	@param query The query for requesting a value from the cache.
-	@return New information to cache.
-	@exception IOException if there was an error fetching the value from the backing store.
+	@return The base name to use for the cached file.
 	*/
-	public final FileData fetchData(final Q query) throws IOException
+	protected String getCacheBaseName(final Q query)
 	{
-//Log.info("Starting to fetch resource", key.getResourceURI());
-		final Repository repository=query.getRepository();	//get the repository
-		final URI resourceURI=query.getResourceURI();	//get the resource URI				
-		final URFResource resource=repository.getResourceDescription(resourceURI);	//get a description of the resource
-		final URFDateTime modifiedDateTime=getModified(resource);	//get the last modified time of the resource before it is filtered
-		final String filename=getRawName(resourceURI);	//get the filename of the resource
-		final String baseName=removeNameExtension(filename);	//get the base name to use	TODO important encode the name so that it can work on the file system
-		final URI resourceParentURI=getParentURI(resourceURI);	//get the parent URI of the resource
-		final Repository rootRepository=repository.getRootRepository();	//get the root repository so that we create a relative path that is consistent across subrepositories (parent repository URIs should be base URIs to subrepository URIs)
-		final URIPath resourceParentRootPath=new URIPath(rootRepository.getRootURI().relativize(resourceParentURI));	//construct the locator using the parent resource's relative path to the root repository
-		final String cacheBaseName=encodeCrossPlatformFilename(resourceParentRootPath+baseName);	//create a base name by encoding the resource's relative path from the user with no extension
-		return fetch(query, resource, getCacheDirectory(query), cacheBaseName);
+		return encodeCrossPlatformFilename(removeRawNameExtension(query.getResourceURI()).toString());	//remove the extension and encode the entire URI as a filename
 	}
 
 	/**Fetches data from the backing store.
 	@param query The query for requesting a value from the cache.
+	@param resource The description of the resource to fetch.
+	@param cacheDirectory The directory in which to store the cached file.
+	@param cacheBaseName The base name to use for the cached file.
 	@return New information to cache.
 	@exception IOException if there was an error fetching the value from the backing store.
 	*/

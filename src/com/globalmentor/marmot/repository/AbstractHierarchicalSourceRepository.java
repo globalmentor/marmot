@@ -38,13 +38,19 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 		public URI getSourceURI() {return sourceURI;}
 
 		/**Sets the base URI of the private URI namespace being managed.
+		If no root URI is specified, the root URI is updated to match the source URI.
 		@param sourceURI The base URI of the private URI namespace being managed.
 		@exception NullPointerException if the given URI is <code>null</code>.
 		@throws IllegalArgumentException if the given source resource URI is not absolute or is not a collection URI.
+		@see #setRootURI(URI)
 		*/
 		public void setSourceURI(final URI sourceURI)
 		{
 			this.sourceURI=checkCollectionURI(checkAbsolute(checkInstance(sourceURI, "Source URI must not be null.")).normalize());
+			if(getRootURI()==null)	//if no root URI has been set
+			{
+				setRootURI(this.sourceURI);	//update the root URI to match the source URI
+			}
 		}
 
 	/**URI constructor with no separate private URI namespace.

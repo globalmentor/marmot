@@ -39,6 +39,51 @@ import com.globalmentor.urf.*;
 public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepository
 {
 
+	/**The repository containing the resource that is the source of this repository's information.*/
+	private Repository sourceRepository=null;
+
+		/**Returns the repository containing the resource that is the source of this repository's information.
+		If there is no source repository, the root repository will be used.
+		@return The repository containing the resource that is the source of this repository's information,
+		or <code>null</code> if the root repository should be used.
+		*/
+		public Repository getSourceRepository() {return sourceRepository;}
+
+		/**Sets the repository containing the resource that is the source of this repository's information.
+		@param sourceRepository The repository containing the source resource, or <code>null</code> if the
+		root repository should be used.
+		@throws IllegalArgumentException if the given repository is this repository.
+		*/
+		public void setSourceRepository(final Repository sourceRepository)
+		{
+			if(sourceRepository==this)	//we can't be our own source
+			{
+				throw new IllegalArgumentException("Repository cannot be its own source.");
+			}
+			this.sourceRepository=checkInstance(sourceRepository, "Source repository cannot be null.");
+		}
+
+		/**Determines the source repository for accessing the source archive.
+		If there is no source repository specified, the root repository is returned.
+		@return The source repository for accessing the source archive.
+		@throws ConfigurationException if no explicit repository is set and this repository is the root repository.
+		@see #getSourceRepository()
+		@see #getRootRepository()
+		*/
+		protected Repository determineSourceRepository() throws ConfigurationException
+		{
+			Repository sourceRepository=getSourceRepository();	//get the specified source repository
+			if(sourceRepository==null)	//if no source repository is specified
+			{
+				sourceRepository=getRootRepository();	//use the root repository
+				if(sourceRepository==this)	//if this repository is the root repository
+				{
+					throw new ConfigurationException("No source repository specified, and repository has no parent repository to serve as its source.");
+				}
+			}
+			return sourceRepository;
+		}
+
 	/**The URI of the resource in another repository indicating the source of this repository's information.*/
 	private URI sourceResourceURI=null;
 
@@ -119,21 +164,6 @@ public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepos
 		throw new UnsupportedOperationException("Archive repositories don't allow automatic creation of subrepositories.");		
 	}
 
-	/**Determines the source repository for accessing the source archive.
-	This implementation returns the parent repository.
-	@return The source repository for accessing the source archive.
-	@throws ConfigurationException if this resource has no parent resource.
-	*/
-	public Repository getSourceRepository() throws ConfigurationException	//TODO allow customization
-	{
-		final Repository sourceRepository=getParentRepository();
-		if(sourceRepository==null)
-		{
-			throw new ConfigurationException("Repository has no parent repository to serve as its source.");
-		}
-		return sourceRepository;
-	}
-
 	/**The last source archive file retrieved from the cache, or <code>null</code> if the source archive file has not been retrieved from the cache.*/
 	private Cache.Data<File> sourceArchiveFileData=null;
 
@@ -143,12 +173,12 @@ public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepos
 	/**Returns the object for accessing the source archive information.
 	@return The source archive.
 	@throws IOException if there is an error retrieving the source archive.
-	@see #getSourceRepository()
+	@see #determineSourceRepository()
 	*/
 	protected A getSourceArchive() throws IOException
 	{
 		final MarmotResourceCache<?> marmotCache=Marmot.getResourceCache();
-		Cache.Data<File> sourceArchiveFileData=marmotCache.getData(getSourceRepository(), getSourceResourceURI());	//retrieve the archive file data, using a cached version if possible
+		Cache.Data<File> sourceArchiveFileData=marmotCache.getData(determineSourceRepository(), getSourceResourceURI());	//retrieve the archive file data, using a cached version if possible
 		if(sourceArchiveFileData!=this.sourceArchiveFileData || sourceArchive==null)	//if we have new file data from the cache (or we've never created a source archive), we need to update the actual archive
 		{
 			sourceArchive=createSourceArchive(sourceArchiveFileData.getValue());	//create a new source archive from the file
