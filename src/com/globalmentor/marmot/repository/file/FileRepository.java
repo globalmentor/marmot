@@ -733,11 +733,11 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			//TODO only use the UNIX hidden filename prefix for UNIX file systems---probably in a subclass
 		if(resourceFile.isDirectory())	//if this is a directory
 		{
-			return new File(resourceFile, addExtension(addExtension(Files.UNIX_HIDDEN_FILENAME_PREFIX+COLLECTION_CONTENT_NAME, MARMOT_DESCRIPTION_NAME), TURF_NAME_EXTENSION));	//return a file in the form ".@.marmot-description.turf"
+			return new File(resourceFile, addExtension(addExtension(Files.UNIX_HIDDEN_FILENAME_PREFIX+COLLECTION_CONTENT_NAME, MARMOT_DESCRIPTION_NAME), NAME_EXTENSION));	//return a file in the form ".@.marmot-description.turf"
 		}
 		else	//if this is not a directory
 		{
-			return changeName(resourceFile, addExtension(addExtension(Files.UNIX_HIDDEN_FILENAME_PREFIX+resourceFile.getName(), MARMOT_DESCRIPTION_NAME), TURF_NAME_EXTENSION));	//return a file in the form ".file.marmot-description.turf"
+			return changeName(resourceFile, addExtension(addExtension(Files.UNIX_HIDDEN_FILENAME_PREFIX+resourceFile.getName(), MARMOT_DESCRIPTION_NAME), NAME_EXTENSION));	//return a file in the form ".file.marmot-description.turf"
 		}
 	}
 
@@ -753,7 +753,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		if(!isCollectionURI(privateResourceURI))	//description files are not collections
 		{
 			final String name=URIs.getName(privateResourceURI);
-			return name!=null && name.startsWith(Files.UNIX_HIDDEN_FILENAME_PREFIX) && name.endsWith(MARMOT_DESCRIPTION_NAME+NAME_EXTENSION_SEPARATOR+TURF_NAME_EXTENSION);	//see if the name matches the pattern TODO use a regex pattern
+			return name!=null && name.startsWith(Files.UNIX_HIDDEN_FILENAME_PREFIX) && name.endsWith(MARMOT_DESCRIPTION_NAME+NAME_EXTENSION_SEPARATOR+NAME_EXTENSION);	//see if the name matches the pattern TODO use a regex pattern
 		}
 		return false;
 	}
