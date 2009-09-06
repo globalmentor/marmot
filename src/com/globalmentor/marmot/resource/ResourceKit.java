@@ -44,7 +44,7 @@ public interface ResourceKit
 	public final static String DEFAULT_THEME_NAME=addExtension(DEFAULT_THEME_SIMPLE_NAME, THEME_NAME_EXTENSION);
 
 	/**The URI of the Marmot resource namespace.*/
-	public final static URI MARMOT_RESOURCE_NAMESPACE_URI=URI.create("http://globalmentor.com/marmot/resource");
+	public final static URI MARMOT_RESOURCE_NAMESPACE_URI=URI.create("http://globalmentor.com/marmot/resource/");
 		//properties
 	/**Specifies a theme of resource by its URI, which may be a path URI relative to the repository.*/
 	public final static URI THEME_URI_PROPERTY_URI=createResourceURI(MARMOT_RESOURCE_NAMESPACE_URI, "themeURI");

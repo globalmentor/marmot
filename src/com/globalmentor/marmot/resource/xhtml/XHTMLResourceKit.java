@@ -56,7 +56,7 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 	public final static String DEFAULT_TEMPLATE_NAME=addExtension(DEFAULT_TEMPLATE_SIMPLE_NAME, XHTML_TEMPLATE_NAME_EXTENSION);
 
 	/**The URI of the Marmot XHTML namespace.*/
-	public final static URI MARMOT_XHTML_NAMESPACE_URI=URI.create("http://globalmentor.com/marmot/resource/xhtml");
+	public final static URI MARMOT_XHTML_NAMESPACE_URI=URI.create("http://globalmentor.com/marmot/resource/xhtml/");
 		//properties
 	/**Specifies a template of resource by its URI, which may be a path URI relative to the repository.*/
 	public final static URI TEMPLATE_URI_PROPERTY_URI=createResourceURI(MARMOT_XHTML_NAMESPACE_URI, "templateURI");

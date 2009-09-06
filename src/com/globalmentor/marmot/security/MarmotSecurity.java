@@ -27,7 +27,7 @@ public class MarmotSecurity
 {
 
 	/**The URI to the Marmot security namespace.*/
-	public final static URI MARMOT_SECURITY_NAMESPACE_URI=URI.create("http://globalmentor.com/marmot/security");
+	public final static URI MARMOT_SECURITY_NAMESPACE_URI=URI.create("http://globalmentor.com/marmot/security/");
 
 		//classes
 	/**A rule specifying access permissions for zero or more principals.*/
