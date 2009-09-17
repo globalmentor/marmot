@@ -16,9 +16,6 @@
 
 package com.globalmentor.marmot.resource;
 
-import static com.globalmentor.io.Files.addExtension;
-import static com.globalmentor.urf.URF.createResourceURI;
-
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.Set;
@@ -36,19 +33,6 @@ import com.globalmentor.urf.URFResource;
 public interface ResourceKit
 {
 
-	/**The default simple name (i.e. the name without an extension) of a Marmox Guise theme.*/
-	public final static String DEFAULT_THEME_SIMPLE_NAME="_";
-	/**The extension for Guise theme resource names.*/
-	public final static String THEME_NAME_EXTENSION="guisetheme";	//TODO create content type for guisetheme file; move to Theme class
-	/**The default name a Guise theme resource.*/
-	public final static String DEFAULT_THEME_NAME=addExtension(DEFAULT_THEME_SIMPLE_NAME, THEME_NAME_EXTENSION);
-
-	/**The URI of the Marmot resource namespace.*/
-	public final static URI MARMOT_RESOURCE_NAMESPACE_URI=URI.create("http://globalmentor.com/marmot/resource/");
-		//properties
-	/**Specifies a theme of resource by its URI, which may be a path URI relative to the repository.*/
-	public final static URI THEME_URI_PROPERTY_URI=createResourceURI(MARMOT_RESOURCE_NAMESPACE_URI, "themeURI");
-	
 	/**Capabilities a resource kit has in relation to resources.
 	@author Garret Wilson
 	*/
