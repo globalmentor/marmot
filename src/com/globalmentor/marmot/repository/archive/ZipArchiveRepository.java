@@ -395,6 +395,7 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 	}
 	
 	/**Creates a resource description to represent a zip entry.
+	<p>This implementation merges the resource description returned by {@link #retrieveResource(URI)}, if any.</p>
 	@param urf The URF data model to use when creating this resource.
 	@param resourceURI The URI of the resource being described.
 	@param resourceZipEntry The zip entry for which a resource should be created,
@@ -406,7 +407,11 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 	protected URFResource createResourceDescription(final URF urf, final URI resourceURI, final ZipEntry resourceZipEntry) throws IOException
 	{
 		final URFResource resource=urf.createResource(resourceURI); //create a default resource description
-//		final String filename=resourceZipEntry.getName();	//get the name of the file
+		final URFResource configuredResource=retrieveResource(resourceURI);	//get the configured resource, if any
+		if(configuredResource!=null)	//if a resource has been configured for this URI
+		{
+			resource.addAllProperties(configuredResource);	//add all the configured properties
+		}
 		long contentLength=0;	//we'll update the content length if we can
 		URFDateTime contentModified=null;	//we'll get the content modified from the file or, for a directory, from its content file, if any---but not from a directory itself
 		if(resourceZipEntry!=null)	//if this is not the root resource

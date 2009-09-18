@@ -16,18 +16,83 @@
 
 package com.globalmentor.marmot.repository;
 
+import static java.util.Collections.*;
+
 import java.io.*;
 import java.net.URI;
+import java.util.*;
 
 import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
 
 /**Abstract implementation of a repository that does not allow resources to be modified.
+<p>This repository allows resource descriptions to be manually assigned. These resource descriptions
+are merged with whatever default resource descriptions are provided by the repository, if any.</p>
 @author Garret Wilson
 */
 public abstract class AbstractReadOnlyRepository extends AbstractRepository
 {
+	
+	/**The map of manually specified resource descriptions keyed to resource URIs.*/
+	private final Map<URI, URFResource> resourceMap=new HashMap<URI, URFResource>();
+
+		/**Adds a resource description to supplement the default resource descriptions.
+		@param resource The resource description to add.
+		@return The resource description previously configured with the given URI, or <code>null</code> if no resource was previously configured.
+		@exception NullPointerException if the given resource is <code>null</code>.
+		@exception IllegalArgumentException if the given resource does not reside inside this repository.
+		*/
+		public URFResource storeResource(final URFResource resource)
+		{
+			final URI resourceURI=checkResourceURI(resource.getURI());	//makes sure the resource URI is valid and normalize the URI
+			return resourceMap.put(resourceURI, resource);	//store the resource description, mapped to the resource URI
+		}
+
+		/**Returns the resource description configured for the given URI.
+		@param resourceURI The URI of the resource the description of which to return.
+		@return The resource with a description configured for the given URI, or <code>null</code> if there is no resource configured for the given URI.
+		@exception NullPointerException if the given URI is <code>null</code>.
+		@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+		*/
+		protected URFResource retrieveResource(URI resourceURI)
+		{
+			resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+			return resourceMap.get(resourceURI);
+		}
+
+		/**Removes the resource description configured for the given URI.
+		@param resourceURI The URI of the resource the description of which to remove.
+		@return The removed resource with a description configured for the given URI, or <code>null</code> if there is no resource configured for the given URI.
+		@exception NullPointerException if the given URI is <code>null</code>.
+		@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+		*/
+		protected URFResource removeResource(URI resourceURI)
+		{
+			resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+			return resourceMap.remove(resourceURI);
+		}
+
+		/**@return The read-only configured resource descriptions.*/
+		protected Iterable<URFResource> getResources()
+		{
+			return unmodifiableCollection(resourceMap.values());	//return an unmodifiable version of the resources
+		}
+
+		/**Stores multiple resources.
+		@param resources The resources to store.
+		@exception NullPointerException if a given resources is <code>null</code>.
+		@exception IllegalArgumentException if a given resource does not reside inside this repository.
+		@see #storeResource(URFResource)
+		*/
+		public void setResources(final Set<URFResource> resources)
+		{
+			resourceMap.clear();	//clear the current resources
+			for(final URFResource resource:resources)	//look at each resource
+			{
+				storeResource(resource);	//add this resource
+			}
+		}
 
 	/**Default constructor with no root URI defined.
 	The root URI must be defined before the repository is opened.
