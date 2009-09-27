@@ -24,6 +24,7 @@ import static com.globalmentor.java.Characters.*;
 import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.net.URIs.*;
 
+import com.globalmentor.application.AbstractApplication;
 import com.globalmentor.application.Application;
 import com.globalmentor.log.Log;
 import com.globalmentor.marmot.repository.*;
@@ -40,7 +41,7 @@ import com.globalmentor.util.*;
 /**Command-line Marmot synchronization utility.
 @author Garret Wilson
 */
-public class MarmotMirror extends Application
+public class MarmotMirror extends AbstractApplication
 {
 
 	/**The application URI.*/
