@@ -19,11 +19,12 @@ package com.globalmentor.marmot;
 import java.io.IOException;
 import java.net.URI;
 
+import static com.globalmentor.application.CommandLineArguments.*;
 import static com.globalmentor.java.Characters.*;
 import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.net.URIs.*;
-import static com.globalmentor.util.CommandLineArguments.*;
 
+import com.globalmentor.application.Application;
 import com.globalmentor.log.Log;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.marmot.repository.RepositorySynchronizer.Resolution;
