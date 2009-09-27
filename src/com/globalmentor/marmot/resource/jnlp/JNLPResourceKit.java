@@ -1,5 +1,5 @@
 /*
- * Copyright © 1996-2008 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 2009 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-package com.globalmentor.marmot.resource.audio;
+package com.globalmentor.marmot.resource.jnlp;
 
-import com.globalmentor.io.Audio;
+import com.globalmentor.jnlp.JNLP;
 import com.globalmentor.marmot.resource.*;
 
-/**Resource kit for handling audio.
+/**Resource kit for handling Java applications.
 <p>Supported media types:</p>
 <ul>
-	<li><code>audio/mpeg</code></li>
+	<li><code>application/x-java-jnlp-file</code></li>
 </ul>
 @author Garret Wilson
 */
-public class AudioResourceKit extends AbstractResourceKit
+public class JNLPResourceKit extends AbstractResourceKit
 {
 
 	/**Default constructor.*/
-	public AudioResourceKit()
+	public JNLPResourceKit()
 	{
-		super(Audio.MPEG_CONTENT_TYPE);
+		super(JNLP.CONTENT_TYPE);
 	}
 
 }
