@@ -571,7 +571,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		}
 	}
 	
-	/**Creates an infinitely deep copy of a resource to another URI in this repository, overwriting any resource at the destionation only if requested. 
+	/**Creates an infinitely deep copy of a resource to another URI in this repository, overwriting any resource at the destination only if requested. 
 	@param resourceURI The URI of the resource to be copied.
 	@param destinationURI The URI to which the resource should be copied.
 	@param overwrite <code>true</code> if any existing resource at the destination should be overwritten,
