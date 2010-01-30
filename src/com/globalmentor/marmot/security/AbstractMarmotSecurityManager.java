@@ -35,22 +35,15 @@ import static com.globalmentor.marmot.security.MarmotSecurity.*;
 public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 {
 
-//TODO fix	@return <code>true</code> if the given user has the requested permission in relation to a resource in a repository, or <code>false</code> if the user has no such permission.
-
-	/**Determines whether a given user has permission to perform some action in relation to a given repository and resource.
-	This method is additive; if a superclass doesn't find a permission, a subclass may be able to add the permission.
-	This is a convenience method that delegates to {@link #isAllowed(Principal, Repository, URI, Principal, URI)}.
-	@param owner The principal that owns the repository.
+	/**Determines whether a given permission is valid in the abstract in respect to a resource.
 	@param repository The repository that contains the resource.
-	@param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
 	@param permissionType The type of permission requested.
-	@return <code>true</code> if the given permission is allowed for the user in relation to the indicated resource, else <code>false</code>.
-	@exception NullPointerException if the given owner, repository, resource URI, and/or permission type is <code>null</code>.
+	@return <code>true</code> if the given permission is valid in relation to the indicated resource, else <code>false</code>.
+	@exception NullPointerException if the given repository, resource URI, and/or permission type is <code>null</code>.
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType permissionType) throws ResourceIOException
+	protected boolean isPermissionValid(final Repository repository, final URI resourceURI, final PermissionType permissionType) throws ResourceIOException
 	{
-//Log.trace("getting allowed for permission", permissionType, "for user", user!=null ? user.getName() : "(none)");
 		if(repository.getRootURI().equals(resourceURI))	//if this is the repository URI
 		{
 			if(permissionType==PermissionType.DELETE || permissionType==PermissionType.RENAME)	//if they are asking to delete or rename the repository
@@ -58,11 +51,71 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 				return false;	//the repository cannot be deleted or renamed
 			}
 		}
+		return true;	//all other permissions are valid
+	}
+
+//TODO fix	@return <code>true</code> if the given user has the requested permission in relation to a resource in a repository, or <code>false</code> if the user has no such permission.
+
+	/**{@inheritDoc}*/
+	@Override
+	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType permissionType) throws ResourceIOException
+	{
+//Log.trace("getting allowed for permission", permissionType, "for user", user!=null ? user.getName() : "(none)");
+		if(!isPermissionValid(repository, resourceURI, permissionType))	//check for validity
+		{
+			return false;
+		}
 		if(checkInstance(owner, "Owner cannot be null.").equals(user))	//if the user is the owner
 		{
 			return true;	//allow the owner to do anything
 		}
 		return getAllowedPermissionTypes(repository, resourceURI, user).contains(permissionType);	//see if the allowed permission types contain the requested permission
+	}
+
+	/**{@inheritDoc}*/
+	@Override
+	public boolean isOneAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, PermissionType... permissionTypes) throws ResourceIOException
+	{
+		permissionTypes=permissionTypes.clone();	//clone the permission types so that we can modify them locally
+		int permissionTypeCount=permissionTypes.length;
+			//weed out invalid requested permissions
+		for(int i=permissionTypes.length-1; i>=0; --i)	//remove permission types that don't apply
+		{
+			final PermissionType permissionType=checkInstance(permissionTypes[i]);
+			if(!isPermissionValid(repository, resourceURI, permissionType))	//if this permission isn't valid
+			{
+				permissionTypes[i]=null;	//'t allow this permission
+				--permissionTypeCount;	//note that we have one fewer permission to check
+			}
+		}
+		if(permissionTypeCount==0)	//if no valid permissions are requested, don't check further---at least one valid permission must be requested, even for the owner
+		{
+			return false;
+		}
+		if(checkInstance(owner, "Owner cannot be null.").equals(user))	//if the user is the owner
+		{
+			return true;	//allow the owner to do anything that is valid
+		}
+		final Set<PermissionType> allowedPermissionTypes=getAllowedPermissionTypes(repository, resourceURI, user);	//get the allowed permission types
+		for(final PermissionType permissionType:permissionTypes)
+		{
+			if(permissionType!=null && allowedPermissionTypes.contains(permissionType))	//if the allowed permission types contain the requested permission
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**{@inheritDoc}*/
+	@Override
+	public boolean isSomethingAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user) throws ResourceIOException
+	{
+		if(checkInstance(owner, "Owner cannot be null.").equals(user))	//if the user is the owner
+		{
+			return true;	//the owner can always do *something* with the resource
+		}
+		return !getAllowedPermissionTypes(repository, resourceURI, user).isEmpty();	//see if there is at least one allowed permission for this user
 	}
 
 	/**Determines whether a given user has permission to perform some action in relation to a given repository and resource.
@@ -177,7 +230,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 			{
 				permissionTypes.add(PermissionType.DELETE);	//impute deletion
 			}
-			return permissionTypes;	//return our permission types, allong with the appropriate imputed permissions
+			return permissionTypes;	//return our permission types, along with the appropriate imputed permissions
 		}
 		else	//if there is no parent
 		{
