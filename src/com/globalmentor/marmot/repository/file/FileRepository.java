@@ -178,7 +178,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		{
 			if(isCollectionURI(resourceURI))	//if the resource is a collection
 			{
-				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+				final URI contentURI=resolve(resourceURI, COLLECTION_CONTENT_NAME);	//determine the URI to use for content
 				final File contentFile=new File(getSourceResourceURI(contentURI));	//create a file object from the private URI of the special collection content resource
 				if(contentFile.exists())	//if there is a special collection content resource
 				{
@@ -233,7 +233,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			final boolean isCollection=isCollectionURI(resourceURI);
 			if(isCollection)	//if the resource is a collection
 			{
-				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+				final URI contentURI=resolve(resourceURI, COLLECTION_CONTENT_NAME);	//determine the URI to use for content
 				contentFile=new File(getSourceResourceURI(contentURI));	//create a file object from the private URI of the special collection content resource
 			}
 			else	//if the resource is not a collection
@@ -449,7 +449,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			final File contentFile;	//determine the file to use for storing content
 			if(isCollectionURI(resourceURI))	//if the resource is a collection
 			{
-				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+				final URI contentURI=resolve(resourceURI, COLLECTION_CONTENT_NAME);	//determine the URI to use for content
 				contentFile=new File(getSourceResourceURI(contentURI));	//create a file object from the private URI of the special collection content resource
 				mkdir(resourceFile);	//create the directory
 			}
@@ -497,7 +497,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			final File contentFile;	//determine the file to use for storing content
 			if(isCollectionURI(resourceURI))	//if the resource is a collection
 			{
-				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+				final URI contentURI=resolve(resourceURI, COLLECTION_CONTENT_NAME);	//determine the URI to use for content
 				contentFile=new File(getSourceResourceURI(contentURI));	//create a file object from the private URI of the special collection content resource
 				mkdir(resourceFile);	//create the directory
 			}
@@ -616,7 +616,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		checkOpen();	//make sure the repository is open
 		try
 		{
-			if(resourceURI.normalize().equals(getRootURI()))	//if they try to delete the root URI
+			if(normalize(resourceURI).equals(getRootURI()))	//if they try to delete the root URI
 			{
 				throw new IllegalArgumentException("Cannot delete repository base URI "+resourceURI);
 			}
@@ -659,7 +659,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			subrepository.moveResource(resourceURI, destinationURI, overwrite);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		if(resourceURI.normalize().equals(getRootURI()))	//if they try to move the root URI
+		if(normalize(resourceURI).equals(getRootURI()))	//if they try to move the root URI
 		{
 			throw new IllegalArgumentException("Cannot move repository base URI "+resourceURI);
 		}
@@ -688,7 +688,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			{
 				throw new IllegalArgumentException("Non-collection URI "+resourceURI+" used for directory "+resourceFile);
 			}
-			final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+			final URI contentURI=resolve(resourceURI, COLLECTION_CONTENT_NAME);	//determine the URI to use for content
 			final File contentFile=new File(getSourceResourceURI(contentURI));	//create a file object from the private URI of the special collection content resource
 			if(contentFile.exists())	//if there is a special collection content resource
 			{
@@ -832,7 +832,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		final boolean isCollection=isCollectionURI(resourceURI);	//see if this is a collection
 		if(isCollection)	//if the resource is a collection
 		{
-			final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+			final URI contentURI=resolve(resourceURI, COLLECTION_CONTENT_NAME);	//determine the URI to use for content
 			final File tempContentFile=new File(getSourceResourceURI(contentURI));	//create a file object from the private URI of the special collection content resource
 			contentFile=tempContentFile.exists() ? tempContentFile : resourceFile;	//if the content file doesn't exist, we can't update its modified time
 		}

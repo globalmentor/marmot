@@ -46,7 +46,7 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 		*/
 		public void setSourceURI(final URI sourceURI)
 		{
-			this.sourceURI=checkCollectionURI(checkAbsolute(checkInstance(sourceURI, "Source URI must not be null.")).normalize());
+			this.sourceURI=checkCollectionURI(checkAbsolute(normalize(checkInstance(sourceURI, "Source URI must not be null."))));
 			if(getRootURI()==null)	//if no root URI has been set
 			{
 				setRootURI(this.sourceURI);	//update the root URI to match the source URI
@@ -82,7 +82,7 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	public AbstractHierarchicalSourceRepository(final URI rootURI, final URI sourceURI, final URFIO<URFResource> descriptionIO)
 	{
 		super(rootURI, descriptionIO);
-		this.sourceURI=sourceURI!=null ? checkCollectionURI(checkAbsolute(sourceURI.normalize())) : null;
+		this.sourceURI=sourceURI!=null ? checkCollectionURI(checkAbsolute(normalize(sourceURI))) : null;
 	}
 
 	/**Translates a public URI in the repository to the equivalent private URI in the private URI namespace.
@@ -112,7 +112,7 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	*/
 	public final Repository createSubrepository(final URIPath subrepositoryPath)
 	{
-		return createSubrepository(getRootURI().resolve(subrepositoryPath.checkRelative().checkCollection().toURI()), subrepositoryPath);	//resolve the subrepository path to the public repository URI		
+		return createSubrepository(resolve(getRootURI(), subrepositoryPath.checkRelative().checkCollection().toURI()), subrepositoryPath);	//resolve the subrepository path to the public repository URI		
 	}
 	
 	/**Creates a repository of the same type as this repository with the same access privileges as this one.
@@ -124,7 +124,7 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	*/
 	public final Repository createSubrepository(final URI publicRepositoryURI, final URIPath privateSubrepositoryPath)
 	{
-		return createSubrepository(publicRepositoryURI, getSourceURI().resolve(privateSubrepositoryPath.checkRelative().checkCollection().toURI()));	//resolve the subrepository path to the private repository URI		
+		return createSubrepository(publicRepositoryURI, resolve(getSourceURI(), privateSubrepositoryPath.checkRelative().checkCollection().toURI()));	//resolve the subrepository path to the private repository URI		
 	}
 
 	/**Creates a repository of the same type as this repository with the same access privileges as this one.

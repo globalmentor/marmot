@@ -337,7 +337,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 		{
 			stringBuilder.append(NAME_EXTENSION_SEPARATOR).append(defaultExtension);	//append the default extension
 		}
-		return parentResourceURI.resolve(URIPath.createURIPathURI(stringBuilder.toString()));	//resolve the encoded name against the parent resource URI; use the special URIPath method in case the name contains a colon character
+		return resolve(parentResourceURI, URIPath.createURIPathURI(stringBuilder.toString()));	//resolve the encoded name against the parent resource URI; use the special URIPath method in case the name contains a colon character
 	}
 
 	/**Creates a new resource with the appropriate default contents for this resource type.
@@ -532,7 +532,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 				{
 					throw new ResourceIOException(resourceURI, "Specified related resource URI "+explicitRelatedResourceURI+" for resource "+resourceURI+" currently must be a relative <path:...> URI.");
 				}
-				return resourceURI.resolve(relatedResourcePath.toURI());	//resolve the related resource path to the resource URI
+				return resolve(resourceURI, relatedResourcePath.toURI());	//resolve the related resource path to the resource URI
 			}
 		}
 		if(defaultRelatedResourceName!=null)	//if a default related resource name was given
@@ -540,7 +540,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 			URI collectionURI=getCurrentLevel(resourceURI);	//start at the current collection level
 			do
 			{
-				final URI relatedResourceURI=collectionURI.resolve(defaultRelatedResourceName);	//get the URI of the related resource if it were to reside at this level
+				final URI relatedResourceURI=resolve(collectionURI, defaultRelatedResourceName);	//get the URI of the related resource if it were to reside at this level
 				if(repository.resourceExists(relatedResourceURI))	//if the related resource exists here
 				{
 					return relatedResourceURI;	//return the URI of the template

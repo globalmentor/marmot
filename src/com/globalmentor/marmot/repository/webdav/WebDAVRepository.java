@@ -355,7 +355,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		{
 			if(isCollectionURI(resourceURI))	//if the resource is a collection
 			{
-				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+				final URI contentURI=resolve(resourceURI, COLLECTION_CONTENT_NAME);	//determine the URI to use for content
 				final WebDAVResource contentWebDAVResource=new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource TODO cache these resources, maybe
 				if(contentWebDAVResource.exists())	//if there is a special collection content resource
 				{
@@ -417,7 +417,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			final WebDAVResource contentWebDAVResource;	//determine the WebDAV resource for accessing the content file
 			if(isCollectionURI(resourceURI))	//if the resource is a collection
 			{
-				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+				final URI contentURI=resolve(resourceURI, COLLECTION_CONTENT_NAME);	//determine the URI to use for content
 				contentWebDAVResource=new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource
 			}
 			else	//if the resource is not a collection
@@ -702,7 +702,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			if(isCollectionURI(resourceURI))	//if this is a collection
 			{
 				webdavResource.mkCol();	//create the collection
-				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+				final URI contentURI=resolve(resourceURI, COLLECTION_CONTENT_NAME);	//determine the URI to use for content
 				contentWebDAVResource=new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource
 			}
 			else	//if this is not a collection
@@ -746,7 +746,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			if(isCollectionURI(resourceURI))	//if this is a collection
 			{
 				webdavResource.mkCol();	//create the collection
-				final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+				final URI contentURI=resolve(resourceURI, COLLECTION_CONTENT_NAME);	//determine the URI to use for content
 				contentWebDAVResource=new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource
 			}
 			else	//if this is not a collection
@@ -1022,7 +1022,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			subrepository.deleteResource(resourceURI);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		if(resourceURI.normalize().equals(getRootURI()))	//if they try to delete the root URI
+		if(normalize(resourceURI).equals(getRootURI()))	//if they try to delete the root URI
 		{
 			throw new IllegalArgumentException("Cannot delete repository base URI "+resourceURI);
 		}
@@ -1065,7 +1065,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			subrepository.moveResource(resourceURI, destinationURI, overwrite);	//delegate to the subrepository
 		}
 		checkOpen();	//make sure the repository is open
-		if(resourceURI.normalize().equals(getRootURI()))	//if they try to move the root URI
+		if(normalize(resourceURI).equals(getRootURI()))	//if they try to move the root URI
 		{
 			throw new IllegalArgumentException("Cannot move repository base URI "+resourceURI);
 		}
@@ -1146,7 +1146,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 				final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 				try
 				{
-					final URI contentURI=resourceURI.resolve(COLLECTION_CONTENT_NAME);	//determine the URI to use for content
+					final URI contentURI=resolve(resourceURI, COLLECTION_CONTENT_NAME);	//determine the URI to use for content
 					final WebDAVResource contentWebDAVResource=new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication);	//create a WebDAV resource for special collection content resource TODO cache these resources, maybe
 					if(contentWebDAVResource.exists())	//if there is a special collection content resource
 					{

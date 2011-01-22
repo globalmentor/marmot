@@ -22,7 +22,7 @@ import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.AbstractResourceKit;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.net.URIPath;
-import com.globalmentor.net.URIs;
+import static com.globalmentor.net.URIs.*;
 
 /**Resource kit for handling collections as folder resources that have no content but can contain children.
 @author Garret Wilson
@@ -52,7 +52,7 @@ public class FolderResourceKit extends AbstractResourceKit
 	public URI getChildResourceURI(final Repository repository, final URI parentResourceURI, final String resourceName) throws ResourceIOException
 	{
 		//TODO fix IllegalArgumentException by checking to ensure that the parent resource is within the repository
-		return parentResourceURI.resolve(URIPath.createURIPathURI(URIPath.encodeSegment(resourceName)+URIs.PATH_SEPARATOR));	//encode the resource name, append a path separator, and resolve it against the child resource collection URI; use the special URIPath method in case the name contains a colon character
+		return resolve(parentResourceURI, URIPath.createURIPathURI(URIPath.encodeSegment(resourceName)+PATH_SEPARATOR));	//encode the resource name, append a path separator, and resolve it against the child resource collection URI; use the special URIPath method in case the name contains a colon character
 	}
 
 }

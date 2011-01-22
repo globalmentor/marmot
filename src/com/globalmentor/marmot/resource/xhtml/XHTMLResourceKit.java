@@ -101,12 +101,12 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 			{
 				throw new ResourceIOException(resourceURI, "Specified template URI "+explicitTemplateURI+" for resource "+resourceURI+" currently must be a relative <path:...> URI.");
 			}
-			return resourceURI.resolve(templatePath.toURI());	//resolve the template path to the resource URI
+			return resolve(resourceURI, templatePath.toURI());	//resolve the template path to the resource URI
 		}
 		URI collectionURI=getCurrentLevel(resourceURI);	//start at the current collection level
 		do
 		{
-			final URI templateURI=collectionURI.resolve(DEFAULT_TEMPLATE_NAME);	//get the URI of the template if it were to reside at this level
+			final URI templateURI=resolve(collectionURI, DEFAULT_TEMPLATE_NAME);	//get the URI of the template if it were to reside at this level
 			if(repository.resourceExists(templateURI))	//if the template exists here
 			{
 				return templateURI;	//return the URI of the template

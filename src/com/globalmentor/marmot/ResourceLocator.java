@@ -18,10 +18,11 @@ package com.globalmentor.marmot;
 
 import java.net.URI;
 
-
 import static com.globalmentor.java.Objects.*;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.net.URIPath;
+
+import static com.globalmentor.net.URIs.*;
 
 /**Encapsulates a resource and the repository within which it exists.
 @author Garret Wilson
@@ -57,7 +58,7 @@ public class ResourceLocator
 	{
 		this.repository=checkInstance(repository, "Repository cannot be null.");
 		this.resourcePath=resourcePath.checkRelative();
-		this.resourceURI=repository.getRootURI().resolve(resourcePath.toURI());	//resolve the resource path to the repository
+		this.resourceURI=resolve(repository.getRootURI(), resourcePath.toURI());	//resolve the resource path to the repository
 	}
 
 }

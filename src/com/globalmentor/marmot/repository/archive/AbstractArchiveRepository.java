@@ -97,7 +97,7 @@ public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepos
 		*/
 		public void setSourceResourceURI(final URI sourceResourceURI)
 		{
-			this.sourceResourceURI=checkNotCollectionURI(checkAbsolute(checkInstance(sourceResourceURI, "Source resource URI must not be null.").normalize()));
+			this.sourceResourceURI=checkNotCollectionURI(checkAbsolute(normalize(checkInstance(sourceResourceURI, "Source resource URI must not be null."))));
 		}
 
 	/**Default constructor with no root URI defined.
@@ -137,7 +137,7 @@ public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepos
 	public AbstractArchiveRepository(final URI rootURI, final URI sourceResourceURI, final URFIO<URFResource> descriptionIO)
 	{
 		super(rootURI, descriptionIO);
-		this.sourceResourceURI=sourceResourceURI!=null ? checkNotCollectionURI(checkAbsolute(sourceResourceURI.normalize())) : null;
+		this.sourceResourceURI=sourceResourceURI!=null ? checkNotCollectionURI(checkAbsolute(normalize(sourceResourceURI))) : null;
 	}
 
 	/**Creates a repository of the same type as this repository with the same access privileges as this one.

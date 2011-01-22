@@ -22,6 +22,7 @@ import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.xhtml.AbstractXHTMLResourceKit;
 import com.globalmentor.net.*;
 
+import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.text.xml.xhtml.XHTML.*;
 
 /**Resource kit for handling folders with XHTML content
@@ -57,6 +58,6 @@ public class XHTMLFolderResourceKit extends AbstractXHTMLResourceKit
 	public URI getChildResourceURI(final Repository repository, final URI parentResourceURI, final String resourceName) throws ResourceIOException
 	{
 		//TODO fix IllegalArgumentException by checking to ensure that the parent resource is within the repository
-		return parentResourceURI.resolve(URIPath.createURIPathURI(URIPath.encodeSegment(resourceName)+URIs.PATH_SEPARATOR));	//encode the resource name, append a path separator, and resolve it against the child resource collection URI; use the special URIPath method in case the name contains a colon character
+		return resolve(parentResourceURI, URIPath.createURIPathURI(URIPath.encodeSegment(resourceName)+PATH_SEPARATOR));	//encode the resource name, append a path separator, and resolve it against the child resource collection URI; use the special URIPath method in case the name contains a colon character
 	}
 }

@@ -145,7 +145,7 @@ public abstract class AbstractRepository implements Repository
 		*/
 		public void setRootURI(final URI rootURI)
 		{
-			this.rootURI=checkInstance(rootURI, "Root URI must not be null.").normalize();
+			this.rootURI=normalize(checkInstance(rootURI, "Root URI must not be null."));
 			for(final Map.Entry<URIPath, Repository> pathRepositoryEntry:pathRepositoryMap.entrySet())	//look at each path to repository mapping
 			{
 				pathRepositoryEntry.getValue().setRootURI(resolve(getRootURI(), pathRepositoryEntry.getKey()));	//update the public URI of the repository to match its location in the repository
@@ -340,7 +340,7 @@ public abstract class AbstractRepository implements Repository
 	*/
 	protected URI checkResourceURI(URI resourceURI)
 	{
-		resourceURI=checkInstance(resourceURI, "Resource URI cannot be null.").normalize();	//normalize the URI
+		resourceURI=normalize(checkInstance(resourceURI, "Resource URI cannot be null."));	//normalize the URI
 		if(!isChild(getRootURI(), resourceURI))	//if the given resource URI does not designate a resource within this repository's URI namespace (this will normalize the URI, but as we need to return a normalized form it's better to normalize first so that actual normalization changes won't have to be done twice)
 		{
 			throw new IllegalArgumentException(resourceURI+" does not designate a resource within the repository "+getRootURI());
@@ -445,7 +445,7 @@ public abstract class AbstractRepository implements Repository
 	*/
 	public AbstractRepository(final URI rootURI, final URFIO<URFResource> descriptionIO)
 	{
-		this.rootURI=rootURI!=null ? rootURI.normalize() : null;
+		this.rootURI=rootURI!=null ? normalize(rootURI) : null;
 		this.descriptionIO=checkInstance(descriptionIO, "Description I/O cannot be null.");	//save the description I/O
 		registerResourceFactory(MARMOT_NAMESPACE_URI, MARMOT_RESOURCE_FACTORY);	//register the Marmot factory
 		registerResourceFactory(MARMOT_SECURITY_NAMESPACE_URI, MARMOT_SECURITY_RESOURCE_FACTORY);	//register the Marmot resource factory
@@ -982,7 +982,7 @@ public abstract class AbstractRepository implements Repository
 		}
 		else	//if the resource is being moved to another repository
 		{
-			if(resourceURI.normalize().equals(getRootURI()))	//if they try to move the root URI
+			if(normalize(resourceURI).equals(getRootURI()))	//if they try to move the root URI
 			{
 				throw new IllegalArgumentException("Cannot move repository base URI "+resourceURI);
 			}

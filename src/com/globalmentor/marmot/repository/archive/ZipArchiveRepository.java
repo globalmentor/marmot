@@ -94,7 +94,7 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 	protected URI getPublicURI(final ZipEntry zipEntry)
 	{
 		final String zipEntryName=zipEntry.getName();
-		return getRootURI().resolve(URIPath.createURIPathURI(URIPath.encode(zipEntryName)));	//encode the zip entry name and resolve it to the repository URI
+		return resolve(getRootURI(), URIPath.createURIPathURI(URIPath.encode(zipEntryName)));	//encode the zip entry name and resolve it to the repository URI
 	}
 	
 	/**Retrieves zip entries to a cached source archive file representing the resource identified by the given resource UI.
