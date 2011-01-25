@@ -93,7 +93,7 @@ public class DefaultMarmotResourceCache extends AbstractMarmotResourceCache<Abst
 	/**A query for cached Marmot resources.
 	@author Garret Wilson
 	*/
-	public static class DefaultMarmotResourceCacheQuery extends AbstractMarmotResourceCacheQuery<MarmotResourceCacheKey>
+	public static class DefaultMarmotResourceCacheQuery extends AbstractMarmotResourceCache.AbstractMarmotResourceCacheQuery<AbstractMarmotResourceCache.MarmotResourceCacheKey>
 	{
 
 		/**Repository and resource URI constructor.

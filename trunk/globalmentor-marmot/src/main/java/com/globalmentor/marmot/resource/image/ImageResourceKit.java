@@ -15,9 +15,9 @@
  */
 
 package com.globalmentor.marmot.resource.image;
-
+/*TODO transfer appropriately to/from Marmox
 import net.marmox.resource.image.ImageScaleFilter;
-
+*/
 import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.ContentTypeConstants.*;
@@ -83,10 +83,11 @@ public class ImageResourceKit extends AbstractResourceKit
 	@exception NullPointerException if the given aspect ID is <code>null</code>.
 	@exception IllegalArgumentException if the given aspect ID does not represent a valid aspect.
 	*/
+/*TODO transfer appropriately to/from Marmox
 	public ResourceContentFilter[] getAspectFilters(final String aspectID) throws IllegalArgumentException
 	{
 		final ImageAspect imageAspect=ImageAspect.valueOf(aspectID);	//determine the image aspect from the ID
 		return new ResourceContentFilter[]{new ImageScaleFilter(imageAspect)};	//return the correct image aspect filter
 	}
-
+*/
 }

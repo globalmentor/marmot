@@ -28,10 +28,10 @@ import com.globalmentor.text.xml.xhtml.XHTML;
 import static com.globalmentor.text.xml.xhtml.XHTML.*;
 import com.globalmentor.urf.URFResource;
 import static com.globalmentor.urf.URF.*;
-
+/*TODO transfer appropriately to Marmox
 import net.marmox.resource.*;
 import net.marmox.resource.xhtml.XHTMLMenuWidget;
-
+*/
 import org.w3c.dom.*;
 
 /**Resource kit for handling XHTML resources.
@@ -131,10 +131,12 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit
 		assert bodyElement!=null : "XHTML documents should always have a body.";
 		final Element headerElement=document.createElementNS(XHTML_NAMESPACE_URI.toString(), ELEMENT_HEADER);	//<header>
 		bodyElement.appendChild(headerElement);
+/*TODO transfer appropriately to Marmox
 		appendElementNS(headerElement, createJavaURI(ResourceLabelHeadingWidget.class.getPackage()).toString(), getLocalName(ResourceLabelHeadingWidget.class));	//<ResourceLabelHeadingWidget>
 		final Element asideElement=document.createElementNS(XHTML_NAMESPACE_URI.toString(), ELEMENT_ASIDE);	//<aside>
 		bodyElement.appendChild(asideElement);
 		appendElementNS(asideElement, createJavaURI(XHTMLMenuWidget.class.getPackage()).toString(), getLocalName(XHTMLMenuWidget.class));	//<XHTMLMenuWidget>
+*/
 		return document;	//return the template document we constructed
 	}
 
