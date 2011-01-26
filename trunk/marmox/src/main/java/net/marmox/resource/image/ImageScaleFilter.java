@@ -31,7 +31,7 @@ import java.util.Iterator;
 import javax.imageio.*;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.stream.*;
-import javax.media.jai.*;
+//JAI import javax.media.jai.*;
 
 import static com.globalmentor.java.Objects.*;
 
