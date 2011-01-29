@@ -57,7 +57,6 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 //TODO fix	@return <code>true</code> if the given user has the requested permission in relation to a resource in a repository, or <code>false</code> if the user has no such permission.
 
 	/**{@inheritDoc}*/
-	@Override
 	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType permissionType) throws ResourceIOException
 	{
 //Log.trace("getting allowed for permission", permissionType, "for user", user!=null ? user.getName() : "(none)");
@@ -73,7 +72,6 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 	}
 
 	/**{@inheritDoc}*/
-	@Override
 	public boolean isOneAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, PermissionType... permissionTypes) throws ResourceIOException
 	{
 		permissionTypes=permissionTypes.clone();	//clone the permission types so that we can modify them locally
@@ -108,7 +106,6 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 	}
 
 	/**{@inheritDoc}*/
-	@Override
 	public boolean isSomethingAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user) throws ResourceIOException
 	{
 		if(checkInstance(owner, "Owner cannot be null.").equals(user))	//if the user is the owner
