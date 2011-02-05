@@ -1,5 +1,5 @@
 /*
- * Copyright © 1996-2008 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 1996-2011 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.marmox.resource.image;
+package com.globalmentor.marmot.resource.image;
 
 /*TODO del ImageJ
 import ij.ImagePlus;
@@ -23,6 +23,7 @@ import ij.process.ImageProcessor;
 */
 
 import java.awt.*;
+import java.awt.geom.Dimension2D;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URI;
@@ -37,13 +38,11 @@ import static com.globalmentor.java.Objects.*;
 
 import static com.globalmentor.io.Files.*;
 
+import com.globalmentor.awt.geom.*;
 import com.globalmentor.marmot.resource.ResourceFileContentFilter;
 import com.globalmentor.marmot.resource.ResourceContentFilter;
-import com.globalmentor.marmot.resource.image.ImageAspect;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.urf.URFResource;
-
-import com.guiseframework.geometry.*;
 
 /**A filter for scaling an image.
 @author Garret Wilson
@@ -67,10 +66,10 @@ public class ImageScaleFilter implements ResourceContentFilter
 	}
 
 	/**The dimensions of the preview aspect.*/
-	public final static Dimensions PREVIEW_DIMENSIONS=new Dimensions(800, 600, Unit.PIXEL);
+	public final static Dimension2D PREVIEW_DIMENSIONS=new ImmutableDimension2D(800, 600);
 
 	/**The dimensions of the thumbnail aspect.*/
-	public final static Dimensions THUMBNAIL_DIMENSIONS=new Dimensions(200, 600, Unit.PIXEL);
+	public final static Dimension2D THUMBNAIL_DIMENSIONS=new ImmutableDimension2D(200, 600);
 
 	/**Performs a scaling operation on a resource.
 	@param resource The description of the resource.
@@ -82,7 +81,7 @@ public class ImageScaleFilter implements ResourceContentFilter
 	public URFResource filter(final URFResource resource, final InputStream inputStream, final OutputStream outputStream) throws ResourceIOException	//TODO review http://archives.java.sun.com/cgi-bin/wa?A2=ind0311&L=jai-interest&F=&S=&P=15036 and http://www.leptonica.com/scaling.html
 	{
 //TODO del Log.trace("ready to scale to aspect", imageAspect);
-		final Dimensions aspectDimensions;	//determine the aspect dimensions
+		final Dimension2D aspectDimensions;	//determine the aspect dimensions
 		switch(getImageAspect())	//see what image aspect is called for
 		{
 			case preview:
@@ -128,13 +127,12 @@ public class ImageScaleFilter implements ResourceContentFilter
 	//TODO del Log.trace("original image dimension", originalDimension);
       final BufferedImage newImage;
 				//the multi-resizing technique described at http://today.java.net/pub/a/today/2007/04/03/perils-of-image-getscaledinstance.html produces many black lines for normal JAI scaling
-			if(originalWidth>aspectDimensions.getWidth().getValue() || originalHeight>aspectDimensions.getHeight().getValue())	//if this image needs scaled
+			if(originalWidth>aspectDimensions.getWidth() || originalHeight>aspectDimensions.getHeight())	//if this image needs scaled
 			{
-				final Dimensions originalDimensions=new Dimensions(originalWidth, originalHeight, Unit.PIXEL);	//find the original dimensions of the image
-				final Dimensions newDimensions=originalDimensions.constrain(aspectDimensions);	//constrain the dimension to the scaled dimension
-	
-				final int newWidth=(int)newDimensions.getWidth().getValue();
-				final int newHeight=(int)newDimensions.getHeight().getValue();
+				final Dimension2D originalDimensions=new ImmutableDimension2D(originalWidth, originalHeight);	//find the original dimensions of the image
+				final Dimension2D newDimensions=Geometry.constrain(originalDimensions, aspectDimensions);	//constrain the dimension to the scaled dimension
+				final int newWidth=(int)newDimensions.getWidth();
+				final int newHeight=(int)newDimensions.getHeight();
 /*JAI method
 	//TODO del Log.trace("scaling to dimension", newDimension);
 				final ParameterBlock parameterBlock=new ParameterBlock();
