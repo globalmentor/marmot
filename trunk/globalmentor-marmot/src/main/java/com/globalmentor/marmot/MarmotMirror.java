@@ -185,7 +185,7 @@ public class MarmotMirror extends AbstractApplication
 			System.out.println(LONG_SWITCH_DELIMITER+getSerializationName(Parameter.DEBUG_HTTP)+": Whether HTTP communication is logged; requires debug to be turned on.");
 			return 0;
 		}
-		configureLog(args);	//configure logging
+		configureLog(args);	//configure logging TODO is this needed? isn't this done my AbstractAppliction?
 		final URI sourceRepositoryURI=guessAbsoluteURI(sourceRepositoryString);	//get the source repository URI
 		final String sourceResourceString=getOption(args, getSerializationName(Parameter.SOURCE_RESOURCE));	//get the source resource parameter
 		final URI sourceResourceURI=sourceResourceString!=null ? guessAbsoluteURI(sourceResourceString) : sourceRepositoryURI;	//if the source resource is not specified, use the repository URI
