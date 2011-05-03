@@ -36,10 +36,10 @@ public class ResourceLocator
 		/**@return The repository in which the resource exists.*/
 		public Repository getRepository() {return repository;}
 
-	/**The full URI to the resource within the respository.*/
+	/**The full URI to the resource within the repository.*/
 	private final URI resourceURI;
 
-		/**@return The full URI to the resource within the respository.*/
+		/**@return The full URI to the resource within the repository.*/
 		public URI getResourceURI() {return resourceURI;}
 
 	/**The path to the resource, relative to the repository.*/
@@ -49,7 +49,7 @@ public class ResourceLocator
 		public URIPath getResourcePath() {return resourcePath;}
 
 	/**Repository and resource path constructor.
-	@param repository The respository in which the resource exists
+	@param repository The repository in which the resource exists
 	@param resourcePath The path to the resource, relative to the repository.
 	@exception NullPointerException if the given repository and/or path is <code>null</code>.
 	@exception IllegalArgumentException if the given path is not a relative path.

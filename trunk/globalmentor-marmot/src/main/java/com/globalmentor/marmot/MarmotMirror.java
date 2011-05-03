@@ -257,7 +257,7 @@ public class MarmotMirror extends AbstractApplication
 	Tthe following repository schemes are recognized:</p>
 	<dl>
 		<dt>{@value HTTP#HTTP_URI_SCHEME}</dt> <dd>{@link RepositoryType#WEBDAV}</dd>
-		<dt>{@value HTTP#HTTPS_SCHEME}</dt> <dd>{@link RepositoryType#WEBDAV}</dd>
+		<dt>{@value HTTP#HTTPS_URI_SCHEME}</dt> <dd>{@link RepositoryType#WEBDAV}</dd>
 		<dt>{@value URIs#FILE_SCHEME}</dt> <dd>{@link RepositoryType#FILE}</dd>
 	</dl>
 	@param repositoryType The type of repository to create, or <code>null</code> if the repository type should be guessed.

@@ -131,7 +131,7 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 	*/
 	protected WebDAVPropertyName createWebDAVPropertyName(final URI urfPropertyURI)
 	{
-		return new WebDAVPropertyName(SUBVERSION_CUSTOM_NAMESPACE, encodeURI(urfPropertyURI, XML_NAME_URI_ESCAPE_CHAR));	//create and return a new WebDAV property name in the Subversion custom property namespace
+		return new WebDAVPropertyName(SUBVERSION_CUSTOM_NAMESPACE, encode(urfPropertyURI, XML_NAME_URI_ESCAPE_CHAR));	//create and return a new WebDAV property name in the Subversion custom property namespace
 	}
 
 	/**Determines the URF property to represent the given WebDAV property if possible.
@@ -150,7 +150,7 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 		{
 			try
 			{
-				final String urfPRopertyURI=uriDecode(webdavPropertyName.getLocalName(), XML_NAME_URI_ESCAPE_CHAR);	//the URF property URI may be encoded as the local name of the Subversion custom property
+				final String urfPRopertyURI=decode(webdavPropertyName.getLocalName(), XML_NAME_URI_ESCAPE_CHAR);	//the URF property URI may be encoded as the local name of the Subversion custom property
 				final URI urfPropertyURI=URI.create(urfPRopertyURI);	//create an URF property URI from the decoded local name, if we can
 				if(urfPropertyURI.isAbsolute())	//only absolute URIs could have been URF property URIs
 				{
