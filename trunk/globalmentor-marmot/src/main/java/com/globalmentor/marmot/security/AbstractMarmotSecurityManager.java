@@ -57,23 +57,44 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 //TODO fix	@return <code>true</code> if the given user has the requested permission in relation to a resource in a repository, or <code>false</code> if the user has no such permission.
 
 	/**{@inheritDoc}*/
-	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType permissionType) throws ResourceIOException
+	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType... permissionTypes) throws ResourceIOException
 	{
 //Log.trace("getting allowed for permission", permissionType, "for user", user!=null ? user.getName() : "(none)");
-		if(!isPermissionValid(repository, resourceURI, permissionType))	//check for validity
+		if(permissionTypes.length==0)
 		{
-			return false;
+			throw new IllegalArgumentException("At least one permission type must be specified.");
+		}
+		for(int i=permissionTypes.length-1; i>=0; --i)	//check all permissions for validity
+		{
+			final PermissionType permissionType=checkInstance(permissionTypes[i]);
+			if(!isPermissionValid(repository, resourceURI, permissionType))	//if this permission isn't valid
+			{
+				return false;
+			}
 		}
 		if(checkInstance(owner, "Owner cannot be null.").equals(user))	//if the user is the owner
 		{
 			return true;	//allow the owner to do anything
 		}
-		return getAllowedPermissionTypes(repository, resourceURI, user).contains(permissionType);	//see if the allowed permission types contain the requested permission
+		final Set<PermissionType> allowedPermissionTypes=getAllowedPermissionTypes(repository, resourceURI, user);	//get the allowed permission types
+		for(final PermissionType permissionType:permissionTypes)
+		{
+			if(!allowedPermissionTypes.contains(permissionType))	//if the allowed permission type does not contain one of the requested permissions
+			{
+				return false;
+			}
+		}
+		return true;
+	
 	}
 
 	/**{@inheritDoc}*/
 	public boolean isOneAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, PermissionType... permissionTypes) throws ResourceIOException
 	{
+		if(permissionTypes.length==0)
+		{
+			throw new IllegalArgumentException("At least one permission type must be specified.");
+		}
 		permissionTypes=permissionTypes.clone();	//clone the permission types so that we can modify them locally
 		int permissionTypeCount=permissionTypes.length;
 			//weed out invalid requested permissions
@@ -82,7 +103,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 			final PermissionType permissionType=checkInstance(permissionTypes[i]);
 			if(!isPermissionValid(repository, resourceURI, permissionType))	//if this permission isn't valid
 			{
-				permissionTypes[i]=null;	//'t allow this permission
+				permissionTypes[i]=null;	//don't allow this permission
 				--permissionTypeCount;	//note that we have one fewer permission to check
 			}
 		}

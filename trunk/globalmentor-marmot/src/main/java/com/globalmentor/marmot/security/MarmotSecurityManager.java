@@ -1,5 +1,5 @@
 /*
- * Copyright © 1996-2008 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 1996-2011 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package com.globalmentor.marmot.security;
 
 import java.net.URI;
 import java.security.Principal;
-import java.util.Set;
 
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.net.ResourceIOException;
@@ -42,12 +41,13 @@ public interface MarmotSecurityManager
 	@param owner The principal that owns the repository.
 	@param repository The repository that contains the resource.
 	@param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
-	@param permissionType The type of permission requested.
-	@return <code>true</code> if the given permission is allowed for the user in relation to the indicated resource, else <code>false</code>.
+	@param permissionTypes The types of permission requested.
+	@return <code>true</code> if all of the given permissions are allowed for the user in relation to the indicated resource, else <code>false</code>.
 	@exception NullPointerException if the given owner, repository, resource URI, and/or permission type is <code>null</code>.
+	@exception IllegalArgumentException if no permission types are given. 
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
-	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType permissionType) throws ResourceIOException;
+	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType... permissionTypes) throws ResourceIOException;
 
 	/**Determines whether a given user has at least one permission to perform some action in relation to a given repository and resource.
 	This method is additive; if a superclass doesn't find a permission, a subclass may be able to add the permission.
@@ -57,6 +57,7 @@ public interface MarmotSecurityManager
 	@param permissionTypes The type of permission requested, one of which must be allowed.
 	@return <code>true</code> if one of the given permissions is allowed for the user in relation to the indicated resource, else <code>false</code>.
 	@exception NullPointerException if the given owner, repository, resource URI, permission types, and/or a permissions type is <code>null</code>.
+	@exception IllegalArgumentException if no permission types are given. 
 	@exception ResourceIOException if there is an error accessing the repository.
 	*/
 	public boolean isOneAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType... permissionTypes) throws ResourceIOException;
