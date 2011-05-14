@@ -59,33 +59,42 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 	/**{@inheritDoc}*/
 	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType... permissionTypes) throws ResourceIOException
 	{
+		return isAllowed(owner, repository, resourceURI, user, false, permissionTypes);
+	}
+	
+	/**{@inheritDoc}*/
+	public boolean isAllowed(final Principal owner, final Repository repository, URI resourceURI, final Principal user, boolean checkAncestors, final PermissionType... permissionTypes) throws ResourceIOException
+	{
 //Log.trace("getting allowed for permission", permissionType, "for user", user!=null ? user.getName() : "(none)");
 		if(permissionTypes.length==0)
 		{
 			throw new IllegalArgumentException("At least one permission type must be specified.");
 		}
-		for(int i=permissionTypes.length-1; i>=0; --i)	//check all permissions for validity
+		do
 		{
-			final PermissionType permissionType=checkInstance(permissionTypes[i]);
-			if(!isPermissionValid(repository, resourceURI, permissionType))	//if this permission isn't valid
+			for(int i=permissionTypes.length-1; i>=0; --i)	//check all permissions for validity
 			{
-				return false;
+				final PermissionType permissionType=checkInstance(permissionTypes[i]);
+				if(!isPermissionValid(repository, resourceURI, permissionType))	//if this permission isn't valid
+				{
+					return false;
+				}
+			}
+			if(owner.equals(user))	//if the user is the owner
+			{
+				return true;	//allow the owner to do anything TODO fix the small case in which ancestors are requested and a permission isn't valid for parent resource, even for the owner 
+			}
+			final Set<PermissionType> allowedPermissionTypes=getAllowedPermissionTypes(repository, resourceURI, user);	//get the allowed permission types
+			for(final PermissionType permissionType:permissionTypes)
+			{
+				if(!allowedPermissionTypes.contains(permissionType))	//if the allowed permission type does not contain one of the requested permissions
+				{
+					return false;
+				}
 			}
 		}
-		if(checkInstance(owner, "Owner cannot be null.").equals(user))	//if the user is the owner
-		{
-			return true;	//allow the owner to do anything
-		}
-		final Set<PermissionType> allowedPermissionTypes=getAllowedPermissionTypes(repository, resourceURI, user);	//get the allowed permission types
-		for(final PermissionType permissionType:permissionTypes)
-		{
-			if(!allowedPermissionTypes.contains(permissionType))	//if the allowed permission type does not contain one of the requested permissions
-			{
-				return false;
-			}
-		}
+		while(checkAncestors && (resourceURI=repository.getParentResourceURI(resourceURI))!=null);	//if we should check ancestors, look at the parent
 		return true;
-	
 	}
 
 	/**{@inheritDoc}*/
@@ -175,7 +184,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 		return allowed;	//return the allowance we found, if any
 	}
 */
-	
+
 	/**Determines all the permissions allowed a particular user in relation to a given resource.
 	@param repository The repository that contains the resource.
 	@param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
