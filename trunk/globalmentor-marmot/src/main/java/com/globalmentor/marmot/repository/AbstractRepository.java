@@ -889,7 +889,7 @@ public abstract class AbstractRepository implements Repository
 						final OutputStream outputStream=destinationRepository.createResource(destinationURI, resourceDescription);	//create the destination resource with the same description as the source resource, getting an output stream for storing the contents
 						try
 						{
-							InputStreams.copy(inputStream, outputStream, contentLength);	//copy the resource
+							Streams.copy(inputStream, outputStream, contentLength);	//copy the resource
 						}
 						finally
 						{

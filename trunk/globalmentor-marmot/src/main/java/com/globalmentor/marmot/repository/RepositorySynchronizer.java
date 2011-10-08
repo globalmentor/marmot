@@ -1,5 +1,5 @@
 /*
- * Copyright © 1996-2008 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 1996-2011 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,8 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.*;
 
-import com.globalmentor.io.InputStreams;
+import com.globalmentor.io.Streams;
+
 import static com.globalmentor.java.Objects.*;
 import com.globalmentor.log.Log;
 import com.globalmentor.marmot.repository.Repository;
@@ -39,7 +40,7 @@ Synchronization occurs on three levels: individual resources (i.e. orphans), met
 public class RepositorySynchronizer
 {
 
-	/**How to resolve a descrepancy between a source and a destination resource content or metadata.
+	/**How to resolve a discrepancy between a source and a destination resource content or metadata.
 	For orphan resources, {@link Resolution#SYNCHRONIZE} is treated the same as {@link Resolution#BACKUP}.
 	*/
 	public enum Resolution
@@ -118,10 +119,10 @@ public class RepositorySynchronizer
 		*/
 		public void setForceContentModifiedProperty(final boolean forceContentModified) {this.forceContentModifiedProperty=forceContentModified;}
 		
-	/**The set of source resource URIs to ignore when resolving descrepancies.*/
+	/**The set of source resource URIs to ignore when resolving discrepancies.*/
 	private final Set<URI> ignoreSourceResourceURIs=new HashSet<URI>();
 
-		/**Adds a source resource to be ignored when resolving descrepancies.
+		/**Adds a source resource to be ignored when resolving discrepancies.
 		@param resourceURI The URI of the source resource to ignore.
 		*/
 		public void addIgnoreSourceResourceURI(final URI resourceURI)
@@ -129,10 +130,10 @@ public class RepositorySynchronizer
 			ignoreSourceResourceURIs.add(resourceURI);
 		}
 
-	/**The set of destination resource URIs to ignore when resolving descrepancies.*/
+	/**The set of destination resource URIs to ignore when resolving discrepancies.*/
 	private final Set<URI> ignoreDestinationResourceURIs=new HashSet<URI>();
 
-		/**Adds a destination resource to be ignored when resolving descrepancies.
+		/**Adds a destination resource to be ignored when resolving discrepancies.
 		@param resourceURI The URI of the destination resource to ignore.
 		*/
 		public void addIgnoreDestinationResourceURI(final URI resourceURI)
@@ -140,10 +141,10 @@ public class RepositorySynchronizer
 			ignoreDestinationResourceURIs.add(resourceURI);
 		}
 
-	/**The set of metadata property URIs to ignore when resolving descrepancies.*/
+	/**The set of metadata property URIs to ignore when resolving discrepancies.*/
 	private final Set<URI> ignorePropertyURIs=new HashSet<URI>();
 
-		/**Adds a metadata property to be ignored when resolving descrepancies.
+		/**Adds a metadata property to be ignored when resolving discrepancies.
 		@param propertyURI The URI of the metadata property to ignore.
 		*/
 		public void addIgnorePropertyURI(final URI propertyURI)
@@ -296,7 +297,7 @@ public class RepositorySynchronizer
 			if(!isContentSynchronized)//if the source and destination are not synchronized
 			{
 				final Resolution resolution=getContentResolution();
-				resolveContent(resolution, sourceRepository, sourceResourceDescription, sourceContentModified, destinationRepository, destinationResourceDescription, destinationContentModified);	//resolve the descrepancy between source and destination
+				resolveContent(resolution, sourceRepository, sourceResourceDescription, sourceContentModified, destinationRepository, destinationResourceDescription, destinationContentModified);	//resolve the discrepancy between source and destination
 			}
 			final Resolution metadataResolution=getMetadataResolution();
 			resolveMetadata(metadataResolution, sourceRepository, sourceResourceDescription, sourceContentModified, destinationRepository, destinationResourceDescription, destinationContentModified);
@@ -363,7 +364,7 @@ public class RepositorySynchronizer
 			return false;	//there is a size discrepancy
 		}
 			//date
-		if(!isSourceCollection || sourceContentLength>0)	//ignore date descrepancies of collections with no content
+		if(!isSourceCollection || sourceContentLength>0)	//ignore date discrepancies of collections with no content
 		{
 			final Date sourceDate=getModified(sourceResourceDescription);	//get the date of the source
 			final Date destinationDate=getModified(destinationResourceDescription);	//get the date of the destination
@@ -375,12 +376,12 @@ public class RepositorySynchronizer
 		return true;	//the resources matched all our tests
 	}
 
-	/**Resolves a content descrepancy between a source and a destination resource.
+	/**Resolves a content discrepancy between a source and a destination resource.
 	If the resource dates are the same, the {@link Resolution#SYNCHRONIZE} resolution will have no effect.
 	If only one of the resource dates is available, it is considered newer for the purpose of the {@link Resolution#SYNCHRONIZE} resolution.
 	If neither resource date is available, the {@link Resolution#SYNCHRONIZE} resolution will be considered the same as the {@link Resolution#BACKUP} resolution.
 	Both resources must exist.
-	@param resolution How the descrepancy should be resolved
+	@param resolution How the discrepancy should be resolved
 	@param sourceRepository The source repository.
 	@param sourceResourceDescription The description of the source resource.
 	@param sourceContentModified The date and time at which the content of the source was modified, or <code>null</code> if not known.
@@ -435,7 +436,7 @@ public class RepositorySynchronizer
 		}
 		final Repository inputRepository, outputRepository;
 		final URFResource inputResourceDescription, outputResourceDescription;
-		switch(resolution)	//see how to resolve the descrepancy; at the point the only options we haven't covered are backup and restore
+		switch(resolution)	//see how to resolve the discrepancy; at the point the only options we haven't covered are backup and restore
 		{
 			case BACKUP:
 			case PRODUCE:
@@ -459,6 +460,7 @@ public class RepositorySynchronizer
 		Log.info(getTestStatus(), "Resolve content:", resolution, "copy", inputResourceURI, outputResourceURI);
 		if(!isTest())	//if this is not just a test
 		{
+			final long inputContentLength=getContentLength(inputResourceDescription);	//get the size of the input resource, if we know it
 			final URFDateTime inputContentModified=getModified(inputResourceDescription);	//get the date of the input resource, if any
 			final InputStream inputStream=inputRepository.getResourceInputStream(inputResourceURI);	//get an input stream to the input resource
 			try
@@ -466,7 +468,7 @@ public class RepositorySynchronizer
 				final OutputStream outputStream=outputRepository.getResourceOutputStream(outputResourceURI, inputContentModified);	//get an output stream to the output resource, keeping the content modified datetime as the input resource, if any
 				try
 				{
-					InputStreams.copy(inputStream, outputStream);	//copy the resource
+					Streams.copy(inputStream, outputStream, inputContentLength);	//copy the resource
 				}
 				finally
 				{
@@ -480,7 +482,7 @@ public class RepositorySynchronizer
 		}
 	}
 
-	/**Resolves metadata descrepancies between a source and a destination resource.
+	/**Resolves metadata discrepancies between a source and a destination resource.
 	If the resource dates are the same, the {@link Resolution#SYNCHRONIZE} resolution will be considered the same as the {@link Resolution#BACKUP} resolution.
 	If only one of the resource dates is available, it is considered newer for the purpose of the {@link Resolution#SYNCHRONIZE} resolution.
 	If neither resource date is available, the {@link Resolution#SYNCHRONIZE} resolution will be considered the same as the {@link Resolution#BACKUP} resolution.
@@ -488,7 +490,7 @@ public class RepositorySynchronizer
 	If the resource dates are not available or are the same, the {@link Resolution#SYNCHRONIZE} resolution will have no effect.
 	This method ignores the {@link Content#MODIFIED_PROPERTY_URI} property.
 	Both resources must exist.
-	@param resolution How the descrepancy should be resolved
+	@param resolution How the discrepancy should be resolved
 	@param sourceRepository The source repository.
 	@param sourceResourceDescription The description of the source resource.
 	@param sourceContentModified The date and time at which the content of the source was modified, or <code>null</code> if not known.
@@ -557,7 +559,7 @@ public class RepositorySynchronizer
 		}
 		final Repository inputRepository, outputRepository;
 		final URFResource inputResourceDescription, outputResourceDescription;
-		switch(resolution)	//see how to resolve the descrepancy; at the point the only options we haven't covered are backup and restore
+		switch(resolution)	//see how to resolve the discrepancy; at the point the only options we haven't covered are backup and restore
 		{
 			case BACKUP:
 			case PRODUCE:
