@@ -1,5 +1,5 @@
 /*
- * Copyright © 1996-2008 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 1996-2011 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.net.URIs.*;
 
 import com.globalmentor.application.AbstractApplication;
-import com.globalmentor.application.Application;
 import com.globalmentor.log.Log;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.marmot.repository.RepositorySynchronizer.Resolution;
@@ -36,7 +35,6 @@ import com.globalmentor.marmot.repository.webdav.WebDAVRepository;
 import com.globalmentor.net.URIs;
 import com.globalmentor.net.http.*;
 import com.globalmentor.urf.dcmi.DCMI;
-import com.globalmentor.util.*;
 
 /**Command-line Marmot synchronization utility.
 @author Garret Wilson
@@ -51,10 +49,10 @@ public class MarmotMirror extends AbstractApplication
 	public final static String TITLE="Marmot Mirror"+TRADE_MARK_SIGN_CHAR;
 
 	/**The application copyright.*/
-	public final static String COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2006-2008 GlobalMentor, Inc. All Rights Reserved.";	//TODO i18n
+	public final static String COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2006-2011 GlobalMentor, Inc. All Rights Reserved.";	//TODO i18n
 
 	/**The version of the application.*/
-	public final static String VERSION="1.1 build 2008-11-08";
+	public final static String VERSION="1.2 build 2022-10-08";
 
 	/**Application command-line parameters.*/
 	public enum Parameter
@@ -252,9 +250,9 @@ public class MarmotMirror extends AbstractApplication
 		run(new MarmotMirror(args), args);	//start a new application
 	}
 
-	/**Create the correct type of respository for the given repository URI.
+	/**Create the correct type of repository for the given repository URI.
 	<p>If no repository type is specified, a type is guessed.
-	Tthe following repository schemes are recognized:</p>
+	The following repository schemes are recognized:</p>
 	<dl>
 		<dt>{@value HTTP#HTTP_URI_SCHEME}</dt> <dd>{@link RepositoryType#WEBDAV}</dd>
 		<dt>{@value HTTP#HTTPS_URI_SCHEME}</dt> <dd>{@link RepositoryType#WEBDAV}</dd>

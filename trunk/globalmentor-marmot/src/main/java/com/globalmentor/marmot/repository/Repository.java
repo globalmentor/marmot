@@ -21,6 +21,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.*;
 
+import com.globalmentor.event.ProgressListener;
 import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
@@ -77,7 +78,7 @@ public interface Repository
 	*/
 	public void setParentRepository(final Repository newParent);
 
-	/**Determines the root of a hierararchy of subrepositories.
+	/**Determines the root of a hierarchy of subrepositories.
 	If this repository has no parent, this method will return this repository.
 	@return The root parent of all the repositories.
 	*/
@@ -474,7 +475,19 @@ public interface Repository
 	*/
 	public void copyResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException;
 
-	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository, overwriting any resource at the destionation only if requested.
+	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository.
+	Any resource at the destination URI will be replaced.
+	@param resourceURI The URI of the resource to be copied.
+	@param destinationRepository The repository to which the resource should be copied, which may be this repository.
+	@param destinationURI The URI to which the resource should be copied.
+	@param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error copying the resource.
+	*/
+	public void copyResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI, final ProgressListener progressListener) throws ResourceIOException;
+	
+	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository, overwriting any resource at the destination only if requested.
 	@param resourceURI The URI of the resource to be copied.
 	@param destinationRepository The repository to which the resource should be copied, which may be this repository.
 	@param destinationURI The URI to which the resource should be copied.
@@ -487,6 +500,20 @@ public interface Repository
 	*/
 	public void copyResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite) throws ResourceIOException;
 
+	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository, overwriting any resource at the destination only if requested.
+	@param resourceURI The URI of the resource to be copied.
+	@param destinationRepository The repository to which the resource should be copied, which may be this repository.
+	@param destinationURI The URI to which the resource should be copied.
+	@param overwrite <code>true</code> if any existing resource at the destination should be overwritten,
+		or <code>false</code> if an existing resource at the destination should cause an exception to be thrown.
+	@param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
+	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	@exception ResourceIOException if there is an error copying the resource.
+	@exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	*/
+	public void copyResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener) throws ResourceIOException;
+	 
 	/**Creates an infinitely deep copy of a resource to another URI in this repository.
 	Any resource at the destination URI will be replaced.
 	@param resourceURI The URI of the resource to be copied.
@@ -507,7 +534,7 @@ public interface Repository
 	@exception ResourceIOException if there is an error copying the resource.
 	@exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
 	*/
-	public void copyResource(final URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException;
+	public void copyResource(final URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException;	//TODO add progress listener capabilities
 
 	/**Moves a resource to the specified URI in the specified repository.
 	Any resource at the destination URI will be replaced.

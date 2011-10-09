@@ -26,6 +26,7 @@ import static java.util.Collections.*;
 
 import com.globalmentor.collections.CollectionMap;
 import com.globalmentor.collections.HashSetHashMap;
+import com.globalmentor.event.ProgressListener;
 import com.globalmentor.io.*;
 import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.security.MarmotSecurity;
@@ -822,7 +823,7 @@ public abstract class AbstractRepository implements Repository
 
 	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository.
 	Any resource at the destination URI will be replaced.
-	This version delegates to {@link #copyResource(URI, Repository, URI, boolean)}.
+	This version delegates to {@link #copyResource(URI, Repository, URI, ProgressListener)}.
 	@param resourceURI The URI of the resource to be copied.
 	@param destinationRepository The repository to which the resource should be copied, which may be this repository.
 	@param destinationURI The URI to which the resource should be copied.
@@ -838,21 +839,33 @@ public abstract class AbstractRepository implements Repository
 		{
 			subrepository.copyResource(resourceURI, destinationRepository, destinationURI);	//delegate to the subrepository
 		}
-		copyResource(resourceURI, destinationRepository, destinationURI, true);	//copy the resource, overwriting any resource at the destination
+		copyResource(resourceURI, destinationRepository, destinationURI, null);	//copy the resource, overwriting any resource at the destination
 	}
 
-	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository, overwriting any resource at the destionation only if requested.
-	This version delegates to {@link Repository#copyResource(URI, URI, boolean)} if the given repository is this repository.
-	Otherwise, this version performs a default copy operation.
+	/**Creates an infinitely deep copy of a resource to the specified URI in the specified repository.
+	Any resource at the destination URI will be replaced.
+	This version delegates to {@link #copyResource(URI, Repository, URI, boolean, ProgressListener)}.
 	@param resourceURI The URI of the resource to be copied.
 	@param destinationRepository The repository to which the resource should be copied, which may be this repository.
 	@param destinationURI The URI to which the resource should be copied.
-	@param overwrite <code>true</code> if any existing resource at the destination should be overwritten,
-		or <code>false</code> if an existing resource at the destination should cause an exception to be thrown.
+	@param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
 	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	@exception ResourceIOException if there is an error copying the resource.
-	@exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	*/
+	public void copyResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI, final ProgressListener progressListener) throws ResourceIOException
+	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			subrepository.copyResource(resourceURI, destinationRepository, destinationURI, progressListener);	//delegate to the subrepository
+		}
+		copyResource(resourceURI, destinationRepository, destinationURI, true, progressListener);	//copy the resource, overwriting any resource at the destination
+	}
+	
+	/**{@inheritDoc}
+	This version delegates to {@link #copyResource(URI, Repository, URI, boolean, ProgressListener)}.
 	*/
 	public void copyResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite) throws ResourceIOException
 	{
@@ -862,10 +875,25 @@ public abstract class AbstractRepository implements Repository
 		{
 			subrepository.copyResource(resourceURI, destinationRepository, destinationURI, overwrite);	//delegate to the subrepository
 		}
+		copyResource(resourceURI, destinationRepository, destinationURI, true, null);	//copy the resource, overwriting any resource at the destination
+	}
+	
+	/**{@inheritDoc}
+	This version delegates to {@link Repository#copyResource(URI, URI, boolean, ProgressListener)} if the given repository is this repository.
+	Otherwise, this version performs a default copy operation.
+	*/
+	public void copyResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener) throws ResourceIOException
+	{
+		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
+		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		{
+			subrepository.copyResource(resourceURI, destinationRepository, destinationURI, overwrite, progressListener);	//delegate to the subrepository
+		}
 		checkOpen();	//make sure the repository is open
 		if(destinationRepository==this)	//if the resource is being copied to this repository
 		{
-			copyResource(resourceURI, destinationURI, overwrite);	//delegate to the internal copy method
+			copyResource(resourceURI, destinationURI, overwrite);	//delegate to the internal copy method TODO add progress listener to API and to this call
 		}
 		else	//if the resource is being copied to another repository
 		{
@@ -889,7 +917,7 @@ public abstract class AbstractRepository implements Repository
 						final OutputStream outputStream=destinationRepository.createResource(destinationURI, resourceDescription);	//create the destination resource with the same description as the source resource, getting an output stream for storing the contents
 						try
 						{
-							Streams.copy(inputStream, outputStream, contentLength);	//copy the resource
+							Streams.copy(inputStream, outputStream, contentLength, progressListener);	//copy the resource
 						}
 						finally
 						{
@@ -986,7 +1014,7 @@ public abstract class AbstractRepository implements Repository
 			{
 				throw new IllegalArgumentException("Cannot move repository base URI "+resourceURI);
 			}
-			copyResource(resourceURI, destinationRepository, destinationURI, overwrite);	//copy the resource to the other repository
+			copyResource(resourceURI, destinationRepository, destinationURI, overwrite);	//copy the resource to the other repository TODO add progress listener capabilities
 			deleteResource(resourceURI);	//delete the moved resource
 		}
 	}
