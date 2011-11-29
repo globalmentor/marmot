@@ -47,7 +47,7 @@ import com.globalmentor.urf.URFResource;
 /**A filter for scaling an image.
 @author Garret Wilson
 */
-public class ImageScaleFilter implements ResourceContentFilter
+public class ImageScaleFilter implements ResourceContentFilter	//TODO remove dependency on AWT; this is the only dependency on AWT in the entire globalmentor-marmot project
 {
 
 	/**The image aspect for this scale.*/
