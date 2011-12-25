@@ -545,48 +545,42 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			}
 		}
 		return getResourceDescription(resourceURI); //get the updated resource description
+	}
 
-		/*TODO fix
+	/** {@inheritDoc} This implementation ignores requests to delete all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
+	@Override
+	protected void deleteResourceImpl(final URI resourceURI) throws ResourceIOException
+	{
+		final URI sourceResourceURI = getSourceResourceURI(resourceURI);
+		if(isSourceResourceVisible(sourceResourceURI)) //if this is a visible resource
+		{
+
+			final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
+			final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
+			synchronized(svnRepository)
+			{
 				try
 				{
-					final File resourceFile = new File(getSourceResourceURI(resourceURI)); //create a file object for the resource
-					if(resourceFile.exists()) //if the resource file already exists (either as a file or a directory)
+					ISVNEditor commitEditor = svnRepository.getCommitEditor("Marmot modification", null, true, null); //get a commit editor to the repository
+					commitEditor.openRoot(-1); //open the root to start making changing
+					commitEditor.deleteEntry(resourceURIPath.toString(), -1); //delete the directory
+					commitEditor.closeDir(); //close the directory we deleted
+					try
 					{
-						delete(resourceFile, true); //delete the file/directory and all its children, if any
+						commitEditor.closeEdit(); //try to finalize the edit
 					}
-					final File contentFile; //determine the file to use for storing content
-					if(isCollectionURI(resourceURI)) //if the resource is a collection
+					catch(final SVNException svnException)
 					{
-						final URI contentURI = resolve(resourceURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content
-						contentFile = new File(getSourceResourceURI(contentURI)); //create a file object from the private URI of the special collection content resource
-						mkdir(resourceFile); //create the directory
+						commitEditor.abortEdit(); //abort the edit we had scheduled
+						throw svnException; //rethrow the exception
 					}
-					else
-					//if the resource is not a collection
-					{
-						contentFile = resourceFile; //use the normal resource file
-						//TODO should we see if a directory exists?
-						createNewFile(resourceFile); //create a new file
-					}
-					if(resourceContents.length > 0 || !isCollectionURI(resourceURI)) //don't write empty content for a new collection
-					{
-						final OutputStream outputStream = new FileOutputStream(contentFile); //get an output stream to the file of the private URI
-						try
-						{
-							outputStream.write(resourceContents); //write the resource contents to the file
-						}
-						finally
-						{
-							outputStream.close(); //always close the output stream
-						}
-					}
-					return alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), resourceFile); //set the properties using the file
 				}
-				catch(final IOException ioException) //if an I/O exception occurs
+				catch(final SVNException svnException)
 				{
-					throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
+					throw toResourceIOException(resourceURI, svnException);
 				}
-		*/
+			}
+		}
 	}
 
 	/**
@@ -664,50 +658,6 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		}
 		checkOpen(); //make sure the repository is open
 		throw new UnsupportedOperationException(); //TODO implement
-	}
-
-	/**
-	 * Deletes a resource.
-	 * @param resourceURI The reference URI of the resource to delete.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws IllegalArgumentException if the given resource URI is the base URI of the repository.
-	 * @throws ResourceIOException if the resource could not be deleted.
-	 */
-	public void deleteResource(URI resourceURI) throws ResourceIOException //TODO fix to prevent resources with special names
-	{
-		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
-			subrepository.deleteResource(resourceURI); //delegate to the subrepository
-		}
-		checkOpen(); //make sure the repository is open
-		throw new UnsupportedOperationException();
-		/*TODO fix
-				try
-				{
-					if(normalize(resourceURI).equals(getRootURI())) //if they try to delete the root URI
-					{
-						throw new IllegalArgumentException("Cannot delete repository base URI " + resourceURI);
-					}
-					final File resourceFile = new File(getSourceResourceURI(resourceURI)); //create a file object for the resource
-		//			TODO del any associated directories
-		//			if(resourceFile.isFile())	//if this is a file and not a directory
-		//			{
-		//				final File directory=getResourceDirectory(resourceURI);	//get the directory to use for the URI
-		//				if(directory.exists())	//if a directory exists for this resource
-		//				{
-		//					FileUtilities.delete(directory, true);	//recursively delete the directory						
-		//				}
-		//			}
-					delete(resourceFile, true); //recursively delete the file or directory
-				}
-				catch(final IOException ioException) //if an I/O exception occurs
-				{
-					throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
-				}
-		*/
 	}
 
 	/**

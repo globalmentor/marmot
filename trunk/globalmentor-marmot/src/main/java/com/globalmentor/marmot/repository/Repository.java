@@ -504,10 +504,14 @@ public interface Repository
 
 	/**
 	 * Deletes a resource.
+	 * <p>
+	 * If no resource exists at the given URI, no action occurs and no error is generated. The resource at the root of the repository, represented by
+	 * {@link #getRootURI()}, cannot be deleted and will result in an {@link IllegalArgumentException}.
+	 * </p>
 	 * @param resourceURI The reference URI of the resource to delete.
 	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given URI represents the root of the repository.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws IllegalArgumentException if the given resource URI is the base URI of the repository.
 	 * @throws ResourceIOException if the resource could not be deleted.
 	 */
 	public void deleteResource(final URI resourceURI) throws ResourceIOException;

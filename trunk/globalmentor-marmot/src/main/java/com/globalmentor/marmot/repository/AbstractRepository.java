@@ -1048,6 +1048,32 @@ public abstract class AbstractRepository implements Repository
 		}
 	}
 
+	/** {@inheritDoc} Child classes should override {@link #deleteResourceImpl(URI)}. */
+	@Override
+	public final void deleteResource(URI resourceURI) throws ResourceIOException
+	{
+		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
+		if(subrepository != this) //if the resource URI lies within a subrepository
+		{
+			subrepository.deleteResource(resourceURI); //delegate to the subrepository
+		}
+		checkOpen(); //make sure the repository is open
+		if(resourceURI.equals(getRootURI())) //if they try to delete the root URI
+		{
+			throw new IllegalArgumentException("Cannot delete repository root URI " + resourceURI);
+		}
+		deleteResourceImpl(resourceURI);
+	}
+
+	/**
+	 * Implementation to delete a resource. If no resource exists at the given URI, no action occurs and no error is generated. The resource URI is guaranteed to
+	 * be normalized and valid for the repository (as well as not equaling the repository root) and the repository is guaranteed to be open.
+	 * @param resourceURI The reference URI of the resource to delete.
+	 * @throws ResourceIOException if the resource could not be deleted.
+	 */
+	protected abstract void deleteResourceImpl(final URI resourceURI) throws ResourceIOException;
+
 	/**
 	 * Adds properties to a given resource. All existing properties will be left unmodified. This implementation creates an {@link URFResourceAlteration} and
 	 * delegates to {@link #alterResourceProperties(URI, URFResourceAlteration)}.

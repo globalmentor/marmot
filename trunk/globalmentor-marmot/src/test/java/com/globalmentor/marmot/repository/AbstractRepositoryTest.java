@@ -70,7 +70,14 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		}
 	*/
 
-	/** Tests creating a sole resource with given contents in a byte array. */
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Creating a resource using supplied contents.</li>
+	 * <li>Checking the existence of a resource.</li>
+	 * <li>Deleting a resource.</li>
+	 * </ul>
+	 */
 	@Test
 	public void testCreateResourceBytes() throws ResourceIOException
 	{
@@ -79,12 +86,24 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		final byte[] resourceContents = Bytes.createRandom(1 << 10 + 1); //create random contents
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		final URFResource newResourceDescription = repository.createResource(resourceURI, resourceContents); //create a resource with random contents
+		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
 		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, new Date());
 		final byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
 		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(resourceContents));
+		repository.deleteResource(resourceURI); //delete the resource we created
+		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
 	}
 
-	/** Tests creating a collection with a resource inside it given contents in a byte array. */
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Creating a collection resource.</li>
+	 * <li>Checking the existence of a collection resource.</li>
+	 * <li>Creating a resource inside a collection using supplied contents.</li>
+	 * <li>Checking the existence of a resource inside a collection.</li>
+	 * <li>Deleting a collection resource with all its contents.</li>
+	 * </ul>
+	 */
 	@Test
 	public void testCreateCollectionResourceBytes() throws ResourceIOException
 	{
@@ -93,13 +112,19 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		final Date beforeCreateCollection = new Date();
 		final URI collectionURI = repository.getRootURI().resolve("test/"); //determine a test collection URI
 		final URFResource newCollectionDescription = repository.createCollectionResource(collectionURI);
+		assertTrue("Created collection resource doesn't exist.", repository.resourceExists(collectionURI));
 		final Date beforeCreateResource = new Date();
 		final URI resourceURI = collectionURI.resolve("test.bin"); //determine a test resource URI
 		final URFResource newResourceDescription = repository.createResource(resourceURI, resourceContents); //create a resource with random contents
+		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
 		checkCreatedResourceDateTimes(newCollectionDescription, beforeCreateCollection, beforeCreateResource);
 		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, new Date());
 		final byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
 		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(resourceContents));
+		repository.deleteResource(collectionURI); //delete the collection resource we created, with its contained resource
+		assertFalse("Deleted collection resource still exists.", repository.resourceExists(collectionURI));
+		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
+
 	}
 
 	/**
