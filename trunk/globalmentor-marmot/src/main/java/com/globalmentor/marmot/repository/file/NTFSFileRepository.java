@@ -46,7 +46,7 @@ public class NTFSFileRepository extends FileRepository
 
 	/**File constructor with no separate private URI namespace.
 	@param repositoryDirectory The file identifying the directory of this repository.
-	@exception NullPointerException if the given respository directory is <code>null</code>.
+	@exception NullPointerException if the given repository directory is <code>null</code>.
 	*/
 	public NTFSFileRepository(final File repositoryDirectory)
 	{
@@ -56,7 +56,7 @@ public class NTFSFileRepository extends FileRepository
 	/**URI constructor with no separate private URI namespace.
 	The given repository URI should end in a slash.
 	@param repositoryURI The URI identifying the location of this repository.
-	@exception NullPointerException if the given respository URI is <code>null</code>.
+	@exception NullPointerException if the given repository URI is <code>null</code>.
 	@exception IllegalArgumentException if the repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
 	*/
 	public NTFSFileRepository(final URI repositoryURI)
@@ -67,7 +67,7 @@ public class NTFSFileRepository extends FileRepository
 	/**Public repository URI and private repository directory constructor.
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryDirectory The file identifying the private directory of the repository.
-	@exception NullPointerException if the given respository URI and/or the given directory is <code>null</code>.
+	@exception NullPointerException if the given repository URI and/or the given directory is <code>null</code>.
 	*/
 	public NTFSFileRepository(final URI publicRepositoryURI, final File privateRepositoryDirectory)
 	{
@@ -78,7 +78,7 @@ public class NTFSFileRepository extends FileRepository
 	The given private repository URI should end in a slash.
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	@exception NullPointerException if one of the given respository URIs is <code>null</code>.
+	@exception NullPointerException if one of the given repository URIs is <code>null</code>.
 	@exception IllegalArgumentException if the private repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
 	*/
 	public NTFSFileRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
@@ -107,13 +107,9 @@ public class NTFSFileRepository extends FileRepository
 		return changeName(resourceFile, resourceFile.getName()+Files.NTFS_ADS_DELIMITER+MARMOT_DESCRIPTION_NAME);	//return a file in the form "file.ext:marmot-description"
 	}
 
-	/**Determines whether a resource, identified by its private URI, is a description file.
-	This version always returns <code>null</code>, as NTFS repositories don't use separate files to store descriptions.
-	@param privateResourceURI The private URI of a resource.
-	@return <code>true</code> if the resource is a description file for another resource.
-	@exception NullPointerException if the given URI is <code>null</code>.
-	*/
-	protected boolean isPrivateURIResourceDescription(final URI privateResourceURI)
+	/**{@inheritDoc} This version always returns <code>false</code>, as NTFS repositories don't use separate files to store descriptions.*/
+	@Override
+	protected boolean isSourceResourceDescription(final URI privateResourceURI)
 	{
 		return false;	//in an NTFS repository there are no separate files for storing descriptions
 	}

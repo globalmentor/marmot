@@ -33,7 +33,7 @@ import static com.globalmentor.net.URIs.*;
 import com.globalmentor.urf.*;
 
 /**Abstract implementation of a repository backed by an archive resource.
-@param <A> The type objct representing a source archive.
+@param <A> The type of object representing a source archive.
 @author Garret Wilson
 */
 public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepository
@@ -127,7 +127,7 @@ public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepos
 		this(rootURI, sourceResourceURI, createDefaultURFResourceDescriptionIO());	//create a default resource description I/O using TURF
 	}
 
-	/**Root URI descipriont I/O constructor.
+	/**Root URI description I/O constructor.
 	@param rootURI The URI identifying the location of this repository.
 	@param sourceResourceURI The URI identifying the private namespace managed by this repository.
 	@param descriptionIO The I/O implementation that writes and reads a resource with the same reference URI as its base URI.

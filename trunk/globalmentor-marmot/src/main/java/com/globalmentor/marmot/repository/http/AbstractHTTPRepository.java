@@ -1,5 +1,5 @@
 /*
- * Copyright © 1996-2009 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 1996-2011 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -153,24 +153,43 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 	{
 		return new HTTPResource(privateResourceURI, getHTTPClient(), passwordAuthentication);		
 	}
-	
-	/**Gets an input stream to the contents of the resource specified by the given URI.
-	For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any.
-	@param resourceURI The URI of the resource to access.
-	@return An input stream to the resource represented by the given URI.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
-	*/
-	public InputStream getResourceInputStream(URI resourceURI) throws ResourceIOException
+
+	/**{@inheritDoc} This implementation returns <code>false</code> for all resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.*/
+	@Override
+	protected boolean resourceExistsImpl(URI resourceURI) throws ResourceIOException
 	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		final URI privateResourceURI=getSourceResourceURI(resourceURI);	//get the resource URI in the private space
+		if(!isSourceResourceVisible(privateResourceURI))	//if this resource should not be public
 		{
-			return subrepository.getResourceInputStream(resourceURI);	//delegate to the subrepository
+			return false;	//ignore this resource
 		}
-		checkOpen();	//make sure the repository is open
+		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
+		try
+		{
+			final HTTPResource httpResource=createHTTPResource(privateResourceURI, passwordAuthentication);	//create an HTTP resource
+			return httpResource.exists();	//see if the HTTP resource exists		
+		}
+		catch(final HTTPRedirectException httpRedirectException)	//if the HTTP resource tries to redirect us somewhere else
+		{
+			return false;	//consider this to indicate that the resource, as identified by the resource URI, does not exist
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw toResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+		}
+		finally
+		{
+			if(passwordAuthentication!=null)	//if we used password authentication
+			{
+				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
+			}
+		}
+	}
+	
+	/**{@inheritDoc} For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any.*/
+	@Override
+	protected InputStream getResourceInputStreamImpl(final URI resourceURI) throws ResourceIOException
+	{
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
@@ -195,7 +214,7 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+			throw toResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 		finally
 		{
@@ -206,28 +225,11 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 		}
 	}
 
-	/**Gets an output stream to the contents of the resource specified by the given URI.
-	The resource description will be updated with the specified content modified datetime if given.
-	An error is generated if the resource does not exist.
-	For collections, this implementation stores the content in the {@value #COLLECTION_CONTENT_NAME} file.
-	@param resourceURI The URI of the resource to access.
-	@param newContentModified The new content modified datetime for the resource, or <code>null</code> if the content modified datetime should not be updated.
-	@return An output stream to the resource represented by the given URI.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the resource.
-	@see Content#MODIFIED_PROPERTY_URI
-	*/
+	/**{@inheritDoc} For collections, this implementation stores the content in the {@value #COLLECTION_CONTENT_NAME} file.*/
 /*TODO fix
-	public OutputStream getResourceOutputStream(URI resourceURI, final URFDateTime newContentModified) throws ResourceIOException
+	@Override
+	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, final URFDateTime newContentModified) throws ResourceIOException
 	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.getResourceOutputStream(resourceURI, newContentModified);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
 		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
 		try
 		{
@@ -268,51 +270,6 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 	}
 */
 	
-	/**Determines if the resource at the given URI exists.
-	This implementation returns <code>false</code> for all resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
-	@param resourceURI The URI of the resource to check.
-	@return <code>true</code> if the resource exists, else <code>false</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the repository.
-	*/
-	public boolean resourceExists(URI resourceURI) throws ResourceIOException
-	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.resourceExists(resourceURI);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
-		final URI privateResourceURI=getSourceResourceURI(resourceURI);	//get the resource URI in the private space
-		if(!isSourceResourcePublic(privateResourceURI))	//if this resource should not be public
-		{
-			return false;	//ignore this resource
-		}
-		final PasswordAuthentication passwordAuthentication=getPasswordAuthentication();	//get authentication, if any
-		try
-		{
-			final HTTPResource httpResource=createHTTPResource(privateResourceURI, passwordAuthentication);	//create an HTTP resource
-			return httpResource.exists();	//see if the HTTP resource exists		
-		}
-		catch(final HTTPRedirectException httpRedirectException)	//if the HTTP resource tries to redirect us somewhere else
-		{
-			return false;	//consider this to indicate that the resource, as identified by the resource URI, does not exist
-		}
-		catch(final IOException ioException)	//if an I/O exception occurs
-		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
-		}
-		finally
-		{
-			if(passwordAuthentication!=null)	//if we used password authentication
-			{
-				fill(passwordAuthentication.getPassword(), (char)0);	//always erase the password from memory as a security measure when we're done with the authentication object
-			}
-		}
-	}
-
 	/**Creates a new resource with the given description and returns an output stream for writing the contents of the resource.
 	If a resource already exists at the given URI it will be replaced.
 	The returned output stream should always be closed.
@@ -449,7 +406,7 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+			throw toResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 		finally
 		{
@@ -460,7 +417,7 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 		}
 	}
 
-	/**Translates the given error specific to this repository type into a resource I/O exception.
+	/**{@inheritDoc}
 	This version makes the following translations:
 	<dl>
 		<dt>{@link HTTPForbiddenException}</dt> <dd>{@link ResourceForbiddenException}</dd>
@@ -468,11 +425,9 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 		<dt>{@link HTTPRedirectException}</dt> <dd>{@link ResourceNotFoundException}</dd>
 		<dt>{@link HTTPPreconditionFailedException}</dt> <dd>{@link ResourceStateException}</dd>
 	</dl>
-	@param resourceURI The URI of the resource to which the exception is related.
-	@param throwable The error which should be translated to a resource I/O exception.
-	@return A resource I/O exception based upon the given throwable.
 	*/
-	protected ResourceIOException createResourceIOException(final URI resourceURI, final Throwable throwable) 
+	@Override
+	protected ResourceIOException toResourceIOException(final URI resourceURI, final Throwable throwable) 
 	{
 		if(throwable instanceof HTTPForbiddenException)
 		{
@@ -492,7 +447,7 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 		}
 		else	//if this is not one of our specially-handled exceptions
 		{
-			return super.createResourceIOException(resourceURI, throwable);	//convert the exception normally
+			return super.toResourceIOException(resourceURI, throwable);	//convert the exception normally
 		}
 	}
 

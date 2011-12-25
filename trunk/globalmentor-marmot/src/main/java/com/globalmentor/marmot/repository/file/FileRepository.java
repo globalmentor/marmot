@@ -49,7 +49,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 
 		//TODO encode special characters, especially the colon on NTFS
 
-	/**The URI represting the XPackage file:folder type.*/	//TODO check; use static imports 
+	/**The URI representing the XPackage file:folder type.*/	//TODO check; use static imports 
 //TODO move if needed	protected final static URI FILE_FOLDER_TYPE_URI=RDFUtilities.createReferenceURI(FileOntologyConstants.FILE_ONTOLOGY_NAMESPACE_URI, FileOntologyConstants.FOLDER_TYPE_NAME);	//TODO promote to parent file-based class		
 
 	/**The extension used for directories to hold resource children.*/
@@ -59,18 +59,18 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	public final static String MARMOT_DESCRIPTION_NAME="marmot-description";
 
 	/**The file filter for listing files in a directory.
-	The file filter returns those resources for which {@link #isSourceResourcePublic(URI)} returns <code>true</code>.
+	The file filter returns those resources for which {@link #isSourceResourceVisible(URI)} returns <code>true</code>.
 	*/
 	private final FileFilter fileFilter=new FileFilter()
 			{
 				/**Tests whether or not the specified abstract pathname is one of the file types we recognize.
 				This implementation ignores hidden files.
-				This implementation delegates to {@link FileRepository#isSourceResourcePublic(URI)}.
+				This implementation delegates to {@link FileRepository#isSourceResourceVisible(URI)}.
 				@param file The abstract pathname to be tested.
 				@return <code>true</code> if and only if the indicated file should be included.
 				@throws NullPointerException if the given file is <code>null</code>.
 				@see File#isHidden()
-				@see FileRepository#isSourceResourcePublic(URI)
+				@see FileRepository#isSourceResourceVisible(URI)
 				*/
 				public boolean accept(final File file)
 				{
@@ -78,12 +78,12 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 					{
 						return false;
 					}
-					return isSourceResourcePublic(toURI(file));	//see if the private URI represented by this file should be accepted 
+					return isSourceResourceVisible(toURI(file));	//see if the private URI represented by this file should be accepted 
 				}
 			};
 		
 	/**Returns the file filter for listing files in a directory.
-	The file filter returns those resources for which {@link #isSourceResourcePublic(URI)} returns <code>true</code>.
+	The file filter returns those resources for which {@link #isSourceResourceVisible(URI)} returns <code>true</code>.
 	@return The file filter for listing files in a directory.
 	*/
 	protected FileFilter getFileFilter() {return fileFilter;}
@@ -98,7 +98,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 
 	/**File constructor with no separate private URI namespace.
 	@param repositoryDirectory The file identifying the directory of this repository.
-	@exception NullPointerException if the given respository directory is <code>null</code>.
+	@exception NullPointerException if the given repository directory is <code>null</code>.
 	*/
 	public FileRepository(final File repositoryDirectory)
 	{
@@ -108,7 +108,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	/**URI constructor with no separate private URI namespace.
 	The given repository URI should end in a slash.
 	@param repositoryURI The URI identifying the location of this repository.
-	@exception NullPointerException if the given respository URI is <code>null</code>.
+	@exception NullPointerException if the given repository URI is <code>null</code>.
 	@exception IllegalArgumentException if the repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
 	*/
 	public FileRepository(final URI repositoryURI)
@@ -119,7 +119,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	/**Public repository URI and private repository directory constructor.
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryDirectory The file identifying the private directory of the repository.
-	@exception NullPointerException if the given respository URI and/or the given directory is <code>null</code>.
+	@exception NullPointerException if the given repository URI and/or the given directory is <code>null</code>.
 	*/
 	public FileRepository(final URI publicRepositoryURI, final File privateRepositoryDirectory)
 	{
@@ -130,14 +130,14 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	The given private repository URI should end in a slash.
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	@exception NullPointerException if one of the given respository URIs is <code>null</code>.
+	@exception NullPointerException if one of the given repository URIs is <code>null</code>.
 //TODO relax; improve	@exception IllegalArgumentException if the private repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
 	*/
 	public FileRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
 	{
 		super(publicRepositoryURI, privateRepositoryURI);	//construct the parent class
 /*TODO decide if how we want initialization to occur, especially using PLOOP
-		if(!FILE_SCHEME.equals(privateRepositoryURI.getScheme()))	//if the private respository URI scheme is not the file scheme
+		if(!FILE_SCHEME.equals(privateRepositoryURI.getScheme()))	//if the private repository URI scheme is not the file scheme
 		{
 			throw new IllegalArgumentException(privateRepositoryURI+" does not use the "+FILE_SCHEME+" URI scheme.");
 		}
@@ -157,23 +157,39 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		return new FileRepository(publicRepositoryURI, privateRepositoryURI);	//create and return a new file repository
 	}
 
-	/**Gets an input stream to the contents of the resource specified by the given URI.
-	For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any.
-	@param resourceURI The URI of the resource to access.
-	@return An input stream to the resource represented by the given URI.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
-	*/
-	public InputStream getResourceInputStream(URI resourceURI) throws ResourceIOException
+	/**{@inheritDoc} This implementation returns <code>false</code> for all resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.*/
+	@Override
+	protected boolean resourceExistsImpl(URI resourceURI) throws ResourceIOException
 	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		final URI privateResourceURI=getSourceResourceURI(resourceURI);	//get the resource URI in the private space
+		if(!isSourceResourceVisible(privateResourceURI))	//if this resource should not be public
 		{
-			return subrepository.getResourceInputStream(resourceURI);	//delegate to the subrepository
+			return false;	//ignore this resource
 		}
-		checkOpen();	//make sure the repository is open
+		final boolean isCollectionURI=isCollectionURI(resourceURI);	//see if the URI specifies a collection
+		final File file=new File(privateResourceURI);	//get the file object for this resource
+		return file.exists() && (isCollectionURI || !file.isDirectory());	//see if the file of the private URI exists; don't allow a non-collection URI to find a non-directory URI, though (file systems usually don't allow both a file and a directory of the same name, so they allow the ending-slash form to be optional)
+	}
+
+	/**{@inheritDoc}*/
+	@Override
+	protected URFResource getResourceDescriptionImpl(final URI resourceURI) throws ResourceIOException
+	{
+		final URF urf=createURF();	//create a new URF data model
+		try
+		{
+			return createResourceDescription(urf, resourceURI, checkFileExists(new File(getSourceResourceURI(resourceURI))));	//create and return a description from a file created from the URI from the private namespace
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw toResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+		}
+	}
+
+	/**{@inheritDoc} For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any.*/
+	@Override
+	protected InputStream getResourceInputStreamImpl(final URI resourceURI) throws ResourceIOException
+	{
 		try
 		{
 			if(isCollectionURI(resourceURI))	//if the resource is a collection
@@ -197,31 +213,14 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+			throw toResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 	}
 
-	/**Gets an output stream to the contents of the resource specified by the given URI.
-	The resource description will be updated with the specified content modified datetime if given.
-	An error is generated if the resource does not exist.
-	For collections, this implementation sets the content of the {@value #COLLECTION_CONTENT_NAME} file, if any.
-	@param resourceURI The URI of the resource to access.
-	@param newContentModified The new content modified datetime for the resource, or <code>null</code> if the content modified datetime should not be updated.
-	@return An output stream to the resource represented by the given URI.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the resource.
-	@see Content#MODIFIED_PROPERTY_URI
-	*/
-	public OutputStream getResourceOutputStream(URI resourceURI, URFDateTime newContentModified) throws ResourceIOException
+	/**{@inheritDoc} For collections, this implementation stores the content in the {@value #COLLECTION_CONTENT_NAME} file.*/
+	@Override
+	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, URFDateTime newContentModified) throws ResourceIOException
 	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.getResourceOutputStream(resourceURI, newContentModified);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
 		try
 		{
 			final File resourceFile=new File(getSourceResourceURI(resourceURI));	//get a file for the resource
@@ -252,7 +251,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+			throw toResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 	}
 
@@ -268,100 +267,18 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		return new FileOutputStream(resourceFile);	//return an output stream to the file
 	}
 
-	/**Retrieves a description of the resource with the given URI.
-	@param resourceURI The URI of the resource the description of which should be retrieved.
-	@return A description of the resource with the given URI.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the repository.
-	*/
-	public URFResource getResourceDescription(URI resourceURI) throws ResourceIOException
+	/** {@inheritDoc} This implementation ignores child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
+	@Override
+	protected boolean hasChildrenImpl(final URI resourceURI) throws ResourceIOException
 	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.getResourceDescription(resourceURI);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
-		final URF urf=createURF();	//create a new URF data model
-		try
-		{
-			return createResourceDescription(urf, resourceURI, new File(getSourceResourceURI(resourceURI)));	//create and return a description from a file created from the URI from the private namespace
-		}
-		catch(final IOException ioException)	//if an I/O exception occurs
-		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
-		}
-	}
-
-	/**Determines if the resource at the given URI exists.
-	This implementation returns <code>false</code> for all resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
-	@param resourceURI The URI of the resource to check.
-	@return <code>true</code> if the resource exists, else <code>false</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the repository.
-	*/
-	public boolean resourceExists(URI resourceURI) throws ResourceIOException
-	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.resourceExists(resourceURI);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
-		final URI privateResourceURI=getSourceResourceURI(resourceURI);	//get the resource URI in the private space
-		if(!isSourceResourcePublic(privateResourceURI))	//if this resource should not be public
-		{
-			return false;	//ignore this resource
-		}
-		final boolean isCollectionURI=isCollectionURI(resourceURI);	//see if the URI specifies a collection
-		final File file=new File(privateResourceURI);	//get the file object for this resource
-		return file.exists() && (isCollectionURI || !file.isDirectory());	//see if the file of the private URI exists; don't allow a non-collection URI to find a non-directory URI, though (file systems usually don't allow both a file and a directory of the same name, so they allow the ending-slash form to be optional)
-	}
-
-	/**Determines whether the resource represented by the given URI has children.
-	This implementation ignores child resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
-	@param resourceURI The URI of the resource.
-	@return <code>true</code> if the specified resource has child resources.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the repository.
-	*/
-	public boolean hasChildren(URI resourceURI) throws ResourceIOException
-	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.hasChildren(resourceURI);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
 		final File resourceFile=new File(getSourceResourceURI(resourceURI));	//create a file object for the resource
 		return isCollectionURI(resourceURI) && resourceFile.isDirectory() && resourceFile.listFiles(getFileFilter()).length>0;	//see if this is a directory and there is more than one file in this directory
 	}
 
-	/**Retrieves child resources of the resource at the given URI.
-	This implementation does not include child resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
-	@param resourceURI The URI of the resource for which sub-resources should be returned.
-	@param resourceFilter The filter that determines whether child resources should be included, or <code>null</code> if the child resources should not be filtered.
-	@param depth The zero-based depth of child resources which should recursively be retrieved, or {@link Repository#INFINITE_DEPTH} for an infinite depth.
-	@return A list of sub-resource descriptions under the given resource.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the repository.
-	*/
-	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final ResourceFilter resourceFilter, final int depth) throws ResourceIOException
+	/**{@inheritDoc} This implementation does not include child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.*/
+	@Override
+	public List<URFResource> getChildResourceDescriptionsImpl(final URI resourceURI, final ResourceFilter resourceFilter, final int depth) throws ResourceIOException
 	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.getChildResourceDescriptions(resourceURI);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
 		if(depth!=0)	//a depth of zero means don't get child resources
 		{
 			final File resourceDirectory=new File(getSourceResourceURI(resourceURI));	//create a file object for the resource
@@ -384,7 +301,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 							}
 							catch(final IOException ioException)	//if an I/O exception occurs
 							{
-								throw createResourceIOException(getRepositoryResourceURI(toURI(file)), ioException);	//translate the exception to a resource I/O exception and throw that, using a public URI to represent the file resource
+								throw toResourceIOException(getRepositoryResourceURI(toURI(file)), ioException);	//translate the exception to a resource I/O exception and throw that, using a public URI to represent the file resource
 							}
 							if(resourceFilter==null || resourceFilter.isPass(childResourceDescription))	//if we should include this resource based upon its description
 							{
@@ -417,28 +334,10 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		}
 	}
 
-	/**Creates a new resource with the given description and returns an output stream for writing the contents of the resource.
-	If a resource already exists at the given URI it will be replaced.
-	The returned output stream should always be closed.
-	If a resource with no contents is desired, {@link #createResource(URI, URFResource, byte[])} with zero bytes is better suited for this task.
-	This implementation updates resource properties before storing the contents of the resource.
-	@param resourceURI The reference URI to use to identify the resource.
-	@param resourceDescription A description of the resource; the resource URI is ignored.
-	@return An output stream for storing the contents of the resource.
-	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if the resource could not be created.
-	*/
-	public OutputStream createResource(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException	//TODO fix to prevent resources with special names
+	/**{@inheritDoc} This implementation updates resource properties before storing the contents of the resource.*/
+	@Override
+	protected OutputStream createResourceImpl(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
 	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.createResource(resourceURI, resourceDescription);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
 		try
 		{
 			final File resourceFile=new File(getSourceResourceURI(resourceURI));	//create a file object for the resource
@@ -463,30 +362,14 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+			throw toResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 	}
 
-	/**Creates a new resource with the given description and contents.
-	If a resource already exists at the given URI it will be replaced.
-	@param resourceURI The reference URI to use to identify the resource.
-	@param resourceDescription A description of the resource; the resource URI is ignored.
-	@param resourceContents The contents to store in the resource.
-	@return A description of the resource that was created.
-	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if the resource could not be created.
-	*/
-	public URFResource createResource(URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException	//TODO fix to prevent resources with special names
+	/**{@inheritDoc}*/
+	@Override
+	protected URFResource createResourceImpl(final URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException
 	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.createResource(resourceURI, resourceDescription, resourceContents);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
 		try
 		{
 			final File resourceFile=new File(getSourceResourceURI(resourceURI));	//create a file object for the resource
@@ -523,7 +406,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+			throw toResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 	}
 
@@ -567,7 +450,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+			throw toResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 	}
 	
@@ -635,7 +518,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+			throw toResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 	}
 
@@ -748,7 +631,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	@return <code>true</code> if the resource is a description file for another resource.
 	@exception NullPointerException if the given URI is <code>null</code>.
 	*/
-	protected boolean isPrivateURIResourceDescription(final URI privateResourceURI)
+	protected boolean isSourceResourceDescription(final URI privateResourceURI)
 	{
 		if(!isCollectionURI(privateResourceURI))	//description files are not collections
 		{
@@ -758,25 +641,21 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		return false;
 	}
 
-	/**Determines whether a resource, identified by its private URI, should be made available in the public space.
-	If this method returns <code>false</code>, the identified resource will essentially become invisible past the {@link Repository} interface.
-	Such resources are normally used internally with special semantics to the repository implementation.
+	/**{@inheritDoc}
 	This version removes the following resources from the public space:
 	<ul>
-		<li>Any resource description file, as determined by {@link #isPrivateURIResourceDescription(URI)}.</li>
+		<li>Any resource description file, as determined by {@link #isSourceResourceDescription(URI)}.</li>
 	</ul>
-	@param privateResourceURI The private URI of a resource.
-	@return <code>true</code> if the resource should be visible as normal, or <code>false</code> if the resource should not be made available to the public space.
-	@exception NullPointerException if the given URI is <code>null</code>.
-	@see #isPrivateURIResourceDescription(URI)
+	@see #isSourceResourceDescription(URI)
 	*/
-	protected boolean isSourceResourcePublic(final URI privateResourceURI)
+	@Override
+	protected boolean isSourceResourceVisible(final URI privateResourceURI)
 	{
-		if(isPrivateURIResourceDescription(privateResourceURI))	//if this is a URI for a resource description
+		if(isSourceResourceDescription(privateResourceURI))	//if this is a URI for a resource description
 		{
 			return false;	//the resource isn't public
 		}
-		return super.isSourceResourcePublic(privateResourceURI);	//do the default checks
+		return super.isSourceResourceVisible(privateResourceURI);	//do the default checks
 	}
 
 	/**Loads a resource description for a single file.
@@ -813,6 +692,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	Live properties are ignored.
 	If the {@value Content#MODIFIED_PROPERTY_URI} property is present, it is not saved and the file modified time is updated to match that value.
 	If the {@value Content#CREATED_PROPERTY_URI} property is present and it is identical to the {@value Content#MODIFIED_PROPERTY_URI} property, it is not saved.
+	(This is to prevent creating description files/streams for every file created.)
 	If the {@value Content#CREATED_PROPERTY_URI} property is present and the resource is a collection with no content, it is not saved.
 	If the resource description file does not exist and there are no properties to save, no resource description file is created.
 	@param resourceDescription The resource description to save; the resource URI is ignored.
@@ -843,7 +723,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		final URFDateTime modified=getModified(resourceDescription);	//see if the description indicates the last modified time
 		if(modified!=null)	//if the last modified time was indicated
 		{
-			resourceDescription.removePropertyValues(Content.MODIFIED_PROPERTY_URI);	//remove all last-modified values from the desciption we'll actually save
+			resourceDescription.removePropertyValues(Content.MODIFIED_PROPERTY_URI);	//remove all last-modified values from the description we'll actually save
 		}
 		final URFDateTime created=getCreated(resourceDescription);	//see if the description indicates the created time
 		if(created!=null)	//if the created time is present
@@ -851,7 +731,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			if((modified!=null && created.getTime()==modified.getTime())	//if the created time is the same as the modified time TODO decide how useful these are
 					|| (isCollection && contentFile==resourceFile))	//or if this is a collection with no content
 			{
-				resourceDescription.removePropertyValues(Content.CREATED_PROPERTY_URI);	//remove all created timestamp values from the desciption to save, as Java can't distinguish between content created and modified and they'll both be initialized from the same value, anyway, when reading
+				resourceDescription.removePropertyValues(Content.CREATED_PROPERTY_URI);	//remove all created timestamp values from the description to save, as Java can't distinguish between content created and modified and they'll both be initialized from the same value, anyway, when reading
 			}
 		}
 		final File resourceDescriptionFile=getResourceDescriptionFile(resourceFile);	//get the file for storing the description
@@ -878,16 +758,14 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		}
 	}
 
-	/**Translates the given error specific to this repository type into a resource I/O exception.
+	/**{@inheritDoc}
 	This version makes the following translations:
 	<dl>
 		<dt>{@link FileNotFoundException}</dt> <dd>{@link ResourceNotFoundException}</dd>
 	</dl>
-	@param resourceURI The URI of the resource to which the exception is related.
-	@param throwable The error which should be translated to a resource I/O exception.
-	@return A resource I/O exception based upon the given throwable.
 	*/
-	protected ResourceIOException createResourceIOException(final URI resourceURI, final Throwable throwable) 
+	@Override
+	protected ResourceIOException toResourceIOException(final URI resourceURI, final Throwable throwable) 
 	{
 		if(throwable instanceof FileNotFoundException)
 		{
@@ -895,7 +773,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		}
 		else	//if this is not one of our specially-handled exceptions
 		{
-			return super.createResourceIOException(resourceURI, throwable);	//convert the exceptoin normally
+			return super.toResourceIOException(resourceURI, throwable);	//convert the exception normally
 		}
 	}
 
@@ -942,7 +820,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			}
 			catch(final IOException ioException)	//if an I/O exception occurs
 			{
-				throw createResourceIOException(getRepositoryResourceURI(toURI(getResourceFile())), ioException);	//translate the exception to a resource I/O exception and throw that
+				throw toResourceIOException(getRepositoryResourceURI(toURI(getResourceFile())), ioException);	//translate the exception to a resource I/O exception and throw that
 			}
 	  }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2009 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 2009-2011 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import java.util.*;
 
 import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
-import com.globalmentor.urf.content.Content;
 
 /**Abstract implementation of a repository that does not allow resources to be modified.
 <p>This repository allows resource descriptions to be manually assigned. These resource descriptions
@@ -121,27 +120,10 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 		super(rootURI, descriptionIO);
 	}
 
-	/**Gets an output stream to the contents of the resource specified by the given URI.
-	The resource description will be updated with the specified content modified datetime if given.
-	An error is generated if the resource does not exist.
-	<p>This implementation throws a {@link ResourceForbiddenException} if the resource URI exists and is within this repository.</p>
-	@param resourceURI The URI of the resource to access.
-	@param newContentModified The new content modified datetime for the resource, or <code>null</code> if the content modified datetime should not be updated.
-	@return An output stream to the resource represented by the given URI.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the resource.
-	@see Content#MODIFIED_PROPERTY_URI
-	*/
-	public OutputStream getResourceOutputStream(URI resourceURI, URFDateTime newContentModified) throws ResourceIOException
+	/**{@inheritDoc} This implementation throws a {@link ResourceForbiddenException} if the resource URI exists.*/
+	@Override
+	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, final URFDateTime newContentModified) throws ResourceIOException
 	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.getResourceOutputStream(resourceURI, newContentModified);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
 		if(!resourceExists(resourceURI))	//if the resource doesn't exist
 		{
 			throw new ResourceNotFoundException(resourceURI, "Cannot open output stream to non-existent resource "+resourceURI+" in repository.");
@@ -149,52 +131,10 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
 	}
 
-	/**Creates a new resource with the given description and returns an output stream for writing the contents of the resource.
-	If a resource already exists at the given URI it will be replaced.
-	The returned output stream should always be closed.
-	If a resource with no contents is desired, {@link #createResource(URI, URFResource, byte[])} with zero bytes is better suited for this task.
-	<p>This implementation throws a {@link ResourceForbiddenException} if the resource URI is within this repository.</p>
-	@param resourceURI The reference URI to use to identify the resource.
-	@param resourceDescription A description of the resource; the resource URI is ignored.
-	@return An output stream for storing the contents of the resource.
-	@exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if the resource could not be created.
-	*/
-	public OutputStream createResource(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
+	/**{@inheritDoc} This implementation throws a {@link ResourceForbiddenException}.*/
+	@Override
+	protected OutputStream createResourceImpl(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
 	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.createResource(resourceURI, resourceDescription);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
-		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
-	}
-
-	/**Creates a new resource with the given description and contents.
-	If a resource already exists at the given URI it will be replaced.
-	<p>This implementation throws a {@link ResourceForbiddenException} if the resource URI is within this repository.</p>
-	@param resourceURI The reference URI to use to identify the resource.
-	@param resourceDescription A description of the resource; the resource URI is ignored.
-	@param resourceContents The contents to store in the resource.
-	@return A description of the resource that was created.
-	@exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if the resource could not be created.
-	*/
-	public URFResource createResource(URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException
-	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.createResource(resourceURI, resourceDescription, resourceContents);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
 	}
 
@@ -266,7 +206,7 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
 	}
 
-	/**Moves a resource to another URI in this repository, overwriting any resource at the destionation only if requested.
+	/**Moves a resource to another URI in this repository, overwriting any resource at the destination only if requested.
 	<p>This implementation throws a {@link ResourceForbiddenException} if the resource URI is within this repository.</p>
 	@param resourceURI The URI of the resource to be moved.
 	@param destinationURI The URI to which the resource should be moved.

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2009 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 2009-2011 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package com.globalmentor.marmot.repository.archive;
 import java.io.*;
 import java.net.URI;
 import java.util.*;
+
 import static java.util.Collections.emptyList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -27,8 +28,10 @@ import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.CharSequences.*;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.net.*;
+
 import static com.globalmentor.net.URIs.*;
 import com.globalmentor.urf.*;
+
 import static com.globalmentor.urf.content.Content.*;
 
 /**A repository backed by a Zip archive resource.
@@ -187,88 +190,11 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 		}
 		return childZipEntries;
 	}
-	
-	/**Gets an input stream to the contents of the resource specified by the given URI.
-	For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any.
-	@param resourceURI The URI of the resource to access.
-	@return An input stream to the resource represented by the given URI.
-	@throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@throws ResourceIOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
-	*/
-	public InputStream getResourceInputStream(URI resourceURI) throws ResourceIOException
-	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.getResourceInputStream(resourceURI);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
-		try
-		{
-			if(isCollectionURI(resourceURI))	//if the resource is a collection (including the root resource)
-			{
-				return new ByteArrayInputStream(NO_BYTES);	//return an input stream to an empty byte array
-			}
-			else	//if the resource is not a collection
-			{
-				final ZipFile zipFile=getSourceArchive();	//get the archive
-				final ZipEntry zipEntry=getZipEntry(zipFile, resourceURI);	//get the entry for this resource
-				return zipFile.getInputStream(zipEntry);	//return an input stream to the entry
-			}
-		}
-		catch(final IOException ioException)	//if an I/O exception occurs
-		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
-		}
-	}
 
-	/**Retrieves a description of the resource with the given URI.
-	@param resourceURI The URI of the resource the description of which should be retrieved.
-	@return A description of the resource with the given URI.
-	@throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@throws ResourceIOException if there is an error accessing the repository.
-	*/
-	public URFResource getResourceDescription(URI resourceURI) throws ResourceIOException
+	/**{@inheritDoc}*/
+	@Override
+	protected boolean resourceExistsImpl(URI resourceURI) throws ResourceIOException
 	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.getResourceDescription(resourceURI);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
-		final URF urf=createURF();	//create a new URF data model
-		try
-		{
-			final ZipEntry resourceZipEntry=getRootURI().equals(resourceURI) ? null : getZipEntry(getSourceArchive(), resourceURI);	//get the zip entry for this resource URI, or null if this is the root resource URI
-			return createResourceDescription(urf, resourceURI, resourceZipEntry);	//create and return a description from a zip entry from the archive
-		}
-		catch(final IOException ioException)	//if an I/O exception occurs
-		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
-		}
-	}
-
-	/**Determines if the resource at the given URI exists.
-	This implementation returns <code>false</code> for all resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
-	@param resourceURI The URI of the resource to check.
-	@return <code>true</code> if the resource exists, else <code>false</code>.
-	@throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@throws ResourceIOException if there is an error accessing the repository.
-	*/
-	public boolean resourceExists(URI resourceURI) throws ResourceIOException
-	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.resourceExists(resourceURI);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
 		if(getRootURI().equals(resourceURI))	//the root resource always exists
 		{
 			return true;
@@ -284,56 +210,67 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+			throw toResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 	}
 
-	/**Determines whether the resource represented by the given URI has children.
-	This implementation ignores child resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
-	@param resourceURI The URI of the resource.
-	@return <code>true</code> if the specified resource has child resources.
-	@throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@throws ResourceIOException if there is an error accessing the repository.
-	*/
-	public boolean hasChildren(URI resourceURI) throws ResourceIOException
+	/**{@inheritDoc}*/
+	@Override
+	protected URFResource getResourceDescriptionImpl(final URI resourceURI) throws ResourceIOException
 	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
+		final URF urf=createURF();	//create a new URF data model
+		try
 		{
-			return subrepository.hasChildren(resourceURI);	//delegate to the subrepository
+			final ZipEntry resourceZipEntry=getRootURI().equals(resourceURI) ? null : getZipEntry(getSourceArchive(), resourceURI);	//get the zip entry for this resource URI, or null if this is the root resource URI
+			return createResourceDescription(urf, resourceURI, resourceZipEntry);	//create and return a description from a zip entry from the archive
 		}
-		checkOpen();	//make sure the repository is open
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw toResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+		}
+	}
+
+	/**{@inheritDoc} For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any.*/
+	@Override
+	protected InputStream getResourceInputStreamImpl(final URI resourceURI) throws ResourceIOException
+	{
+		try
+		{
+			if(isCollectionURI(resourceURI))	//if the resource is a collection (including the root resource)
+			{
+				return new ByteArrayInputStream(NO_BYTES);	//return an input stream to an empty byte array
+			}
+			else	//if the resource is not a collection
+			{
+				final ZipFile zipFile=getSourceArchive();	//get the archive
+				final ZipEntry zipEntry=getZipEntry(zipFile, resourceURI);	//get the entry for this resource
+				return zipFile.getInputStream(zipEntry);	//return an input stream to the entry
+			}
+		}
+		catch(final IOException ioException)	//if an I/O exception occurs
+		{
+			throw toResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+		}
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	protected boolean hasChildrenImpl(final URI resourceURI) throws ResourceIOException
+	{
 		try
 		{
 			return !getChildZipEntries(getSourceArchive(), resourceURI, 1).isEmpty();	//TODO improve to keep from going through the entire file once a directory is found
 		}
 		catch(final IOException ioException)	//if an I/O exception occurs
 		{
-			throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+			throw toResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 		}
 	}
 
-	/**Retrieves child resources of the resource at the given URI.
-	This implementation does not include child resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
-	@param resourceURI The URI of the resource for which sub-resources should be returned.
-	@param resourceFilter The filter that determines whether child resources should be included, or <code>null</code> if the child resources should not be filtered.
-	@param depth The zero-based depth of child resources which should recursively be retrieved, or {@link Repository#INFINITE_DEPTH} for an infinite depth.
-	@return A list of sub-resource descriptions under the given resource.
-	@throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@throws ResourceIOException if there is an error accessing the repository.
-	*/
-	public List<URFResource> getChildResourceDescriptions(URI resourceURI, final ResourceFilter resourceFilter, final int depth) throws ResourceIOException
+	/**{@inheritDoc}*/
+	@Override
+	public List<URFResource> getChildResourceDescriptionsImpl(final URI resourceURI, final ResourceFilter resourceFilter, final int depth) throws ResourceIOException
 	{
-		resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository=getSubrepository(resourceURI);	//see if the resource URI lies within a subrepository
-		if(subrepository!=this)	//if the resource URI lies within a subrepository
-		{
-			return subrepository.getChildResourceDescriptions(resourceURI);	//delegate to the subrepository
-		}
-		checkOpen();	//make sure the repository is open
 		if(depth!=0)	//a depth of zero means don't get child resources
 		{
 			try
@@ -361,7 +298,7 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 								}
 								catch(final IOException ioException)	//if an I/O exception occurs
 								{
-									throw createResourceIOException(childResourceURI, ioException);	//translate the exception to a resource I/O exception and throw that for this child resource zip entry
+									throw toResourceIOException(childResourceURI, ioException);	//translate the exception to a resource I/O exception and throw that for this child resource zip entry
 								}
 								if(resourceFilter==null || resourceFilter.isPass(childResourceDescription))	//if we should include this resource based upon its description
 								{
@@ -385,7 +322,7 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 			}
 			catch(final IOException ioException)	//if an I/O exception occurs
 			{
-				throw createResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
+				throw toResourceIOException(resourceURI, ioException);	//translate the exception to a resource I/O exception and throw that
 			}
 		}
 		else	//if a depth of zero was requested
