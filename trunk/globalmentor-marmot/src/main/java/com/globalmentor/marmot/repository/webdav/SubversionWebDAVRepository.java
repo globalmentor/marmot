@@ -19,13 +19,11 @@ package com.globalmentor.marmot.repository.webdav;
 import java.net.*;
 import java.util.Set;
 
-import com.globalmentor.marmot.repository.Repository;
-import com.globalmentor.marmot.repository.Repositories;
+import com.globalmentor.marmot.repository.*;
 import com.globalmentor.net.URIs;
 import com.globalmentor.net.http.*;
 import com.globalmentor.net.http.webdav.*;
 
-import static com.globalmentor.marmot.repository.Repositories.*;
 import static com.globalmentor.net.http.webdav.SubversionWebDAV.*;
 
 /**
@@ -35,8 +33,8 @@ import static com.globalmentor.net.http.webdav.SubversionWebDAV.*;
  * </p>
  * <p>
  * This version stores URF properties by using a URI that is the concatenation of {@value SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI} and the encoded
- * version of the URF property URI, using {@value Repositories#PROPERTY_NAME_URI_ESCAPE_CHAR} as the escape character. The standard URI escape
- * character, {@value URIs#ESCAPE_CHAR}, is not a valid name character, so {@value Repositories#PROPERTY_NAME_URI_ESCAPE_CHAR}, which conveniently is
+ * version of the URF property URI, using {@value AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR} as the escape character. The standard URI escape
+ * character, {@value URIs#ESCAPE_CHAR}, is not a valid name character, so {@value AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR}, which conveniently is
  * not a valid URI character, is used instead.
  * </p>
  * @author Garret Wilson
@@ -50,7 +48,7 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 
 	/** The Subversion version of the synchronization WebDAV get last modified property. */
 	protected final static WebDAVPropertyName SUBVERSION_SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME = new WebDAVPropertyName(SUBVERSION_CUSTOM_NAMESPACE,
-			SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME.getLocalName());
+			SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME.getLocalName());	//TODO fix; was this accidentally not used?
 
 	/**
 	 * Determines the WebDAV property name to represent the synchronization WebDAV get last modified property. This version returns a version of the property
@@ -59,7 +57,7 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 	 */
 	protected WebDAVPropertyName getSyncWebDAVGetLastModifiedWebDAVPropertyName()
 	{
-		return SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME;
+		return SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME;	//TODO maybe just return null and abandon this altogether for Subversion
 	}
 
 	/**
@@ -130,12 +128,12 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 	/**
 	 * Determines the WebDAV property name to represent an URF property. This version uses the encoded URF property URI as the local name of the
 	 * {@value SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI} namespace. The standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name
-	 * character, so {@value Repositories#PROPERTY_NAME_URI_ESCAPE_CHAR}, which conveniently is not a valid URI character, is used instead.
+	 * character, so {@value #PROPERTY_NAME_URI_ESCAPE_CHAR}, which conveniently is not a valid URI character, is used instead.
 	 * @param urfPropertyURI The URI of the URF property to represent.
 	 * @return A WebDAV property name to use in representing an URF property with the given URF property URI.
 	 * @see SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI
-	 * @see Repositories#PROPERTY_NAME_URI_ESCAPE_CHAR
-	 * @see Repositories#encodePropertyURILocalName(URI)
+	 * @see AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR
+	 * @see AbstractRepository#encodePropertyURILocalName(URI)
 	 */
 	protected WebDAVPropertyName createWebDAVPropertyName(final URI urfPropertyURI)
 	{
@@ -146,13 +144,13 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 	 * Determines the URF property to represent the given WebDAV property if possible. If the WebDAV property has a local name of
 	 * {@value SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI}, the decoded form of its local name, if an absolute URI, will be used as the URF property URI.
 	 * The standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name character, so
-	 * {@value Repositories#PROPERTY_NAME_URI_ESCAPE_CHAR}, which conveniently is not a valid URI character, is used instead. Otherwise, this method
+	 * {@value AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR}, which conveniently is not a valid URI character, is used instead. Otherwise, this method
 	 * delegates to the super version.
 	 * @param webdavPropertyName The name of the WebDAV property.
 	 * @return The URI of the URF property to represent the given WebDAV property, or <code>null</code> if the given WebDAV property cannot be represented in URF.
 	 * @see SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI
-	 * @see Repositories#PROPERTY_NAME_URI_ESCAPE_CHAR
-	 * @see Repositories#decodePropertyURILocalName(String)
+	 * @see AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR
+	 * @see AbstractRepository#decodePropertyURILocalName(String)
 	 */
 	protected URI getURFPropertyURI(final WebDAVPropertyName webdavPropertyName)
 	{
@@ -160,7 +158,7 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 		{
 			try
 			{
-				return Repositories.decodePropertyURILocalName(webdavPropertyName.getLocalName()); //the URF property URI may be encoded as the local name of the Subversion custom property
+				return decodePropertyURILocalName(webdavPropertyName.getLocalName()); //the URF property URI may be encoded as the local name of the Subversion custom property
 			}
 			catch(final IllegalArgumentException illegalArgumentException) //if the Subversion custom property local name wasn't an encoded URI, ignore the error and use the property normally
 			{

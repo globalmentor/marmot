@@ -31,6 +31,7 @@ import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.test.AbstractTest;
 import com.globalmentor.urf.URFDateTime;
 import com.globalmentor.urf.URFResource;
+import com.globalmentor.urf.content.Content;
 
 /**
  * Abstract base class for running tests on repositories.
@@ -81,12 +82,15 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	@Test
 	public void testCreateResourceBytes() throws ResourceIOException
 	{
+		final int contentLength = (1 << 10) + 1;
 		final Date beforeCreateResource = new Date();
 		final Repository repository = getRepository();
-		final byte[] resourceContents = Bytes.createRandom(1 << 10 + 1); //create random contents
+		final byte[] resourceContents = Bytes.createRandom(contentLength); //create random contents
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		final URFResource newResourceDescription = repository.createResource(resourceURI, resourceContents); //create a resource with random contents
 		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
+		assertThat("Invalid content length of created resource.", Content.getContentLength(newResourceDescription), equalTo((long)contentLength));
+
 		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, new Date());
 		final byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
 		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(resourceContents));
@@ -107,18 +111,21 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	@Test
 	public void testCreateCollectionResourceBytes() throws ResourceIOException
 	{
+		final int contentLength = (1 << 10) + 1;
 		final Repository repository = getRepository();
-		final byte[] resourceContents = Bytes.createRandom(1 << 10 + 1); //create random contents
+		final byte[] resourceContents = Bytes.createRandom(contentLength); //create random contents
 		final Date beforeCreateCollection = new Date();
 		final URI collectionURI = repository.getRootURI().resolve("test/"); //determine a test collection URI
 		final URFResource newCollectionDescription = repository.createCollectionResource(collectionURI);
 		assertTrue("Created collection resource doesn't exist.", repository.resourceExists(collectionURI));
+		assertThat("Invalid content length of created collection resource.", Content.getContentLength(newCollectionDescription), equalTo(0L));
 		final Date beforeCreateResource = new Date();
 		final URI resourceURI = collectionURI.resolve("test.bin"); //determine a test resource URI
 		final URFResource newResourceDescription = repository.createResource(resourceURI, resourceContents); //create a resource with random contents
 		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
 		checkCreatedResourceDateTimes(newCollectionDescription, beforeCreateCollection, beforeCreateResource);
 		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, new Date());
+		assertThat("Invalid content length of created resource.", Content.getContentLength(newResourceDescription), equalTo((long)contentLength));
 		final byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
 		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(resourceContents));
 		repository.deleteResource(collectionURI); //delete the collection resource we created, with its contained resource

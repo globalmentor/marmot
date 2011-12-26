@@ -31,7 +31,6 @@ import static com.globalmentor.urf.content.Content.*;
 import static com.globalmentor.urf.dcmi.DCMI.*;
 
 import static com.globalmentor.java.Bytes.*;
-import static com.globalmentor.marmot.repository.Repositories.*;
 import static com.globalmentor.model.Locales.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.net.http.webdav.WebDAV.*;
@@ -91,7 +90,8 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 
 	/**
 	 * Determines the WebDAV property name to represent the synchronization WebDAV get last modified property.
-	 * @return The WebDAV property name to use in representing the synchronization WebDAV get last modified property.
+	 * @return The WebDAV property name to use in representing the synchronization WebDAV get last modified property, or <code>null</code> if no synchronization
+	 *         last modified property should be used.
 	 */
 	protected WebDAVPropertyName getSyncWebDAVGetLastModifiedWebDAVPropertyName()
 	{
@@ -267,12 +267,11 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * @throws IOException if there is an error creating the WebDAV property and value.
 	 * @see #createWebDAVPropertyName(URI)
 	 */
-	protected WebDAVProperty createWebDAVProperty(final URI resourceURI, final URFProperty... properties) throws IOException
+	protected WebDAVProperty createWebDAVProperty(final URI resourceURI, final Iterable<URFProperty> properties) throws IOException
 	{
-		final String webdavPropertyStringValue = encodePropertiesTextValue(resourceURI, getDescriptionIO(), properties); //encode the properties into a single value
-		final URI propertyURI = properties[0].getPropertyURI(); //get the URI of the URF property (we know by now there is at least one property)
-		final WebDAVPropertyName webdavPropertyName = createWebDAVPropertyName(propertyURI); //create a WebDAV property name from the URF property URI
-		final WebDAVPropertyValue webdavPropertyValue = new WebDAVLiteralPropertyValue(webdavPropertyStringValue); //create a WebDAV literal property value from the determined string
+		final NameValuePair<URI, String> webdavPropertyStringValue = encodePropertiesTextValue(resourceURI, properties); //encode the properties into a single value
+		final WebDAVPropertyName webdavPropertyName = createWebDAVPropertyName(webdavPropertyStringValue.getName()); //create a WebDAV property name from the URF property URI
+		final WebDAVPropertyValue webdavPropertyValue = new WebDAVLiteralPropertyValue(webdavPropertyStringValue.getValue()); //create a WebDAV literal property value from the determined string
 		return new WebDAVProperty(webdavPropertyName, webdavPropertyValue); //create and return a WebDAV property and value
 	}
 
@@ -434,6 +433,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
 		try
 		{
+			final WebDAVResource webdavResource = new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource
 			if(isCollectionURI(resourceURI)) //if the resource is a collection
 			{
 				final URI contentURI = resolve(resourceURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content
@@ -445,13 +445,16 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 				else
 				//if there is no collection content resource
 				{
+					if(!webdavResource.exists())	//if the content resource doesn't exist because the collection itself doesn't exist
+					{
+						throw new HTTPNotFoundException("Collection resource "+webdavResource.getURI()+" does not exist.");
+					}
 					return new ByteArrayInputStream(NO_BYTES); //return an input stream to an empty byte array
 				}
 			}
 			else
 			//if the resource is not a collection
 			{
-				final WebDAVResource webdavResource = new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource
 				return webdavResource.getInputStream(); //return an input stream to the resource
 			}
 		}
@@ -729,7 +732,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			}
 		}
 	}
-	
+
 	/**
 	 * Determines the WebDAV property names of an existing list of WebDAV properties that correspond to a set of URF property URIs. This is useful for deleting
 	 * existing URF properties.
@@ -753,25 +756,14 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	}
 
 	/**
-	 * Alters properties of a given resource. This implementation does not support removing specific properties by value.
-	 * @param resourceURI The reference URI of the resource.
-	 * @param resourceAlteration The specification of the alterations to be performed on the resource.
-	 * @return The updated description of the resource.
-	 * @exception NullPointerException if the given resource URI and/or resource alteration is <code>null</code>.
-	 * @exception ResourceIOException if the resource properties could not be altered.
+	 * {@inheritDoc} This implementation does not support removing specific properties by value.
 	 * @exception UnsupportedOperationException if a property is requested to be removed by value.
 	 * @exception UnsupportedOperationException if a property is requested to be added without the property URI first being removed (i.e. a property addition
 	 *              instead of a property setting).
 	 */
-	public URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException
+	@Override
+	protected URFResource alterResourcePropertiesImpl(final URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException
 	{
-		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
-			return subrepository.alterResourceProperties(resourceURI, resourceAlteration); //delegate to the subrepository
-		}
-		checkOpen(); //make sure the repository is open
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
 		try
 		{
@@ -803,8 +795,8 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * </p>
 	 * <p>
 	 * If the {@link Content#MODIFIED_PROPERTY_URI} property is being set/added, the property returned by
-	 * {@link #getSyncWebDAVGetLastModifiedWebDAVPropertyName()} will be updated with the current value of the {@link WebDAV#GET_LAST_MODIFIED_PROPERTY_NAME}
-	 * property.
+	 * {@link #getSyncWebDAVGetLastModifiedWebDAVPropertyName()}, if any, will be updated with the current value of the
+	 * {@link WebDAV#GET_LAST_MODIFIED_PROPERTY_NAME} property.
 	 * </p>
 	 * @param resourceURI The reference URI of the resource.
 	 * @param resourceAlteration The specification of the alterations to be performed on the resource.
@@ -814,8 +806,6 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * @exception IOException if the resource properties could not be altered.
 	 * @exception DataException if some data we retrieved was not as expected.
 	 * @exception UnsupportedOperationException if a property is requested to be removed by value.
-	 * @exception UnsupportedOperationException if a property is requested to be added without the property URI first being removed (i.e. a property addition
-	 *              instead of a property setting).
 	 */
 	protected URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration, final WebDAVResource webdavResource)
 			throws IOException, DataException
@@ -899,10 +889,10 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		for(final Map.Entry<URI, Set<URFProperty>> urfPropertyURIPropertyAdditionEntries : urfPropertyURIPropertyAdditions.entrySet())
 		{
 			final Set<URFProperty> urfPropertyAdditions = urfPropertyURIPropertyAdditionEntries.getValue(); //get the URF properties to add
-			final WebDAVProperty webdavProperty = createWebDAVProperty(resourceURI, urfPropertyAdditions.toArray(new URFProperty[urfPropertyAdditions.size()])); //create a WebDAV property and value for these URF property
+			final WebDAVProperty webdavProperty = createWebDAVProperty(resourceURI, urfPropertyAdditions); //create a WebDAV property and value for these URF property
 			setWebDAVProperties.add(webdavProperty); //add this WebDAV property to the set of properties to set
 		}
-		if(syncWebDAVGetLastContentModified != null) //if we have a synchronize property to write
+		if(syncWebDAVGetLastContentModified != null && getSyncWebDAVGetLastModifiedWebDAVPropertyName() != null) //if we have a synchronize property to write
 		{
 			setWebDAVProperties.add(new WebDAVProperty(getSyncWebDAVGetLastModifiedWebDAVPropertyName(), syncWebDAVGetLastContentModified)); //we'll update the last time we knew of a getlastmodified
 		}
@@ -1133,7 +1123,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 						final String propertyTextValue = ((WebDAVLiteralPropertyValue)propertyValue).getText(); //get the text value of the property
 						try
 						{
-							decodePropertiesTextValue(urf, resource, urfPropertyURI, propertyTextValue, getDescriptionIO()); //decode the properties from the single text value and update the resource
+							decodePropertiesTextValue(resource, urfPropertyURI, propertyTextValue); //decode the properties from the single text value and update the resource
 						}
 						catch(final IllegalArgumentException illegalArgumentException) //if the property text value wasn't encoded properly
 						{
@@ -1230,7 +1220,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			}
 		}
 		URFDateTime modified = getModified(resource); //try to determine the modified date and time; the stored modified time will always trump everything else, unless the time is out of sync
-		if(modified != null) //if we have an explicit modified date and time, verify that the file hasn't changed externally to Marmot
+		if(modified != null && getSyncWebDAVGetLastModifiedWebDAVPropertyName() != null) //if we have an explicit modified date and time, verify that the file hasn't changed externally to Marmot
 		{
 			final WebDAVProperty syncWebDAVGetLastModifiedProperty = contentProperties.get(getSyncWebDAVGetLastModifiedWebDAVPropertyName()); //check sync modified time to see if we should use our modified value
 			if(syncWebDAVGetLastModifiedProperty != null)

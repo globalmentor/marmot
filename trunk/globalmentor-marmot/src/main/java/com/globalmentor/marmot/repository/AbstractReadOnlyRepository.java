@@ -146,26 +146,10 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
 	}
 
-	/**
-	 * Alters properties of a given resource.
-	 * <p>
-	 * This implementation throws a {@link ResourceForbiddenException} if the resource URI is within this repository.
-	 * </p>
-	 * @param resourceURI The reference URI of the resource.
-	 * @param resourceAlteration The specification of the alterations to be performed on the resource.
-	 * @return The updated description of the resource.
-	 * @exception NullPointerException if the given resource URI and/or resource alteration is <code>null</code>.
-	 * @exception ResourceIOException if the resource properties could not be altered.
-	 */
-	public URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException
+	/** {@inheritDoc} This implementation throws a {@link ResourceForbiddenException}. */
+	@Override
+	protected URFResource alterResourcePropertiesImpl(final URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException
 	{
-		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
-			return subrepository.alterResourceProperties(resourceURI, resourceAlteration); //delegate to the subrepository
-		}
-		checkOpen(); //make sure the repository is open
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
 	}
 

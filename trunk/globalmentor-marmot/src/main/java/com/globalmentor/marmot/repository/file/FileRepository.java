@@ -110,7 +110,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	/**
 	 * File constructor with no separate private URI namespace.
 	 * @param repositoryDirectory The file identifying the directory of this repository.
-	 * @exception NullPointerException if the given repository directory is <code>null</code>.
+	 * @throws NullPointerException if the given repository directory is <code>null</code>.
 	 */
 	public FileRepository(final File repositoryDirectory)
 	{
@@ -120,8 +120,8 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	/**
 	 * URI constructor with no separate private URI namespace. The given repository URI should end in a slash.
 	 * @param repositoryURI The URI identifying the location of this repository.
-	 * @exception NullPointerException if the given repository URI is <code>null</code>.
-	 * @exception IllegalArgumentException if the repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
+	 * @throws NullPointerException if the given repository URI is <code>null</code>.
+	 * @throws IllegalArgumentException if the repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
 	 */
 	public FileRepository(final URI repositoryURI)
 	{
@@ -132,7 +132,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	 * Public repository URI and private repository directory constructor.
 	 * @param publicRepositoryURI The URI identifying the location of this repository.
 	 * @param privateRepositoryDirectory The file identifying the private directory of the repository.
-	 * @exception NullPointerException if the given repository URI and/or the given directory is <code>null</code>.
+	 * @throws NullPointerException if the given repository URI and/or the given directory is <code>null</code>.
 	 */
 	public FileRepository(final URI publicRepositoryURI, final File privateRepositoryDirectory)
 	{
@@ -143,7 +143,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	 * Public repository URI and private repository URI constructor. The given private repository URI should end in a slash.
 	 * @param publicRepositoryURI The URI identifying the location of this repository.
 	 * @param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	 * @exception NullPointerException if one of the given repository URIs is <code>null</code>. //TODO relax; improve @exception IllegalArgumentException if the
+	 * @throws NullPointerException if one of the given repository URIs is <code>null</code>. //TODO relax; improve @throws IllegalArgumentException if the
 	 *              private repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
 	 */
 	public FileRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
@@ -192,7 +192,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		final URF urf = createURF(); //create a new URF data model
 		try
 		{
-			return createResourceDescription(urf, resourceURI, checkFileExists(new File(getSourceResourceURI(resourceURI)))); //create and return a description from a file created from the URI from the private namespace
+			return createResourceDescription(urf, resourceURI, new File(getSourceResourceURI(resourceURI))); //create and return a description from a file created from the URI from the private namespace
 		}
 		catch(final IOException ioException) //if an I/O exception occurs
 		{
@@ -206,6 +206,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	{
 		try
 		{
+			final File resourceFile = new File(getSourceResourceURI(resourceURI)); //create a file object from the private URI
 			if(isCollectionURI(resourceURI)) //if the resource is a collection
 			{
 				final URI contentURI = resolve(resourceURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content
@@ -217,14 +218,14 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 				else
 				//if there is no collection content resource
 				{
+					checkFileExists(resourceFile);	//make sure the real problem isn't that the resource file itself doesn't exist
 					return new ByteArrayInputStream(NO_BYTES); //return an input stream to an empty byte array
 				}
 			}
 			else
 			//if the resource is not a collection
 			{
-				final File file = new File(getSourceResourceURI(resourceURI)); //create a file object from the private URI
-				return new FileInputStream(file); //return an input stream to the file
+				return new FileInputStream(resourceFile); //return an input stream to the file; this will check for the file's existence
 			}
 		}
 		catch(final IOException ioException) //if an I/O exception occurs
@@ -240,10 +241,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		try
 		{
 			final File resourceFile = new File(getSourceResourceURI(resourceURI)); //get a file for the resource
-			if(!resourceFile.exists()) //if the file doesn't exist
-			{
-				throw new FileNotFoundException("Cannot open output stream to non-existent file " + resourceFile + " in repository.");
-			}
+			checkFileExists(resourceFile);
 			final File contentFile; //determine the file to use for storing content
 			final boolean isCollection = isCollectionURI(resourceURI);
 			if(isCollection) //if the resource is a collection
@@ -277,7 +275,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	 * @param resourceURI The URI of the resource to access.
 	 * @param resourceFile The file representing the resource.
 	 * @return An output stream to the resource represented by given resource file.
-	 * @exception IOException if there is an error accessing the resource.
+	 * @throws IOException if there is an error accessing the resource.
 	 */
 	protected OutputStream getResourceOutputStream(final URI resourceURI, final File resourceFile) throws IOException
 	{
@@ -455,23 +453,10 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		}
 	}
 
-	/**
-	 * Alters properties of a given resource.
-	 * @param resourceURI The reference URI of the resource.
-	 * @param resourceAlteration The specification of the alterations to be performed on the resource.
-	 * @return The updated description of the resource.
-	 * @exception NullPointerException if the given resource URI and/or resource alteration is <code>null</code>.
-	 * @exception ResourceIOException if the resource properties could not be altered.
-	 */
-	public URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException
+	/** {@inheritDoc} */
+	@Override
+	protected URFResource alterResourcePropertiesImpl(final URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException
 	{
-		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
-			return subrepository.alterResourceProperties(resourceURI, resourceAlteration); //delegate to the subrepository
-		}
-		checkOpen(); //make sure the repository is open
 		return alterResourceProperties(resourceURI, resourceAlteration, new File(getSourceResourceURI(resourceURI))); //create a file object and alter the properties for the file
 	}
 
@@ -481,8 +466,8 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	 * @param resourceAlteration The specification of the alterations to be performed on the resource.
 	 * @param resourceFile The file to use in updating the resource properties.
 	 * @return The updated description of the resource.
-	 * @exception NullPointerException if the given resource URI, resource alteration, and/or resource file is <code>null</code>.
-	 * @exception ResourceIOException if the resource properties could not be altered.
+	 * @throws NullPointerException if the given resource URI, resource alteration, and/or resource file is <code>null</code>.
+	 * @throws ResourceIOException if the resource properties could not be altered.
 	 */
 	protected URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration, final File resourceFile)
 			throws ResourceIOException
@@ -507,10 +492,10 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	 * @param destinationURI The URI to which the resource should be copied.
 	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
 	 *          destination should cause an exception to be thrown.
-	 * @exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @exception ResourceIOException if there is an error copying the resource.
-	 * @exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	 * @throws ResourceIOException if there is an error copying the resource.
+	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
 	 */
 	public void copyResource(URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException
 	{
@@ -535,11 +520,11 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	 * @param destinationURI The URI to which the resource should be moved.
 	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
 	 *          destination should cause an exception to be thrown.
-	 * @exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @exception IllegalArgumentException if the given resource URI is the base URI of the repository.
-	 * @exception ResourceIOException if there is an error moving the resource.
-	 * @exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	 * @throws IllegalArgumentException if the given resource URI is the base URI of the repository.
+	 * @throws ResourceIOException if there is an error moving the resource.
+	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
 	 */
 	public void moveResource(URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException
 	{
@@ -565,11 +550,13 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	 * @param resourceURI The URI of the resource being described.
 	 * @param resourceFile The file for which a resource should be created.
 	 * @return A resource description of the given file.
-	 * @exception IOException if there is an error creating the resource description.
+	 * @throws FileNotFoundException if the given resource file does not exist.
+	 * @throws IOException if there is an error creating the resource description.
 	 * @throws IllegalArgumentException if a non-collection URI is given to access a directory.
 	 */
 	protected URFResource createResourceDescription(final URF urf, final URI resourceURI, final File resourceFile) throws IOException
 	{
+		checkFileExists(resourceFile);
 		final URFResource resource = loadResourceDescription(urf, resourceFile); //load the resource description, if there is one
 		long contentLength = 0; //we'll update the content length if we can
 		URFDateTime contentModified = null; //we'll get the content modified from the file or, for a directory, from its content file, if any---but not from a directory itself
@@ -641,7 +628,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	 * containing {@value #MARMOT_DESCRIPTION_NAME}, and ending with the extension for TURF files.
 	 * @param privateResourceURI The private URI of a resource.
 	 * @return <code>true</code> if the resource is a description file for another resource.
-	 * @exception NullPointerException if the given URI is <code>null</code>.
+	 * @throws NullPointerException if the given URI is <code>null</code>.
 	 */
 	protected boolean isSourceResourceDescription(final URI privateResourceURI)
 	{
@@ -676,7 +663,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	 * @param urf The URF data model to use when creating this resource.
 	 * @param resourceFile The file of a resource.
 	 * @return A resource description of the given file.
-	 * @exception IOException if there is an error loading the resource description.
+	 * @throws IOException if there is an error loading the resource description.
 	 * @see #getResourceDescriptionFile(File)
 	 */
 	protected URFResource loadResourceDescription(final URF urf, final File resourceFile) throws IOException
@@ -711,7 +698,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	 * description file does not exist and there are no properties to save, no resource description file is created.
 	 * @param resourceDescription The resource description to save; the resource URI is ignored.
 	 * @param resourceFile The file of a resource.
-	 * @exception IOException if there is an error save the resource description.
+	 * @throws IOException if there is an error save the resource description.
 	 * @see #getResourceDescriptionFile(File)
 	 */
 	protected void saveResourceDescription(URFResource resourceDescription, final File resourceFile) throws IOException
@@ -824,7 +811,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		 * @param outputStream The output stream to decorate
 		 * @param resourceDescription The description of the resource to store; the URI of the description is ignored.
 		 * @param resourceFile The file for updating the properties.
-		 * @exception NullPointerException if the given output stream, resourceURI, resource description, and/or resource file is <code>null</code>.
+		 * @throws NullPointerException if the given output stream, resourceURI, resource description, and/or resource file is <code>null</code>.
 		 */
 		public DescriptionWriterOutputStreamDecorator(final OutputStream outputStream, final URFResource resourceDescription, final File resourceFile)
 		{
@@ -835,7 +822,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 
 		/**
 		 * Called after the stream is successfully closed. This version updates the file properties to reflect the given resource description.
-		 * @exception ResourceIOException if an I/O error occurs.
+		 * @throws ResourceIOException if an I/O error occurs.
 		 */
 		protected void afterClose() throws ResourceIOException
 		{

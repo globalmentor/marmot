@@ -299,7 +299,8 @@ public interface Repository
 	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	 * @throws IllegalArgumentException if the given resource is too large to be placed in a byte array.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws ResourceIOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
+	 * @throws ResourceIOException if there is an error accessing the resource.
 	 */
 	public byte[] getResourceContents(final URI resourceURI) throws ResourceIOException;
 
@@ -309,7 +310,8 @@ public interface Repository
 	 * @return An input stream to the resource represented by the given URI.
 	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws ResourceIOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
+	 * @throws ResourceIOException if there is an error accessing the resource.
 	 */
 	public InputStream getResourceInputStream(final URI resourceURI) throws ResourceIOException;
 
@@ -535,6 +537,7 @@ public interface Repository
 	 * @param properties The properties to set.
 	 * @return The updated description of the resource.
 	 * @throws NullPointerException if the given resource URI and/or properties is <code>null</code>.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if the resource properties could not be updated.
 	 */
 	public URFResource setResourceProperties(final URI resourceURI, final URFProperty... properties) throws ResourceIOException;
@@ -546,6 +549,7 @@ public interface Repository
 	 * @param propertyURIs The properties to remove.
 	 * @return The updated description of the resource.
 	 * @throws NullPointerException if the given resource URI and/or property URIs is <code>null</code>.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if the resource properties could not be updated.
 	 */
 	public URFResource removeResourceProperties(final URI resourceURI, final URI... propertyURIs) throws ResourceIOException;
@@ -556,10 +560,8 @@ public interface Repository
 	 * @param resourceAlteration The specification of the alterations to be performed on the resource.
 	 * @return The updated description of the resource.
 	 * @throws NullPointerException if the given resource URI and/or resource alteration is <code>null</code>.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if the resource properties could not be altered.
-	 * @throws UnsupportedOperationException if a property is requested to be removed by value.
-	 * @throws UnsupportedOperationException if a property is requested to be added without the property URI first being removed (i.e. a property addition instead
-	 *           of a property setting).
 	 */
 	public URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException;
 

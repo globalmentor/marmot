@@ -17,6 +17,7 @@
 package com.globalmentor.marmot.repository.svn.svnkit;
 
 import java.io.*;
+import java.net.PasswordAuthentication;
 import java.net.URI;
 import java.util.*;
 
@@ -29,22 +30,28 @@ import org.tmatesoft.svn.core.io.*;
 import org.tmatesoft.svn.core.io.diff.SVNDeltaGenerator;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
+import static java.util.Arrays.fill;
 import static java.util.Collections.*;
+import static org.tmatesoft.svn.core.SVNProperty.*;
 
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Bytes.*;
+import static com.globalmentor.java.Conditions.unexpected;
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.marmot.repository.Repositories.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
 
+import com.globalmentor.collections.CollectionMap;
+import com.globalmentor.collections.HashSetHashMap;
 import com.globalmentor.io.*;
+import com.globalmentor.java.Conditions;
 import com.globalmentor.marmot.repository.*;
+import com.globalmentor.model.NameValuePair;
 import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
-
-import static com.globalmentor.urf.TURF.*;
+import com.globalmentor.util.DataException;
 
 /**
  * Subversion repository implemented by SVNKit.
@@ -274,7 +281,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
 			synchronized(svnRepository)
 			{
-				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the directory entry for this repository
+				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the directory entry for this resource
 				if(dirEntry.getKind() == SVNNodeKind.NONE) //make sure we have a resource at this URI
 				{
 					throw new ResourceNotFoundException(resourceURI);
@@ -497,54 +504,58 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			try
 			{
 				//TODO del if not needed				final long latestRevision=svnRepository.getLatestRevision();	//get the latest repository revision
-				ISVNEditor commitEditor = svnRepository.getCommitEditor("Marmot modification", null, true, null); //get a commit editor to the repository
-				commitEditor.openRoot(-1); //open the root to start making changing
+				ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource creation.", null, true, null); //get a commit editor to the repository
+				editor.openRoot(-1); //open the root to start making changing
 
 				//				final URIPath contentURIPath;	//determine the path to use for storing content
 
 				if(isCollectionURI(resourceURI)) //if we're creating a collection
 				{
 					//TODO decide what to do if collection exists
-					commitEditor.addDir(resourceURIPath.toString(), null, -1); //show that we are adding a directory to the repository
+					editor.addDir(resourceURIPath.toString(), null, -1); //show that we are adding a directory to the repository
 					if(resourceContents.length > 0) //if we have contents for the directory
 					{
 						final URIPath contentURIPath = resourceURIPath.resolve(COLLECTION_CONTENT_NAME); //determine the URI path to use for content, using the special collection content resource
-						commitEditor.applyTextDelta(contentURIPath.toString(), null); //this is a new file; start with a blank checksum TODO fix for existing files
+						editor.applyTextDelta(contentURIPath.toString(), null); //this is a new file; start with a blank checksum TODO fix for existing files
 						final SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
-						final String checksum = deltaGenerator.sendDelta(contentURIPath.toString(), new ByteArrayInputStream(resourceContents), commitEditor, true); //create a new delta for the contents
-						//TODO update last-modified properties
-						commitEditor.closeFile(resourceURIPath.toString(), checksum); //finish the file addition
+						final String checksum = deltaGenerator.sendDelta(contentURIPath.toString(), new ByteArrayInputStream(resourceContents), editor, true); //create a new delta for the contents
+						editor.closeFile(resourceURIPath.toString(), checksum); //finish the file addition
 					}
-					//TODO update properties
-					commitEditor.closeDir(); //close the directory we added
+					alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), editor, null, SVNNodeKind.DIR);	//alter the properties to be exactly those specified by the given resource description
+					editor.closeDir(); //close the directory we added
 				}
 				else
 				//if we're creating a non-collection resource
 				{
-					commitEditor.addFile(resourceURIPath.toString(), null, -1); //show that we are adding a file to the repository
-					commitEditor.applyTextDelta(resourceURIPath.toString(), null); //this is a new file; start with a blank checksum TODO fix for existing files
+					editor.addFile(resourceURIPath.toString(), null, -1); //show that we are adding a file to the repository
+					editor.applyTextDelta(resourceURIPath.toString(), null); //this is a new file; start with a blank checksum TODO fix for existing files
 					final SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
-					final String checksum = deltaGenerator.sendDelta(resourceURIPath.toString(), new ByteArrayInputStream(resourceContents), commitEditor, true); //create a new delta for the contents
-					//TODO update properties
-					commitEditor.closeFile(resourceURIPath.toString(), checksum); //finish the file addition
+					final String checksum = deltaGenerator.sendDelta(resourceURIPath.toString(), new ByteArrayInputStream(resourceContents), editor, true); //create a new delta for the contents
+					alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), editor, null, SVNNodeKind.FILE);	//alter the properties to be exactly those specified by the given resource description
+					editor.closeFile(resourceURIPath.toString(), checksum); //finish the file addition
 				}
-				commitEditor.closeDir(); //close the root
+				editor.closeDir(); //close the root
 				try
 				{
-					commitEditor.closeEdit(); //try to finalize the edit
+					editor.closeEdit(); //try to finalize the edit
 				}
 				catch(final SVNException svnException)
 				{
-					commitEditor.abortEdit(); //abort the edit we had scheduled
+					editor.abortEdit(); //abort the edit we had scheduled
 					throw svnException; //rethrow the exception
 				}
+				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the directory entry for this resource
+				return createResourceDescription(createURF(), resourceURI, dirEntry); //create and return the latest description of the resource
+			}
+			catch(final IOException ioException)
+			{
+				throw toResourceIOException(resourceURI, ioException);
 			}
 			catch(final SVNException svnException)
 			{
 				throw toResourceIOException(resourceURI, svnException);
 			}
 		}
-		return getResourceDescription(resourceURI); //get the updated resource description
 	}
 
 	/** {@inheritDoc} This implementation ignores requests to delete all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
@@ -561,17 +572,17 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			{
 				try
 				{
-					ISVNEditor commitEditor = svnRepository.getCommitEditor("Marmot modification", null, true, null); //get a commit editor to the repository
-					commitEditor.openRoot(-1); //open the root to start making changing
-					commitEditor.deleteEntry(resourceURIPath.toString(), -1); //delete the directory
-					commitEditor.closeDir(); //close the directory we deleted
+					ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource deletion.", null, true, null); //get a commit editor to the repository
+					editor.openRoot(-1); //open the root to start making changing
+					editor.deleteEntry(resourceURIPath.toString(), -1); //delete the directory
+					editor.closeDir(); //close the directory we deleted
 					try
 					{
-						commitEditor.closeEdit(); //try to finalize the edit
+						editor.closeEdit(); //try to finalize the edit
 					}
 					catch(final SVNException svnException)
 					{
-						commitEditor.abortEdit(); //abort the edit we had scheduled
+						editor.abortEdit(); //abort the edit we had scheduled
 						throw svnException; //rethrow the exception
 					}
 				}
@@ -583,53 +594,148 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		}
 	}
 
-	/**
-	 * Alters properties of a given resource.
-	 * @param resourceURI The reference URI of the resource.
-	 * @param resourceAlteration The specification of the alterations to be performed on the resource.
-	 * @return The updated description of the resource.
-	 * @throws NullPointerException if the given resource URI and/or resource alteration is <code>null</code>.
-	 * @throws ResourceIOException if the resource properties could not be altered.
-	 */
-	public URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException
+	/** {@inheritDoc} */
+	@Override
+	protected URFResource alterResourcePropertiesImpl(final URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException
 	{
-		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
+		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
+		final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
+		synchronized(svnRepository)
 		{
-			return subrepository.alterResourceProperties(resourceURI, resourceAlteration); //delegate to the subrepository
+			try
+			{
+				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the directory entry for this resource
+				final SVNNodeKind nodeKind=dirEntry.getKind();
+				if(nodeKind == SVNNodeKind.NONE) //make sure we have a resource at this URI
+				{
+					throw new ResourceNotFoundException(resourceURI);
+				}
+				ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource property modification.", null, true, null); //get a commit editor to the repository
+				editor.openRoot(-1); //open the root to start making changing
+				if(nodeKind==SVNNodeKind.FILE)	//open the file or directory for editing
+				{
+					editor.openFile(resourceURIPath.toString(), -1);
+				}
+				else if(nodeKind==SVNNodeKind.DIR)
+				{
+					editor.openDir(resourceURIPath.toString(), -1);
+				}
+				else
+				{
+					throw new ResourceIOException(resourceURI, "Unrecognized directory entry node kind: "+nodeKind);
+				}
+				alterResourceProperties(resourceURI, resourceAlteration, editor, dirEntry, nodeKind); //create alter the properties of this resource
+				if(nodeKind==SVNNodeKind.FILE)	//if this was a file, close its edits
+				{
+					editor.closeFile(resourceURIPath.toString(), null);
+				}
+				try
+				{
+					editor.closeEdit(); //try to finalize the edit
+				}
+				catch(final SVNException svnException)
+				{
+					editor.abortEdit(); //abort the edit we had scheduled
+					throw svnException; //rethrow the exception
+				}
+				return createResourceDescription(createURF(), resourceURI, dirEntry);	//get the latest description of the resource and return it
+			}
+			catch(final IOException ioException)
+			{
+				throw toResourceIOException(resourceURI, ioException);
+			}
+			catch(final SVNException svnException)
+			{
+				throw toResourceIOException(resourceURI, svnException);
+			}
 		}
-		checkOpen(); //make sure the repository is open
-		return alterResourceProperties(resourceURI, resourceAlteration, new File(getSourceResourceURI(resourceURI))); //create a file object and alter the properties for the file
 	}
 
 	/**
-	 * Alters properties of a given resource. Live properties are ignored.
+	 * Alters properties of a given resource. This implementation does not support removing specific properties by value.
+	 * <p>
+	 * This implementation has a race condition for adding new property values for properties that already exist in that simultaneous additions could clobber all
+	 * the additions but the last one.
+	 * </p>
 	 * @param resourceURI The reference URI of the resource.
 	 * @param resourceAlteration The specification of the alterations to be performed on the resource.
-	 * @param resourceFile The file to use in updating the resource properties.
-	 * @return The updated description of the resource.
-	 * @throws NullPointerException if the given resource URI, resource alteration, and/or resource file is <code>null</code>.
-	 * @throws ResourceIOException if the resource properties could not be altered.
+	 * @param editor The editor indicating the in-progress commit edits.
+	 * @param dirEntry The SVNKit directory entry of the file or directory, or <code>null</code> if no directory entry is available (e.g. for a file not yet created).
+	 * @param nodeKind The SVNKit kind of node the properties of which are being altered.
+	 * @throws NullPointerException if the given resource URI, resource alteration, editor, and/or node kind is <code>null</code>.
+	 * @throws NullPointerException if the given directory entry is <code>null</code> and a property addition (as opposed to a property setting, that is, a property
+	 * addition without a corresponding property URI removal) is requested.
+	 * @throws IOException if the resource properties could not be altered.
+//TODO del	 * @throws DataException if some data we retrieved was not as expected.
+	 * @throws UnsupportedOperationException if a property is requested to be removed by value.
 	 */
-	protected URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration, final File resourceFile)
-			throws ResourceIOException
+	protected void alterResourceProperties(final URI resourceURI, final URFResourceAlteration resourceAlteration, final ISVNEditor editor,
+			final SVNDirEntry dirEntry, final SVNNodeKind nodeKind) throws SVNException, IOException //IOException, DataException
 	{
-		throw new UnsupportedOperationException();
-		/*TODO fix
-				final URF urf = createURF(); //create a new URF data model
-				try
+		final boolean isDir = nodeKind == SVNNodeKind.DIR; //see if this is a directory or a file being modified
+		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
+		if(!resourceAlteration.getPropertyRemovals().isEmpty()) //if there are properties to be removed by value
+		{
+			throw new UnsupportedOperationException("This implementation does not support removing properties by value.");
+		}
+		final Set<URI> livePropertyURIs = getLivePropertyURIs(); //get the set of live properties
+		final Set<URI> propertyURIRemovals = new HashSet<URI>(resourceAlteration.getPropertyURIRemovals()); //get the property URI removals, which we'll optimize based upon the property settings
+		URFResource resourceDescription = null; //we'll only retrieve the existing resource description if needed
+		//determine the URF properties that should be added for each URF property
+		final CollectionMap<URI, URFProperty, Set<URFProperty>> urfPropertyURIPropertyAdditions = new HashSetHashMap<URI, URFProperty>(); //create a map of sets of properties to add, keyed to their property URIs, so that we can find multiple property values for a single property if present
+		for(final URFProperty propertyAddition : resourceAlteration.getPropertyAdditions()) //look at all the property additions
+		{
+			final URI propertyURI = propertyAddition.getPropertyURI(); //get the URI of the URF property
+			if(!livePropertyURIs.contains(propertyURI)) //if this is not a live property
+			{
+				if(!resourceAlteration.getPropertyURIRemovals().contains(propertyURI)) //if a property addition was requested instead of a property setting (i.e. without first removing all the URI properties), we'll need to first gather the existing properties
 				{
-					final URFResource resourceDescription = createResourceDescription(urf, resourceURI, resourceFile); //get a description from a file created from the URI from the private namespace
-					resourceDescription.alter(resourceAlteration); //alter the resource according to the specification
-					saveResourceDescription(resourceDescription, resourceFile); //save the altered resource description
-					return createResourceDescription(urf, resourceURI, resourceFile); //get a new description from the file, because the live properties might have changed
+					if(resourceDescription == null) //if we don't yet have a description for the resource
+					{
+						resourceDescription = createResourceDescription(createURF(), resourceURI, dirEntry); //get a description of the resource
+					}
+					for(final URFProperty existingProperty : resourceDescription.getProperties(propertyURI)) //gather the existing properties; we'll have to combine them all into one property value
+					{
+						urfPropertyURIPropertyAdditions.addItem(propertyURI, existingProperty); //indicate that this is another URF property to add for this property URI
+					}
 				}
-				catch(final IOException ioException) //if an I/O exception occurs
-				{
-					throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
-				}
-		*/
+				urfPropertyURIPropertyAdditions.addItem(propertyURI, propertyAddition); //indicate that this is another URF property to add/set for this property URI
+				propertyURIRemovals.remove(propertyURI); //indicate that we don't have to remove this property, because it will be removed by setting it
+			}
+		}
+		//at this point we have only properties to set and properties to remove
+		//convert the URF property set and removals to SVNKit property sets
+		final Map<String, SVNPropertyValue> setSVNKitProperties = new HashMap<String, SVNPropertyValue>(urfPropertyURIPropertyAdditions.size()
+				+ propertyURIRemovals.size()); //keep track of which SVNKit properties to set based upon the URF properties to add
+		for(final Map.Entry<URI, Set<URFProperty>> urfPropertyURIPropertyAdditionEntries : urfPropertyURIPropertyAdditions.entrySet()) //look at all the properties to add
+		{
+			final Set<URFProperty> urfPropertyAdditions = urfPropertyURIPropertyAdditionEntries.getValue(); //get the URF properties to add
+			final NameValuePair<URI, String> propertyTextValue = encodePropertiesTextValue(resourceURI, urfPropertyAdditions); //encode the properties into a single value
+			setSVNKitProperties.put(encodePropertyURILocalName(propertyTextValue.getName()), SVNPropertyValue.create(propertyTextValue.getValue())); //store this value for later setting
+		}
+		//determine the properties to remove
+		for(final URI propertyURIRemoval : propertyURIRemovals) //look at all the property removals left after removing that which are irrelevant
+		{
+			if(!livePropertyURIs.contains(propertyURIRemoval)) //if this is not a live property
+			{
+				setSVNKitProperties.put(encodePropertyURILocalName(propertyURIRemoval), null); //in SVNKit a null value indicates that the property should be removed
+			}
+		}
+		//actually set/remove the properties
+		for(final Map.Entry<String, SVNPropertyValue> setProperty : setSVNKitProperties.entrySet())
+		{
+			final String propertyName = setProperty.getKey();
+			final SVNPropertyValue propertyValue = setProperty.getValue();
+			if(isDir)
+			{
+				editor.changeDirProperty(propertyName, propertyValue);
+			}
+			else
+			{
+				editor.changeFileProperty(resourceURIPath.toString(), propertyName, propertyValue);
+			}
+
+		}
 	}
 
 	/**
@@ -701,9 +807,24 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	 * @throws SVNException if there is an error creating the resource description.
 	 * @throws IllegalArgumentException if a non-collection URI is given to access a directory.
 	 */
-	protected URFResource createResourceDescription(final URF urf, final URI resourceURI, final SVNDirEntry dirEntry) throws SVNException
+	protected URFResource createResourceDescription(final URF urf, final URI resourceURI, final SVNDirEntry dirEntry) throws SVNException, ResourceIOException	//TODO recheck all these exception types
 	{
 		return createResourceDescription(urf, resourceURI, dirEntry, null);
+	}
+
+	/**
+	 * Determines whether the given property is in a reserved namespace. Reserved namespaces include:
+	 * <ul>
+	 * <li>{@link SVNProperty#SVN_PREFIX}.</li>
+	 * <li>{@link SVNProperty#SVNKIT_PREFIX}.</li>
+	 * </ul>
+	 * @param propertyName The name of the property to check.
+	 * @return <code>true</code> if the property is in one of the known reserved namespaces.
+	 * @throws NullPointerException if the given property name is <code>null</code>.
+	 */
+	protected boolean isReservedNamespaceProperty(final String propertyName)
+	{
+		return propertyName.startsWith(SVN_PREFIX) || propertyName.startsWith(SVNKIT_PREFIX);
 	}
 
 	/**
@@ -718,17 +839,18 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	 * @throws IllegalArgumentException if a non-collection URI is given to access a directory.
 	 */
 	protected URFResource createResourceDescription(final URF urf, final URI resourceURI, final SVNDirEntry dirEntry, SVNProperties properties)
-			throws SVNException
+			throws SVNException, ResourceIOException
 	{
+		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
 		final URFResource resource = urf.createResource(resourceURI); //create a default resource description
-		SVNNodeKind svnNodeKind = dirEntry.getKind(); //find out what kind of node this is
+		SVNNodeKind nodeKind = dirEntry.getKind(); //find out what kind of node this is
 		//		final String filename = resourceFile.getName(); //get the name of the file
 		long contentLength = 0; //we'll update the content length if we can
-		URFDateTime contentModified = null; //we'll get the content modified from the file or, for a directory, from its content file, if any---but not from a directory itself
+		//		URFDateTime contentModified = null; //we'll get the content modified from the file or, for a directory, from its content file, if any---but not from a directory itself
 		final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
 		synchronized(svnRepository)
 		{
-			if(svnNodeKind == SVNNodeKind.DIR) //if this is a directory
+			if(nodeKind == SVNNodeKind.DIR) //if this is a directory
 			{
 				if(!isCollectionURI(resourceURI)) //if a non-collection URI was used for the directory
 				{
@@ -737,11 +859,12 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 				final URI contentURI = resolve(resourceURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content
 				//				if(svnRepository.checkPath(getResourceURIPath(contentURI).toString(), -1)==SVNNodeKind.FILE) //if there is a special collection content file
 				//				{
-				final SVNDirEntry contentDirEntry = svnRepository.info(getResourceURIPath(contentURI).toString(), -1); //get the directory entry for the special collection content resource
+				final URIPath contentURIPath = getResourceURIPath(contentURI);
+				final SVNDirEntry contentDirEntry = svnRepository.info(contentURIPath.toString(), -1); //get the directory entry for the special collection content resource
 				if(contentDirEntry != null) //if there is a special collection content resource
 				{
 					contentLength = contentDirEntry.getSize(); //use the size of the special collection content resource
-					contentModified = new URFDateTime(contentDirEntry.getDate()); //set the modified timestamp as the last modified date of the content file			
+					//don't use a Subversion last-modified; SVNKit throws away the real last-modified and uses the creation date: contentModified = new URFDateTime(contentDirEntry.getDate()); //set the modified timestamp as the last modified date of the content file 
 				}
 				//					properties=contentDirEntry.hasProperties() ? svnRepository.in
 			}
@@ -749,20 +872,33 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			//if this file is not a directory
 			{
 				contentLength = dirEntry.getSize(); //use the size of the file
-				contentModified = new URFDateTime(dirEntry.getDate()); //set the modified timestamp as the last modified date of the resource file			
+				//don't use a Subversion last-modified; SVNKit throws away the real last-modified and uses the creation date: contentModified = new URFDateTime(dirEntry.getDate()); //set the modified timestamp as the last modified date of the resource file			
 			}
 			setContentLength(resource, contentLength); //indicate the length of the content
-			if(contentModified != null) //if we have a content modified time
-			{
-				setModified(resource, contentModified); //set the modified timestamp as the last modified date
-			}
+			/*TODO del if not usable
+						if(contentModified != null) //if we have a content modified time
+						{
+							setModified(resource, contentModified); //set the modified timestamp as the last modified date
+						}
+			*/
 			//TODO verify where content type comes from
 			if(dirEntry.hasProperties()) //if there are additional properties
 			{
 				if(properties == null) //if no properties were given
 				{
 					properties = new SVNProperties(); //load the properties from the repository
-					svnRepository.getFile(getResourceURIPath(resourceURI).toString(), -1, properties, null);
+					if(nodeKind==SVNNodeKind.FILE)	//open the file or directory for editing
+					{
+						svnRepository.getFile(resourceURIPath.toString(), -1, properties, null);
+					}
+					else if(nodeKind==SVNNodeKind.DIR)
+					{
+						svnRepository.getDir(resourceURIPath.toString(), -1, properties, (Collection<?>)null);
+					}
+					else
+					{
+						throw new ResourceIOException(resourceURI, "Unrecognized directory entry node kind: "+nodeKind);
+					}
 				}
 				@SuppressWarnings("unchecked")
 				final Map<String, SVNPropertyValue> propertyValues = (Map<String, SVNPropertyValue>)properties.asMap(); //get a map of the Subversion properties
@@ -770,13 +906,13 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 				{
 					final String propertyName = propertyValueEntry.getKey();
 					final SVNPropertyValue propertyValue = propertyValueEntry.getValue();
-					if(SVNProperty.isRegularProperty(propertyName) && propertyValue.isString()) //if this is a regular Subversion property with a string value
+					if(!isReservedNamespaceProperty(propertyName) && propertyValue.isString()) //if this is a non-reserved Subversion property with a string value
 					{
-						final String propertyLocalName = SVNProperty.shortPropertyName(propertyName); //get the local part of the property name
+						//TODO del if not needed						final String propertyLocalName = SVNProperty.shortPropertyName(propertyName); //get the local part of the property name
 						try
 						{
-							final URI propertyURI = decodePropertyURILocalName(propertyLocalName); //the URF property URI may be encoded as the local name of the Subversion custom property
-							decodePropertiesTextValue(urf, resource, propertyURI, propertyValueEntry.getValue().getString(), getDescriptionIO()); //decode the text value into the property
+							final URI propertyURI = decodePropertyURILocalName(propertyName); //the URF property URI may be encoded as the local name of the Subversion custom property
+							decodePropertiesTextValue(resource, propertyURI, propertyValueEntry.getValue().getString()); //decode the text value into the resource
 						}
 						catch(final IllegalArgumentException illegalArgumentException) //if the Subversion custom property local name wasn't an encoded URI, ignore the error and skip this property
 						{

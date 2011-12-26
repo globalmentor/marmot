@@ -28,20 +28,25 @@ import static java.util.Collections.*;
 import com.globalmentor.collections.*;
 import com.globalmentor.event.ProgressListener;
 import com.globalmentor.io.*;
+import com.globalmentor.java.Strings;
 import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.security.MarmotSecurity;
+import com.globalmentor.model.NameValuePair;
 import com.globalmentor.model.ReadWriteLockObjectHolder;
 import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
 
+import static com.globalmentor.io.Charsets.*;
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Bytes.*;
+import static com.globalmentor.java.Characters.*;
 import static com.globalmentor.java.Conditions.*;
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.marmot.Marmot.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 import static com.globalmentor.net.URIs.*;
+import static com.globalmentor.urf.TURF.*;
 import static com.globalmentor.urf.content.Content.*;
 
 /**
@@ -66,6 +71,12 @@ import static com.globalmentor.urf.content.Content.*;
  * </ul>
  * <p>
  * This implementation initializes the map of extension contents to {@link Files#FILE_EXTENSION_CONTENT_TYPE_MAP}.
+ * </p>
+ * <p>
+ * To assist in implementing repositories that don't support custom namespaces, this class allows encoding of URF properties by using some other namespace
+ * namespace with a local name encoded version of the URF property URI, using {@value AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR} as the escape character.
+ * The standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name character, so {@value AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR},
+ * which conveniently is not a valid URI character, is used instead.
  * </p>
  * @author Garret Wilson
  */
@@ -686,6 +697,7 @@ public abstract class AbstractRepository implements Repository
 	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	 * @throws IllegalArgumentException if the given resource is too large to be placed in a byte array.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
 	 */
 	protected byte[] getResourceContentsImpl(final URI resourceURI) throws ResourceIOException
@@ -739,7 +751,8 @@ public abstract class AbstractRepository implements Repository
 	 * for the repository and the repository is guaranteed to be open.
 	 * @param resourceURI The URI of the resource to access.
 	 * @return An input stream to the resource represented by the given URI.
-	 * @throws ResourceIOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
+	 * @throws ResourceIOException if there is an error accessing the resource.
 	 */
 	protected abstract InputStream getResourceInputStreamImpl(final URI resourceURI) throws ResourceIOException;
 
@@ -1075,17 +1088,11 @@ public abstract class AbstractRepository implements Repository
 	protected abstract void deleteResourceImpl(final URI resourceURI) throws ResourceIOException;
 
 	/**
-	 * Adds properties to a given resource. All existing properties will be left unmodified. This implementation creates an {@link URFResourceAlteration} and
-	 * delegates to {@link #alterResourceProperties(URI, URFResourceAlteration)}.
-	 * @param resourceURI The reference URI of the resource.
-	 * @param properties The properties to set.
-	 * @return The updated description of the resource.
-	 * @throws NullPointerException if the given resource URI and/or properties is <code>null</code>.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws ResourceIOException if the resource properties could not be updated.
+	 * {@inheritDoc} This version delegates to {@link #addResourcePropertiesImpl(URI, URFProperty...)}. Child classes normally should override
+	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
 	 */
-	public URFResource addResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException
+	@Override
+	public final URFResource addResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
@@ -1093,22 +1100,31 @@ public abstract class AbstractRepository implements Repository
 		{
 			return subrepository.addResourceProperties(resourceURI, properties); //delegate to the subrepository
 		}
-		return alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createAddPropertiesAlteration(properties)); //create an alteration for adding properties and alter the resource
+		checkOpen(); //make sure the repository is open
+		return addResourcePropertiesImpl(resourceURI, properties);
 	}
 
 	/**
-	 * Sets the properties of a given resource. Any existing properties with the same URIs as the given given property/value pairs will be removed. All other
-	 * existing properties will be left unmodified. This implementation creates an {@link URFResourceAlteration} and delegates to
-	 * {@link #alterResourceProperties(URI, URFResourceAlteration)}.
+	 * Adds properties to a given resource. All existing properties will be left unmodified. The resource URI is guaranteed to be normalized and valid for the
+	 * repository and the repository is guaranteed to be open. This implementation creates an {@link URFResourceAlteration} and delegates to
+	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
 	 * @param resourceURI The reference URI of the resource.
 	 * @param properties The properties to set.
 	 * @return The updated description of the resource.
 	 * @throws NullPointerException if the given resource URI and/or properties is <code>null</code>.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	 * @throws ResourceIOException if the resource properties could not be updated.
 	 */
-	public URFResource setResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException
+	protected URFResource addResourcePropertiesImpl(final URI resourceURI, final URFProperty... properties) throws ResourceIOException
+	{
+		return alterResourcePropertiesImpl(resourceURI, DefaultURFResourceAlteration.createAddPropertiesAlteration(properties)); //create an alteration for adding properties and alter the resource
+	}
+
+	/**
+	 * {@inheritDoc} This version delegates to {@link #setResourcePropertiesImpl(URI, URFProperty...)}. Child classes normally should override
+	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
+	 */
+	@Override
+	public final URFResource setResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
@@ -1116,20 +1132,32 @@ public abstract class AbstractRepository implements Repository
 		{
 			return subrepository.setResourceProperties(resourceURI, properties); //delegate to the subrepository
 		}
-		return alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createSetPropertiesAlteration(properties)); //create an alteration for setting properties and alter the resource
+		checkOpen(); //make sure the repository is open
+		return setResourcePropertiesImpl(resourceURI, properties);
 	}
 
 	/**
-	 * Removes properties from a given resource. Any existing properties with the same URIs as the given given property/value pairs will be removed. All other
-	 * existing properties will be left unmodified. This implementation creates an {@link URFResourceAlteration} and delegates to
-	 * {@link #alterResourceProperties(URI, URFResourceAlteration)}.
+	 * Sets the properties of a given resource. Any existing properties with the same URIs as the given given property/value pairs will be removed. All other
+	 * existing properties will be left unmodified. The resource URI is guaranteed to be normalized and valid for the repository and the repository is guaranteed
+	 * to be open. This implementation creates an {@link URFResourceAlteration} and delegates to {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
 	 * @param resourceURI The reference URI of the resource.
-	 * @param propertyURIs The properties to remove.
+	 * @param properties The properties to set.
 	 * @return The updated description of the resource.
-	 * @throws NullPointerException if the given resource URI and/or property URIs is <code>null</code>.
+	 * @throws NullPointerException if the given resource URI and/or properties is <code>null</code>.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if the resource properties could not be updated.
 	 */
-	public URFResource removeResourceProperties(URI resourceURI, final URI... propertyURIs) throws ResourceIOException
+	public URFResource setResourcePropertiesImpl(URI resourceURI, final URFProperty... properties) throws ResourceIOException
+	{
+		return alterResourcePropertiesImpl(resourceURI, DefaultURFResourceAlteration.createSetPropertiesAlteration(properties)); //create an alteration for setting properties and alter the resource
+	}
+
+	/**
+	 * {@inheritDoc} This implementation delegates to {@link #removeResourcePropertiesImpl(URI, URI...)}. Child classes normally should override
+	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
+	 */
+	@Override
+	public final URFResource removeResourceProperties(URI resourceURI, final URI... propertyURIs) throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
@@ -1137,8 +1165,51 @@ public abstract class AbstractRepository implements Repository
 		{
 			return subrepository.removeResourceProperties(resourceURI, propertyURIs); //delegate to the subrepository
 		}
-		return alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createRemovePropertiesAlteration(propertyURIs)); //create an alteration for removing properties and alter the resource
+		checkOpen(); //make sure the repository is open
+		return removeResourcePropertiesImpl(resourceURI, propertyURIs);
 	}
+
+	/**
+	 * Removes properties from a given resource. Any existing properties with the same URIs as the given given property/value pairs will be removed. All other
+	 * existing properties will be left unmodified. The resource URI is guaranteed to be normalized and valid for the repository and the repository is guaranteed
+	 * to be open. This implementation creates an {@link URFResourceAlteration} and delegates to {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
+	 * @param resourceURI The reference URI of the resource.
+	 * @param propertyURIs The properties to remove.
+	 * @return The updated description of the resource.
+	 * @throws NullPointerException if the given resource URI and/or property URIs is <code>null</code>.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
+	 * @throws ResourceIOException if the resource properties could not be updated.
+	 */
+	public URFResource removeResourcePropertiesImpl(URI resourceURI, final URI... propertyURIs) throws ResourceIOException
+	{
+		return alterResourcePropertiesImpl(resourceURI, DefaultURFResourceAlteration.createRemovePropertiesAlteration(propertyURIs)); //create an alteration for removing properties and alter the resource
+	}
+
+	/** {@inheritDoc} Child classes should override {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}. */
+	@Override
+	public final URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException
+	{
+		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
+		if(subrepository != this) //if the resource URI lies within a subrepository
+		{
+			return subrepository.alterResourceProperties(resourceURI, resourceAlteration); //delegate to the subrepository
+		}
+		checkOpen(); //make sure the repository is open
+		return alterResourcePropertiesImpl(resourceURI, resourceAlteration);
+	}
+
+	/**
+	 * Implementation to alter properties of a given resource. The resource URI is guaranteed to be normalized and valid for the repository and the repository is
+	 * guaranteed to be open.
+	 * @param resourceURI The reference URI of the resource.
+	 * @param resourceAlteration The specification of the alterations to be performed on the resource.
+	 * @return The updated description of the resource.
+	 * @throws NullPointerException if the given resource URI and/or resource alteration is <code>null</code>.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
+	 * @throws ResourceIOException if the resource properties could not be altered.
+	 */
+	protected abstract URFResource alterResourcePropertiesImpl(final URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException;
 
 	/**
 	 * Determines the URI of the collection resource of the given URI; either the given resource URI if the resource represents a collection, or the parent
@@ -1502,6 +1573,142 @@ public abstract class AbstractRepository implements Repository
 		finally
 		{
 			super.finalize(); //always call the parent version
+		}
+	}
+
+	/** The character used to escape URIs to encode them as property names in another namespace. */
+	public final static char PROPERTY_NAME_URI_ESCAPE_CHAR = MIDDLE_DOT_CHAR;
+
+	/**
+	 * Determines the a property name to represent an URF property by encoded the URF property URI to be a simple local name.
+	 * <p>
+	 * The standard URI escape character, {@value URIs#ESCAPE_CHAR}, may not be a valid name character for e.g. Subversion using WebDAV, so
+	 * {@value #PROPERTY_NAME_URI_ESCAPE_CHAR}, which conveniently is not a valid URI character, is used instead.
+	 * </p>
+	 * <p>
+	 * This method is part of a set for encoding/decoding entire property URIs as a single property local name for those repository types that don't allow
+	 * specific namespaces to be set.
+	 * </p>
+	 * @param urfPropertyURI The URI of the URF property to represent.
+	 * @return A property name to use in representing an URF property with the given URF property URI.
+	 * @see #PROPERTY_NAME_URI_ESCAPE_CHAR
+	 * @see #decodePropertyURILocalName(String)
+	 */
+	protected static String encodePropertyURILocalName(final URI urfPropertyURI)
+	{
+		return encode(urfPropertyURI, PROPERTY_NAME_URI_ESCAPE_CHAR);
+	}
+
+	/**
+	 * Determines the URF property to represent the given property local name, which is assumed to have a full property URI encoded in it.
+	 * <p>
+	 * The standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name character, so {@value #PROPERTY_NAME_URI_ESCAPE_CHAR}, which conveniently
+	 * is not a valid URI character, is used instead.
+	 * </p>
+	 * <p>
+	 * This method is part of a set for encoding/decoding entire property URIs as a single property local name for those repository types that don't allow
+	 * specific namespaces to be set.
+	 * </p>
+	 * @param webdavPropertyName The name of the WebDAV property.
+	 * @return The URI of the URF property to represent the given property local name.
+	 * @throws IllegalArgumentException if the given local name has no valid absolute URF property URI encoded in it.
+	 * @see #PROPERTY_NAME_URI_ESCAPE_CHAR
+	 * @see #encodePropertyURILocalName(URI)
+	 */
+	protected static URI decodePropertyURILocalName(final String propertyLocalName)
+	{
+		final String urfPRopertyURI = decode(propertyLocalName, PROPERTY_NAME_URI_ESCAPE_CHAR); //the URF property URI may be encoded as the local name of the custom property
+		return checkAbsolute(URI.create(urfPRopertyURI)); //create an URF property URI from the decoded local name and make sure it is absolute
+	}
+
+	/**
+	 * Creates a single text value for to represent the given URF property and value(s). At least one property must be given.
+	 * <p>
+	 * This method is part of a pair of methods to allow multiple typed values encoded in a single string for repositories that don't natively allow multiple or
+	 * typed properties.
+	 * </p>
+	 * @param resourceURI The URI of the resource.
+	 * @param properties The URF properties to represent as values encoded in a single string
+	 * @param descriptionIO The I/O implementation for reading resources.
+	 * @return A property URI and a text value representing the given URF properties.
+	 * @throws NullPointerException if the given properties and/or description I/O is <code>null</code>.
+	 * @throws IllegalArgumentException if no properties are given.
+	 * @throws IllegalArgumentException if all of the properties do not have the same property URI.
+	 * @throws IllegalArgumentException if there is an error creating the text value.
+	 * @see #decodePropertiesTextValue(URFResource, URI, String)
+	 * @see #getDescriptionIO()
+	 */
+	protected NameValuePair<URI, String> encodePropertiesTextValue(final URI resourceURI, final Iterable<URFProperty> properties)
+			throws IOException
+	{
+		final Iterator<URFProperty> propertyIterator = properties.iterator();
+		if(!propertyIterator.hasNext()) //if no properties are given
+		{
+			throw new IllegalArgumentException("At least one URF property must be provided to create a WebDAV property.");
+		}
+		URFProperty property = propertyIterator.next(); //get the first property
+		final URI propertyURI = property.getPropertyURI(); //get the URI of the URF property
+		//TODO why don't we check to see if there is only one text property, and simply return the text value of that property? was this an oversight in an earlier implementation? we would need to still encode it if the real string starts with the TURF signature
+		final URFResource propertyDescription = new DefaultURFResource(resourceURI); //create a new resource description just for this property
+		do //for each URF property
+		{
+			if(!propertyURI.equals(property.getPropertyURI())) //if this URF property has a different URI
+			{
+				throw new IllegalArgumentException("All URF properties expected to have property URI " + propertyURI + "; found " + property.getPropertyURI() + ".");
+			}
+			propertyDescription.addProperty(property); //add this property to the resource
+			if(propertyIterator.hasNext()) //get the next property
+			{
+				property = propertyIterator.next();
+			}
+		}
+		while(propertyIterator.hasNext());
+		return new NameValuePair<URI, String>(propertyURI, Strings.write(resourceURI, propertyDescription, getDescriptionIO(), UTF_8_CHARSET)); //write the description to a string, using the resource URI as the base URI
+	}
+
+	/**
+	 * Adds the identified property of the given resource from the given text, which may indicate a set of properties encoded in URF.
+	 * <p>
+	 * If the property text value begins with {@link TURF#SIGNATURE}, it is assumed to be stored in TURF; the identified property is removed and replaced with all
+	 * given properties stored in the parsed TURF description. Otherwise, the text value is assumed to be just another text value and is added to the resource
+	 * using the identified property.
+	 * </p>
+	 * <p>
+	 * This method is part of a pair of methods to allow multiple typed values encoded in a single string for repositories that don't natively allow multiple or
+	 * typed properties.
+	 * </p>
+	 * @param resource The resource the properties of which to add.
+	 * @param propertyURI The URI of the property to add.
+	 * @param propertyTextValue The text value to add; this value may represent several properties encoded as TURF.
+	 * @throws NullPointerException if the given resource, property URI, and/or property text value is <code>null</code>.
+	 * @throws IllegalArgumentException if the given property text value purports to be TURF but has serialization errors.
+	 * @see #encodePropertiesTextValue(URI, Iterable)
+	 * @see #createURF()
+	 * @see #getDescriptionIO()
+	 */
+	protected void decodePropertiesTextValue(final URFResource resource, final URI propertyURI, final String propertyTextValue)
+	{
+		if(propertyTextValue.startsWith(SIGNATURE)) //if this property value is stored in TURF
+		{
+			try
+			{
+				//read a description of the resource from the property, recognizing the resource serialized with URI "" as indicating the given resource
+				final URFResource propertyDescription = getDescriptionIO().read(createURF(), new ByteArrayInputStream(propertyTextValue.getBytes(UTF_8_CHARSET)), resource.getURI());
+				resource.removePropertyValues(propertyURI); //if we were successful (that is, the property text value had no errors), remove any values already present for this value 
+				for(final URFProperty property : propertyDescription.getProperties(propertyURI)) //for each read property that we expect in the description
+				{
+					resource.addProperty(property); //add this property to the given description
+				}
+			}
+			catch(final IOException ioException) //if we had any problem interpreting the text value as TURF
+			{
+				throw new IllegalArgumentException("Invalid URF property value.", ioException);
+			}
+		}
+		else
+		//if this is a normal string property
+		{
+			resource.addPropertyValue(propertyURI, propertyTextValue); //add the string value to the resource
 		}
 	}
 }
