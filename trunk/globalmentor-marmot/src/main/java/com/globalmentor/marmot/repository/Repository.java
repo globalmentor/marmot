@@ -531,6 +531,18 @@ public interface Repository
 	public URFResource addResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException;
 
 	/**
+	 * Adds properties to a given resource. All existing properties will be left unmodified.
+	 * @param resourceURI The reference URI of the resource.
+	 * @param properties The properties to set.
+	 * @return The updated description of the resource.
+	 * @throws NullPointerException if the given resource URI and/or properties is <code>null</code>.
+	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	 * @throws ResourceIOException if the resource properties could not be updated.
+	 */
+	public URFResource addResourceProperties(URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException;
+	
+	/**
 	 * Sets the properties of a given resource. Any existing properties with the same URIs as the given given property/value pairs will be removed. All other
 	 * existing properties will be left unmodified.
 	 * @param resourceURI The reference URI of the resource.
@@ -543,6 +555,18 @@ public interface Repository
 	public URFResource setResourceProperties(final URI resourceURI, final URFProperty... properties) throws ResourceIOException;
 
 	/**
+	 * Sets the properties of a given resource. Any existing properties with the same URIs as the given given property/value pairs will be removed. All other
+	 * existing properties will be left unmodified.
+	 * @param resourceURI The reference URI of the resource.
+	 * @param properties The properties to set.
+	 * @return The updated description of the resource.
+	 * @throws NullPointerException if the given resource URI and/or properties is <code>null</code>.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
+	 * @throws ResourceIOException if the resource properties could not be updated.
+	 */
+	public URFResource setResourceProperties(final URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException;
+	
+	/**
 	 * Removes properties from a given resource. Any existing properties with the same URIs as the given given property/value pairs will be removed. All other
 	 * existing properties will be left unmodified.
 	 * @param resourceURI The reference URI of the resource.
@@ -554,6 +578,18 @@ public interface Repository
 	 */
 	public URFResource removeResourceProperties(final URI resourceURI, final URI... propertyURIs) throws ResourceIOException;
 
+	/**
+	 * Removes properties from a given resource. Any existing properties with the same URIs as the given given property/value pairs will be removed. All other
+	 * existing properties will be left unmodified.
+	 * @param resourceURI The reference URI of the resource.
+	 * @param propertyURIs The properties to remove.
+	 * @return The updated description of the resource.
+	 * @throws NullPointerException if the given resource URI and/or property URIs is <code>null</code>.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
+	 * @throws ResourceIOException if the resource properties could not be updated.
+	 */
+	public URFResource removeResourceProperties(final URI resourceURI, final Iterable<URI> propertyURIs) throws ResourceIOException;
+	
 	/**
 	 * Alters properties of a given resource.
 	 * @param resourceURI The reference URI of the resource.

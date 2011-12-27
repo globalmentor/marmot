@@ -1088,11 +1088,21 @@ public abstract class AbstractRepository implements Repository
 	protected abstract void deleteResourceImpl(final URI resourceURI) throws ResourceIOException;
 
 	/**
-	 * {@inheritDoc} This version delegates to {@link #addResourcePropertiesImpl(URI, URFProperty...)}. Child classes normally should override
+	 * {@inheritDoc} This version delegates to {@link #addResourceProperties(URI, Iterable)}. Child classes normally should override
 	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
 	 */
 	@Override
 	public final URFResource addResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException
+	{
+		return addResourceProperties(resourceURI, asList(properties));
+	}
+
+	/**
+	 * {@inheritDoc} This version delegates to {@link #addResourcePropertiesImpl(URI, Iterable)}. Child classes normally should override
+	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
+	 */
+	@Override
+	public final URFResource addResourceProperties(URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
@@ -1114,17 +1124,27 @@ public abstract class AbstractRepository implements Repository
 	 * @throws NullPointerException if the given resource URI and/or properties is <code>null</code>.
 	 * @throws ResourceIOException if the resource properties could not be updated.
 	 */
-	protected URFResource addResourcePropertiesImpl(final URI resourceURI, final URFProperty... properties) throws ResourceIOException
+	protected URFResource addResourcePropertiesImpl(final URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException
 	{
 		return alterResourcePropertiesImpl(resourceURI, DefaultURFResourceAlteration.createAddPropertiesAlteration(properties)); //create an alteration for adding properties and alter the resource
 	}
 
 	/**
-	 * {@inheritDoc} This version delegates to {@link #setResourcePropertiesImpl(URI, URFProperty...)}. Child classes normally should override
+	 * {@inheritDoc} This version delegates to {@link #setResourceProperties(URI, Iterable)}. Child classes normally should override
 	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
 	 */
 	@Override
 	public final URFResource setResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException
+	{
+		return setResourceProperties(resourceURI, asList(properties));
+	}
+
+	/**
+	 * {@inheritDoc} This version delegates to {@link #setResourcePropertiesImpl(URI, Iterable)}. Child classes normally should override
+	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
+	 */
+	@Override
+	public final URFResource setResourceProperties(URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
@@ -1147,17 +1167,27 @@ public abstract class AbstractRepository implements Repository
 	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if the resource properties could not be updated.
 	 */
-	public URFResource setResourcePropertiesImpl(URI resourceURI, final URFProperty... properties) throws ResourceIOException
+	public URFResource setResourcePropertiesImpl(URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException
 	{
 		return alterResourcePropertiesImpl(resourceURI, DefaultURFResourceAlteration.createSetPropertiesAlteration(properties)); //create an alteration for setting properties and alter the resource
 	}
 
 	/**
-	 * {@inheritDoc} This implementation delegates to {@link #removeResourcePropertiesImpl(URI, URI...)}. Child classes normally should override
+	 * {@inheritDoc} This implementation delegates to {@link #removeResourceProperties(URI, Iterable)}. Child classes normally should override
 	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
 	 */
 	@Override
 	public final URFResource removeResourceProperties(URI resourceURI, final URI... propertyURIs) throws ResourceIOException
+	{
+		return removeResourceProperties(resourceURI, asList(propertyURIs));
+	}
+
+	/**
+	 * {@inheritDoc} This implementation delegates to {@link #removeResourcePropertiesImpl(URI, Iterable)}. Child classes normally should override
+	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
+	 */
+	@Override
+	public final URFResource removeResourceProperties(URI resourceURI, final Iterable<URI> propertyURIs) throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
@@ -1180,7 +1210,7 @@ public abstract class AbstractRepository implements Repository
 	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if the resource properties could not be updated.
 	 */
-	public URFResource removeResourcePropertiesImpl(URI resourceURI, final URI... propertyURIs) throws ResourceIOException
+	public URFResource removeResourcePropertiesImpl(URI resourceURI, final Iterable<URI> propertyURIs) throws ResourceIOException
 	{
 		return alterResourcePropertiesImpl(resourceURI, DefaultURFResourceAlteration.createRemovePropertiesAlteration(propertyURIs)); //create an alteration for removing properties and alter the resource
 	}
@@ -1638,8 +1668,7 @@ public abstract class AbstractRepository implements Repository
 	 * @see #decodePropertiesTextValue(URFResource, URI, String)
 	 * @see #getDescriptionIO()
 	 */
-	protected NameValuePair<URI, String> encodePropertiesTextValue(final URI resourceURI, final Iterable<URFProperty> properties)
-			throws IOException
+	protected NameValuePair<URI, String> encodePropertiesTextValue(final URI resourceURI, final Iterable<URFProperty> properties) throws IOException
 	{
 		final Iterator<URFProperty> propertyIterator = properties.iterator();
 		if(!propertyIterator.hasNext()) //if no properties are given
@@ -1693,7 +1722,8 @@ public abstract class AbstractRepository implements Repository
 			try
 			{
 				//read a description of the resource from the property, recognizing the resource serialized with URI "" as indicating the given resource
-				final URFResource propertyDescription = getDescriptionIO().read(createURF(), new ByteArrayInputStream(propertyTextValue.getBytes(UTF_8_CHARSET)), resource.getURI());
+				final URFResource propertyDescription = getDescriptionIO().read(createURF(), new ByteArrayInputStream(propertyTextValue.getBytes(UTF_8_CHARSET)),
+						resource.getURI());
 				resource.removePropertyValues(propertyURI); //if we were successful (that is, the property text value had no errors), remove any values already present for this value 
 				for(final URFProperty property : propertyDescription.getProperties(propertyURI)) //for each read property that we expect in the description
 				{

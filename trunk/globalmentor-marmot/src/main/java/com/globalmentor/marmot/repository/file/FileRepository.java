@@ -40,7 +40,8 @@ import static com.globalmentor.urf.TURF.*;
  * Repository stored in a file system.
  * <p>
  * This implementation uses the file last modified timestamp to store the {@value Content#MODIFIED_PROPERTY_URI} property. The content modified property is not
- * saved for collections with no content.
+ * saved for collections with no content. The creation timestamp {@value Content#MODIFIED_PROPERTY_URI} is not stored in order to prevent needless creation of
+ * description files.
  * </p>
  * <p>
  * This implementation ignores hidden files when considering child resources.
@@ -144,7 +145,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	 * @param publicRepositoryURI The URI identifying the location of this repository.
 	 * @param privateRepositoryURI The URI identifying the private namespace managed by this repository.
 	 * @throws NullPointerException if one of the given repository URIs is <code>null</code>. //TODO relax; improve @throws IllegalArgumentException if the
-	 *              private repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
+	 *           private repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
 	 */
 	public FileRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
 	{
@@ -218,7 +219,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 				else
 				//if there is no collection content resource
 				{
-					checkFileExists(resourceFile);	//make sure the real problem isn't that the resource file itself doesn't exist
+					checkFileExists(resourceFile); //make sure the real problem isn't that the resource file itself doesn't exist
 					return new ByteArrayInputStream(NO_BYTES); //return an input stream to an empty byte array
 				}
 			}
@@ -598,11 +599,11 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 					setCreated(resource, contentModified);	//set the created time as the last modified date of the file, as Java doesn't allow access to the creation time
 				}
 		*/
-		return resource; //return the resource that respresents the file
+		return resource; //return the resource that represents the file
 	}
 
 	/**
-	 * Determines the file that holds the description of the given resource file. This version uses a separate destinct file beginning with the Unix hidden
+	 * Determines the file that holds the description of the given resource file. This version uses a separate distinct file beginning with the Unix hidden
 	 * prefix, containing {@value #MARMOT_DESCRIPTION_NAME}, and ending with the extension for TURF files.
 	 * @param resourceFile The file of a resource.
 	 * @return A new file designating the location of the resource description.
