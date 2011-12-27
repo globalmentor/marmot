@@ -16,6 +16,7 @@
 
 package com.globalmentor.marmot.repository;
 
+import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
 import static org.hamcrest.CoreMatchers.*;
@@ -90,7 +91,6 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		final URFResource newResourceDescription = repository.createResource(resourceURI, resourceContents); //create a resource with random contents
 		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
 		assertThat("Invalid content length of created resource.", Content.getContentLength(newResourceDescription), equalTo((long)contentLength));
-
 		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, new Date());
 		final byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
 		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(resourceContents));
@@ -131,9 +131,31 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		repository.deleteResource(collectionURI); //delete the collection resource we created, with its contained resource
 		assertFalse("Deleted collection resource still exists.", repository.resourceExists(collectionURI));
 		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
-
 	}
 
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Creating a resource with no contents.</li>
+	 * <li>Deleting an empty resource.</li>
+	 * </ul>
+	 */
+	@Test
+	public void testCreateEmptyResource() throws ResourceIOException
+	{
+		final Date beforeCreateResource = new Date();
+		final Repository repository = getRepository();
+		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
+		final URFResource newResourceDescription = repository.createResource(resourceURI, NO_BYTES); //create a resource with no contents
+		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
+		assertThat("Invalid content length of created resource.", Content.getContentLength(newResourceDescription), equalTo(0L));
+		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, new Date());
+		final byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
+		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(NO_BYTES));
+		repository.deleteResource(resourceURI); //delete the resource we created
+		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
+	}
+	
 	/**
 	 * Ensures that the dates of a created resource are valid.
 	 * @param resourceDescription The description of the created resource.
@@ -150,7 +172,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		if(modifiedDateTime != null)
 		{
 			assertTrue(
-					"Modified datetime not expected range.",
+					"Modified datetime not in expected range ("+beforeDate.getTime()+", "+modifiedDateTime.getTime()+", "+afterDate.getTime()+")",
 					(modifiedDateTime.equals(beforeDate) || modifiedDateTime.after(beforeDate))
 							&& (modifiedDateTime.equals(afterDate) || modifiedDateTime.before(afterDate)));
 		}
