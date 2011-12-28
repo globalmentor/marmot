@@ -305,35 +305,34 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		{
 			try
 			{
-				if(isCollectionURI(resourceURI)) //if the resource is a collection
+				final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
+				final URIPath contentURIPath; //we'll determine the URI path to use for content
+				final boolean isCollection = isCollectionURI(resourceURI);
+				if(isCollection) //if the resource is a collection
 				{
-					/*TODO fix for collection URIs
-					final URI contentURI = resolve(resourceURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content
-					final File contentFile = new File(getSourceResourceURI(contentURI)); //create a file object from the private URI of the special collection content resource
-					if(contentFile.exists()) //if there is a special collection content resource
-					{
-						return new FileInputStream(contentFile); //return an input stream to the file
-					}
-					else
-					*/
-					//if there is no collection content resource
-					{
-						return new ByteArrayInputStream(NO_BYTES); //return an input stream to an empty byte array
-					}
+					contentURIPath = resourceURIPath.resolve(COLLECTION_CONTENT_NAME); //the URI path to use for content uses the special collection content resource
 				}
 				else
 				//if the resource is not a collection
 				{
-					final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
-					final SVNNodeKind svnNodeKind = svnRepository.checkPath(resourceURIPath.toString(), -1); //see what kind of resource this is
-					if(svnNodeKind == SVNNodeKind.NONE) //make sure we have a resource at this URI
+					contentURIPath = resourceURIPath; //we'll get the content from the file itself
+				}
+				final SVNNodeKind contentNodeKind = svnRepository.checkPath(contentURIPath.toString(), -1); //see what kind of resource this is
+				if(contentNodeKind == SVNNodeKind.NONE) //if there is no such file TODO check to see if this is a directory, and throw the appropriate error
+				{
+					if(isCollection) //if we're looking for collection content, this is not a problem---the collection simply has no content
+					{
+						return new ByteArrayInputStream(NO_BYTES); //return an input stream to an empty byte array TODO create an EmptyInputStream class
+					}
+					else
+					//for non-collections
 					{
 						throw new ResourceNotFoundException(resourceURI);
 					}
-					final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(); //create a byte array output stream to hold the file TODO improve to create temporary files for large resources and return an input stream to them
-					svnRepository.getFile(resourceURIPath.toString(), -1, null, byteArrayOutputStream); //retrieve the contents of the file
-					return new ByteArrayInputStream(byteArrayOutputStream.toByteArray()); //get the bytes from the output stream and return them as an input stream
 				}
+				final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(); //create a byte array output stream to hold the file TODO improve to create temporary files for large resources and return an input stream to them
+				svnRepository.getFile(contentURIPath.toString(), -1, null, byteArrayOutputStream); //retrieve the contents of the content file
+				return new ByteArrayInputStream(byteArrayOutputStream.toByteArray()); //get the bytes from the output stream and return them as an input stream
 			}
 			catch(final SVNException svnException)
 			{
@@ -518,28 +517,40 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	 *          ignored.
 	 * @param dirEntry The SVNKit directory entry of the existing file or directory, or <code>null</code> if the resource does not exist and is being created.
 	 * @param inputStream The input stream containing the contents to store in the resource.
-	 * @return A description of the resource that was created.
 	 * @throws NullPointerException if the given resource URI and/or input stream is <code>null</code>.
 	 * @throws IllegalArgumentException if the given input stream does not support mark/reset.
 	 * @throws ResourceIOException if the resource could not be created.
 	 */
-	protected URFResource setResourceContents(final URI resourceURI, final URFResource resourceDescription, SVNDirEntry dirEntry, final InputStream inputStream)
+	protected void setResourceContents(final URI resourceURI, final URFResource resourceDescription, final SVNDirEntry dirEntry, final InputStream inputStream)
 			throws ResourceIOException
 	{
-
-		//TODO del if not needed		final InputStream oldInputStream=null;	//the input stream to the old version
-
 		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
+		final URIPath contentURIPath; //we'll determine the URI path to use for content
+		final boolean isCollection = isCollectionURI(resourceURI);
+		if(isCollection) //if the resource is a collection
+		{
+			contentURIPath = resourceURIPath.resolve(COLLECTION_CONTENT_NAME); //the URI path to use for content uses the special collection content resource
+		}
+		else
+		//if the resource is not a collection
+		{
+			contentURIPath = resourceURIPath; //we'll get the content from the file itself
+		}
 		final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
 		synchronized(svnRepository)
 		{
 			try
 			{
 				//TODO del if not needed				final long latestRevision=svnRepository.getLatestRevision();	//get the latest repository revision
-				ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource creation.", null, true, null); //get a commit editor to the repository
+
+				//see if we have a content resource; if the collection doesn't exist yet, then of course the content file doesn't yet exist
+				//this check must be done outside of an edit or we will get a SVNKit reentrant error
+				final boolean contentFileExists = dirEntry != null ? svnRepository.checkPath(contentURIPath.toString(), -1) != SVNNodeKind.NONE : false;
+				//TODO probably transfer the check for a non-collection content file existing here as well, so this variable will be put to use for both kinds of resources
+				final ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource creation.", null, true, null); //get a commit editor to the repository
 				try
 				{
-					editor.openRoot(-1); //open the root to start making changing
+					editor.openRoot(-1); //open the root to start making changes
 					if(isCollectionURI(resourceURI)) //if we're creating a collection
 					{
 						if(dirEntry != null) //if the directory supposedly exists
@@ -555,15 +566,12 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 						//otherwise, for a new collection, we only care if we have something to write
 						if(dirEntry != null || hasContent)
 						{
-							final URIPath contentURIPath = resourceURIPath.resolve(COLLECTION_CONTENT_NAME); //determine the URI path to use for content, using the special collection content resource
-							final SVNDirEntry contentDirEntry = svnRepository.info(contentURIPath.toString(), -1); //get the directory entry for the content resource
-							final boolean hasContentFile = contentDirEntry.getKind() != SVNNodeKind.NONE; //see if we have a content resource
-							if(hasContentFile || hasContent) //if the file doesn't exist and there's nothing to write, there's nothing to do
+							if(contentFileExists || hasContent) //if the file doesn't exist and there's nothing to write, there's nothing to do
 							{
 								//we'll write content even if we have no content---if there once was a content file,
 								//we'll keep it---even a zero-byte file---in order to maintain modified dates and such:
 								//if(hasContent) //if we have content to write
-								if(hasContentFile) //if the content file exists
+								if(contentFileExists) //if the content file exists
 								{
 									editor.openFile(contentURIPath.toString(), -1); //open the content file for modification
 								}
@@ -574,7 +582,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 								editor.applyTextDelta(contentURIPath.toString(), null); //this is a new file; start with a blank checksum
 								final SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
 								final String checksum = deltaGenerator.sendDelta(contentURIPath.toString(), inputStream, editor, true); //create a new delta for the contents
-								editor.closeFile(resourceURIPath.toString(), checksum); //finish the file addition
+								editor.closeFile(contentURIPath.toString(), checksum); //finish the content file addition
 							}
 						}
 						if(resourceDescription != null) //if we have a description of the resource, set its properties
@@ -613,8 +621,6 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					editor.abortEdit(); //abort the edit we had scheduled
 					throw svnException; //rethrow the exception
 				}
-				dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the updated directory entry for this resource
-				return createResourceDescription(createURF(), resourceURI, dirEntry); //create and return the latest description of the resource
 			}
 			catch(final IOException ioException)
 			{
@@ -641,10 +647,10 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			{
 				try
 				{
-					ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource deletion.", null, true, null); //get a commit editor to the repository
+					final ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource deletion.", null, true, null); //get a commit editor to the repository
 					try
 					{
-						editor.openRoot(-1); //open the root to start making changing
+						editor.openRoot(-1); //open the root to start making changes
 						editor.deleteEntry(resourceURIPath.toString(), -1); //delete the directory
 						editor.closeDir(); //close the directory we deleted
 						editor.closeEdit(); //try to finalize the edit
@@ -679,10 +685,10 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 				{
 					throw new ResourceNotFoundException(resourceURI);
 				}
-				ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource property modification.", null, true, null); //get a commit editor to the repository
+				final ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource property modification.", null, true, null); //get a commit editor to the repository
 				try
 				{
-					editor.openRoot(-1); //open the root to start making changing
+					editor.openRoot(-1); //open the root to start making changes
 					if(nodeKind == SVNNodeKind.FILE) //open the file or directory for editing
 					{
 						editor.openFile(resourceURIPath.toString(), -1);

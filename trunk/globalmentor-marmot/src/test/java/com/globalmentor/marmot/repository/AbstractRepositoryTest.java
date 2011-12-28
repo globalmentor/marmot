@@ -16,6 +16,7 @@
 
 package com.globalmentor.marmot.repository;
 
+import static com.globalmentor.io.Charsets.*;
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.Conditions.*;
 import static com.globalmentor.net.URIs.*;
@@ -66,15 +67,6 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 */
 	protected abstract Repository createRepository();
 
-	/*TODO del
-		@Test
-		public void test() throws ResourceIOException
-		{
-			final Repository repository=new NTFSFileRepository(new File("example"));
-			Repositories.print(repository, System.out);
-		}
-	*/
-
 	/**
 	 * Tests:
 	 * <ul>
@@ -84,38 +76,114 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * </ul>
 	 */
 	@Test
-	public void testCreateResourceBytes() throws ResourceIOException
+	public void testCreateResourceBytes() throws IOException
 	{
-		final int contentLength = (1 << 10) + 1;
-		final Date beforeCreateResource = new Date();
-		final Repository repository = getRepository();
-		final byte[] resourceContents = Bytes.createRandom(contentLength); //create random contents
+
+		final int initialContentLength = (1 << 10) + 1;
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
-		final URFResource newResourceDescription = repository.createResource(resourceURI, resourceContents); //create a resource with random contents
-		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
-		assertThat("Invalid content length of created resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
-		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, new Date());
-		final byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
-		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(resourceContents));
-		repository.deleteResource(resourceURI); //delete the resource we created
-		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
+		testResourceContentBytes(resourceURI, false, Bytes.createRandom(initialContentLength));
 	}
 
 	/**
 	 * Tests:
 	 * <ul>
-	 * <li>Creating a resource using supplied contents.</li>
+	 * <li>Creating a collection resource using supplied contents.</li>
+	 * <li>Checking the existence of a collection resource.</li>
+	 * <li>Deleting a collection resource.</li>
+	 * </ul>
+	 */
+	@Test
+	public void testCreateCollectionBytes() throws IOException
+	{
+
+		final int initialContentLength = (1 << 10) + 1;
+		final URI resourceURI = repository.getRootURI().resolve("test/"); //determine a test collection resource URI
+		testResourceContentBytes(resourceURI, false, Bytes.createRandom(initialContentLength));
+	}
+
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Creating a resource using supplied binary contents.</li>
 	 * <li>Checking the existence of a resource.</li>
-	 * <li>Changing the contents of a resource using an output stream.</li>
+	 * <li>Changing the binary contents of a resource using an output stream.</li>
 	 * <li>Deleting a resource.</li>
 	 * </ul>
 	 */
 	@Test
-	public void testChangeResourceBytes() throws IOException
+	public void testChangeResourceBinary() throws IOException
 	{
 		final int initialContentLength = (1 << 10) + 1;
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
-		testResourceContentBytes(resourceURI, Bytes.createRandom(initialContentLength), Bytes.createRandom(initialContentLength * 2));
+		testResourceContentBytes(resourceURI, false, new byte[0], Bytes.createRandom(initialContentLength), Bytes.createRandom(initialContentLength * 2),
+				Bytes.createRandom(initialContentLength * 3), new byte[0], Bytes.createRandom(initialContentLength)); //try three different sizes of binary content
+	}
+
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Creating a collection resource using supplied binary contents.</li>
+	 * <li>Checking the existence of a collection resource.</li>
+	 * <li>Changing the binary contents of a collection resource using an output stream.</li>
+	 * <li>Deleting a resource.</li>
+	 * </ul>
+	 */
+	@Test
+	public void testChangeCollectionBinary() throws IOException
+	{
+		final int initialContentLength = (1 << 10) + 1;
+		final URI resourceURI = repository.getRootURI().resolve("test/"); //determine a test collection resource URI
+		testResourceContentBytes(resourceURI, false, new byte[0], Bytes.createRandom(initialContentLength), Bytes.createRandom(initialContentLength * 2),
+				Bytes.createRandom(initialContentLength * 3), new byte[0], Bytes.createRandom(initialContentLength)); //try three different sizes of binary content
+	}
+
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Creating a resource using supplied text contents.</li>
+	 * <li>Checking the existence of a resource.</li>
+	 * <li>Changing the text contents of a resource using an output stream.</li>
+	 * <li>Deleting a resource.</li>
+	 * </ul>
+	 */
+	@Test
+	public void testChangeResourceText() throws IOException
+	{
+		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
+		testResourceContentBytes(resourceURI, false, "This is a test.".getBytes(UTF_8_CHARSET), "This is a test.\nThis is a second line.".getBytes(UTF_8_CHARSET),
+				"This really is a test.\nThis is a second line.".getBytes(UTF_8_CHARSET), "This is just a test.".getBytes(UTF_8_CHARSET)); //try three different sizes of text content
+	}
+
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Creating a small resource using an output stream.</li>
+	 * <li>Checking the existence of a resource.</li>
+	 * <li>Deleting a resource.</li>
+	 * </ul>
+	 */
+	@Test
+	public void testCreateSmallResourceOutputStream() throws IOException
+	{
+		final int contentLength = (1 << 3) + 1; //>8
+		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
+		testResourceContentBytes(resourceURI, true, Bytes.createRandom(contentLength));
+	}
+
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Creating a large resource using an output stream.</li>
+	 * <li>Checking the existence of a resource.</li>
+	 * <li>Deleting a resource.</li>
+	 * </ul>
+	 */
+	@Test
+	public void testCreateLargeResourceOutputStream() throws IOException
+	{
+		final int contentLength = (1 << 20) + 1; //>1MB
+		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
+		testResourceContentBytes(resourceURI, true, Bytes.createRandom(contentLength));
 	}
 
 	/**
@@ -127,16 +195,34 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * <li>Deleting a resource.</li>
 	 * </ul>
 	 * @param resourceURI The URI of the resource to create.
+	 * @param streamCreate Whether the resource should initially be created using an output stream rather than supplying the bytes.
 	 * @param contents The array of byte arrays of content to use; the first will create the resource, the others will test modifying the resource
 	 * @throws NullPointerException if the given resource URI and/or content array is <code>null</code>.
 	 * @throws IllegalArgumentException if the array of contents is empty.
 	 */
-	protected void testResourceContentBytes(final URI resourceURI, final byte[]... contents) throws IOException
+	protected void testResourceContentBytes(final URI resourceURI, final boolean streamCreate, final byte[]... contents) throws IOException
 	{
 		checkArgumentPositive(contents.length);
 		Date before = new Date();
 		final Repository repository = getRepository();
-		URFResource newResourceDescription = repository.createResource(resourceURI, contents[0]); //create an initial resource with contents
+		URFResource newResourceDescription;
+		if(streamCreate) //if we should create the resource using a stream
+		{
+			final OutputStream outputStream = repository.createResource(resourceURI); //create a resource and get an output stream to the contents
+			try
+			{
+				outputStream.write(contents[0]); //write the contents
+			}
+			finally
+			{
+				outputStream.close(); //close the output stream
+			}
+			newResourceDescription = repository.getResourceDescription(resourceURI); //get an updated description of the resource
+		}
+		else
+		{
+			newResourceDescription = repository.createResource(resourceURI, contents[0]); //create an initial resource with contents
+		}
 		Date after = new Date();
 		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
 		assertThat("Invalid content length of created resource.", getContentLength(newResourceDescription), equalTo((long)contents[0].length));
@@ -162,68 +248,6 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 			assertThat("Invalid content length of changed resource.", getContentLength(newResourceDescription), equalTo((long)changedContent.length));
 			//TODO fix last-modified date for SVNKit repository		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, afterCreateResource);
 		}
-		repository.deleteResource(resourceURI); //delete the resource we created
-		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
-	}
-
-	/**
-	 * Tests:
-	 * <ul>
-	 * <li>Creating a small resource using an output stream.</li>
-	 * <li>Checking the existence of a resource.</li>
-	 * <li>Deleting a resource.</li>
-	 * </ul>
-	 */
-	@Test
-	public void testCreateSmallResourceOutputStream() throws IOException
-	{
-		testCreateResourceOutputStream((1 << 3) + 1); //>8
-	}
-
-	/**
-	 * Tests:
-	 * <ul>
-	 * <li>Creating a large resource using an output stream.</li>
-	 * <li>Checking the existence of a resource.</li>
-	 * <li>Deleting a resource.</li>
-	 * </ul>
-	 */
-	@Test
-	public void testCreateLargeResourceOutputStream() throws IOException
-	{
-		testCreateResourceOutputStream((1 << 20) + 1); //>1MB
-	}
-
-	/**
-	 * Tests:
-	 * <ul>
-	 * <li>Creating a resource using an output stream.</li>
-	 * <li>Checking the existence of a resource.</li>
-	 * <li>Deleting a resource.</li>
-	 * </ul>
-	 * @param contentLength The size of the resource to create.
-	 */
-	public void testCreateResourceOutputStream(final int contentLength) throws IOException
-	{
-		final Date beforeCreateResource = new Date();
-		final Repository repository = getRepository();
-		final byte[] resourceContents = Bytes.createRandom(contentLength); //create random contents
-		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
-		final OutputStream outputStream = repository.createResource(resourceURI); //create a resource and get an output stream to the contents
-		try
-		{
-			outputStream.write(resourceContents); //write the contents
-		}
-		finally
-		{
-			outputStream.close(); //close the output stream
-		}
-		final URFResource newResourceDescription = repository.getResourceDescription(resourceURI); //get a description of the new resource
-		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
-		assertThat("Invalid content length of created resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
-		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, new Date());
-		final byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
-		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(resourceContents));
 		repository.deleteResource(resourceURI); //delete the resource we created
 		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
 	}
