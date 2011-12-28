@@ -797,6 +797,7 @@ public abstract class AbstractRepository implements Repository
 	 * @param resourceURI The URI of the resource to access.
 	 * @param newContentModified The new content modified datetime for the resource, or <code>null</code> if the content modified datetime should not be updated.
 	 * @return An output stream to the resource represented by the given URI.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if there is an error accessing the resource.
 	 * @see Content#MODIFIED_PROPERTY_URI
 	 */
@@ -869,7 +870,7 @@ public abstract class AbstractRepository implements Repository
 	@Override
 	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final int depth) throws ResourceIOException
 	{
-		checkArgumentMinimum(depth, 0);
+		checkArgumentNotNegative(depth);
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
 		if(subrepository != this) //if the resource URI lies within a subrepository
@@ -884,7 +885,7 @@ public abstract class AbstractRepository implements Repository
 	@Override
 	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final ResourceFilter resourceFilter, final int depth) throws ResourceIOException
 	{
-		checkArgumentMinimum(depth, 0);
+		checkArgumentNotNegative(depth);
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
 		if(subrepository != this) //if the resource URI lies within a subrepository
@@ -1590,9 +1591,7 @@ public abstract class AbstractRepository implements Repository
 		}
 	*/
 
-	/**
-	 * Cleans up the object for garbage collection. This version closes the repository.
-	 */
+	/** {@inheritDoc} This version closes the repository. */
 	@Override
 	protected void finalize() throws Throwable
 	{

@@ -23,6 +23,8 @@ import static com.globalmentor.urf.dcmi.DCMI.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URI;
 import java.util.*;
 
@@ -94,6 +96,68 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		final byte[] resourceContents = Bytes.createRandom(contentLength); //create random contents
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		final URFResource newResourceDescription = repository.createResource(resourceURI, resourceContents); //create a resource with random contents
+		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
+		assertThat("Invalid content length of created resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
+		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, new Date());
+		final byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
+		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(resourceContents));
+		repository.deleteResource(resourceURI); //delete the resource we created
+		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
+	}
+
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Creating a small resource using an output stream.</li>
+	 * <li>Checking the existence of a resource.</li>
+	 * <li>Deleting a resource.</li>
+	 * </ul>
+	 */
+	@Test
+	public void testCreateSmallResourceOutputStream() throws IOException
+	{
+		testCreateResourceOutputStream((1 << 3) + 1); //>8
+	}
+
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Creating a large resource using an output stream.</li>
+	 * <li>Checking the existence of a resource.</li>
+	 * <li>Deleting a resource.</li>
+	 * </ul>
+	 */
+	@Test
+	public void testCreateLargeResourceOutputStream() throws IOException
+	{
+		testCreateResourceOutputStream((1 << 20) + 1); //>1MB
+	}
+
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Creating a resource using an output stream.</li>
+	 * <li>Checking the existence of a resource.</li>
+	 * <li>Deleting a resource.</li>
+	 * </ul>
+	 * @param contentLength The size of the resource to create.
+	 */
+	public void testCreateResourceOutputStream(final int contentLength) throws IOException
+	{
+		final Date beforeCreateResource = new Date();
+		final Repository repository = getRepository();
+		final byte[] resourceContents = Bytes.createRandom(contentLength); //create random contents
+		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
+		final OutputStream outputStream = repository.createResource(resourceURI); //create a resource and get an output stream to the contents
+		try
+		{
+			outputStream.write(resourceContents); //write the contents
+		}
+		finally
+		{
+			outputStream.close(); //close the output stream
+		}
+		final URFResource newResourceDescription = repository.getResourceDescription(resourceURI); //get a description of the new resource
 		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
 		assertThat("Invalid content length of created resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
 		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, new Date());

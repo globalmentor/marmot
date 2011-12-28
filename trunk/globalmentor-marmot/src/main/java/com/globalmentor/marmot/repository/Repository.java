@@ -323,6 +323,7 @@ public interface Repository
 	 * @return An output stream to the resource represented by the given URI.
 	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if there is an error accessing the resource.
 	 * @see Content#MODIFIED_PROPERTY_URI
 	 */
@@ -337,6 +338,7 @@ public interface Repository
 	 * @return An output stream to the resource represented by the given URI.
 	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if there is an error accessing the resource.
 	 * @see Content#MODIFIED_PROPERTY_URI
 	 */
