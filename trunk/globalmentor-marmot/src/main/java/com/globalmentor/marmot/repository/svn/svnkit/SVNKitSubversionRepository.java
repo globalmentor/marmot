@@ -35,7 +35,7 @@ import static java.util.Collections.*;
 import static org.tmatesoft.svn.core.SVNProperty.*;
 
 import static com.globalmentor.io.Files.*;
-import static com.globalmentor.io.InputStreams.isEmpty;
+import static com.globalmentor.io.InputStreams.*;
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.Conditions.unexpected;
 import static com.globalmentor.java.Objects.*;
@@ -346,7 +346,34 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	@Override
 	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, final URFDateTime newContentModified) throws ResourceIOException
 	{
-		throw new ResourceForbiddenException(resourceURI, "This repository is read-only."); //TODO fix
+		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
+		final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
+		synchronized(svnRepository)
+		{
+			try
+			{
+				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the directory entry for this resource
+				if(dirEntry.getKind() == SVNNodeKind.NONE) //make sure we have a resource at this URI
+				{
+					throw new ResourceNotFoundException(resourceURI);
+				}
+				final TempOutputStream tempOutputStream = new TempOutputStream() //create a new temporary output stream that, before it is closed, will save the collected bytes to the existing resource
+				{
+					@Override
+					protected void beforeClose() throws IOException //when the output stream is ready to be closed
+					{
+						super.beforeClose();
+						final InputStream inputStream = toMarkSupportedInputStream(getInputStream()); //get an input stream to the data, making sure it supports mark/reset
+						setResourceContents(resourceURI, null, dirEntry, inputStream); //set resource contents from the resource input stream
+					}
+				};
+				return tempOutputStream; //return the temporary output stream we created
+			}
+			catch(final SVNException svnException)
+			{
+				throw toResourceIOException(resourceURI, svnException);
+			}
+		}
 	}
 
 	/** {@inheritDoc} This implementation ignores child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
@@ -455,43 +482,11 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			protected void beforeClose() throws IOException //when the output stream is ready to be closed
 			{
 				super.beforeClose();
-				createResource(resourceURI, resourceDescription, getInputStream()); //get an input stream to the data and send it to the create resource method
+				final InputStream inputStream = toMarkSupportedInputStream(getInputStream()); //get an input stream to the data, making sure it supports mark/reset
+				setResourceContents(resourceURI, resourceDescription, null, inputStream); //set resource contents from the resource input stream
 			}
 		};
 		return tempOutputStream; //return the temporary output stream we created 
-
-		//		return createResource(resourceURI, resourceDescription, new ByteArrayInputStream(resourceContents));	//create the resource, providing the resource contents in an input stream
-
-		//		throw new UnsupportedOperationException();
-		/*TODO fix
-				try
-				{
-					final File resourceFile = new File(getSourceResourceURI(resourceURI)); //create a file object for the resource
-					if(resourceFile.exists()) //if the resource file already exists (either as a file or a directory)
-					{
-						delete(resourceFile, true); //delete the file/directory and all its children, if any
-					}
-					final File contentFile; //determine the file to use for storing content
-					if(isCollectionURI(resourceURI)) //if the resource is a collection
-					{
-						final URI contentURI = resolve(resourceURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content
-						contentFile = new File(getSourceResourceURI(contentURI)); //create a file object from the private URI of the special collection content resource
-						mkdir(resourceFile); //create the directory
-					}
-					else
-					//if the resource is not a collection
-					{
-						contentFile = resourceFile; //use the normal resource file
-						//TODO should we see if a directory exists?
-						createNewFile(resourceFile); //create a new file
-					}
-					return new DescriptionWriterOutputStreamDecorator(new FileOutputStream(contentFile, true), resourceDescription, resourceFile); //wrap the output stream to the content file in a decorator that will write the properties after the contents are stored
-				}
-				catch(final IOException ioException) //if an I/O exception occurs
-				{
-					throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
-				}
-		*/
 	}
 
 	/** {@inheritDoc} */
@@ -499,83 +494,41 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	protected URFResource createResourceImpl(final URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents)
 			throws ResourceIOException
 	{
-		return createResource(resourceURI, resourceDescription, new ByteArrayInputStream(resourceContents)); //create the resource, providing the resource contents in an input stream
-		/*TODO del when works
+		synchronized(svnRepository)
+		{
+			try
+			{
+				setResourceContents(resourceURI, resourceDescription, null, new ByteArrayInputStream(resourceContents)); //create the resource, providing the resource contents in an input stream
 				final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
-				final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
-				synchronized(svnRepository)
-				{
-					try
-					{
-						//TODO del if not needed				final long latestRevision=svnRepository.getLatestRevision();	//get the latest repository revision
-						ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource creation.", null, true, null); //get a commit editor to the repository
-						try
-						{
-							editor.openRoot(-1); //open the root to start making changing
-
-							//				final URIPath contentURIPath;	//determine the path to use for storing content
-
-							if(isCollectionURI(resourceURI)) //if we're creating a collection
-							{
-								//TODO decide what to do if collection exists
-								editor.addDir(resourceURIPath.toString(), null, -1); //show that we are adding a directory to the repository
-								if(resourceContents.length > 0) //if we have contents for the directory
-								{
-									final URIPath contentURIPath = resourceURIPath.resolve(COLLECTION_CONTENT_NAME); //determine the URI path to use for content, using the special collection content resource
-									editor.applyTextDelta(contentURIPath.toString(), null); //this is a new file; start with a blank checksum TODO fix for existing files
-									final SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
-									final String checksum = deltaGenerator.sendDelta(contentURIPath.toString(), new ByteArrayInputStream(resourceContents), editor, true); //create a new delta for the contents
-									editor.closeFile(resourceURIPath.toString(), checksum); //finish the file addition
-								}
-								alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), editor, null, SVNNodeKind.DIR); //alter the properties to be exactly those specified by the given resource description
-								editor.closeDir(); //close the directory we added
-							}
-							else
-							//if we're creating a non-collection resource
-							{
-								editor.addFile(resourceURIPath.toString(), null, -1); //show that we are adding a file to the repository
-								editor.applyTextDelta(resourceURIPath.toString(), null); //this is a new file; start with a blank checksum TODO fix for existing files
-								final SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
-								final String checksum = deltaGenerator.sendDelta(resourceURIPath.toString(), new ByteArrayInputStream(resourceContents), editor, true); //create a new delta for the contents
-								alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), editor, null, SVNNodeKind.FILE); //alter the properties to be exactly those specified by the given resource description
-								editor.closeFile(resourceURIPath.toString(), checksum); //finish the file addition
-							}
-							editor.closeDir(); //close the root
-							editor.closeEdit(); //try to finalize the edit
-						}
-						catch(final SVNException svnException)
-						{
-							editor.abortEdit(); //abort the edit we had scheduled
-							throw svnException; //rethrow the exception
-						}
-						final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the directory entry for this resource
-						return createResourceDescription(createURF(), resourceURI, dirEntry); //create and return the latest description of the resource
-					}
-					catch(final IOException ioException)
-					{
-						throw toResourceIOException(resourceURI, ioException);
-					}
-					catch(final SVNException svnException)
-					{
-						throw toResourceIOException(resourceURI, svnException);
-					}
-				}
-		*/
+				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the updated directory entry for this resource
+				return createResourceDescription(createURF(), resourceURI, dirEntry); //create and return the latest description of the resource
+			}
+			catch(final SVNException svnException)
+			{
+				throw toResourceIOException(resourceURI, svnException);
+			}
+		}
 	}
 
 	/**
-	 * Creates a new resource with the given description and contents from an input stream. If a resource already exists at the given URI it will be replaced. The
-	 * resource URI is guaranteed to be normalized and valid for the repository and the repository is guaranteed to be open.
+	 * Stores the contents of a new or existing resource with the given optional description and contents from an input stream. The resource URI is guaranteed to
+	 * be normalized and valid for the repository and the repository is guaranteed to be open.
 	 * @param resourceURI The reference URI to use to identify the resource.
-	 * @param resourceDescription A description of the resource; the resource URI is ignored.
+	 * @param resourceDescription A description of the resource, or <code>null</code> if the resource properties should not be altered; the resource URI is
+	 *          ignored.
+	 * @param dirEntry The SVNKit directory entry of the existing file or directory, or <code>null</code> if the resource does not exist and is being created.
 	 * @param inputStream The input stream containing the contents to store in the resource.
 	 * @return A description of the resource that was created.
-	 * @throws NullPointerException if the given resource URI, resource description, and/or input stream is <code>null</code>.
+	 * @throws NullPointerException if the given resource URI and/or input stream is <code>null</code>.
 	 * @throws IllegalArgumentException if the given input stream does not support mark/reset.
 	 * @throws ResourceIOException if the resource could not be created.
 	 */
-	protected URFResource createResource(final URI resourceURI, final URFResource resourceDescription, final InputStream inputStream) throws ResourceIOException
+	protected URFResource setResourceContents(final URI resourceURI, final URFResource resourceDescription, SVNDirEntry dirEntry, final InputStream inputStream)
+			throws ResourceIOException
 	{
+
+		//TODO del if not needed		final InputStream oldInputStream=null;	//the input stream to the old version
+
 		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
 		final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
 		synchronized(svnRepository)
@@ -587,32 +540,69 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 				try
 				{
 					editor.openRoot(-1); //open the root to start making changing
-
-					//				final URIPath contentURIPath;	//determine the path to use for storing content
-
 					if(isCollectionURI(resourceURI)) //if we're creating a collection
 					{
-						//TODO decide what to do if collection exists
-						editor.addDir(resourceURIPath.toString(), null, -1); //show that we are adding a directory to the repository
-						if(!isEmpty(inputStream)) //if we have contents for the directory
+						if(dirEntry != null) //if the directory supposedly exists
+						{
+							editor.openDir(resourceURIPath.toString(), -1); //open the directory for modification
+						}
+						else
+						{
+							editor.addDir(resourceURIPath.toString(), null, -1); //show that we are adding a directory to the repository
+						}
+						final boolean hasContent = !isEmpty(inputStream); //see if content is given
+						//if the directory already exists, we need to always make sure the content file, if any, is up-to-date;
+						//otherwise, for a new collection, we only care if we have something to write
+						if(dirEntry != null || hasContent)
 						{
 							final URIPath contentURIPath = resourceURIPath.resolve(COLLECTION_CONTENT_NAME); //determine the URI path to use for content, using the special collection content resource
-							editor.applyTextDelta(contentURIPath.toString(), null); //this is a new file; start with a blank checksum TODO fix for existing files
-							final SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
-							final String checksum = deltaGenerator.sendDelta(contentURIPath.toString(), inputStream, editor, true); //create a new delta for the contents
-							editor.closeFile(resourceURIPath.toString(), checksum); //finish the file addition
+							final SVNDirEntry contentDirEntry = svnRepository.info(contentURIPath.toString(), -1); //get the directory entry for the content resource
+							final boolean hasContentFile = contentDirEntry.getKind() != SVNNodeKind.NONE; //see if we have a content resource
+							if(hasContentFile || hasContent) //if the file doesn't exist and there's nothing to write, there's nothing to do
+							{
+								//we'll write content even if we have no content---if there once was a content file,
+								//we'll keep it---even a zero-byte file---in order to maintain modified dates and such:
+								//if(hasContent) //if we have content to write
+								if(hasContentFile) //if the content file exists
+								{
+									editor.openFile(contentURIPath.toString(), -1); //open the content file for modification
+								}
+								else
+								{
+									editor.addFile(contentURIPath.toString(), null, -1); //add the content file
+								}
+								editor.applyTextDelta(contentURIPath.toString(), null); //this is a new file; start with a blank checksum
+								final SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
+								final String checksum = deltaGenerator.sendDelta(contentURIPath.toString(), inputStream, editor, true); //create a new delta for the contents
+								editor.closeFile(resourceURIPath.toString(), checksum); //finish the file addition
+							}
 						}
-						alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), editor, null, SVNNodeKind.DIR); //alter the properties to be exactly those specified by the given resource description
+						if(resourceDescription != null) //if we have a description of the resource, set its properties
+						{
+							alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), editor, dirEntry,
+									SVNNodeKind.DIR); //alter the properties to be exactly those specified by the given resource description
+						}
 						editor.closeDir(); //close the directory we added
 					}
 					else
 					//if we're creating a non-collection resource
 					{
-						editor.addFile(resourceURIPath.toString(), null, -1); //show that we are adding a file to the repository
+						if(dirEntry != null) //if the file supposedly exists
+						{
+							editor.openFile(resourceURIPath.toString(), -1); //open the file for modification
+						}
+						else
+						{
+							editor.addFile(resourceURIPath.toString(), null, -1); //show that we are adding a file to the repository
+						}
 						editor.applyTextDelta(resourceURIPath.toString(), null); //this is a new file; start with a blank checksum TODO fix for existing files
 						final SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
 						final String checksum = deltaGenerator.sendDelta(resourceURIPath.toString(), inputStream, editor, true); //create a new delta for the contents
-						alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), editor, null, SVNNodeKind.FILE); //alter the properties to be exactly those specified by the given resource description
+						if(resourceDescription != null) //if we have a description of the resource, set its properties
+						{
+							alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), editor, dirEntry,
+									SVNNodeKind.FILE); //alter the properties to be exactly those specified by the given resource description
+						}
 						editor.closeFile(resourceURIPath.toString(), checksum); //finish the file addition
 					}
 					editor.closeDir(); //close the root
@@ -623,7 +613,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					editor.abortEdit(); //abort the edit we had scheduled
 					throw svnException; //rethrow the exception
 				}
-				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the directory entry for this resource
+				dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the updated directory entry for this resource
 				return createResourceDescription(createURF(), resourceURI, dirEntry); //create and return the latest description of the resource
 			}
 			catch(final IOException ioException)

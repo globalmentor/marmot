@@ -17,14 +17,14 @@
 package com.globalmentor.marmot.repository;
 
 import static com.globalmentor.java.Bytes.*;
+import static com.globalmentor.java.Conditions.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
 import static com.globalmentor.urf.dcmi.DCMI.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URI;
 import java.util.*;
 
@@ -33,11 +33,7 @@ import org.junit.*;
 import com.globalmentor.java.Bytes;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.test.AbstractTest;
-import com.globalmentor.urf.DefaultURFProperty;
-import com.globalmentor.urf.DefaultURFResource;
-import com.globalmentor.urf.URFDateTime;
-import com.globalmentor.urf.URFProperty;
-import com.globalmentor.urf.URFResource;
+import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
 import com.globalmentor.urf.dcmi.DCMI;
 
@@ -101,6 +97,71 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, new Date());
 		final byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
 		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(resourceContents));
+		repository.deleteResource(resourceURI); //delete the resource we created
+		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
+	}
+
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Creating a resource using supplied contents.</li>
+	 * <li>Checking the existence of a resource.</li>
+	 * <li>Changing the contents of a resource using an output stream.</li>
+	 * <li>Deleting a resource.</li>
+	 * </ul>
+	 */
+	@Test
+	public void testChangeResourceBytes() throws IOException
+	{
+		final int initialContentLength = (1 << 10) + 1;
+		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
+		testResourceContentBytes(resourceURI, Bytes.createRandom(initialContentLength), Bytes.createRandom(initialContentLength * 2));
+	}
+
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Creating a resource using supplied contents.</li>
+	 * <li>Checking the existence of a resource.</li>
+	 * <li>If more than one content array is provided, changing the contents of a resource using an output stream.</li>
+	 * <li>Deleting a resource.</li>
+	 * </ul>
+	 * @param resourceURI The URI of the resource to create.
+	 * @param contents The array of byte arrays of content to use; the first will create the resource, the others will test modifying the resource
+	 * @throws NullPointerException if the given resource URI and/or content array is <code>null</code>.
+	 * @throws IllegalArgumentException if the array of contents is empty.
+	 */
+	protected void testResourceContentBytes(final URI resourceURI, final byte[]... contents) throws IOException
+	{
+		checkArgumentPositive(contents.length);
+		Date before = new Date();
+		final Repository repository = getRepository();
+		URFResource newResourceDescription = repository.createResource(resourceURI, contents[0]); //create an initial resource with contents
+		Date after = new Date();
+		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
+		assertThat("Invalid content length of created resource.", getContentLength(newResourceDescription), equalTo((long)contents[0].length));
+		checkCreatedResourceDateTimes(newResourceDescription, before, after);
+		byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
+		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(contents[0]));
+		for(int i = 1; i < contents.length; ++i) //look at all the alternate contents, if any
+		{
+			final byte[] changedContent = contents[i];
+			before = after; //switch the dates back
+			final OutputStream outputStream = repository.getResourceOutputStream(resourceURI); //get an output stream to the existing resource
+			try
+			{
+				outputStream.write(changedContent); //write the changed contents
+			}
+			finally
+			{
+				outputStream.close(); //close the output stream
+			}
+			after = new Date();
+			newResourceDescription = repository.getResourceDescription(resourceURI); //get an updated description of the resource
+			assertTrue("Changed resource doesn't exist.", repository.resourceExists(resourceURI));
+			assertThat("Invalid content length of changed resource.", getContentLength(newResourceDescription), equalTo((long)changedContent.length));
+			//TODO fix last-modified date for SVNKit repository		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, afterCreateResource);
+		}
 		repository.deleteResource(resourceURI); //delete the resource we created
 		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
 	}
@@ -199,6 +260,47 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(resourceContents));
 		repository.deleteResource(collectionURI); //delete the collection resource we created, with its contained resource
 		assertFalse("Deleted collection resource still exists.", repository.resourceExists(collectionURI));
+		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
+	}
+
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Creating all needed parent resources for a deeply-nested resource.</li>
+	 * <li>Checking the existence of a deeply-nested collection resource.</li>
+	 * <li>Creating a resource inside a deeply-nested collection using supplied contents.</li>
+	 * <li>Checking the existence of a deeply-nested resource inside a collection.</li>
+	 * <li>Deleting a deeply-nested collection resource with all its contents.</li>
+	 * </ul>
+	 */
+	@Test
+	public void testCreateDeepResourceBytes() throws ResourceIOException
+	{
+		final int contentLength = (1 << 10) + 1;
+		final Repository repository = getRepository();
+		final byte[] resourceContents = Bytes.createRandom(contentLength); //create random contents
+		final Date beforeCreateCollection = new Date();
+		final URI rootCollectionURI = repository.getRootURI().resolve("test1/"); //determine some top-level collection
+		final URI collectionURI = rootCollectionURI.resolve("test2/test3/test4/test5/"); //determine a deeply-nested test collection URI
+		final URI resourceURI = collectionURI.resolve("test.bin"); //determine a test resource URI
+		final URFResource newCollectionDescription = repository.createParentResources(resourceURI); //create all necessary parent resources for the resource
+		assertThat("Last created parent resource doesn't match our deeply-nested collection.", newCollectionDescription.getURI(), equalTo(collectionURI));
+		assertTrue("Created root collection resource doesn't exist.", repository.resourceExists(rootCollectionURI));
+		assertThat("Invalid content length of created root collection resource.", getContentLength(repository.getResourceDescription(rootCollectionURI)),
+				equalTo(0L));
+		assertTrue("Created nested collection resource doesn't exist.", repository.resourceExists(collectionURI));
+		assertThat("Invalid content length of created nested collection resource.", getContentLength(newCollectionDescription), equalTo(0L));
+		final Date beforeCreateResource = new Date();
+		final URFResource newResourceDescription = repository.createResource(resourceURI, resourceContents); //create a resource with random contents
+		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
+		checkCreatedResourceDateTimes(newCollectionDescription, beforeCreateCollection, beforeCreateResource);
+		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, new Date());
+		assertThat("Invalid content length of created resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
+		final byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
+		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(resourceContents));
+		repository.deleteResource(rootCollectionURI); //delete the root collection resource we created, with its contained deeply-nested collections and resource
+		assertFalse("Deleted root collection resource still exists.", repository.resourceExists(rootCollectionURI));
+		assertFalse("Deleted nested collection resource still exists.", repository.resourceExists(collectionURI));
 		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
 	}
 
