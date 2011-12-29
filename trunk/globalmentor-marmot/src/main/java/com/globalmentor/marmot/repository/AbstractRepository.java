@@ -29,6 +29,7 @@ import com.globalmentor.collections.*;
 import com.globalmentor.event.ProgressListener;
 import com.globalmentor.io.*;
 import com.globalmentor.java.Strings;
+import com.globalmentor.log.Log;
 import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.model.NameValuePair;
@@ -1590,6 +1591,20 @@ public abstract class AbstractRepository implements Repository
 			
 		}
 	*/
+
+	/** {@inheritDoc} This version calls {@link #close()}. */
+	@Override
+	public synchronized void dispose()
+	{
+		try
+		{
+			close();
+		}
+		catch(final ResourceIOException resourceIOException)
+		{
+			Log.error(resourceIOException);
+		}
+	}
 
 	/** {@inheritDoc} This version closes the repository. */
 	@Override

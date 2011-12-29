@@ -445,9 +445,9 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 				else
 				//if there is no collection content resource
 				{
-					if(!webdavResource.exists())	//if the content resource doesn't exist because the collection itself doesn't exist
+					if(!webdavResource.exists()) //if the content resource doesn't exist because the collection itself doesn't exist
 					{
-						throw new HTTPNotFoundException("Collection resource "+webdavResource.getURI()+" does not exist.");
+						throw new HTTPNotFoundException("Collection resource " + webdavResource.getURI() + " does not exist.");
 					}
 					return new ByteArrayInputStream(NO_BYTES); //return an input stream to an empty byte array
 				}
@@ -1355,6 +1355,24 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		//if this is not one of our specially-handled exceptions
 		{
 			return super.toResourceIOException(resourceURI, throwable); //convert the exception normally
+		}
+	}
+
+	/** {@inheritDoc} This version calls clears and releases the password, if any. */
+	@Override
+	public synchronized void dispose()
+	{
+		try
+		{
+			super.dispose();
+		}
+		finally
+		{
+			if(password != null) //if we have a password
+			{
+				fill(password, (char)0); //erase the password from memory as a security measure
+				password = null; //release the password
+			}
 		}
 	}
 

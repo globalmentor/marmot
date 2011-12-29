@@ -17,7 +17,6 @@
 package com.globalmentor.marmot.repository.svn.svnkit;
 
 import java.io.*;
-import java.net.PasswordAuthentication;
 import java.net.URI;
 import java.util.*;
 
@@ -30,29 +29,24 @@ import org.tmatesoft.svn.core.io.*;
 import org.tmatesoft.svn.core.io.diff.SVNDeltaGenerator;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
-import static java.util.Arrays.fill;
+import static java.util.Arrays.*;
 import static java.util.Collections.*;
 import static org.tmatesoft.svn.core.SVNProperty.*;
 
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.io.InputStreams.*;
 import static com.globalmentor.java.Bytes.*;
-import static com.globalmentor.java.Conditions.unexpected;
-import static com.globalmentor.java.Objects.*;
-import static com.globalmentor.marmot.repository.Repositories.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
 
 import com.globalmentor.collections.CollectionMap;
 import com.globalmentor.collections.HashSetHashMap;
 import com.globalmentor.io.*;
-import com.globalmentor.java.Conditions;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.model.NameValuePair;
 import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
-import com.globalmentor.util.DataException;
 
 /**
  * Subversion repository implemented by SVNKit.
@@ -62,12 +56,10 @@ import com.globalmentor.util.DataException;
  * </p>
  * 
  * <p>
- * This implementation uses the file last modified timestamp to store the {@value Content#MODIFIED_PROPERTY_URI} property. The content modified property is not
- * saved for collections with no content.
- * </p>
- * //TODO
- * <p>
- * This implementation ignores hidden files when considering child resources.
+ * This implementation stores explicit {@link Content#CREATED_PROPERTY_URI} and {@link Content#MODIFIED_PROPERTY_URI} properties for all resources, but the
+ * resource live last modified timestamp will override the given content modified date when retrieving properties. For collections, the
+ * {@link Content#MODIFIED_PROPERTY_URI} property is stored on the actual collection resource, but the retrieved live content modified date is retrieved from
+ * the content resource, if any.
  * </p>
  * @author Garret Wilson
  */
@@ -920,8 +912,8 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		final URFResource resource = urf.createResource(resourceURI); //create a default resource description
 		SVNNodeKind nodeKind = dirEntry.getKind(); //find out what kind of node this is
 		//		final String filename = resourceFile.getName(); //get the name of the file
-		long contentLength = 0; //we'll update the content length if we can
-		//		URFDateTime contentModified = null; //we'll get the content modified from the file or, for a directory, from its content file, if any---but not from a directory itself
+		final long contentLength; //we'll update the content length if we can
+		URFDateTime contentModified = null; //we'll get the content modified from the file or, for a directory, from its content file, if any---but not from a directory itself
 		final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
 		synchronized(svnRepository)
 		{
@@ -932,30 +924,27 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					throw new IllegalArgumentException("Non-collection URI " + resourceURI + " used for directory " + resourceURI);
 				}
 				final URI contentURI = resolve(resourceURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content
-				//				if(svnRepository.checkPath(getResourceURIPath(contentURI).toString(), -1)==SVNNodeKind.FILE) //if there is a special collection content file
-				//				{
 				final URIPath contentURIPath = getResourceURIPath(contentURI);
 				final SVNDirEntry contentDirEntry = svnRepository.info(contentURIPath.toString(), -1); //get the directory entry for the special collection content resource
-				if(contentDirEntry != null) //if there is a special collection content resource
+				if(contentDirEntry != null) //if there is a special collection content file
 				{
 					contentLength = contentDirEntry.getSize(); //use the size of the special collection content resource
-					//don't use a Subversion last-modified; SVNKit throws away the real last-modified and uses the creation date: contentModified = new URFDateTime(contentDirEntry.getDate()); //set the modified timestamp as the last modified date of the content file 
+					contentModified = new URFDateTime(contentDirEntry.getDate()); //set the modified timestamp as the last modified date of the content file 
 				}
-				//					properties=contentDirEntry.hasProperties() ? svnRepository.in
+				else
+				//if there is no special collection content file
+				{
+					contentLength = 0; //the collection has no content
+					contentModified = null; //don't return a last modified date 
+
+				}
 			}
 			else
 			//if this file is not a directory
 			{
 				contentLength = dirEntry.getSize(); //use the size of the file
-				//don't use a Subversion last-modified; SVNKit throws away the real last-modified and uses the creation date: contentModified = new URFDateTime(dirEntry.getDate()); //set the modified timestamp as the last modified date of the resource file			
+				contentModified = new URFDateTime(dirEntry.getDate()); //set the modified timestamp as the last modified date of the resource file			
 			}
-			setContentLength(resource, contentLength); //indicate the length of the content
-			/*TODO del if not usable
-						if(contentModified != null) //if we have a content modified time
-						{
-							setModified(resource, contentModified); //set the modified timestamp as the last modified date
-						}
-			*/
 			//TODO verify where content type comes from
 			if(dirEntry.hasProperties()) //if there are additional properties
 			{
@@ -995,84 +984,33 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					}
 				}
 			}
+			//live properties
+			setContentLength(resource, contentLength); //indicate the length of the content
+			//in SVNKit for the time being the live last-modified date overrides everything
+			if(contentModified != null) //if we have a content modified time
+			{
+				setModified(resource, contentModified); //set the modified timestamp as the last modified date
+			}
 			//TODO fix synchronize-last-modified-time business; see WebDavRepository
 		}
 		return resource; //return the resource that represents the file
 	}
 
-	/**
-	 * Saves a resource description for a single file. Live properties are ignored. If the {@value Content#MODIFIED_PROPERTY_URI} property is present, it is not
-	 * saved and the file modified time is updated to match that value. If the {@value Content#CREATED_PROPERTY_URI} property is present and it is identical to
-	 * the {@value Content#MODIFIED_PROPERTY_URI} property, it is not saved. If the {@value Content#CREATED_PROPERTY_URI} property is present and the resource is
-	 * a collection with no content, it is not saved. If the resource description file does not exist and there are no properties to save, no resource description
-	 * file is created.
-	 * @param resourceDescription The resource description to save; the resource URI is ignored.
-	 * @param resourceFile The file of a resource.
-	 * @throws IOException if there is an error save the resource description.
-	 * @see #getResourceDescriptionFile(File)
-	 */
-	/*TODO fix
-		protected void saveResourceDescription(URFResource resourceDescription, final File resourceFile) throws IOException
+	/** {@inheritDoc} This version calls clears and releases the password, if any. */
+	@Override
+	public synchronized void dispose()
+	{
+		try
 		{
-			final URI resourceURI = getRepositoryResourceURI(toURI(resourceFile)); //get a public URI to represent the file resource
-			resourceDescription = new DefaultURFResource(resourceDescription, resourceURI); //create a temporary resource so that we can remove the live properties and to make sure we use the correct URI
-			for(final URI livePropertyURI : getLivePropertyURIs()) //look at all live properties
+			super.dispose();
+		}
+		finally
+		{
+			if(password != null) //if we have a password
 			{
-				resourceDescription.removePropertyValues(livePropertyURI); //remove all values for this live property
-			}
-			final File contentFile; //determine the file to use for storing content
-			final boolean isCollection = isCollectionURI(resourceURI); //see if this is a collection
-			if(isCollection) //if the resource is a collection
-			{
-				final URI contentURI = resolve(resourceURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content
-				final File tempContentFile = new File(getSourceResourceURI(contentURI)); //create a file object from the private URI of the special collection content resource
-				contentFile = tempContentFile.exists() ? tempContentFile : resourceFile; //if the content file doesn't exist, we can't update its modified time
-			}
-			else
-			//if the resource is not a collection
-			{
-				contentFile = resourceFile; //use the normal resource file
-			}
-			final URFDateTime modified = getModified(resourceDescription); //see if the description indicates the last modified time
-			if(modified != null) //if the last modified time was indicated
-			{
-				resourceDescription.removePropertyValues(Content.MODIFIED_PROPERTY_URI); //remove all last-modified values from the description we'll actually save
-			}
-			final URFDateTime created = getCreated(resourceDescription); //see if the description indicates the created time
-			if(created != null) //if the created time is present
-			{
-				if((modified != null && created.getTime() == modified.getTime()) //if the created time is the same as the modified time TODO decide how useful these are
-						|| (isCollection && contentFile == resourceFile)) //or if this is a collection with no content
-				{
-					resourceDescription.removePropertyValues(Content.CREATED_PROPERTY_URI); //remove all created timestamp values from the description to save, as Java can't distinguish between content created and modified and they'll both be initialized from the same value, anyway, when reading
-				}
-			}
-			final File resourceDescriptionFile = getResourceDescriptionFile(resourceFile); //get the file for storing the description
-			if(resourceDescription.hasProperties() || resourceDescriptionFile.exists()) //if there are any properties to set (otherwise, don't create an empty properties file) or the description file already exists
-			{
-				try
-				{
-					Files.write(resourceDescriptionFile, resourceURI, resourceDescription, getDescriptionIO()); //write the description, using the resource URI as the base URI
-				}
-				catch(final IOException ioException) //if an error occurs
-				{
-					throw new IOException("Error writing resource description to " + resourceDescriptionFile, ioException);
-				}
-			}
-			if(modified != null) //if a modification timestamp was indicated
-			{
-				if(!isCollection || contentFile != resourceFile) //don't update the content modified for collections with no content
-				{
-					if(!contentFile.setLastModified(modified.getTime())) //update the content file's record of the last modified time
-					{
-						throw new IOException("Error updating content modified time of " + resourceFile);
-					}
-				}
+				fill(password, (char)0); //erase the password from memory as a security measure
+				password = null; //release the password
 			}
 		}
-	*/
-
-	//TODO fix DescriptionWriterOutputStreamDecorator
-
-	//TODO add finalize() to clear password from memory 
+	}
 }

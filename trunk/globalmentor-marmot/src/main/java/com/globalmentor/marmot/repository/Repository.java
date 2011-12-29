@@ -22,6 +22,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 
 import com.globalmentor.event.ProgressListener;
+import com.globalmentor.java.Disposable;
 import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
@@ -62,7 +63,7 @@ import com.globalmentor.urf.content.Content;
  * </p>
  * @author Garret Wilson
  */
-public interface Repository
+public interface Repository extends Disposable
 {
 
 	/** The value indicating an infinite depth when retrieving child resource descriptions. */

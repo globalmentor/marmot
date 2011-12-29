@@ -232,7 +232,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		for(int i = 1; i < contents.length; ++i) //look at all the alternate contents, if any
 		{
 			final byte[] changedContent = contents[i];
-			before = after; //switch the dates back
+			before = after; //shift the dates back
 			final OutputStream outputStream = repository.getResourceOutputStream(resourceURI); //get an output stream to the existing resource
 			try
 			{
@@ -246,7 +246,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 			newResourceDescription = repository.getResourceDescription(resourceURI); //get an updated description of the resource
 			assertTrue("Changed resource doesn't exist.", repository.resourceExists(resourceURI));
 			assertThat("Invalid content length of changed resource.", getContentLength(newResourceDescription), equalTo((long)changedContent.length));
-			//TODO fix last-modified date for SVNKit repository		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, afterCreateResource);
+			checkCreatedResourceDateTimes(newResourceDescription, before, after);
 		}
 		repository.deleteResource(resourceURI); //delete the resource we created
 		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
@@ -475,7 +475,8 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		final URFDateTime createdDateTime = getCreated(resourceDescription);
 		if(createdDateTime != null)
 		{
-			assertThat("Modified datetime not equal to created datetime.", createdDateTime, equalTo(modifiedDateTime));
+			assertTrue("Modified datetime not equal to created datetime.", !createdDateTime.after(modifiedDateTime)); //in all the repositories, the created time should never be past the modified time
+			//TODO bring back when all repositories support retrieving saved modified date			assertThat("Modified datetime not equal to created datetime.", createdDateTime, equalTo(modifiedDateTime));
 		}
 	}
 
