@@ -118,18 +118,11 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	 * Public repository URI and private repository URI constructor. The given private repository URI should end in a slash.
 	 * @param publicRepositoryURI The URI identifying the location of this repository.
 	 * @param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	 * @throws NullPointerException if one of the given repository URIs is <code>null</code>. //TODO relax; improve @throws IllegalArgumentException if the
-	 *           private repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
+	 * @throws NullPointerException if one of the given repository URIs is <code>null</code>.
 	 */
 	public SVNKitSubversionRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
 	{
 		super(publicRepositoryURI, privateRepositoryURI); //construct the parent class
-		/*TODO decide if how we want initialization to occur, especially using PLOOP
-				if(!FILE_SCHEME.equals(privateRepositoryURI.getScheme()))	//if the private repository URI scheme is not the file scheme
-				{
-					throw new IllegalArgumentException(privateRepositoryURI+" does not use the "+FILE_SCHEME+" URI scheme.");
-				}
-		*/
 		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO = (URFResourceTURFIO<URFResource>)getDescriptionIO(); //get the description I/O
 		urfResourceDescriptionIO.setBOMWritten(false); //turn off BOM generation
 		urfResourceDescriptionIO.setFormatted(false); //turn off formatting
@@ -322,9 +315,17 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 						throw new ResourceNotFoundException(resourceURI);
 					}
 				}
-				final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(); //create a byte array output stream to hold the file TODO improve to create temporary files for large resources and return an input stream to them
-				svnRepository.getFile(contentURIPath.toString(), -1, null, byteArrayOutputStream); //retrieve the contents of the content file
-				return new ByteArrayInputStream(byteArrayOutputStream.toByteArray()); //get the bytes from the output stream and return them as an input stream
+				final TempOutputStream tempOutputStream = new TempOutputStream(false); //create a temporary output stream that won't automatically delete its contents when closed
+				svnRepository.getFile(contentURIPath.toString(), -1, null, tempOutputStream); //retrieve the contents of the content file; if SVNKit closes the output stream, it won't matter, because we turned off auto-dispose
+				try
+				{
+					return tempOutputStream.getInputStream(); //return an input stream to the data; the returned input stream will delete the temporary file, if any
+				}
+				catch(final IOException ioException)
+				{
+					tempOutputStream.dispose(); //dispose of our output stream
+					throw toResourceIOException(resourceURI, ioException);
+				}
 			}
 			catch(final SVNException svnException)
 			{
@@ -355,7 +356,15 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					{
 						super.beforeClose();
 						final InputStream inputStream = toMarkSupportedInputStream(getInputStream()); //get an input stream to the data, making sure it supports mark/reset
-						setResourceContents(resourceURI, null, dirEntry, inputStream); //set resource contents from the resource input stream
+						try
+						{
+							setResourceContents(resourceURI, null, dirEntry, inputStream); //set resource contents from the resource input stream
+						}
+						finally
+						//always make sure the input stream is closed; this is especially important if we were using a temporary file
+						{
+							inputStream.close();
+						}
 					}
 				};
 				return tempOutputStream; //return the temporary output stream we created
@@ -465,7 +474,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 
 	/** {@inheritDoc} This implementation updates resource properties before storing the contents of the resource. */
 	@Override
-	protected OutputStream createResourceImpl(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException //TODO improve comments
+	protected OutputStream createResourceImpl(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
 	{
 		final TempOutputStream tempOutputStream = new TempOutputStream() //create a new temporary output stream that, before it is closed, will save the collected bytes to a new resource
 		{
@@ -474,7 +483,15 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			{
 				super.beforeClose();
 				final InputStream inputStream = toMarkSupportedInputStream(getInputStream()); //get an input stream to the data, making sure it supports mark/reset
-				setResourceContents(resourceURI, resourceDescription, null, inputStream); //set resource contents from the resource input stream
+				try
+				{
+					setResourceContents(resourceURI, resourceDescription, null, inputStream); //set resource contents from the resource input stream
+				}
+				finally
+				//always make sure the input stream is closed; this is especially important if we were using a temporary file
+				{
+					inputStream.close();
+				}
 			}
 		};
 		return tempOutputStream; //return the temporary output stream we created 
@@ -533,8 +550,6 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		{
 			try
 			{
-				//TODO del if not needed				final long latestRevision=svnRepository.getLatestRevision();	//get the latest repository revision
-
 				//see if we have a content resource; if the collection doesn't exist yet, then of course the content file doesn't yet exist
 				//this check must be done outside of an edit or we will get a SVNKit reentrant error
 				final boolean contentFileExists = dirEntry != null ? svnRepository.checkPath(contentURIPath.toString(), -1) != SVNNodeKind.NONE : false;
@@ -571,7 +586,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 								{
 									editor.addFile(contentURIPath.toString(), null, -1); //add the content file
 								}
-								editor.applyTextDelta(contentURIPath.toString(), null); //this is a new file; start with a blank checksum
+								editor.applyTextDelta(contentURIPath.toString(), null); //start with a blank checksum; we'll not compare the file to any existing file, even when updating files
 								final SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
 								final String checksum = deltaGenerator.sendDelta(contentURIPath.toString(), inputStream, editor, true); //create a new delta for the contents
 								editor.closeFile(contentURIPath.toString(), checksum); //finish the content file addition
@@ -595,7 +610,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 						{
 							editor.addFile(resourceURIPath.toString(), null, -1); //show that we are adding a file to the repository
 						}
-						editor.applyTextDelta(resourceURIPath.toString(), null); //this is a new file; start with a blank checksum TODO fix for existing files
+						editor.applyTextDelta(resourceURIPath.toString(), null); //start with a blank checksum; we'll not compare the file to any existing file, even when updating files
 						final SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
 						final String checksum = deltaGenerator.sendDelta(resourceURIPath.toString(), inputStream, editor, true); //create a new delta for the contents
 						if(resourceDescription != null) //if we have a description of the resource, set its properties
@@ -733,11 +748,11 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	 * @throws NullPointerException if the given resource URI, resource alteration, editor, and/or node kind is <code>null</code>.
 	 * @throws NullPointerException if the given directory entry is <code>null</code> and a property addition (as opposed to a property setting, that is, a
 	 *           property addition without a corresponding property URI removal) is requested.
-	 * @throws IOException if the resource properties could not be altered. //TODO del * @throws DataException if some data we retrieved was not as expected.
+	 * @throws IOException if the resource properties could not be altered.
 	 * @throws UnsupportedOperationException if a property is requested to be removed by value.
 	 */
 	protected void alterResourceProperties(final URI resourceURI, final URFResourceAlteration resourceAlteration, final ISVNEditor editor,
-			final SVNDirEntry dirEntry, final SVNNodeKind nodeKind) throws SVNException, IOException //IOException, DataException
+			final SVNDirEntry dirEntry, final SVNNodeKind nodeKind) throws SVNException, IOException
 	{
 		final boolean isDir = nodeKind == SVNNodeKind.DIR; //see if this is a directory or a file being modified
 		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
@@ -945,7 +960,6 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 				contentLength = dirEntry.getSize(); //use the size of the file
 				contentModified = new URFDateTime(dirEntry.getDate()); //set the modified timestamp as the last modified date of the resource file			
 			}
-			//TODO verify where content type comes from
 			if(dirEntry.hasProperties()) //if there are additional properties
 			{
 				if(properties == null) //if no properties were given
@@ -972,7 +986,6 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					final SVNPropertyValue propertyValue = propertyValueEntry.getValue();
 					if(!isReservedNamespaceProperty(propertyName) && propertyValue.isString()) //if this is a non-reserved Subversion property with a string value
 					{
-						//TODO del if not needed						final String propertyLocalName = SVNProperty.shortPropertyName(propertyName); //get the local part of the property name
 						try
 						{
 							final URI propertyURI = decodePropertyURILocalName(propertyName); //the URF property URI may be encoded as the local name of the Subversion custom property
