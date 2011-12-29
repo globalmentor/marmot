@@ -41,6 +41,7 @@ import static com.globalmentor.urf.content.Content.*;
 
 import com.globalmentor.collections.CollectionMap;
 import com.globalmentor.collections.HashSetHashMap;
+import com.globalmentor.event.ProgressListener;
 import com.globalmentor.io.*;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.model.NameValuePair;
@@ -647,7 +648,6 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		final URI sourceResourceURI = getSourceResourceURI(resourceURI);
 		if(isSourceResourceVisible(sourceResourceURI)) //if this is a visible resource
 		{
-
 			final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
 			final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
 			synchronized(svnRepository)
@@ -659,7 +659,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					{
 						editor.openRoot(-1); //open the root to start making changes
 						editor.deleteEntry(resourceURIPath.toString(), -1); //delete the directory
-						editor.closeDir(); //close the directory we deleted
+						editor.closeDir(); //close the root
 						editor.closeEdit(); //try to finalize the edit
 					}
 					catch(final SVNException svnException)
@@ -816,36 +816,62 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			{
 				editor.changeFileProperty(resourceURIPath.toString(), propertyName, propertyValue);
 			}
-
 		}
 	}
 
 	/**
-	 * Creates an infinitely deep copy of a resource to another URI in this repository, overwriting any resource at the destination only if requested.
-	 * @param resourceURI The URI of the resource to be copied.
-	 * @param destinationURI The URI to which the resource should be copied.
-	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
-	 *          destination should cause an exception to be thrown.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws ResourceIOException if there is an error copying the resource.
-	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	 * {@inheritDoc} This implementation throws a {@link ResourceNotFoundException} for all resource for which {@link #isSourceResourceVisible(URI)} returns
+	 * <code>false</code>.
 	 */
-	public void copyResource(URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException
+	@Override
+	protected void copyResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
+			throws ResourceIOException
 	{
-		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
+		if(!isSourceResourceVisible(getSourceResourceURI(resourceURI))) //if this is not a visible resource
 		{
-			subrepository.copyResource(resourceURI, destinationURI, overwrite); //delegate to the subrepository
+			throw new ResourceNotFoundException(resourceURI);
 		}
-		final Repository destinationRepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
-		if(destinationRepository != this) //if the destination URI lies within a subrepository
+		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
+		final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
+		synchronized(svnRepository)
 		{
-			copyResource(resourceURI, destinationRepository, destinationURI, overwrite); //copy between repositories
+			try
+			{
+				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the directory entry for this resource
+				final SVNNodeKind nodeKind = dirEntry.getKind();
+				if(nodeKind == SVNNodeKind.NONE) //make sure we have a resource at this URI
+				{
+					throw new ResourceNotFoundException(resourceURI);
+				}
+				//TODO add a checkNodeKind(resourceURI) here and all over the place to ensure that we don't have a file for a collection and vice/versa
+				final URIPath destinationURIPath = getResourceURIPath(destinationURI); //get the path to the destination resource
+				final ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource copy.", null, true, null); //get a commit editor to the repository
+				try
+				{
+					editor.openRoot(-1); //open the root to start making changes
+					if(isCollectionURI(resourceURI)) //if we're copying a collection
+					{
+						editor.addDir(destinationURIPath.toString(), resourceURIPath.toString(), dirEntry.getRevision()); //copy the existing directory at its latest revision
+						editor.closeDir(); //close the copied directory
+					}
+					else
+					{
+						editor.addFile(destinationURIPath.toString(), resourceURIPath.toString(), dirEntry.getRevision()); //copy the existing file at its latest revision
+					}
+					editor.closeDir(); //close the root
+					editor.closeEdit(); //try to finalize the edit
+				}
+				catch(final SVNException svnException)
+				{
+					editor.abortEdit(); //abort the edit we had scheduled
+					throw svnException; //rethrow the exception
+				}
+			}
+			catch(final SVNException svnException)
+			{
+				throw toResourceIOException(resourceURI, svnException);
+			}
 		}
-		checkOpen(); //make sure the repository is open
-		throw new UnsupportedOperationException(); //TODO implement
 	}
 
 	/**

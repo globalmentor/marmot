@@ -37,6 +37,7 @@ import static com.globalmentor.net.http.webdav.WebDAV.*;
 
 import com.globalmentor.collections.CollectionMap;
 import com.globalmentor.collections.HashSetHashMap;
+import com.globalmentor.event.ProgressListener;
 import com.globalmentor.io.*;
 import com.globalmentor.log.Log;
 import com.globalmentor.marmot.Marmot;
@@ -915,30 +916,17 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	}
 
 	/**
-	 * Creates an infinitely deep copy of a resource to another URI in this repository, overwriting any resource at the destionation only if requested.
-	 * @param resourceURI The URI of the resource to be copied.
-	 * @param destinationURI The URI to which the resource should be copied.
-	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
-	 *          destination should cause an exception to be thrown.
-	 * @exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @exception ResourceIOException if there is an error copying the resource.
-	 * @exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	 * {@inheritDoc} This implementation throws a {@link ResourceNotFoundException} for all resource for which {@link #isSourceResourceVisible(URI)} returns
+	 * <code>false</code>.
 	 */
-	public void copyResource(URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException
+	@Override
+	protected void copyResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
+			throws ResourceIOException
 	{
-		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
+		if(!isSourceResourceVisible(getSourceResourceURI(resourceURI))) //if this is not a visible resource
 		{
-			subrepository.copyResource(resourceURI, destinationURI, overwrite); //delegate to the subrepository
+			throw new ResourceNotFoundException(resourceURI);
 		}
-		final Repository destinationRepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
-		if(destinationRepository != this) //if the destination URI lies within a subrepository
-		{
-			copyResource(resourceURI, destinationRepository, destinationURI, overwrite); //copy between repositories
-		}
-		checkOpen(); //make sure the repository is open
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
 		try
 		{

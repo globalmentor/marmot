@@ -1072,6 +1072,7 @@ public abstract class AbstractRepository implements Repository
 		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
 			subrepository.deleteResource(resourceURI); //delegate to the subrepository
+			return;
 		}
 		checkOpen(); //make sure the repository is open
 		if(resourceURI.equals(getRootURI())) //if they try to delete the root URI
@@ -1298,59 +1299,155 @@ public abstract class AbstractRepository implements Repository
 		return parentResourceURI; //return the URI of the parent resource
 	}
 
+	//intra-repository copy
+
 	/**
-	 * Creates an infinitely deep copy of a resource to another URI in this repository. Any resource at the destination URI will be replaced. This version
-	 * delegates to {@link Repository#copyResource(URI, URI, boolean)}.
-	 * @param resourceURI The URI of the resource to be copied.
-	 * @param destinationURI The URI to which the resource should be copied.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws ResourceIOException if there is an error copying the resource.
+	 * {@inheritDoc} If the destination URI lies in a subrepository, this version delegates to
+	 * {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}. Otherwise, this version delegates to
+	 * {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
 	 */
-	public void copyResource(URI resourceURI, final URI destinationURI) throws ResourceIOException
+	@Override
+	public final void copyResource(URI resourceURI, final URI destinationURI) throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
 		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
 			copyResource(resourceURI, destinationURI); //delegate to the subrepository
+			return;
 		}
-		copyResource(resourceURI, destinationURI, true); //copy the resource, overwriting any resource at the destination
+		checkOpen(); //make sure the repository is open
+		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
+		if(destinationSubrepository != this) //if the destination URI lies within a subrepository
+		{
+			copyResourceImpl(resourceURI, destinationSubrepository, destinationURI, true, null); //copy to the subrepository
+			return;
+		}
+		copyResourceImpl(resourceURI, destinationURI, true, null); //copy the resource, overwriting any resource at the destination
 	}
 
 	/**
-	 * Creates an infinitely deep copy of a resource to the specified URI in the specified repository. Any resource at the destination URI will be replaced. This
-	 * version delegates to {@link #copyResource(URI, Repository, URI, ProgressListener)}.
-	 * @param resourceURI The URI of the resource to be copied.
-	 * @param destinationRepository The repository to which the resource should be copied, which may be this repository.
-	 * @param destinationURI The URI to which the resource should be copied.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws ResourceIOException if there is an error copying the resource.
+	 * {@inheritDoc} If the destination URI lies in a subrepository, this version delegates to
+	 * {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}. Otherwise, this version delegates to
+	 * {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
 	 */
-	public void copyResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException
+	@Override
+	public final void copyResource(URI resourceURI, final URI destinationURI, final ProgressListener progressListener) throws ResourceIOException
+	{
+		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
+		if(subrepository != this) //if the resource URI lies within a subrepository
+		{
+			copyResource(resourceURI, destinationURI, progressListener); //delegate to the subrepository
+			return;
+		}
+		checkOpen(); //make sure the repository is open
+		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
+		if(destinationSubrepository != this) //if the destination URI lies within a subrepository
+		{
+			copyResourceImpl(resourceURI, destinationSubrepository, destinationURI, true, progressListener); //copy to the subrepository
+			return;
+		}
+		copyResourceImpl(resourceURI, destinationURI, true, progressListener); //copy the resource, overwriting any resource at the destination
+	}
+
+	/**
+	 * {@inheritDoc} If the destination URI lies in a subrepository, this version delegates to
+	 * {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}. Otherwise, this version delegates to
+	 * {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 */
+	@Override
+	public final void copyResource(URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException
+	{
+		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
+		if(subrepository != this) //if the resource URI lies within a subrepository
+		{
+			copyResource(resourceURI, destinationURI, overwrite); //delegate to the subrepository
+			return;
+		}
+		checkOpen(); //make sure the repository is open
+		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
+		if(destinationSubrepository != this) //if the destination URI lies within a subrepository
+		{
+			copyResourceImpl(resourceURI, destinationSubrepository, destinationURI, overwrite, null); //copy to the subrepository
+			return;
+		}
+		copyResourceImpl(resourceURI, destinationURI, overwrite, null);
+	}
+
+	/**
+	 * {@inheritDoc} If the destination URI lies in a subrepository, this version delegates to
+	 * {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}. Otherwise, this version delegates to
+	 * {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 */
+	@Override
+	public final void copyResource(URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
+			throws ResourceIOException
+	{
+		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
+		if(subrepository != this) //if the resource URI lies within a subrepository
+		{
+			copyResource(resourceURI, destinationURI, overwrite, progressListener); //delegate to the subrepository
+			return;
+		}
+		checkOpen(); //make sure the repository is open
+		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
+		if(destinationSubrepository != this) //if the destination URI lies within a subrepository
+		{
+			copyResourceImpl(resourceURI, destinationSubrepository, destinationURI, overwrite, progressListener); //copy to the subrepository
+			return;
+		}
+		copyResourceImpl(resourceURI, destinationURI, overwrite, progressListener);
+	}
+
+	/**
+	 * Creates an infinitely deep copy of a resource to another URI in this repository, overwriting any resource at the destination only if requested. The
+	 * resource URI is guaranteed to be normalized and valid for the repository and the repository is guaranteed to be open.
+	 * @param resourceURI The URI of the resource to be copied.
+	 * @param destinationURI The URI to which the resource should be copied.
+	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
+	 *          destination should cause an exception to be thrown.
+	 * @param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
+	 * @throws ResourceIOException if there is an error copying the resource.
+	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	 */
+	protected abstract void copyResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
+			throws ResourceIOException;	//TODO here and in all the copy methods, make sure we're not copying from collection to non-collection and vice-versa
+
+	//inter-repository copy
+
+	/**
+	 * {@inheritDoc} If the given resource is in this repository, this version delegates to {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * Otherwise, this version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 */
+	@Override
+	public final void copyResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
 		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
 			subrepository.copyResource(resourceURI, destinationRepository, destinationURI); //delegate to the subrepository
+			return;
 		}
-		copyResource(resourceURI, destinationRepository, destinationURI, null); //copy the resource, overwriting any resource at the destination
+		checkOpen(); //make sure the repository is open
+		if(destinationRepository == this) //if the resource is being copied to this repository
+		{
+			copyResourceImpl(resourceURI, destinationURI, true, null); //delegate to the internal copy method
+			return;
+		}
+		copyResourceImpl(resourceURI, destinationRepository, destinationURI, true, null);
 	}
 
 	/**
-	 * Creates an infinitely deep copy of a resource to the specified URI in the specified repository. Any resource at the destination URI will be replaced. This
-	 * version delegates to {@link #copyResource(URI, Repository, URI, boolean, ProgressListener)}.
-	 * @param resourceURI The URI of the resource to be copied.
-	 * @param destinationRepository The repository to which the resource should be copied, which may be this repository.
-	 * @param destinationURI The URI to which the resource should be copied.
-	 * @param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws ResourceIOException if there is an error copying the resource.
+	 * {@inheritDoc} If the given resource is in this repository, this version delegates to {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * Otherwise, this version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
 	 */
-	public void copyResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI, final ProgressListener progressListener)
+	@Override
+	public final void copyResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI, final ProgressListener progressListener)
 			throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
@@ -1358,14 +1455,23 @@ public abstract class AbstractRepository implements Repository
 		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
 			subrepository.copyResource(resourceURI, destinationRepository, destinationURI, progressListener); //delegate to the subrepository
+			return;
 		}
-		copyResource(resourceURI, destinationRepository, destinationURI, true, progressListener); //copy the resource, overwriting any resource at the destination
+		checkOpen(); //make sure the repository is open
+		if(destinationRepository == this) //if the resource is being copied to this repository
+		{
+			copyResourceImpl(resourceURI, destinationURI, true, progressListener); //delegate to the internal copy method
+			return;
+		}
+		copyResourceImpl(resourceURI, destinationRepository, destinationURI, true, progressListener);
 	}
 
 	/**
-	 * {@inheritDoc} This version delegates to {@link #copyResource(URI, Repository, URI, boolean, ProgressListener)}.
+	 * {@inheritDoc} If the given resource is in this repository, this version delegates to {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * Otherwise, this version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
 	 */
-	public void copyResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite)
+	@Override
+	public final void copyResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite)
 			throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
@@ -1373,15 +1479,23 @@ public abstract class AbstractRepository implements Repository
 		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
 			subrepository.copyResource(resourceURI, destinationRepository, destinationURI, overwrite); //delegate to the subrepository
+			return;
 		}
-		copyResource(resourceURI, destinationRepository, destinationURI, true, null); //copy the resource, overwriting any resource at the destination
+		checkOpen(); //make sure the repository is open
+		if(destinationRepository == this) //if the resource is being copied to this repository
+		{
+			copyResourceImpl(resourceURI, destinationURI, overwrite, null); //delegate to the internal copy method
+			return;
+		}
+		copyResourceImpl(resourceURI, destinationRepository, destinationURI, overwrite, null);
 	}
 
 	/**
-	 * {@inheritDoc} This version delegates to {@link Repository#copyResource(URI, URI, boolean, ProgressListener)} if the given repository is this repository.
-	 * Otherwise, this version performs a default copy operation.
+	 * {@inheritDoc} If the given resource is in this repository, this version delegates to {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * Otherwise, this version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
 	 */
-	public void copyResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite,
+	@Override
+	public final void copyResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite,
 			final ProgressListener progressListener) throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
@@ -1389,54 +1503,82 @@ public abstract class AbstractRepository implements Repository
 		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
 			subrepository.copyResource(resourceURI, destinationRepository, destinationURI, overwrite, progressListener); //delegate to the subrepository
+			return;
 		}
 		checkOpen(); //make sure the repository is open
 		if(destinationRepository == this) //if the resource is being copied to this repository
 		{
-			copyResource(resourceURI, destinationURI, overwrite); //delegate to the internal copy method TODO add progress listener to API and to this call
+			copyResourceImpl(resourceURI, destinationURI, overwrite, progressListener); //delegate to the internal copy method
+			return;
 		}
-		else
-		//if the resource is being copied to another repository
+		copyResourceImpl(resourceURI, destinationRepository, destinationURI, overwrite, progressListener);
+	}
+
+	/**
+	 * Creates an infinitely deep copy of a resource to the specified URI in the specified repository, overwriting any resource at the destination only if
+	 * requested. The resource URI is guaranteed to be normalized and valid for the repository and the repository is guaranteed to be open. The destination
+	 * repository is guaranteed to be a different repository than this repository.
+	 * <p>
+	 * This version performs a default copy operation. Normally child classes do not need to override this version.
+	 * </p>
+	 * @param resourceURI The URI of the resource to be copied.
+	 * @param destinationRepository The repository to which the resource should be copied, which may be this repository.
+	 * @param destinationURI The URI to which the resource should be copied.
+	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
+	 *          destination should cause an exception to be thrown.
+	 * @param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
+	 * @throws ResourceIOException if there is an error copying the resource.
+	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	 */
+	protected void copyResourceImpl(final URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite,
+			final ProgressListener progressListener) throws ResourceIOException
+	{
+		try
 		{
-			try
+			//TODO del Log.trace("ready to create resource", destinationURI, "in destination repository", destinationRepository.getReferenceURI());
+			final boolean isCollection = isCollectionURI(resourceURI); //see if the resource is a collection
+			final URFResource resourceDescription = getResourceDescription(resourceURI); //get a description of the resource; this will throw an exception if the source resource doesn't exist
+			if(!overwrite) //if we're not allowed to overwrite files
 			{
-				//TODO del Log.trace("ready to create resource", destinationURI, "in destination repository", destinationRepository.getReferenceURI());
-				final boolean isCollection = isCollectionURI(resourceURI); //see if the resource is a collection
-				final URFResource resourceDescription = getResourceDescription(resourceURI); //get a description of the resource
-				final long contentLength = getContentLength(resourceDescription); //get the size of the resource content
-				if(contentLength == 0) //if this is a resource with no content, don't needlessly create content (especially important for collections)
+				if(destinationRepository.resourceExists(destinationURI)) //if the destination resource exists TODO create an overwrite-aware createResource() method to make this more efficient
 				{
-					destinationRepository.createResource(destinationURI, resourceDescription, NO_BYTES); //create a zero-byte resource with the given description
+					throw new ResourceStateException(destinationURI, "Destination resource already exists.");
 				}
-				else
-				//if there is content
+			}
+			final long contentLength = getContentLength(resourceDescription); //get the size of the resource content
+			if(contentLength == 0) //if this is a resource with no content, don't needlessly create content (especially important for collections)
+			{
+				destinationRepository.createResource(destinationURI, resourceDescription, NO_BYTES); //create a zero-byte resource with the given description
+			}
+			else
+			//if there is content
+			{
+				//TODO check for non-existent source resource
+				final InputStream inputStream = getResourceInputStream(resourceURI); //get an input stream to the source resource
+				try
 				{
-					//TODO check for non-existent source resource
-					final InputStream inputStream = getResourceInputStream(resourceURI); //get an input stream to the source resource
+					//TODO create an overwrite-aware createResource() method
+					final OutputStream outputStream = destinationRepository.createResource(destinationURI, resourceDescription); //create the destination resource with the same description as the source resource, getting an output stream for storing the contents
 					try
 					{
-						//TODO create an overwrite-aware createResource() method
-						final OutputStream outputStream = destinationRepository.createResource(destinationURI, resourceDescription); //create the destination resource with the same description as the source resource, getting an output stream for storing the contents
-						try
-						{
-							Streams.copy(inputStream, outputStream, contentLength, progressListener); //copy the resource
-						}
-						finally
-						{
-							outputStream.close(); //always close the output stream
-						}
+						Streams.copy(inputStream, outputStream, contentLength, progressListener); //copy the resource
 					}
 					finally
 					{
-						inputStream.close(); //always close the input stream
+						outputStream.close(); //always close the output stream
 					}
 				}
-				//TODO copy the child resources
+				finally
+				{
+					inputStream.close(); //always close the input stream
+				}
 			}
-			catch(final IOException ioException) //if an I/O exception occurs
-			{
-				throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
-			}
+			//TODO copy the child resources
+		}
+		catch(final IOException ioException) //if an I/O exception occurs
+		{
+			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
 		}
 	}
 
@@ -1484,8 +1626,8 @@ public abstract class AbstractRepository implements Repository
 	}
 
 	/**
-	 * Moves a resource to the specified URI in the specified repository, overwriting any resource at the destionation only if requested. This version delegates
-	 * to {@link Repository#moveResource(URI, URI, boolean)} if the given repository is this repository. Otherwise, this version delegates to
+	 * Moves a resource to the specified URI in the specified repository, overwriting any resource at the destination only if requested. This version delegates to
+	 * {@link Repository#moveResource(URI, URI, boolean)} if the given repository is this repository. Otherwise, this version delegates to
 	 * {@link Repository#copyResource(URI, Repository, URI, boolean)} and then delegates to {@link Repository#deleteRepository(URI)}.
 	 * @param resourceURI The URI of the resource to be moved.
 	 * @param destinationRepository The repository to which the resource should be moved, which may be this repository.
