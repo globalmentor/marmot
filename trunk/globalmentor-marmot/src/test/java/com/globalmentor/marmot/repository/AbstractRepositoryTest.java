@@ -43,7 +43,7 @@ import com.globalmentor.urf.dcmi.DCMI;
  * 
  * @author Garret Wilson
  */
-public abstract class AbstractRepositoryTest extends AbstractTest //TODO add resource overwrite test
+public abstract class AbstractRepositoryTest extends AbstractTest
 {
 
 	/** The repository on which tests are being run. */
@@ -355,7 +355,6 @@ public abstract class AbstractRepositoryTest extends AbstractTest //TODO add res
 		final int contentLength = (1 << 10) + 1;
 		final Repository repository = getRepository();
 		final byte[] resourceContents = Bytes.createRandom(contentLength); //create random contents
-		final Date beforeCreateCollection = new Date();
 		final URI collection1URI = repository.getRootURI().resolve("test1/"); //determine some top-level collection
 		final URI collection2URI = collection1URI.resolve("test2/");
 		final URI collection3URI = collection2URI.resolve("test3/");
@@ -381,18 +380,14 @@ public abstract class AbstractRepositoryTest extends AbstractTest //TODO add res
 		final URFResource collection5PropertiesResource = createTestProperties(collection5URI, "Collection 5", "The fifth collection.");
 		repository.setResourceProperties(collection5URI, collection5PropertiesResource.getProperties());
 		//create resource
-		Date before = new Date();
 		URFResource newResourceDescription = repository.createResource(resourceURI, resourceContents); //create a resource with random contents
-		Date after = new Date();
 		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
-		checkCreatedResourceDateTimes(newCollectionDescription, beforeCreateCollection, before);
-		checkCreatedResourceDateTimes(newResourceDescription, before, after);
 		assertThat("Invalid content length of created resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
 		byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
 		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(resourceContents));
 		//set resource properties
-		final URFResource propertiesResource = createTestProperties(resourceURI); //create test properties
-		repository.setResourceProperties(resourceURI, propertiesResource.getProperties()); //set those properties individually
+		final URFResource resourcePropertiesResource = createTestProperties(resourceURI); //create test properties
+		repository.setResourceProperties(resourceURI, resourcePropertiesResource.getProperties()); //set those properties individually
 		//copy resource up hierarchy
 		final URI copyResourceURI = collection3URI.resolve("copy.bin");
 		repository.copyResource(resourceURI, copyResourceURI); //copy the resource
@@ -400,7 +395,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest //TODO add res
 		assertThat("Invalid content length of copied resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
 		newResourceContents = repository.getResourceContents(copyResourceURI); //read the contents we copied
 		assertThat("Retrieved contents of copied resource not what expected.", newResourceContents, equalTo(resourceContents));
-		checkResourceProperties(newResourceDescription, propertiesResource.getProperties()); //see if the copied resource has the same properties
+		checkResourceProperties(newResourceDescription, resourcePropertiesResource.getProperties()); //see if the copied resource has the same properties
 		//copy collection resource up hierarchy
 		final URI copyCollectionURI = collection3URI.resolve("copy/");
 		repository.copyResource(collection5URI, copyCollectionURI); //copy test1/test2/test3/test4/test5/ to test1/test2/test3/copy/
@@ -414,7 +409,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest //TODO add res
 		assertThat("Invalid content length of copied collection nested resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
 		newResourceContents = repository.getResourceContents(copyCollectionResourceURI); //read the contents of the resource copied along with the collection
 		assertThat("Retrieved contents of copied collection nested resource not what expected.", newResourceContents, equalTo(resourceContents));
-		checkResourceProperties(newResourceDescription, propertiesResource.getProperties()); //see if the resource in the copied collection has the same properties
+		checkResourceProperties(newResourceDescription, resourcePropertiesResource.getProperties()); //see if the resource in the copied collection has the same properties
 		//move resource up hierarchy
 		final URI moveResourceURI = collection3URI.resolve("move.bin");
 		repository.moveResource(resourceURI, moveResourceURI); //move the resource to test1/test2/test3/move.bin
@@ -423,7 +418,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest //TODO add res
 		assertThat("Invalid content length of copied resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
 		newResourceContents = repository.getResourceContents(moveResourceURI); //read the contents we moved
 		assertThat("Retrieved contents of copied resource not what expected.", newResourceContents, equalTo(resourceContents));
-		checkResourceProperties(newResourceDescription, propertiesResource.getProperties()); //see if the moved resource has the same properties
+		checkResourceProperties(newResourceDescription, resourcePropertiesResource.getProperties()); //see if the moved resource has the same properties
 		//move collection resource up hierarchy
 		final URI moveCollectionURI = collection1URI.resolve("move/");
 		repository.moveResource(collection3URI, moveCollectionURI); //move test1/test2/test3/ to test1/move/
@@ -437,14 +432,37 @@ public abstract class AbstractRepositoryTest extends AbstractTest //TODO add res
 		assertThat("Invalid content length of moved collection copied nested resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
 		newResourceContents = repository.getResourceContents(moveCollectionCopyResourceURI); //read the contents of the copied resource moved along with the collection
 		assertThat("Retrieved contents of moved collection copied nested resource not what expected.", newResourceContents, equalTo(resourceContents));
-		checkResourceProperties(newResourceDescription, propertiesResource.getProperties()); //see if the copied resource in the moved collection has the same properties
+		checkResourceProperties(newResourceDescription, resourcePropertiesResource.getProperties()); //see if the copied resource in the moved collection has the same properties
 		final URI moveCollectionMoveResourceURI = moveCollectionURI.resolve(getName(moveResourceURI));
 		assertTrue("Moved collection moved nested resource doesn't exist.", repository.resourceExists(moveCollectionMoveResourceURI));
 		newResourceDescription = repository.getResourceDescription(moveCollectionMoveResourceURI); //get a description of the moved resource inside the moved collection
 		assertThat("Invalid content length of moved collection moved nested resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
 		newResourceContents = repository.getResourceContents(moveCollectionMoveResourceURI); //read the contents of the moved resource moved along with the collection
 		assertThat("Retrieved contents of moved collection moved nested resource not what expected.", newResourceContents, equalTo(resourceContents));
-		checkResourceProperties(newResourceDescription, propertiesResource.getProperties()); //see if the moved resource in the moved collection has the same properties
+		checkResourceProperties(newResourceDescription, resourcePropertiesResource.getProperties()); //see if the moved resource in the moved collection has the same properties
+		//create resource2 and copy with overwrite, using distinct properties
+		final URI resource2URI = collection1URI.resolve("test2.bin"); //test1/test2.bin
+		newResourceDescription = repository.createResource(resource2URI, resourceContents); //create a resource with random contents
+		final URFResource resource2PropertiesResource = createTestProperties(resource2URI, "Resource2", "Second Resource"); //create test properties
+		repository.setResourceProperties(resource2URI, resource2PropertiesResource.getProperties()); //set those properties individually
+		repository.copyResource(resource2URI, moveCollectionCopyResourceURI); //copy the resource, overwriting the old copy.bin
+		newResourceDescription = repository.getResourceDescription(moveCollectionCopyResourceURI); //get a description of the copied resource
+		assertThat("Invalid content length of copied resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
+		newResourceContents = repository.getResourceContents(moveCollectionCopyResourceURI); //read the contents we copied
+		assertThat("Retrieved contents of copied resource not what expected.", newResourceContents, equalTo(resourceContents));
+		checkResourceProperties(newResourceDescription, resource2PropertiesResource.getProperties()); //see if the copied resource has the expected properties
+		//create resource3 and move with overwrite, using distinct properties
+		final URI resource3URI = collection1URI.resolve("test3.bin"); //test1/test3.bin
+		newResourceDescription = repository.createResource(resource3URI, resourceContents); //create a resource with random contents
+		final URFResource resource3PropertiesResource = createTestProperties(resource3URI, "Resource3", "Third Resource"); //create test properties
+		repository.setResourceProperties(resource3URI, resource3PropertiesResource.getProperties()); //set those properties individually
+		repository.moveResource(resource3URI, moveCollectionMoveResourceURI); //move the resource, overwriting the old move.bin
+		assertFalse("Moved resource still exists.", repository.resourceExists(resourceURI));
+		newResourceDescription = repository.getResourceDescription(moveCollectionMoveResourceURI); //get a description of the moved resource
+		assertThat("Invalid content length of copied resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
+		newResourceContents = repository.getResourceContents(moveCollectionMoveResourceURI); //read the contents we moved
+		assertThat("Retrieved contents of copied resource not what expected.", newResourceContents, equalTo(resourceContents));
+		checkResourceProperties(newResourceDescription, resource3PropertiesResource.getProperties()); //see if the moved resource has the expected properties
 		//delete resource
 		repository.deleteResource(collection1URI); //delete the root collection resource we created, with its contained deeply-nested collections and resource
 		assertFalse("Deleted root collection resource still exists.", repository.resourceExists(collection1URI));
