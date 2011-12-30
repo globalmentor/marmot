@@ -248,6 +248,15 @@ public interface Repository extends Disposable
 	public boolean isLivePropertyURI(final URI propertyURI);
 
 	/**
+	 * Checks to make sure the resource designated by the given resource URI is within this repository.
+	 * @param resourceURI The URI of the resource to check.
+	 * @return The normalized form of the given resource URI.
+	 * @throws NullPointerException if the given resource URI is <code>null</code>.
+	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 */
+	public URI checkResourceURI(URI resourceURI) throws IllegalArgumentException;
+	
+	/**
 	 * Determines the URI of the collection resource of the given URI; either the given resource URI if the resource represents a collection, or the parent
 	 * resource if not.
 	 * @param resourceURI The URI of the resource for which the collection resource URI should be returned.
@@ -610,7 +619,8 @@ public interface Repository extends Disposable
 	 * Creates an infinitely deep copy of a resource to another URI in this repository. Any resource at the destination URI will be replaced.
 	 * @param resourceURI The URI of the resource to be copied.
 	 * @param destinationURI The URI to which the resource should be copied.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given source or destination URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given destination resource is a child of the given source resource, representing a circular copy.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if there is an error copying the resource.
@@ -622,7 +632,8 @@ public interface Repository extends Disposable
 	 * @param resourceURI The URI of the resource to be copied.
 	 * @param destinationURI The URI to which the resource should be copied.
 	 * @param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given source or destination URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given destination resource is a child of the given source resource, representing a circular copy.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if there is an error copying the resource.
@@ -635,11 +646,12 @@ public interface Repository extends Disposable
 	 * @param destinationURI The URI to which the resource should be copied.
 	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
 	 *          destination should cause an exception to be thrown.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given source or destination URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given destination resource is a child of the given source resource, representing a circular copy.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws ResourceIOException if there is an error copying the resource.
 	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	 * @throws ResourceIOException if there is an error copying the resource.
 	 */
 	public void copyResource(final URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException;
 	
@@ -650,11 +662,12 @@ public interface Repository extends Disposable
 	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
 	 *          destination should cause an exception to be thrown.
 	 * @param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given source or destination URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given destination resource is a child of the given source resource, representing a circular copy.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	 * @throws ResourceNotFoundException if the identified resource does not exist.
-	 * @throws ResourceIOException if there is an error copying the resource.
 	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	 * @throws ResourceIOException if there is an error copying the resource.
 	 */
 	public void copyResource(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener) throws ResourceIOException;
 	
@@ -665,7 +678,8 @@ public interface Repository extends Disposable
 	 * @param resourceURI The URI of the resource to be copied.
 	 * @param destinationRepository The repository to which the resource should be copied, which may be this repository.
 	 * @param destinationURI The URI to which the resource should be copied.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given source or destination URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given destination resource is a child of the given source resource, representing a circular copy.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if there is an error copying the resource.
@@ -678,7 +692,8 @@ public interface Repository extends Disposable
 	 * @param destinationRepository The repository to which the resource should be copied, which may be this repository.
 	 * @param destinationURI The URI to which the resource should be copied.
 	 * @param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given source or destination URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given destination resource is a child of the given source resource, representing a circular copy.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if there is an error copying the resource.
@@ -694,7 +709,8 @@ public interface Repository extends Disposable
 	 * @param destinationURI The URI to which the resource should be copied.
 	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
 	 *          destination should cause an exception to be thrown.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given source or destination URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given destination resource is a child of the given source resource, representing a circular copy.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if there is an error copying the resource.
@@ -712,7 +728,8 @@ public interface Repository extends Disposable
 	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
 	 *          destination should cause an exception to be thrown.
 	 * @param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given source or destination URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given destination resource is a child of the given source resource, representing a circular copy.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if there is an error copying the resource.

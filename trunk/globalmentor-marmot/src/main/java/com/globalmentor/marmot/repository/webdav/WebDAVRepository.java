@@ -947,7 +947,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	}
 
 	/**
-	 * Moves a resource to another URI in this repository, overwriting any resource at the destionation only if requested.
+	 * Moves a resource to another URI in this repository, overwriting any resource at the destination only if requested.
 	 * @param resourceURI The URI of the resource to be moved.
 	 * @param destinationURI The URI to which the resource should be moved.
 	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the

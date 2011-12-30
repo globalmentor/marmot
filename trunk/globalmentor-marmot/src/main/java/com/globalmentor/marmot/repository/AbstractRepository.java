@@ -385,14 +385,10 @@ public abstract class AbstractRepository implements Repository
 	}
 
 	/**
-	 * Checks to make sure the resource designated by the given resource URI is within this repository. This version makes sure the given URI is a child of the
-	 * resource reference URI.
-	 * @param resourceURI The URI of the resource to check.
-	 * @return The normalized form of the given resource.
-	 * @throws NullPointerException if the given resource URI is <code>null</code>.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * {@inheritDoc} This version makes sure the given URI is a child of the repository root URI.
+	 * @see #getRootURI()
 	 */
-	protected URI checkResourceURI(URI resourceURI)
+	public URI checkResourceURI(URI resourceURI) throws IllegalArgumentException
 	{
 		resourceURI = normalize(checkInstance(resourceURI, "Resource URI cannot be null.")); //normalize the URI
 		if(!isChild(getRootURI(), resourceURI)) //if the given resource URI does not designate a resource within this repository's URI namespace (this will normalize the URI, but as we need to return a normalized form it's better to normalize first so that actual normalization changes won't have to be done twice)
@@ -1307,14 +1303,19 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
 	 */
 	@Override
-	public final void copyResource(URI resourceURI, final URI destinationURI) throws ResourceIOException
+	public final void copyResource(URI resourceURI, URI destinationURI) throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		destinationURI = checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
 		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
-			copyResource(resourceURI, destinationURI); //delegate to the subrepository
+			subrepository.copyResource(resourceURI, destinationURI); //delegate to the subrepository
 			return;
+		}
+		if(isChild(resourceURI, destinationURI))
+		{
+			throw new IllegalArgumentException("Cannot perform circular copy from " + resourceURI + " to " + destinationURI);
 		}
 		checkOpen(); //make sure the repository is open
 		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
@@ -1332,14 +1333,19 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
 	 */
 	@Override
-	public final void copyResource(URI resourceURI, final URI destinationURI, final ProgressListener progressListener) throws ResourceIOException
+	public final void copyResource(URI resourceURI, URI destinationURI, final ProgressListener progressListener) throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		destinationURI = checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
 		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
-			copyResource(resourceURI, destinationURI, progressListener); //delegate to the subrepository
+			subrepository.copyResource(resourceURI, destinationURI, progressListener); //delegate to the subrepository
 			return;
+		}
+		if(isChild(resourceURI, destinationURI))
+		{
+			throw new IllegalArgumentException("Cannot perform circular copy from " + resourceURI + " to " + destinationURI);
 		}
 		checkOpen(); //make sure the repository is open
 		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
@@ -1357,14 +1363,19 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
 	 */
 	@Override
-	public final void copyResource(URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException
+	public final void copyResource(URI resourceURI, URI destinationURI, final boolean overwrite) throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		destinationURI = checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
 		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
-			copyResource(resourceURI, destinationURI, overwrite); //delegate to the subrepository
+			subrepository.copyResource(resourceURI, destinationURI, overwrite); //delegate to the subrepository
 			return;
+		}
+		if(isChild(resourceURI, destinationURI))
+		{
+			throw new IllegalArgumentException("Cannot perform circular copy from " + resourceURI + " to " + destinationURI);
 		}
 		checkOpen(); //make sure the repository is open
 		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
@@ -1382,15 +1393,20 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
 	 */
 	@Override
-	public final void copyResource(URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
+	public final void copyResource(URI resourceURI, URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
 			throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		destinationURI = checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
 		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
-			copyResource(resourceURI, destinationURI, overwrite, progressListener); //delegate to the subrepository
+			subrepository.copyResource(resourceURI, destinationURI, overwrite, progressListener); //delegate to the subrepository
 			return;
+		}
+		if(isChild(resourceURI, destinationURI))
+		{
+			throw new IllegalArgumentException("Cannot perform circular copy from " + resourceURI + " to " + destinationURI);
 		}
 		checkOpen(); //make sure the repository is open
 		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
@@ -1404,7 +1420,8 @@ public abstract class AbstractRepository implements Repository
 
 	/**
 	 * Creates an infinitely deep copy of a resource to another URI in this repository, overwriting any resource at the destination only if requested. The
-	 * resource URI is guaranteed to be normalized and valid for the repository and the repository is guaranteed to be open.
+	 * resource URI is guaranteed to be normalized and valid for the repository and the repository is guaranteed to be open. The destination resource URI is
+	 * guaranteed not to be a child of the source resource URI.
 	 * @param resourceURI The URI of the resource to be copied.
 	 * @param destinationURI The URI to which the resource should be copied.
 	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
@@ -1415,7 +1432,7 @@ public abstract class AbstractRepository implements Repository
 	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
 	 */
 	protected abstract void copyResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
-			throws ResourceIOException;	//TODO here and in all the copy methods, make sure we're not copying from collection to non-collection and vice-versa
+			throws ResourceIOException; //TODO here and in all the copy methods, make sure we're not copying from collection to non-collection and vice-versa
 
 	//inter-repository copy
 
@@ -1424,9 +1441,10 @@ public abstract class AbstractRepository implements Repository
 	 * Otherwise, this version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
 	 */
 	@Override
-	public final void copyResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException
+	public final void copyResource(URI resourceURI, final Repository destinationRepository, URI destinationURI) throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		destinationURI = destinationRepository.checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
 		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
@@ -1439,6 +1457,10 @@ public abstract class AbstractRepository implements Repository
 			copyResourceImpl(resourceURI, destinationURI, true, null); //delegate to the internal copy method
 			return;
 		}
+		if(isChild(resourceURI, destinationURI))
+		{
+			throw new IllegalArgumentException("Cannot perform circular copy from " + resourceURI + " to " + destinationURI + " even between repositories.");
+		}
 		copyResourceImpl(resourceURI, destinationRepository, destinationURI, true, null);
 	}
 
@@ -1447,10 +1469,11 @@ public abstract class AbstractRepository implements Repository
 	 * Otherwise, this version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
 	 */
 	@Override
-	public final void copyResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI, final ProgressListener progressListener)
+	public final void copyResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final ProgressListener progressListener)
 			throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		destinationURI = destinationRepository.checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
 		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
@@ -1463,6 +1486,10 @@ public abstract class AbstractRepository implements Repository
 			copyResourceImpl(resourceURI, destinationURI, true, progressListener); //delegate to the internal copy method
 			return;
 		}
+		if(isChild(resourceURI, destinationURI))
+		{
+			throw new IllegalArgumentException("Cannot perform circular copy from " + resourceURI + " to " + destinationURI + " even between repositories.");
+		}
 		copyResourceImpl(resourceURI, destinationRepository, destinationURI, true, progressListener);
 	}
 
@@ -1471,10 +1498,11 @@ public abstract class AbstractRepository implements Repository
 	 * Otherwise, this version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
 	 */
 	@Override
-	public final void copyResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite)
+	public final void copyResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final boolean overwrite)
 			throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		destinationURI = destinationRepository.checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
 		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
@@ -1487,6 +1515,10 @@ public abstract class AbstractRepository implements Repository
 			copyResourceImpl(resourceURI, destinationURI, overwrite, null); //delegate to the internal copy method
 			return;
 		}
+		if(isChild(resourceURI, destinationURI))
+		{
+			throw new IllegalArgumentException("Cannot perform circular copy from " + resourceURI + " to " + destinationURI + " even between repositories.");
+		}
 		copyResourceImpl(resourceURI, destinationRepository, destinationURI, overwrite, null);
 	}
 
@@ -1495,10 +1527,11 @@ public abstract class AbstractRepository implements Repository
 	 * Otherwise, this version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
 	 */
 	@Override
-	public final void copyResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite,
+	public final void copyResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final boolean overwrite,
 			final ProgressListener progressListener) throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		destinationURI = destinationRepository.checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
 		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
@@ -1511,13 +1544,18 @@ public abstract class AbstractRepository implements Repository
 			copyResourceImpl(resourceURI, destinationURI, overwrite, progressListener); //delegate to the internal copy method
 			return;
 		}
+		if(isChild(resourceURI, destinationURI))
+		{
+			throw new IllegalArgumentException("Cannot perform circular copy from " + resourceURI + " to " + destinationURI + " even between repositories.");
+		}
 		copyResourceImpl(resourceURI, destinationRepository, destinationURI, overwrite, progressListener);
 	}
 
 	/**
 	 * Creates an infinitely deep copy of a resource to the specified URI in the specified repository, overwriting any resource at the destination only if
 	 * requested. The resource URI is guaranteed to be normalized and valid for the repository and the repository is guaranteed to be open. The destination
-	 * repository is guaranteed to be a different repository than this repository.
+	 * resource URI is guaranteed not to be a child of the source resource URI. The destination repository is guaranteed to be a different repository than this
+	 * repository.
 	 * <p>
 	 * This version performs a default copy operation. Normally child classes do not need to override this version.
 	 * </p>
@@ -1711,8 +1749,12 @@ public abstract class AbstractRepository implements Repository
 	/**
 	 * Translates the given error specific to the this repository type into a resource I/O exception.
 	 * <p>
-	 * This version returns the given throwable if it is already a {@link ResourceIOException}; otherwise, it simply wraps the given throwable in a
-	 * {@link ResourceIOException}.
+	 * This version returns the given throwable if it is already a {@link ResourceIOException}. It also makes the following translations:
+	 * <dl>
+	 * <dt>{@link IllegalSt}</dt>
+	 * <dd>{@link ResourceNotFoundException}</dd>
+	 * </dl>
+	 * Otherwise, it simply wraps the given throwable in a {@link ResourceIOException}.
 	 * </p>
 	 * @param resourceURI The URI of the resource to which the exception is related.
 	 * @param throwable The error which should be translated to a resource I/O exception.
@@ -1720,7 +1762,18 @@ public abstract class AbstractRepository implements Repository
 	 */
 	protected ResourceIOException toResourceIOException(final URI resourceURI, final Throwable throwable)
 	{
-		return throwable instanceof ResourceIOException ? (ResourceIOException)throwable : new ResourceIOException(resourceURI, throwable); //default to simple exception chaining with a new resource I/O exception, if the throwable isn't already a resourc I/O exception
+		if(throwable instanceof ResourceIOException)
+		{
+			return (ResourceIOException)throwable;
+		}
+		else if(throwable instanceof IllegalStateException)
+		{
+			return new ResourceStateException(resourceURI, throwable);
+		}
+		else
+		{
+			return new ResourceIOException(resourceURI, throwable); //default to simple exception chaining with a new resource I/O exception
+		}
 	}
 
 	/**

@@ -500,7 +500,30 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		{
 			throw new ResourceNotFoundException(resourceURI);
 		}
-		throw new UnsupportedOperationException(); //TODO implement
+		final File sourceFile = new File(getSourceResourceURI(resourceURI)); //create a file object for the source resource
+		final File destinationFile = new File(getSourceResourceURI(destinationURI)); //create a file object for the destination resource
+		try
+		{
+			copy(sourceFile, destinationFile, overwrite, progressListener); //recursively copy the files/directories
+			final File sourceDescriptionFile = getResourceDescriptionFile(sourceFile); //get the file used for storing the description
+			final File destinationDescriptionFile = getResourceDescriptionFile(destinationFile); //get the destination file used for storing the description
+			if(sourceDescriptionFile.exists()) //if the source file has a description file
+			{
+				copy(sourceDescriptionFile, destinationDescriptionFile); //always copy over the description file---we don't want to risk that a single resource copy has an outdated description file that was already existing
+			}
+			else
+			//if the source file has no description file
+			{
+				if(destinationDescriptionFile.exists()) //remove the destination description file if it exists (which might happen if we copy a resource without a description, overwriting a resource that had a description
+				{
+					delete(destinationDescriptionFile);
+				}
+			}
+		}
+		catch(final IOException ioException) //if an I/O exception occurs
+		{
+			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
+		}
 	}
 
 	/**

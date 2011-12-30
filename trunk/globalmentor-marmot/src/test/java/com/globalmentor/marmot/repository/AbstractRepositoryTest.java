@@ -33,6 +33,7 @@ import org.junit.*;
 
 import com.globalmentor.java.Bytes;
 import com.globalmentor.net.ResourceIOException;
+import com.globalmentor.net.URIs;
 import com.globalmentor.test.AbstractTest;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
@@ -43,7 +44,7 @@ import com.globalmentor.urf.dcmi.DCMI;
  * 
  * @author Garret Wilson
  */
-public abstract class AbstractRepositoryTest extends AbstractTest
+public abstract class AbstractRepositoryTest extends AbstractTest //TODO add resource overwrite test
 {
 
 	/** The repository on which tests are being run. */
@@ -82,6 +83,20 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		final int initialContentLength = (1 << 10) + 1;
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		testResourceContentBytes(resourceURI, false, Bytes.createRandom(initialContentLength));
+	}
+
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Creating a resource with no contents.</li>
+	 * <li>Deleting an empty resource.</li>
+	 * </ul>
+	 */
+	@Test
+	public void testCreateEmptyResource() throws IOException
+	{
+		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
+		testResourceContentBytes(resourceURI, false, NO_BYTES);
 	}
 
 	/**
@@ -294,61 +309,72 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * <li>Checking the existence of a deeply-nested collection resource.</li>
 	 * <li>Creating a resource inside a deeply-nested collection using supplied contents.</li>
 	 * <li>Checking the existence of a deeply-nested resource inside a collection.</li>
+	 * <li>Copying the deeply-nested resource up the hierarchy inside a collection.</li>
 	 * <li>Deleting a deeply-nested collection resource with all its contents.</li>
 	 * </ul>
 	 */
 	@Test
-	public void testCreateDeepResourceBytes() throws ResourceIOException
+	public void testCopyDeepResource() throws ResourceIOException //TODO make sure properties get copied over
 	{
 		final int contentLength = (1 << 10) + 1;
 		final Repository repository = getRepository();
 		final byte[] resourceContents = Bytes.createRandom(contentLength); //create random contents
 		final Date beforeCreateCollection = new Date();
-		final URI rootCollectionURI = repository.getRootURI().resolve("test1/"); //determine some top-level collection
-		final URI collectionURI = rootCollectionURI.resolve("test2/test3/test4/test5/"); //determine a deeply-nested test collection URI
-		final URI resourceURI = collectionURI.resolve("test.bin"); //determine a test resource URI
-		final URFResource newCollectionDescription = repository.createParentResources(resourceURI); //create all necessary parent resources for the resource
-		assertThat("Last created parent resource doesn't match our deeply-nested collection.", newCollectionDescription.getURI(), equalTo(collectionURI));
-		assertTrue("Created root collection resource doesn't exist.", repository.resourceExists(rootCollectionURI));
-		assertThat("Invalid content length of created root collection resource.", getContentLength(repository.getResourceDescription(rootCollectionURI)),
-				equalTo(0L));
-		assertTrue("Created nested collection resource doesn't exist.", repository.resourceExists(collectionURI));
+		final URI collection1URI = repository.getRootURI().resolve("test1/"); //determine some top-level collection
+		final URI collection2URI = collection1URI.resolve("test2/");
+		final URI collection3URI = collection2URI.resolve("test3/");
+		final URI collection4URI = collection3URI.resolve("test4/");
+		final URI collection5URI = collection4URI.resolve("test5/"); //determine a deeply-nested test collection URI
+		final URI resourceURI = collection5URI.resolve("test.bin"); //determine a test resource URI
+		//create parents
+		URFResource newCollectionDescription = repository.createParentResources(resourceURI); //create all necessary parent resources for the resource
+		assertThat("Last created parent resource doesn't match our deeply-nested collection.", newCollectionDescription.getURI(), equalTo(collection5URI));
+		assertTrue("Created root collection resource doesn't exist.", repository.resourceExists(collection1URI));
+		assertThat("Invalid content length of created root collection resource.", getContentLength(repository.getResourceDescription(collection1URI)), equalTo(0L));
+		assertTrue("Created nested collection resource doesn't exist.", repository.resourceExists(collection5URI));
 		assertThat("Invalid content length of created nested collection resource.", getContentLength(newCollectionDescription), equalTo(0L));
-		final Date beforeCreateResource = new Date();
-		final URFResource newResourceDescription = repository.createResource(resourceURI, resourceContents); //create a resource with random contents
+		Date before = new Date();
+		//create resource
+		URFResource newResourceDescription = repository.createResource(resourceURI, resourceContents); //create a resource with random contents
+		Date after = new Date();
 		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
-		checkCreatedResourceDateTimes(newCollectionDescription, beforeCreateCollection, beforeCreateResource);
-		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, new Date());
+		checkCreatedResourceDateTimes(newCollectionDescription, beforeCreateCollection, before);
+		checkCreatedResourceDateTimes(newResourceDescription, before, after);
 		assertThat("Invalid content length of created resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
-		final byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
+		byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
 		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(resourceContents));
-		repository.deleteResource(rootCollectionURI); //delete the root collection resource we created, with its contained deeply-nested collections and resource
-		assertFalse("Deleted root collection resource still exists.", repository.resourceExists(rootCollectionURI));
-		assertFalse("Deleted nested collection resource still exists.", repository.resourceExists(collectionURI));
+		//copy resource up hierarchy
+		final URI copyResourceURI = collection3URI.resolve("copy.bin");
+		before = after;
+		repository.copyResource(resourceURI, copyResourceURI); //copy the resource
+		newResourceDescription = repository.getResourceDescription(copyResourceURI); //get a description of the copied resource
+		/*TODO check and delete; the copied resource should probably keep the same last-modified time as the original resource
+		after = new Date();
+		checkCreatedResourceDateTimes(newResourceDescription, before, after);
+		*/
+		assertThat("Invalid content length of copied resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
+		newResourceContents = repository.getResourceContents(copyResourceURI); //read the contents we copied
+		assertThat("Retrieved contents of copied resource not what expected.", newResourceContents, equalTo(resourceContents));
+		//copy resource up hierarchy
+		final URI copyCollectionURI = collection3URI.resolve("copy/");
+		repository.copyResource(collection5URI, copyCollectionURI); //copy test1/test2/test3/test4/test5/ to test1/test2/test3/copy/
+		assertTrue("Copied collection resource doesn't exist.", repository.resourceExists(copyCollectionURI));
+		newCollectionDescription = repository.getResourceDescription(copyCollectionURI); //get a description of the copied collection
+		assertThat("Invalid content length of copied collection resource.", getContentLength(repository.getResourceDescription(copyCollectionURI)), equalTo(0L));
+		final URI copyCollectionResourceURI = copyCollectionURI.resolve(getName(resourceURI));
+		assertTrue("Copied collection nested resource doesn't exist.", repository.resourceExists(copyCollectionResourceURI));
+		newResourceDescription = repository.getResourceDescription(copyCollectionResourceURI); //get a description of the resource inside the copied collection
+		assertThat("Invalid content length of copied collection nested resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
+		newResourceContents = repository.getResourceContents(copyCollectionResourceURI); //read the contents of the resource copied along with the collection
+		assertThat("Retrieved contents of copied collection nested resource not what expected.", newResourceContents, equalTo(resourceContents));
+		//delete resource
+		repository.deleteResource(collection1URI); //delete the root collection resource we created, with its contained deeply-nested collections and resource
+		assertFalse("Deleted root collection resource still exists.", repository.resourceExists(collection1URI));
+		assertFalse("Deleted nested collection resource still exists.", repository.resourceExists(collection5URI));
 		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
-	}
-
-	/**
-	 * Tests:
-	 * <ul>
-	 * <li>Creating a resource with no contents.</li>
-	 * <li>Deleting an empty resource.</li>
-	 * </ul>
-	 */
-	@Test
-	public void testCreateEmptyResource() throws ResourceIOException
-	{
-		final Date beforeCreateResource = new Date();
-		final Repository repository = getRepository();
-		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
-		final URFResource newResourceDescription = repository.createResource(resourceURI, NO_BYTES); //create a resource with no contents
-		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
-		assertThat("Invalid content length of created resource.", getContentLength(newResourceDescription), equalTo(0L));
-		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, new Date());
-		final byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
-		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(NO_BYTES));
-		repository.deleteResource(resourceURI); //delete the resource we created
-		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
+		assertFalse("Deleted copied resource still exists.", repository.resourceExists(copyResourceURI));
+		assertFalse("Deleted copied collection resource still exists.", repository.resourceExists(copyCollectionURI));
+		assertFalse("Deleted copied collection nested resource still exists.", repository.resourceExists(copyCollectionResourceURI));
 	}
 
 	/**
