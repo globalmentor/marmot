@@ -71,7 +71,7 @@ public class NTFSFileRepository extends FileRepository
 	*/
 	public NTFSFileRepository(final URI publicRepositoryURI, final File privateRepositoryDirectory)
 	{
-		this(publicRepositoryURI, privateRepositoryDirectory!=null ? getDirectoryURI(privateRepositoryDirectory) : null);	//get a directory URI from the private repository directory and use it as the base repository URI
+		this(publicRepositoryURI, privateRepositoryDirectory!=null ? toURI(privateRepositoryDirectory, true) : null);	//get a directory URI from the private repository directory and use it as the base repository URI
 	}
 
 	/**Public repository URI and private repository URI constructor.

@@ -169,30 +169,11 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
 	}
 
-	/**
-	 * Moves a resource to another URI in this repository, overwriting any resource at the destination only if requested.
-	 * <p>
-	 * This implementation throws a {@link ResourceForbiddenException} if the resource URI is within this repository.
-	 * </p>
-	 * @param resourceURI The URI of the resource to be moved.
-	 * @param destinationURI The URI to which the resource should be moved.
-	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
-	 *          destination should cause an exception to be thrown.
-	 * @exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @exception IllegalArgumentException if the given resource URI is the base URI of the repository.
-	 * @exception ResourceIOException if there is an error moving the resource.
-	 * @exception ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
-	 */
-	public void moveResource(URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException
+	/** {@inheritDoc} This implementation throws a {@link ResourceForbiddenException}. */
+	@Override
+	protected void moveResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
+			throws ResourceIOException
 	{
-		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
-			subrepository.moveResource(resourceURI, destinationURI, overwrite); //delegate to the subrepository
-		}
-		checkOpen(); //make sure the repository is open
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
 	}
 

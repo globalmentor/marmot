@@ -255,7 +255,7 @@ public interface Repository extends Disposable
 	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	 */
 	public URI checkResourceURI(URI resourceURI) throws IllegalArgumentException;
-	
+
 	/**
 	 * Determines the URI of the collection resource of the given URI; either the given resource URI if the resource represents a collection, or the parent
 	 * resource if not.
@@ -553,7 +553,7 @@ public interface Repository extends Disposable
 	 * @throws ResourceIOException if the resource properties could not be updated.
 	 */
 	public URFResource addResourceProperties(URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException;
-	
+
 	/**
 	 * Sets the properties of a given resource. Any existing properties with the same URIs as the given given property/value pairs will be removed. All other
 	 * existing properties will be left unmodified.
@@ -577,7 +577,7 @@ public interface Repository extends Disposable
 	 * @throws ResourceIOException if the resource properties could not be updated.
 	 */
 	public URFResource setResourceProperties(final URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException;
-	
+
 	/**
 	 * Removes properties from a given resource. Any existing properties with the same URIs as the given given property/value pairs will be removed. All other
 	 * existing properties will be left unmodified.
@@ -601,7 +601,7 @@ public interface Repository extends Disposable
 	 * @throws ResourceIOException if the resource properties could not be updated.
 	 */
 	public URFResource removeResourceProperties(final URI resourceURI, final Iterable<URI> propertyURIs) throws ResourceIOException;
-	
+
 	/**
 	 * Alters properties of a given resource.
 	 * @param resourceURI The reference URI of the resource.
@@ -639,7 +639,7 @@ public interface Repository extends Disposable
 	 * @throws ResourceIOException if there is an error copying the resource.
 	 */
 	public void copyResource(final URI resourceURI, final URI destinationURI, final ProgressListener progressListener) throws ResourceIOException;
-	
+
 	/**
 	 * Creates an infinitely deep copy of a resource to another URI in this repository, overwriting any resource at the destination only if requested.
 	 * @param resourceURI The URI of the resource to be copied.
@@ -654,7 +654,7 @@ public interface Repository extends Disposable
 	 * @throws ResourceIOException if there is an error copying the resource.
 	 */
 	public void copyResource(final URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException;
-	
+
 	/**
 	 * Creates an infinitely deep copy of a resource to another URI in this repository, overwriting any resource at the destination only if requested.
 	 * @param resourceURI The URI of the resource to be copied.
@@ -669,10 +669,11 @@ public interface Repository extends Disposable
 	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
 	 * @throws ResourceIOException if there is an error copying the resource.
 	 */
-	public void copyResource(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener) throws ResourceIOException;
-	
+	public void copyResource(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
+			throws ResourceIOException;
+
 	//inter-repository copy
-	
+
 	/**
 	 * Creates an infinitely deep copy of a resource to the specified URI in the specified repository. Any resource at the destination URI will be replaced.
 	 * @param resourceURI The URI of the resource to be copied.
@@ -738,29 +739,121 @@ public interface Repository extends Disposable
 	public void copyResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite,
 			final ProgressListener progressListener) throws ResourceIOException;
 
+	//intra-repository move
+
+	/**
+	 * Moves a resource to another URI in this repository. Any resource at the destination URI will be replaced.
+	 * <p>
+	 * The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.
+	 * </p>
+	 * @param resourceURI The URI of the resource to be copied.
+	 * @param destinationURI The URI to which the resource should be copied.
+	 * @throws IllegalArgumentException if the given source or destination URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given URI represents the root of the repository.
+	 * @throws IllegalArgumentException if the given destination resource is a child of the given source resource, representing a circular move.
+	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
+	 * @throws ResourceIOException if there is an error moving the resource.
+	 */
+	public void moveResource(final URI resourceURI, final URI destinationURI) throws ResourceIOException;
+
+	/**
+	 * Moves a resource to another URI in this repository. Any resource at the destination URI will be replaced.
+	 * <p>The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.</p>
+	 * @param resourceURI The URI of the resource to be copied.
+	 * @param destinationURI The URI to which the resource should be copied.
+	 * @param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
+	 * @throws IllegalArgumentException if the given source or destination URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given URI represents the root of the repository.
+	 * @throws IllegalArgumentException if the given destination resource is a child of the given source resource, representing a circular move.
+	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
+	 * @throws ResourceIOException if there is an error moving the resource.
+	 */
+	public void moveResource(final URI resourceURI, final URI destinationURI, final ProgressListener progressListener) throws ResourceIOException;
+
+	/**
+	 * Moves a resource to another URI in this repository, overwriting any resource at the destination only if requested.
+	 * <p>The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.</p>
+	 * @param resourceURI The URI of the resource to be copied.
+	 * @param destinationURI The URI to which the resource should be copied.
+	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
+	 *          destination should cause an exception to be thrown.
+	 * @throws IllegalArgumentException if the given source or destination URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given URI represents the root of the repository.
+	 * @throws IllegalArgumentException if the given destination resource is a child of the given source resource, representing a circular move.
+	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
+	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	 * @throws ResourceIOException if there is an error moving the resource.
+	 */
+	public void moveResource(final URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException;
+
+	/**
+	 * Moves a resource to another URI in this repository, overwriting any resource at the destination only if requested.
+	 * <p>The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.</p>
+	 * @param resourceURI The URI of the resource to be copied.
+	 * @param destinationURI The URI to which the resource should be copied.
+	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
+	 *          destination should cause an exception to be thrown.
+	 * @param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
+	 * @throws IllegalArgumentException if the given source or destination URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given URI represents the root of the repository.
+	 * @throws IllegalArgumentException if the given destination resource is a child of the given source resource, representing a circular move.
+	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
+	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	 * @throws ResourceIOException if there is an error moving the resource.
+	 */
+	public void moveResource(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
+			throws ResourceIOException;
+
+	//inter-repository move
+
 	/**
 	 * Moves a resource to the specified URI in the specified repository. Any resource at the destination URI will be replaced.
-	 * @param resourceURI The URI of the resource to be moved.
-	 * @param destinationRepository The repository to which the resource should be moved, which may be this repository.
-	 * @param destinationURI The URI to which the resource should be moved.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * <p>The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.</p>
+	 * @param resourceURI The URI of the resource to be copied.
+	 * @param destinationRepository The repository to which the resource should be copied, which may be this repository.
+	 * @param destinationURI The URI to which the resource should be copied.
+	 * @throws IllegalArgumentException if the given source or destination URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given URI represents the root of the repository.
+	 * @throws IllegalArgumentException if the given destination resource is a child of the given source resource, representing a circular move.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws IllegalArgumentException if the given resource URI is the base URI of the repository.
 	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if there is an error moving the resource.
 	 */
 	public void moveResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException;
 
 	/**
+	 * Moves a resource to the specified URI in the specified repository. Any resource at the destination URI will be replaced.
+	 * <p>The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.</p>
+	 * @param resourceURI The URI of the resource to be copied.
+	 * @param destinationRepository The repository to which the resource should be copied, which may be this repository.
+	 * @param destinationURI The URI to which the resource should be copied.
+	 * @param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
+	 * @throws IllegalArgumentException if the given source or destination URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given URI represents the root of the repository.
+	 * @throws IllegalArgumentException if the given destination resource is a child of the given source resource, representing a circular move.
+	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
+	 * @throws ResourceIOException if there is an error moving the resource.
+	 */
+	public void moveResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI, final ProgressListener progressListener)
+			throws ResourceIOException;
+
+	/**
 	 * Moves a resource to the specified URI in the specified repository, overwriting any resource at the destination only if requested.
-	 * @param resourceURI The URI of the resource to be moved.
-	 * @param destinationRepository The repository to which the resource should be moved, which may be this repository.
-	 * @param destinationURI The URI to which the resource should be moved.
+	 * <p>The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.</p>
+	 * @param resourceURI The URI of the resource to be copied.
+	 * @param destinationRepository The repository to which the resource should be copied, which may be this repository.
+	 * @param destinationURI The URI to which the resource should be copied.
 	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
 	 *          destination should cause an exception to be thrown.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given source or destination URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given URI represents the root of the repository.
+	 * @throws IllegalArgumentException if the given destination resource is a child of the given source resource, representing a circular move.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws IllegalArgumentException if the given resource URI is the base URI of the repository.
 	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if there is an error moving the resource.
 	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
@@ -769,30 +862,23 @@ public interface Repository extends Disposable
 			throws ResourceIOException;
 
 	/**
-	 * Moves a resource to another URI in this repository. Any resource at the destination URI will be replaced.
-	 * @param resourceURI The URI of the resource to be moved.
-	 * @param destinationURI The URI to which the resource should be moved.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws IllegalArgumentException if the given resource URI is the base URI of the repository.
-	 * @throws ResourceNotFoundException if the identified resource does not exist.
-	 * @throws ResourceIOException if there is an error moving the resource.
-	 */
-	public void moveResource(final URI resourceURI, final URI destinationURI) throws ResourceIOException;
-
-	/**
-	 * Moves a resource to another URI in this repository, overwriting any resource at the destination only if requested.
-	 * @param resourceURI The URI of the resource to be moved.
-	 * @param destinationURI The URI to which the resource should be moved.
+	 * Moves a resource to the specified URI in the specified repository, overwriting any resource at the destination only if requested.
+	 * <p>The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.</p>
+	 * @param resourceURI The URI of the resource to be copied.
+	 * @param destinationRepository The repository to which the resource should be copied, which may be this repository.
+	 * @param destinationURI The URI to which the resource should be copied.
 	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
 	 *          destination should cause an exception to be thrown.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
+	 * @throws IllegalArgumentException if the given source or destination URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalArgumentException if the given URI represents the root of the repository.
+	 * @throws IllegalArgumentException if the given destination resource is a child of the given source resource, representing a circular move.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws IllegalArgumentException if the given resource URI is the base URI of the repository.
 	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if there is an error moving the resource.
 	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
 	 */
-	public void moveResource(final URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException;
+	public void moveResource(final URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite,
+			final ProgressListener progressListener) throws ResourceIOException;
 
 }

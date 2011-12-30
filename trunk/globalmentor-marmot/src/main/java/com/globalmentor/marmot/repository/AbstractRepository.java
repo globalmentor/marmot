@@ -1620,131 +1620,317 @@ public abstract class AbstractRepository implements Repository
 		}
 	}
 
+	//intra-repository move
+
 	/**
-	 * Moves a resource to another URI in this repository. Any resource at the destination URI will be replaced. This version delegates to
-	 * {@link Repository#moveResource(URI, URI, boolean)}.
-	 * @param resourceURI The URI of the resource to be moved.
-	 * @param destinationURI The URI to which the resource should be moved.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws IllegalArgumentException if the given resource URI is the base URI of the repository.
-	 * @throws ResourceIOException if there is an error moving the resource.
+	 * {@inheritDoc} If the destination URI lies in a subrepository, this version delegates to
+	 * {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}. Otherwise, this version delegates to
+	 * {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
 	 */
-	public void moveResource(URI resourceURI, final URI destinationURI) throws ResourceIOException
+	@Override
+	public final void moveResource(URI resourceURI, URI destinationURI) throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		destinationURI = checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
 		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
 			subrepository.moveResource(resourceURI, destinationURI); //delegate to the subrepository
+			return;
 		}
-		moveResource(resourceURI, destinationURI, true); //move the resource, overwriting any resource at the destination
+		if(resourceURI.equals(getRootURI())) //if they try to move the root URI
+		{
+			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
+		}
+		if(isChild(resourceURI, destinationURI))
+		{
+			throw new IllegalArgumentException("Cannot perform circular move from " + resourceURI + " to " + destinationURI);
+		}
+		checkOpen(); //make sure the repository is open
+		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
+		if(destinationSubrepository != this) //if the destination URI lies within a subrepository
+		{
+			moveResourceImpl(resourceURI, destinationSubrepository, destinationURI, true, null); //move to the subrepository
+			return;
+		}
+		moveResourceImpl(resourceURI, destinationURI, true, null); //move the resource, overwriting any resource at the destination
 	}
 
 	/**
-	 * Moves a resource to the specified URI in the specified repository. Any resource at the destination URI will be replaced. This version delegates to
-	 * {@link #moveResource(URI, Repository, URI, boolean)}.
-	 * @param resourceURI The URI of the resource to be moved.
-	 * @param destinationRepository The repository to which the resource should be moved, which may be this repository.
-	 * @param destinationURI The URI to which the resource should be moved.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws IllegalArgumentException if the given resource URI is the base URI of the repository.
-	 * @throws ResourceIOException if there is an error moving the resource.
+	 * {@inheritDoc} If the destination URI lies in a subrepository, this version delegates to
+	 * {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}. Otherwise, this version delegates to
+	 * {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
 	 */
-	public void moveResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI) throws ResourceIOException
+	@Override
+	public final void moveResource(URI resourceURI, URI destinationURI, final ProgressListener progressListener) throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		destinationURI = checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
+		if(subrepository != this) //if the resource URI lies within a subrepository
+		{
+			subrepository.moveResource(resourceURI, destinationURI, progressListener); //delegate to the subrepository
+			return;
+		}
+		if(resourceURI.equals(getRootURI())) //if they try to move the root URI
+		{
+			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
+		}
+		if(isChild(resourceURI, destinationURI))
+		{
+			throw new IllegalArgumentException("Cannot perform circular move from " + resourceURI + " to " + destinationURI);
+		}
+		checkOpen(); //make sure the repository is open
+		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
+		if(destinationSubrepository != this) //if the destination URI lies within a subrepository
+		{
+			moveResourceImpl(resourceURI, destinationSubrepository, destinationURI, true, progressListener); //move to the subrepository
+			return;
+		}
+		moveResourceImpl(resourceURI, destinationURI, true, progressListener); //move the resource, overwriting any resource at the destination
+	}
+
+	/**
+	 * {@inheritDoc} If the destination URI lies in a subrepository, this version delegates to
+	 * {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}. Otherwise, this version delegates to
+	 * {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 */
+	@Override
+	public final void moveResource(URI resourceURI, URI destinationURI, final boolean overwrite) throws ResourceIOException
+	{
+		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		destinationURI = checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
+		if(subrepository != this) //if the resource URI lies within a subrepository
+		{
+			subrepository.moveResource(resourceURI, destinationURI, overwrite); //delegate to the subrepository
+			return;
+		}
+		if(resourceURI.equals(getRootURI())) //if they try to move the root URI
+		{
+			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
+		}
+		if(isChild(resourceURI, destinationURI))
+		{
+			throw new IllegalArgumentException("Cannot perform circular move from " + resourceURI + " to " + destinationURI);
+		}
+		checkOpen(); //make sure the repository is open
+		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
+		if(destinationSubrepository != this) //if the destination URI lies within a subrepository
+		{
+			moveResourceImpl(resourceURI, destinationSubrepository, destinationURI, overwrite, null); //move to the subrepository
+			return;
+		}
+		moveResourceImpl(resourceURI, destinationURI, overwrite, null);
+	}
+
+	/**
+	 * {@inheritDoc} If the destination URI lies in a subrepository, this version delegates to
+	 * {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}. Otherwise, this version delegates to
+	 * {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 */
+	@Override
+	public final void moveResource(URI resourceURI, URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
+			throws ResourceIOException
+	{
+		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		destinationURI = checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
+		if(subrepository != this) //if the resource URI lies within a subrepository
+		{
+			subrepository.moveResource(resourceURI, destinationURI, overwrite, progressListener); //delegate to the subrepository
+			return;
+		}
+		if(resourceURI.equals(getRootURI())) //if they try to move the root URI
+		{
+			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
+		}
+		if(isChild(resourceURI, destinationURI))
+		{
+			throw new IllegalArgumentException("Cannot perform circular move from " + resourceURI + " to " + destinationURI);
+		}
+		checkOpen(); //make sure the repository is open
+		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
+		if(destinationSubrepository != this) //if the destination URI lies within a subrepository
+		{
+			moveResourceImpl(resourceURI, destinationSubrepository, destinationURI, overwrite, progressListener); //move to the subrepository
+			return;
+		}
+		moveResourceImpl(resourceURI, destinationURI, overwrite, progressListener);
+	}
+
+	/**
+	 * Moves a resource to another URI in this repository, overwriting any resource at the destination only if requested. The resource URI is guaranteed to be
+	 * normalized and valid for the repository (not the root), and the repository is guaranteed to be open. The destination resource URI is guaranteed not to be a
+	 * child of the source resource URI.
+	 * @param resourceURI The URI of the resource to be copied.
+	 * @param destinationURI The URI to which the resource should be copied.
+	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
+	 *          destination should cause an exception to be thrown.
+	 * @param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
+	 * @throws ResourceIOException if there is an error moving the resource.
+	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	 */
+	protected abstract void moveResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
+			throws ResourceIOException; //TODO here and in all the move methods, make sure we're not moving from collection to non-collection and vice-versa
+
+	//inter-repository move
+
+	/**
+	 * {@inheritDoc} If the given resource is in this repository, this version delegates to {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * Otherwise, this version delegates to {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 */
+	@Override
+	public final void moveResource(URI resourceURI, final Repository destinationRepository, URI destinationURI) throws ResourceIOException
+	{
+		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		destinationURI = destinationRepository.checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
 		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
 			subrepository.moveResource(resourceURI, destinationRepository, destinationURI); //delegate to the subrepository
+			return;
 		}
-		moveResource(resourceURI, destinationRepository, destinationURI, true); //move the resource, overwriting any resource at the destination
+		checkOpen(); //make sure the repository is open
+		if(destinationRepository == this) //if the resource is being copied to this repository
+		{
+			moveResourceImpl(resourceURI, destinationURI, true, null); //delegate to the internal move method
+			return;
+		}
+		if(resourceURI.equals(getRootURI())) //if they try to move the root URI
+		{
+			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
+		}
+		if(isChild(resourceURI, destinationURI))
+		{
+			throw new IllegalArgumentException("Cannot perform circular move from " + resourceURI + " to " + destinationURI + " even between repositories.");
+		}
+		moveResourceImpl(resourceURI, destinationRepository, destinationURI, true, null);
 	}
 
 	/**
-	 * Moves a resource to the specified URI in the specified repository, overwriting any resource at the destination only if requested. This version delegates to
-	 * {@link Repository#moveResource(URI, URI, boolean)} if the given repository is this repository. Otherwise, this version delegates to
-	 * {@link Repository#copyResource(URI, Repository, URI, boolean)} and then delegates to {@link Repository#deleteRepository(URI)}.
-	 * @param resourceURI The URI of the resource to be moved.
-	 * @param destinationRepository The repository to which the resource should be moved, which may be this repository.
-	 * @param destinationURI The URI to which the resource should be moved.
-	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
-	 *          destination should cause an exception to be thrown.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws IllegalArgumentException if the given resource URI is the base URI of the repository.
-	 * @throws ResourceIOException if there is an error moving the resource.
-	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	 * {@inheritDoc} If the given resource is in this repository, this version delegates to {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * Otherwise, this version delegates to {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
 	 */
-	public void moveResource(URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite)
+	@Override
+	public final void moveResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final ProgressListener progressListener)
 			throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		destinationURI = destinationRepository.checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
+		if(subrepository != this) //if the resource URI lies within a subrepository
+		{
+			subrepository.moveResource(resourceURI, destinationRepository, destinationURI, progressListener); //delegate to the subrepository
+			return;
+		}
+		checkOpen(); //make sure the repository is open
+		if(destinationRepository == this) //if the resource is being copied to this repository
+		{
+			moveResourceImpl(resourceURI, destinationURI, true, progressListener); //delegate to the internal move method
+			return;
+		}
+		if(resourceURI.equals(getRootURI())) //if they try to move the root URI
+		{
+			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
+		}
+		if(isChild(resourceURI, destinationURI))
+		{
+			throw new IllegalArgumentException("Cannot perform circular move from " + resourceURI + " to " + destinationURI + " even between repositories.");
+		}
+		moveResourceImpl(resourceURI, destinationRepository, destinationURI, true, progressListener);
+	}
+
+	/**
+	 * {@inheritDoc} If the given resource is in this repository, this version delegates to {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * Otherwise, this version delegates to {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 */
+	@Override
+	public final void moveResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final boolean overwrite)
+			throws ResourceIOException
+	{
+		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		destinationURI = destinationRepository.checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
 		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
 			subrepository.moveResource(resourceURI, destinationRepository, destinationURI, overwrite); //delegate to the subrepository
+			return;
 		}
 		checkOpen(); //make sure the repository is open
-		if(destinationRepository == this) //if the resource is being moved to this repository
+		if(destinationRepository == this) //if the resource is being copied to this repository
 		{
-			moveResource(resourceURI, destinationURI, overwrite); //delegate to the internal move method
+			moveResourceImpl(resourceURI, destinationURI, overwrite, null); //delegate to the internal move method
+			return;
 		}
-		else
-		//if the resource is being moved to another repository
+		if(resourceURI.equals(getRootURI())) //if they try to move the root URI
 		{
-			if(normalize(resourceURI).equals(getRootURI())) //if they try to move the root URI
-			{
-				throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
-			}
-			copyResource(resourceURI, destinationRepository, destinationURI, overwrite); //copy the resource to the other repository TODO add progress listener capabilities
-			deleteResource(resourceURI); //delete the moved resource
+			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
 		}
+		if(isChild(resourceURI, destinationURI))
+		{
+			throw new IllegalArgumentException("Cannot perform circular move from " + resourceURI + " to " + destinationURI + " even between repositories.");
+		}
+		moveResourceImpl(resourceURI, destinationRepository, destinationURI, overwrite, null);
 	}
 
 	/**
-	 * Updates the {@value Content#TYPE_PROPERTY_URI} property of the given resource. This method should be called before each non-collection resource description
-	 * is returned. If the resource has no {@value Content#TYPE_PROPERTY_URI} property defined, a content type will be looked up from the extension of the
-	 * resource name, if any, using {@link #getExtensionContentType(Charset)}. No default content type is provided for a resource with a collection URI (i.e. a
-	 * URI ending in {@value URIs#PATH_SEPARATOR}). If the resource has no {@value Content#CHARSET_PROPERTY_URI} property defined, a charset will be determined if
-	 * possible using {@link #getContentTypeCharset(ContentType)}.
-	 * @param resource The resource the content type of which should be updated.
-	 * @see Content#TYPE_PROPERTY_URI
-	 * @see Content#CHARSET_PROPERTY_URI
+	 * {@inheritDoc} If the given resource is in this repository, this version delegates to {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * Otherwise, this version delegates to {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
 	 */
-	/*TODO del when works; transferred to MarmotSession
-		protected void updateContentType(final URFResource resource)	//TODO consider passing a MarmotSession to all the repository methods, and asking the MarmotSession for defaults 
+	@Override
+	public final void moveResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final boolean overwrite,
+			final ProgressListener progressListener) throws ResourceIOException
+	{
+		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
+		destinationURI = destinationRepository.checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
+		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
+		if(subrepository != this) //if the resource URI lies within a subrepository
 		{
-			ContentType contentType=getContentType(resource);	//get the specified content type of the resource
-			if(contentType==null)	//if no content type is specified
-			{
-				final URI resourceURI=resource.getURI();	//get the resource URI
-				final String resourceName=resourceURI!=null && !isCollectionURI(resourceURI) ? URIs.getName(resourceURI) : null;	//get the resource name, if any
-				if(resourceName!=null && !resourceName.isEmpty())	//if we have a non-empty name (only collections URIs should return empty names, so this non-empty verification is redundant)
-				{
-					contentType=getExtensionContentType(getNameExtension(resourceName));	//get the registered content type, if any, for the resource's extension (which may be null)
-					if(contentType!=null)	//if we found a content type
-					{
-						setContentType(resource, contentType);	//update the content type property
-					}
-				}
-			}
-			if(contentType!=null)	//if we know a content type, update the charset, if needed
-			{
-				Charset charset=getCharset(resource);	//get the specified charset of the resource
-				if(charset==null)	//if no charset is specified
-				{
-					charset=getContentTypeCharset(contentType);	//get the registered charset, if any, for the content type
-					if(charset!=null)	//if we found a charset
-					{
-						setCharset(resource, charset);	//update the charset property
-					}
-				}
-			}
+			subrepository.moveResource(resourceURI, destinationRepository, destinationURI, overwrite, progressListener); //delegate to the subrepository
+			return;
 		}
-	*/
+		checkOpen(); //make sure the repository is open
+		if(destinationRepository == this) //if the resource is being copied to this repository
+		{
+			moveResourceImpl(resourceURI, destinationURI, overwrite, progressListener); //delegate to the internal move method
+			return;
+		}
+		if(resourceURI.equals(getRootURI())) //if they try to move the root URI
+		{
+			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
+		}
+		if(isChild(resourceURI, destinationURI))
+		{
+			throw new IllegalArgumentException("Cannot perform circular move from " + resourceURI + " to " + destinationURI + " even between repositories.");
+		}
+		moveResourceImpl(resourceURI, destinationRepository, destinationURI, overwrite, progressListener);
+	}
+
+	/**
+	 * Moves a resource to the specified URI in the specified repository, overwriting any resource at the destination only if requested. The resource URI is
+	 * guaranteed to be normalized and valid for the repository (not the root), and the repository is guaranteed to be open. The destination resource URI is
+	 * guaranteed not to be a child of the source resource URI. The destination repository is guaranteed to be a different repository than this repository.
+	 * <p>
+	 * This version performs a default move operation. Normally child classes do not need to override this version.
+	 * </p>
+	 * @param resourceURI The URI of the resource to be copied.
+	 * @param destinationRepository The repository to which the resource should be copied, which may be this repository.
+	 * @param destinationURI The URI to which the resource should be copied.
+	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
+	 *          destination should cause an exception to be thrown.
+	 * @param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
+	 * @throws ResourceIOException if there is an error moving the resource.
+	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	 */
+	protected void moveResourceImpl(final URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite,
+			final ProgressListener progressListener) throws ResourceIOException
+	{
+		copyResource(resourceURI, destinationRepository, destinationURI, overwrite, progressListener); //copy the resource to the other repository
+		deleteResource(resourceURI); //delete the moved resource in this repository
+	}
 
 	/**
 	 * Translates the given error specific to the this repository type into a resource I/O exception.

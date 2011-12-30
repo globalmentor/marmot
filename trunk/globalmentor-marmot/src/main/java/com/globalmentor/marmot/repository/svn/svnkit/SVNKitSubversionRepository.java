@@ -90,7 +90,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	 */
 	public SVNKitSubversionRepository(final File repositoryDirectory)
 	{
-		this(getDirectoryURI(repositoryDirectory)); //get a directory URI from the repository directory and use it as the base repository URI
+		this(toURI(repositoryDirectory, true)); //get a directory URI from the repository directory and use it as the base repository URI
 	}
 
 	/**
@@ -112,7 +112,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	 */
 	public SVNKitSubversionRepository(final URI publicRepositoryURI, final File privateRepositoryDirectory)
 	{
-		this(publicRepositoryURI, privateRepositoryDirectory != null ? getDirectoryURI(privateRepositoryDirectory) : null); //get a directory URI from the private repository directory and use it as the base repository URI
+		this(publicRepositoryURI, privateRepositoryDirectory != null ? toURI(privateRepositoryDirectory, true) : null); //get a directory URI from the private repository directory and use it as the base repository URI
 	}
 
 	/**
@@ -827,11 +827,46 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	protected void copyResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
 			throws ResourceIOException
 	{
+		transferResource(resourceURI, destinationURI, overwrite, false, progressListener); //copy the resource
+	}
+
+	/**
+	 * {@inheritDoc} This implementation throws a {@link ResourceNotFoundException} for all resource for which {@link #isSourceResourceVisible(URI)} returns
+	 * <code>false</code>.
+	 */
+	@Override
+	protected void moveResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
+			throws ResourceIOException
+	{
+		transferResource(resourceURI, destinationURI, overwrite, true, progressListener); //copy the resource and then delete the source resource
+	}
+
+	/**
+	 * Copies or moves a resource to another URI in this repository, overwriting any resource at the destination only if requested. The resource URI is guaranteed
+	 * to be normalized and valid for the repository (not the root), and the repository is guaranteed to be open. The destination resource URI is guaranteed not
+	 * to be a child of the source resource URI.
+	 * <p>
+	 * This implementation throws a {@link ResourceNotFoundException} for all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
+	 * @param resourceURI The URI of the resource to be copied.
+	 * @param destinationURI The URI to which the resource should be copied.
+	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
+	 *          destination should cause an exception to be thrown.
+	 * @param move <code>true</code> if the source resource should be removed after the copy.
+	 * @param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
+	 * @throws ResourceIOException if there is an error moving the resource.
+	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	 */
+	protected void transferResource(final URI resourceURI, final URI destinationURI, final boolean overwrite, final boolean move,
+			final ProgressListener progressListener) throws ResourceIOException
+	{
 		if(!isSourceResourceVisible(getSourceResourceURI(resourceURI))) //if this is not a visible resource
 		{
 			throw new ResourceNotFoundException(resourceURI);
 		}
 		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
+		final URIPath destinationURIPath = getResourceURIPath(destinationURI); //get the path to the destination resource
 		final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
 		synchronized(svnRepository)
 		{
@@ -843,12 +878,20 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 				{
 					throw new ResourceNotFoundException(resourceURI);
 				}
+				final SVNNodeKind destinationNodeKind = svnRepository.checkPath(destinationURIPath.toString(), -1);
+				if(destinationNodeKind != SVNNodeKind.NONE && !overwrite) //if the destination resource already exists but we shouldn't overwrite
+				{
+					throw new ResourceStateException(destinationURI, "Destination resource already exists.");
+				}
 				//TODO add a checkNodeKind(resourceURI) here and all over the place to ensure that we don't have a file for a collection and vice/versa
-				final URIPath destinationURIPath = getResourceURIPath(destinationURI); //get the path to the destination resource
 				final ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource copy.", null, true, null); //get a commit editor to the repository
 				try
 				{
 					editor.openRoot(-1); //open the root to start making changes
+					if(destinationNodeKind != SVNNodeKind.NONE) //if the destination resource already exists
+					{
+						editor.deleteEntry(destinationURIPath.toString(), -1); //delete the destination resource
+					}
 					if(isCollectionURI(resourceURI)) //if we're copying a collection
 					{
 						editor.addDir(destinationURIPath.toString(), resourceURIPath.toString(), dirEntry.getRevision()); //copy the existing directory at its latest revision
@@ -857,6 +900,10 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					else
 					{
 						editor.addFile(destinationURIPath.toString(), resourceURIPath.toString(), dirEntry.getRevision()); //copy the existing file at its latest revision
+					}
+					if(move) //if this is a move
+					{
+						editor.deleteEntry(resourceURIPath.toString(), -1); //delete the source resource
 					}
 					editor.closeDir(); //close the root
 					editor.closeEdit(); //try to finalize the edit
@@ -872,36 +919,6 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 				throw toResourceIOException(resourceURI, svnException);
 			}
 		}
-	}
-
-	/**
-	 * Moves a resource to another URI in this repository, overwriting any resource at the destionation only if requested.
-	 * @param resourceURI The URI of the resource to be moved.
-	 * @param destinationURI The URI to which the resource should be moved.
-	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
-	 *          destination should cause an exception to be thrown.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws IllegalArgumentException if the given resource URI is the base URI of the repository.
-	 * @throws ResourceIOException if there is an error moving the resource.
-	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
-	 */
-	public void moveResource(URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException
-	{
-		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
-			subrepository.moveResource(resourceURI, destinationURI, overwrite); //delegate to the subrepository
-		}
-		checkOpen(); //make sure the repository is open
-		if(normalize(resourceURI).equals(getRootURI())) //if they try to move the root URI
-		{
-			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
-		}
-		throw new UnsupportedOperationException(); //TODO implement
-
-		//TODO move resource description if needed
 	}
 
 	/**

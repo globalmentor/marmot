@@ -116,7 +116,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	 */
 	public FileRepository(final File repositoryDirectory)
 	{
-		this(getDirectoryURI(repositoryDirectory)); //get a directory URI from the repository directory and use it as the base repository URI
+		this(toURI(repositoryDirectory, true)); //get a directory URI from the repository directory and use it as the base repository URI
 	}
 
 	/**
@@ -138,7 +138,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	 */
 	public FileRepository(final URI publicRepositoryURI, final File privateRepositoryDirectory)
 	{
-		this(publicRepositoryURI, privateRepositoryDirectory != null ? getDirectoryURI(privateRepositoryDirectory) : null); //get a directory URI from the private repository directory and use it as the base repository URI
+		this(publicRepositoryURI, privateRepositoryDirectory != null ? toURI(privateRepositoryDirectory, true) : null); //get a directory URI from the private repository directory and use it as the base repository URI
 	}
 
 	/**
@@ -500,6 +500,88 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		{
 			throw new ResourceNotFoundException(resourceURI);
 		}
+		//perform all the copying manually, because using Files.copy() will not transfer any NTFS alternate data streams
+		try
+		{
+			final File sourceFile = new File(getSourceResourceURI(resourceURI)); //create a file object for the source resource
+			final File destinationFile = new File(getSourceResourceURI(destinationURI)); //create a file object for the destination resource
+			//TODO add beginning and ending progress events, along with a system of levels
+			if(sourceFile.isDirectory()) //directory
+			{
+				if(!overwrite)
+				{
+					if(destinationFile.isDirectory())
+					{
+						throw new ResourceStateException(destinationURI, "Destination resource already exists.");
+					}
+				}
+				final File destinationParentFile = destinationFile.getParentFile(); //make sure the destination parent file exists
+				if(destinationParentFile != null)
+				{
+					if(!destinationParentFile.isDirectory())
+					{
+						throw new ResourceStateException(destinationURI, "Parent of copy destination resource " + destinationURI + " does not exist.");
+					}
+				}
+				copy(sourceFile, destinationFile, false, overwrite, progressListener); //copy the directory, but only make a shallow copy
+				final URI contentURI = resolve(resourceURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content
+				final File contentFile = new File(getSourceResourceURI(contentURI)); //create a file object from the private URI of the special collection content resource
+				final URI destinationContentURI = resolve(destinationURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content at the destination
+				final File destinationContentFile = new File(getSourceResourceURI(destinationContentURI)); //create a file object from the private URI of the special collection content resource at the destination
+				if(contentFile.exists()) //if there is a special collection content resource
+				{
+					copy(contentFile, destinationFile, true, true); //copy over the collection content resource
+				}
+				else
+				//if there is no collection content resource
+				{
+					if(destinationContentFile.exists()) //make sure the destination has no content file to match
+					{
+						delete(destinationContentFile);
+					}
+				}
+				for(final File childSourceFile : sourceFile.listFiles(fileFilter)) //list all the files representing resources in the directory
+				{
+					final String filename = childSourceFile.getName();
+					final File childDestinationFile = new File(destinationFile, filename);
+					//copy each child
+					copyResourceImpl(getRepositoryResourceURI(toURI(childSourceFile)),
+							getRepositoryResourceURI(toURI(childDestinationFile, childSourceFile.isDirectory())), overwrite, progressListener); //make sure the destination URI correctly represents directories
+				}
+			}
+			else
+			//file
+			{
+				checkFileExists(sourceFile);
+				if(!overwrite)
+				{
+					if(destinationFile.exists())
+					{
+						throw new ResourceStateException(destinationURI, "Destination resource already exists.");
+					}
+				}
+				copy(sourceFile, destinationFile, false, overwrite, progressListener); //copy the file
+			}
+			final File sourceDescriptionFile = getResourceDescriptionFile(sourceFile); //get the file used for storing the description
+			final File destinationDescriptionFile = getResourceDescriptionFile(destinationFile); //get the destination file used for storing the description
+			if(sourceDescriptionFile.exists()) //if the source file has a description file
+			{
+				copy(sourceDescriptionFile, destinationDescriptionFile); //always copy over the description file---we don't want to risk that a single resource copy has an outdated description file that was already existing
+			}
+			else
+			//if the source file has no description file
+			{
+				if(destinationDescriptionFile.exists()) //remove the destination description file if it exists (which might happen if we copy a resource without a description, overwriting a resource that had a description
+				{
+					delete(destinationDescriptionFile);
+				}
+			}
+		}
+		catch(final IOException ioException) //if an I/O exception occurs
+		{
+			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
+		}
+		/*this won't work on NTFS, because using Files.copy() doesn't transfer ADS
 		final File sourceFile = new File(getSourceResourceURI(resourceURI)); //create a file object for the source resource
 		final File destinationFile = new File(getSourceResourceURI(destinationURI)); //create a file object for the destination resource
 		try
@@ -524,36 +606,50 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		{
 			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
 		}
+		*/
 	}
 
 	/**
-	 * Moves a resource to another URI in this repository, overwriting any resource at the destination only if requested.
-	 * @param resourceURI The URI of the resource to be moved.
-	 * @param destinationURI The URI to which the resource should be moved.
-	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
-	 *          destination should cause an exception to be thrown.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws IllegalArgumentException if the given resource URI is the base URI of the repository.
-	 * @throws ResourceIOException if there is an error moving the resource.
-	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
+	 * {@inheritDoc} This implementation throws a {@link ResourceNotFoundException} for all resource for which {@link #isSourceResourceVisible(URI)} returns
+	 * <code>false</code>.
 	 */
-	public void moveResource(URI resourceURI, final URI destinationURI, final boolean overwrite) throws ResourceIOException
+	@Override
+	protected void moveResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
+			throws ResourceIOException
 	{
-		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
-		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
+		if(!isSourceResourceVisible(getSourceResourceURI(resourceURI))) //if this is not a visible resource
 		{
-			subrepository.moveResource(resourceURI, destinationURI, overwrite); //delegate to the subrepository
+			throw new ResourceNotFoundException(resourceURI);
 		}
-		checkOpen(); //make sure the repository is open
-		if(normalize(resourceURI).equals(getRootURI())) //if they try to move the root URI
+		//TODO do something with progress listener
+		final File sourceFile = new File(getSourceResourceURI(resourceURI)); //create a file object for the source resource
+		final File destinationFile = new File(getSourceResourceURI(destinationURI)); //create a file object for the destination resource
+		try
 		{
-			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
+			if(!overwrite) //if we shouldn't automatically overwrite destination resources
+			{
+				if(destinationFile.exists())
+				{
+					throw new ResourceStateException(destinationURI, "Destination resource already exists.");
+				}
+			}
+			final File sourceDescriptionFile = getResourceDescriptionFile(sourceFile); //get the file used for storing the description
+			final File destinationDescriptionFile = getResourceDescriptionFile(destinationFile); //get the destination file used for storing the description
+			if(!sourceDescriptionFile.exists() && destinationDescriptionFile.exists()) //if the source file has no description file, delete any existing destination description file already existing
+			{
+				delete(destinationDescriptionFile); //this must be done before the move, because after the move there will be no source description file if the source description file was a stream of the source file
+			}
+			move(sourceFile, destinationFile, overwrite); //move the resource; this should move all contained description files and NTFS ADSs, if present
+			if(sourceDescriptionFile.exists()) //if the source file still has a description file, it was a separate file
+			{
+				copy(sourceDescriptionFile, destinationDescriptionFile); //always copy over the description file---we don't want to risk that a single resource copy has an outdated description file that was already existing
+				delete(sourceDescriptionFile); //do a separate copy/delete just in case File.renameTo() doesn't work with NTFS streams
+			}
 		}
-		throw new UnsupportedOperationException(); //TODO implement
-
-		//TODO move resource description if needed
+		catch(final IOException ioException) //if an I/O exception occurs
+		{
+			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
+		}
 	}
 
 	/**

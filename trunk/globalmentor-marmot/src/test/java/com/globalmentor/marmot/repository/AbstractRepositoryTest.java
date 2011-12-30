@@ -19,6 +19,7 @@ package com.globalmentor.marmot.repository;
 import static com.globalmentor.io.Charsets.*;
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.Conditions.*;
+import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
 import static com.globalmentor.urf.dcmi.DCMI.*;
@@ -33,10 +34,8 @@ import org.junit.*;
 
 import com.globalmentor.java.Bytes;
 import com.globalmentor.net.ResourceIOException;
-import com.globalmentor.net.URIs;
 import com.globalmentor.test.AbstractTest;
 import com.globalmentor.urf.*;
-import com.globalmentor.urf.content.Content;
 import com.globalmentor.urf.dcmi.DCMI;
 
 /**
@@ -305,102 +304,6 @@ public abstract class AbstractRepositoryTest extends AbstractTest //TODO add res
 	/**
 	 * Tests:
 	 * <ul>
-	 * <li>Creating all needed parent resources for a deeply-nested resource.</li>
-	 * <li>Checking the existence of a deeply-nested collection resource.</li>
-	 * <li>Creating a resource inside a deeply-nested collection using supplied contents.</li>
-	 * <li>Checking the existence of a deeply-nested resource inside a collection.</li>
-	 * <li>Copying the deeply-nested resource up the hierarchy inside a collection.</li>
-	 * <li>Deleting a deeply-nested collection resource with all its contents.</li>
-	 * </ul>
-	 */
-	@Test
-	public void testCopyDeepResource() throws ResourceIOException //TODO make sure properties get copied over
-	{
-		final int contentLength = (1 << 10) + 1;
-		final Repository repository = getRepository();
-		final byte[] resourceContents = Bytes.createRandom(contentLength); //create random contents
-		final Date beforeCreateCollection = new Date();
-		final URI collection1URI = repository.getRootURI().resolve("test1/"); //determine some top-level collection
-		final URI collection2URI = collection1URI.resolve("test2/");
-		final URI collection3URI = collection2URI.resolve("test3/");
-		final URI collection4URI = collection3URI.resolve("test4/");
-		final URI collection5URI = collection4URI.resolve("test5/"); //determine a deeply-nested test collection URI
-		final URI resourceURI = collection5URI.resolve("test.bin"); //determine a test resource URI
-		//create parents
-		URFResource newCollectionDescription = repository.createParentResources(resourceURI); //create all necessary parent resources for the resource
-		assertThat("Last created parent resource doesn't match our deeply-nested collection.", newCollectionDescription.getURI(), equalTo(collection5URI));
-		assertTrue("Created root collection resource doesn't exist.", repository.resourceExists(collection1URI));
-		assertThat("Invalid content length of created root collection resource.", getContentLength(repository.getResourceDescription(collection1URI)), equalTo(0L));
-		assertTrue("Created nested collection resource doesn't exist.", repository.resourceExists(collection5URI));
-		assertThat("Invalid content length of created nested collection resource.", getContentLength(newCollectionDescription), equalTo(0L));
-		Date before = new Date();
-		//create resource
-		URFResource newResourceDescription = repository.createResource(resourceURI, resourceContents); //create a resource with random contents
-		Date after = new Date();
-		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
-		checkCreatedResourceDateTimes(newCollectionDescription, beforeCreateCollection, before);
-		checkCreatedResourceDateTimes(newResourceDescription, before, after);
-		assertThat("Invalid content length of created resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
-		byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
-		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(resourceContents));
-		//copy resource up hierarchy
-		final URI copyResourceURI = collection3URI.resolve("copy.bin");
-		before = after;
-		repository.copyResource(resourceURI, copyResourceURI); //copy the resource
-		newResourceDescription = repository.getResourceDescription(copyResourceURI); //get a description of the copied resource
-		/*TODO check and delete; the copied resource should probably keep the same last-modified time as the original resource
-		after = new Date();
-		checkCreatedResourceDateTimes(newResourceDescription, before, after);
-		*/
-		assertThat("Invalid content length of copied resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
-		newResourceContents = repository.getResourceContents(copyResourceURI); //read the contents we copied
-		assertThat("Retrieved contents of copied resource not what expected.", newResourceContents, equalTo(resourceContents));
-		//copy resource up hierarchy
-		final URI copyCollectionURI = collection3URI.resolve("copy/");
-		repository.copyResource(collection5URI, copyCollectionURI); //copy test1/test2/test3/test4/test5/ to test1/test2/test3/copy/
-		assertTrue("Copied collection resource doesn't exist.", repository.resourceExists(copyCollectionURI));
-		newCollectionDescription = repository.getResourceDescription(copyCollectionURI); //get a description of the copied collection
-		assertThat("Invalid content length of copied collection resource.", getContentLength(repository.getResourceDescription(copyCollectionURI)), equalTo(0L));
-		final URI copyCollectionResourceURI = copyCollectionURI.resolve(getName(resourceURI));
-		assertTrue("Copied collection nested resource doesn't exist.", repository.resourceExists(copyCollectionResourceURI));
-		newResourceDescription = repository.getResourceDescription(copyCollectionResourceURI); //get a description of the resource inside the copied collection
-		assertThat("Invalid content length of copied collection nested resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
-		newResourceContents = repository.getResourceContents(copyCollectionResourceURI); //read the contents of the resource copied along with the collection
-		assertThat("Retrieved contents of copied collection nested resource not what expected.", newResourceContents, equalTo(resourceContents));
-		//delete resource
-		repository.deleteResource(collection1URI); //delete the root collection resource we created, with its contained deeply-nested collections and resource
-		assertFalse("Deleted root collection resource still exists.", repository.resourceExists(collection1URI));
-		assertFalse("Deleted nested collection resource still exists.", repository.resourceExists(collection5URI));
-		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
-		assertFalse("Deleted copied resource still exists.", repository.resourceExists(copyResourceURI));
-		assertFalse("Deleted copied collection resource still exists.", repository.resourceExists(copyCollectionURI));
-		assertFalse("Deleted copied collection nested resource still exists.", repository.resourceExists(copyCollectionResourceURI));
-	}
-
-	/**
-	 * Creates a resource description with test properties, including the following properties:
-	 * <ul>
-	 * <li>{@link DCMI#TITLE_PROPERTY_URI}</li>
-	 * <li>{@link DCMI#DESCRIPTION_PROPERTY_URI}</li>
-	 * <li>{@link DCMI#DATE_PROPERTY_URI}</li>
-	 * <li>{@link DCMI#LANGUAGE_PROPERTY_URI}</li>
-	 * </ul>
-	 * @param resourceURI The URI to
-	 * @return A description of test properties.
-	 */
-	protected URFResource createTestProperties(final URI resourceURI)
-	{
-		final URFResource resource = new DefaultURFResource(resourceURI);
-		setTitle(resource, "Test Title");
-		setDescription(resource, "This is a test description.");
-		setDate(resource, new URFDateTime());
-		setLanguage(resource, Locale.ENGLISH);
-		return resource;
-	}
-
-	/**
-	 * Tests:
-	 * <ul>
 	 * <li>Setting properties individually on a normal resource.</li>
 	 * <li>Retrieving properties individually on a normal resource.</li>
 	 * <li>Updating properties individually on a normal resource.</li>
@@ -432,6 +335,155 @@ public abstract class AbstractRepositoryTest extends AbstractTest //TODO add res
 		repository.createCollectionResource(collectionURI);
 		testResourceProperties(collectionURI);
 		repository.deleteResource(collectionURI); //delete the resource we created
+	}
+
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Creating all needed parent resources for a deeply-nested resource.</li>
+	 * <li>Checking the existence of a deeply-nested collection resource.</li>
+	 * <li>Creating a resource inside a deeply-nested collection using supplied contents.</li>
+	 * <li>Checking the existence of a deeply-nested resource inside a collection.</li>
+	 * <li>Copying a deeply-nested resource up the hierarchy inside a collection.</li>
+	 * <li>Copying a deeply-nested collection resource up the hierarchy inside a collection.</li>
+	 * <li>Deleting a deeply-nested collection resource with all its contents.</li>
+	 * </ul>
+	 */
+	@Test
+	public void testCopyMoveDeepResource() throws ResourceIOException
+	{
+		final int contentLength = (1 << 10) + 1;
+		final Repository repository = getRepository();
+		final byte[] resourceContents = Bytes.createRandom(contentLength); //create random contents
+		final Date beforeCreateCollection = new Date();
+		final URI collection1URI = repository.getRootURI().resolve("test1/"); //determine some top-level collection
+		final URI collection2URI = collection1URI.resolve("test2/");
+		final URI collection3URI = collection2URI.resolve("test3/");
+		final URI collection4URI = collection3URI.resolve("test4/");
+		final URI collection5URI = collection4URI.resolve("test5/"); //determine a deeply-nested test collection URI
+		final URI resourceURI = collection5URI.resolve("test.bin"); //determine a test resource URI
+		//create parents
+		URFResource newCollectionDescription = repository.createParentResources(resourceURI); //create all necessary parent resources for the resource
+		assertThat("Last created parent resource doesn't match our deeply-nested collection.", newCollectionDescription.getURI(), equalTo(collection5URI));
+		assertTrue("Created root collection resource doesn't exist.", repository.resourceExists(collection1URI));
+		assertThat("Invalid content length of created root collection resource.", getContentLength(repository.getResourceDescription(collection1URI)), equalTo(0L));
+		assertTrue("Created nested collection resource doesn't exist.", repository.resourceExists(collection5URI));
+		assertThat("Invalid content length of created nested collection resource.", getContentLength(newCollectionDescription), equalTo(0L));
+		//set collection properties
+		final URFResource collection1PropertiesResource = createTestProperties(collection1URI, "Collection 1", "The first collection.");
+		repository.setResourceProperties(collection1URI, collection1PropertiesResource.getProperties());
+		final URFResource collection2PropertiesResource = createTestProperties(collection2URI, "Collection 2", "The second collection.");
+		repository.setResourceProperties(collection2URI, collection2PropertiesResource.getProperties());
+		final URFResource collection3PropertiesResource = createTestProperties(collection3URI, "Collection 3", "The third collection.");
+		repository.setResourceProperties(collection3URI, collection3PropertiesResource.getProperties());
+		final URFResource collection4PropertiesResource = createTestProperties(collection4URI, "Collection 4", "The fourth collection.");
+		repository.setResourceProperties(collection4URI, collection4PropertiesResource.getProperties());
+		final URFResource collection5PropertiesResource = createTestProperties(collection5URI, "Collection 5", "The fifth collection.");
+		repository.setResourceProperties(collection5URI, collection5PropertiesResource.getProperties());
+		//create resource
+		Date before = new Date();
+		URFResource newResourceDescription = repository.createResource(resourceURI, resourceContents); //create a resource with random contents
+		Date after = new Date();
+		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
+		checkCreatedResourceDateTimes(newCollectionDescription, beforeCreateCollection, before);
+		checkCreatedResourceDateTimes(newResourceDescription, before, after);
+		assertThat("Invalid content length of created resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
+		byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
+		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(resourceContents));
+		//set resource properties
+		final URFResource propertiesResource = createTestProperties(resourceURI); //create test properties
+		repository.setResourceProperties(resourceURI, propertiesResource.getProperties()); //set those properties individually
+		//copy resource up hierarchy
+		final URI copyResourceURI = collection3URI.resolve("copy.bin");
+		repository.copyResource(resourceURI, copyResourceURI); //copy the resource
+		newResourceDescription = repository.getResourceDescription(copyResourceURI); //get a description of the copied resource
+		assertThat("Invalid content length of copied resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
+		newResourceContents = repository.getResourceContents(copyResourceURI); //read the contents we copied
+		assertThat("Retrieved contents of copied resource not what expected.", newResourceContents, equalTo(resourceContents));
+		checkResourceProperties(newResourceDescription, propertiesResource.getProperties()); //see if the copied resource has the same properties
+		//copy collection resource up hierarchy
+		final URI copyCollectionURI = collection3URI.resolve("copy/");
+		repository.copyResource(collection5URI, copyCollectionURI); //copy test1/test2/test3/test4/test5/ to test1/test2/test3/copy/
+		assertTrue("Copied collection resource doesn't exist.", repository.resourceExists(copyCollectionURI));
+		newCollectionDescription = repository.getResourceDescription(copyCollectionURI); //get a description of the copied collection
+		assertThat("Invalid content length of copied collection resource.", getContentLength(newCollectionDescription), equalTo(0L));
+		checkResourceProperties(newCollectionDescription, collection5PropertiesResource.getProperties()); //see if the copied collection resource has the same properties
+		final URI copyCollectionResourceURI = copyCollectionURI.resolve(getName(resourceURI));
+		assertTrue("Copied collection nested resource doesn't exist.", repository.resourceExists(copyCollectionResourceURI));
+		newResourceDescription = repository.getResourceDescription(copyCollectionResourceURI); //get a description of the resource inside the copied collection
+		assertThat("Invalid content length of copied collection nested resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
+		newResourceContents = repository.getResourceContents(copyCollectionResourceURI); //read the contents of the resource copied along with the collection
+		assertThat("Retrieved contents of copied collection nested resource not what expected.", newResourceContents, equalTo(resourceContents));
+		checkResourceProperties(newResourceDescription, propertiesResource.getProperties()); //see if the resource in the copied collection has the same properties
+		//move resource up hierarchy
+		final URI moveResourceURI = collection3URI.resolve("move.bin");
+		repository.moveResource(resourceURI, moveResourceURI); //move the resource to test1/test2/test3/move.bin
+		assertFalse("Moved resource still exists.", repository.resourceExists(resourceURI));
+		newResourceDescription = repository.getResourceDescription(moveResourceURI); //get a description of the moved resource
+		assertThat("Invalid content length of copied resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
+		newResourceContents = repository.getResourceContents(moveResourceURI); //read the contents we moved
+		assertThat("Retrieved contents of copied resource not what expected.", newResourceContents, equalTo(resourceContents));
+		checkResourceProperties(newResourceDescription, propertiesResource.getProperties()); //see if the moved resource has the same properties
+		//move collection resource up hierarchy
+		final URI moveCollectionURI = collection1URI.resolve("move/");
+		repository.moveResource(collection3URI, moveCollectionURI); //move test1/test2/test3/ to test1/move/
+		assertTrue("Moved collection resource doesn't exist.", repository.resourceExists(moveCollectionURI));
+		newCollectionDescription = repository.getResourceDescription(moveCollectionURI); //get a description of the copied collection
+		assertThat("Invalid content length of moved collection resource.", getContentLength(newCollectionDescription), equalTo(0L));
+		checkResourceProperties(newCollectionDescription, collection3PropertiesResource.getProperties()); //see if the moved collection resource has the same properties
+		final URI moveCollectionCopyResourceURI = moveCollectionURI.resolve(getName(copyResourceURI));
+		assertTrue("Moved collection copied nested resource doesn't exist.", repository.resourceExists(moveCollectionCopyResourceURI));
+		newResourceDescription = repository.getResourceDescription(moveCollectionCopyResourceURI); //get a description of the copied resource inside the moved collection
+		assertThat("Invalid content length of moved collection copied nested resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
+		newResourceContents = repository.getResourceContents(moveCollectionCopyResourceURI); //read the contents of the copied resource moved along with the collection
+		assertThat("Retrieved contents of moved collection copied nested resource not what expected.", newResourceContents, equalTo(resourceContents));
+		checkResourceProperties(newResourceDescription, propertiesResource.getProperties()); //see if the copied resource in the moved collection has the same properties
+		final URI moveCollectionMoveResourceURI = moveCollectionURI.resolve(getName(moveResourceURI));
+		assertTrue("Moved collection moved nested resource doesn't exist.", repository.resourceExists(moveCollectionMoveResourceURI));
+		newResourceDescription = repository.getResourceDescription(moveCollectionMoveResourceURI); //get a description of the moved resource inside the moved collection
+		assertThat("Invalid content length of moved collection moved nested resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
+		newResourceContents = repository.getResourceContents(moveCollectionMoveResourceURI); //read the contents of the moved resource moved along with the collection
+		assertThat("Retrieved contents of moved collection moved nested resource not what expected.", newResourceContents, equalTo(resourceContents));
+		checkResourceProperties(newResourceDescription, propertiesResource.getProperties()); //see if the moved resource in the moved collection has the same properties
+		//delete resource
+		repository.deleteResource(collection1URI); //delete the root collection resource we created, with its contained deeply-nested collections and resource
+		assertFalse("Deleted root collection resource still exists.", repository.resourceExists(collection1URI));
+		assertFalse("Deleted nested collection resource still exists.", repository.resourceExists(collection5URI));
+		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
+		assertFalse("Deleted copied resource still exists.", repository.resourceExists(copyResourceURI));
+		assertFalse("Deleted copied collection resource still exists.", repository.resourceExists(copyCollectionURI));
+		assertFalse("Deleted copied collection nested resource still exists.", repository.resourceExists(copyCollectionResourceURI));
+		assertFalse("Deleted moved collection resource still exists.", repository.resourceExists(moveCollectionURI));
+		assertFalse("Deleted moved collection copied nested resource still exists.", repository.resourceExists(moveCollectionCopyResourceURI));
+		assertFalse("Deleted moved collection moved nested resource still exists.", repository.resourceExists(moveCollectionCopyResourceURI));
+	}
+
+	/**
+	 * Ensures that the dates of a created resource are valid.
+	 * @param resourceDescription The description of the created resource.
+	 * @param beforeDate Some date before the creation of the file
+	 * @param afterDate Some date after the creation of the file
+	 */
+	protected void checkCreatedResourceDateTimes(final URFResource resourceDescription, final Date beforeDate, final Date afterDate)
+	{
+		final URFDateTime modifiedDateTime = getModified(resourceDescription);
+		if(!isCollectionURI(resourceDescription.getURI())) //modified datetime is optional for collections
+		{
+			assertNotNull("Missing modified datetime.", modifiedDateTime);
+		}
+		if(modifiedDateTime != null)
+		{
+			assertTrue(
+					"Modified datetime not in expected range (" + beforeDate.getTime() + ", " + modifiedDateTime.getTime() + ", " + afterDate.getTime() + ")",
+					(modifiedDateTime.equals(beforeDate) || modifiedDateTime.after(beforeDate))
+							&& (modifiedDateTime.equals(afterDate) || modifiedDateTime.before(afterDate)));
+		}
+		final URFDateTime createdDateTime = getCreated(resourceDescription);
+		if(createdDateTime != null)
+		{
+			assertTrue("Modified datetime not equal to created datetime.", !createdDateTime.after(modifiedDateTime)); //in all the repositories, the created time should never be past the modified time
+			//TODO bring back when all repositories support retrieving saved modified date			assertThat("Modified datetime not equal to created datetime.", createdDateTime, equalTo(modifiedDateTime));
+		}
 	}
 
 	/**
@@ -479,31 +531,44 @@ public abstract class AbstractRepositoryTest extends AbstractTest //TODO add res
 	}
 
 	/**
-	 * Ensures that the dates of a created resource are valid.
-	 * @param resourceDescription The description of the created resource.
-	 * @param beforeDate Some date before the creation of the file
-	 * @param afterDate Some date after the creation of the file
+	 * Creates a resource description with test properties, including the following properties:
+	 * <ul>
+	 * <li>{@link DCMI#TITLE_PROPERTY_URI}</li>
+	 * <li>{@link DCMI#DESCRIPTION_PROPERTY_URI}</li>
+	 * <li>{@link DCMI#DATE_PROPERTY_URI}</li>
+	 * <li>{@link DCMI#LANGUAGE_PROPERTY_URI}</li>
+	 * </ul>
+	 * @param resourceURI The URI of the description to create.
+	 * @return A description of test properties.
+	 * @throws NullPointerException if the given resource URI is <code>null</code>.
 	 */
-	protected void checkCreatedResourceDateTimes(final URFResource resourceDescription, final Date beforeDate, final Date afterDate)
+	protected URFResource createTestProperties(final URI resourceURI)
 	{
-		final URFDateTime modifiedDateTime = getModified(resourceDescription);
-		if(!isCollectionURI(resourceDescription.getURI())) //modified datetime is optional for collections
-		{
-			assertNotNull("Missing modified datetime.", modifiedDateTime);
-		}
-		if(modifiedDateTime != null)
-		{
-			assertTrue(
-					"Modified datetime not in expected range (" + beforeDate.getTime() + ", " + modifiedDateTime.getTime() + ", " + afterDate.getTime() + ")",
-					(modifiedDateTime.equals(beforeDate) || modifiedDateTime.after(beforeDate))
-							&& (modifiedDateTime.equals(afterDate) || modifiedDateTime.before(afterDate)));
-		}
-		final URFDateTime createdDateTime = getCreated(resourceDescription);
-		if(createdDateTime != null)
-		{
-			assertTrue("Modified datetime not equal to created datetime.", !createdDateTime.after(modifiedDateTime)); //in all the repositories, the created time should never be past the modified time
-			//TODO bring back when all repositories support retrieving saved modified date			assertThat("Modified datetime not equal to created datetime.", createdDateTime, equalTo(modifiedDateTime));
-		}
+		return createTestProperties(resourceURI, "Test Title", "This is a test description.");
+	}
+
+	/**
+	 * Creates a resource description with test properties, including the following properties:
+	 * <ul>
+	 * <li>{@link DCMI#TITLE_PROPERTY_URI}</li>
+	 * <li>{@link DCMI#DESCRIPTION_PROPERTY_URI}</li>
+	 * <li>{@link DCMI#DATE_PROPERTY_URI}</li>
+	 * <li>{@link DCMI#LANGUAGE_PROPERTY_URI}</li>
+	 * </ul>
+	 * @param resourceURI The URI of the description to create.
+	 * @param title The DCMI title to use.
+	 * @param description The DCMI description to use.
+	 * @return A description of test properties.
+	 * @throws NullPointerException if the given resource URI, title, and/or description is <code>null</code>.
+	 */
+	protected URFResource createTestProperties(final URI resourceURI, final String title, final String description)
+	{
+		final URFResource resource = new DefaultURFResource(resourceURI);
+		setTitle(resource, checkInstance(title));
+		setDescription(resource, checkInstance(description));
+		setDate(resource, new URFDateTime());
+		setLanguage(resource, Locale.ENGLISH);
+		return resource;
 	}
 
 	/**
@@ -515,7 +580,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest //TODO add res
 	{
 		for(final URFProperty property : properties)
 		{
-			assertThat("Resource doesn't have expected property value for " + property.getPropertyURI(),
+			assertThat("Resource " + resourceDescription + " doesn't have expected property value for " + property.getPropertyURI(),
 					resourceDescription.getPropertyValue(property.getPropertyURI()), equalTo(property.getValue()));
 		}
 	}
