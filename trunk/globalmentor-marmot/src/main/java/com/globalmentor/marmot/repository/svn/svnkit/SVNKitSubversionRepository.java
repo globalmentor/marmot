@@ -36,6 +36,7 @@ import static org.tmatesoft.svn.core.SVNProperty.*;
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.io.InputStreams.*;
 import static com.globalmentor.java.Bytes.*;
+import static com.globalmentor.java.Conditions.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
 
@@ -186,6 +187,28 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		return svnRepository;
 	}
 
+	/**
+	 * Translates a SVNKit directory entry to the equivalent public URI in the public repository URI namespace. This method ensures that directories provide URIs
+	 * with an appropriate collection ending slash.
+	 * @param baseURI The repository base URI against which the directory entry's relative path will be resolved (e.g. the URI of the resource from which a list
+	 *          of child nodes was retrieved).
+	 * @param dirEntry The SVNKit directory entry.
+	 * @return A URI equivalent to the directory entry in the public repository URI namespace.
+	 * @throws NullPointerException if the given base URI and/or directory entry is <code>null</code>.
+	 * @throws IllegalArgumentException if the given directory entry has no relative path.
+	 * @see SVNDirEntry#getRelativePath()
+	 */
+	protected URI getRepositoryResourceURI(final URI baseURI, final SVNDirEntry dirEntry)
+	{
+		final String relativePath = checkArgumentNotNull(dirEntry.getRelativePath(), "Directory entry has no relative path: " + dirEntry);
+		URI resourceURI = baseURI.resolve(relativePath); //get the supposed resource URI
+		if(dirEntry.getKind() == SVNNodeKind.DIR) //if this is a directory
+		{
+			resourceURI = toCollectionURI(resourceURI); //make sure the resulting URI represents a collection
+		}
+		return resourceURI;
+	}
+
 	/** {@inheritDoc} This version connects to the SVNKit repository. */
 	@Override
 	public void openImpl() throws ResourceIOException
@@ -238,18 +261,21 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		{
 			return false; //ignore this resource
 		}
-		final boolean isCollectionURI = isCollectionURI(resourceURI); //see if the URI specifies a collection
 		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
 		try
 		{
-			final SVNNodeKind svnNodeKind;
+			final SVNNodeKind nodeKind;
 			final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
 			synchronized(svnRepository)
 			{
-				svnNodeKind = svnRepository.checkPath(resourceURIPath.toString(), -1); //see what kind of resource this is
+				nodeKind = svnRepository.checkPath(resourceURIPath.toString(), -1); //see what kind of resource this is
 			}
-			final boolean isDirectory = svnNodeKind == SVNNodeKind.DIR; //see if this is a Subversion directory
-			return svnNodeKind != SVNNodeKind.NONE && isCollectionURI == isDirectory; //see if Subversion resource exists; make sure its type corresponds with what we expect according to the URI (i.e. collection or not)
+			if(nodeKind == SVNNodeKind.NONE) //if there is no node
+			{
+				return false; //the resource doesn't exist
+			}
+			checkNodeKind(nodeKind, resourceURI); //make sure the node is the correct kind for our resource URI
+			return true;
 		}
 		catch(final SVNException svnException)
 		{
@@ -269,10 +295,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			synchronized(svnRepository)
 			{
 				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the directory entry for this resource
-				if(dirEntry.getKind() == SVNNodeKind.NONE) //make sure we have a resource at this URI
-				{
-					throw new ResourceNotFoundException(resourceURI);
-				}
+				checkNodeKind(dirEntry.getKind(), resourceURI); //make sure the node is the correct kind for our resource URI, and that the node exists
 				return createResourceDescription(urf, resourceURI, dirEntry); //create and return a description of the resource
 			}
 		}
@@ -292,29 +315,26 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			try
 			{
 				final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
+				checkNodeKind(svnRepository.checkPath(resourceURIPath.toString(), -1), resourceURI); //see what kind of resource this is, verifying the node kind and making sure the node exists
 				final URIPath contentURIPath; //we'll determine the URI path to use for content
 				final boolean isCollection = isCollectionURI(resourceURI);
 				if(isCollection) //if the resource is a collection
 				{
 					contentURIPath = resourceURIPath.resolve(COLLECTION_CONTENT_NAME); //the URI path to use for content uses the special collection content resource
+					final SVNNodeKind contentNodeKind = svnRepository.checkPath(contentURIPath.toString(), -1); //see what kind of resource the content is
+					if(contentNodeKind == SVNNodeKind.NONE) //if we're looking for collection content, this is not a problem---the collection simply has no content
+					{
+						return new ByteArrayInputStream(NO_BYTES); //return an input stream to an empty byte array TODO create an EmptyInputStream class
+					}
+					else if(contentNodeKind != SVNNodeKind.FILE) //if the content file not a file
+					{
+						throw new ResourceStateException(resourceURI, "Found non-file node kind " + contentNodeKind + " for collection content path " + contentURIPath);
+					}
 				}
 				else
 				//if the resource is not a collection
 				{
 					contentURIPath = resourceURIPath; //we'll get the content from the file itself
-				}
-				final SVNNodeKind contentNodeKind = svnRepository.checkPath(contentURIPath.toString(), -1); //see what kind of resource this is
-				if(contentNodeKind == SVNNodeKind.NONE) //if there is no such file TODO check to see if this is a directory, and throw the appropriate error
-				{
-					if(isCollection) //if we're looking for collection content, this is not a problem---the collection simply has no content
-					{
-						return new ByteArrayInputStream(NO_BYTES); //return an input stream to an empty byte array TODO create an EmptyInputStream class
-					}
-					else
-					//for non-collections
-					{
-						throw new ResourceNotFoundException(resourceURI);
-					}
 				}
 				final TempOutputStream tempOutputStream = new TempOutputStream(false); //create a temporary output stream that won't automatically delete its contents when closed
 				svnRepository.getFile(contentURIPath.toString(), -1, null, tempOutputStream); //retrieve the contents of the content file; if SVNKit closes the output stream, it won't matter, because we turned off auto-dispose
@@ -346,10 +366,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			try
 			{
 				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the directory entry for this resource
-				if(dirEntry.getKind() == SVNNodeKind.NONE) //make sure we have a resource at this URI
-				{
-					throw new ResourceNotFoundException(resourceURI);
-				}
+				checkNodeKind(dirEntry.getKind(), resourceURI); //make sure the node is the correct kind for our resource URI, and that the node exists
 				final TempOutputStream tempOutputStream = new TempOutputStream() //create a new temporary output stream that, before it is closed, will save the collected bytes to the existing resource
 				{
 					@Override
@@ -391,11 +408,23 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		{
 			try
 			{
-				if(svnRepository.checkPath(resourceURIPath.toString(), -1) != SVNNodeKind.DIR) //only Subversion directories can have children
+				final SVNNodeKind nodeKind = checkNodeKind(svnRepository.checkPath(resourceURIPath.toString(), -1), resourceURI); //get and check the node kind, making sure the node exists
+				if(nodeKind != SVNNodeKind.DIR) //only Subversion directories can have children
 				{
 					return false;
 				}
-				return !svnRepository.getDir(resourceURIPath.toString(), -1, null, (Collection<?>)null).isEmpty(); //see if there is at least one child
+				@SuppressWarnings("unchecked")
+				final Collection<SVNDirEntry> childDirEntries = svnRepository.getDir(resourceURIPath.toString(), -1, null, (Collection<?>)null); //get a collection of child directory entries
+				for(final SVNDirEntry childDirEntry : childDirEntries) //make sure one of the directory entries is visible
+				{
+					final URI childResourceURI = getRepositoryResourceURI(resourceURI, childDirEntry); //get the public URI for this resource
+					final URI sourceChildResourceURI = getSourceResourceURI(childResourceURI); //get the private version of this child resource
+					if(isSourceResourceVisible(sourceChildResourceURI)) //if this is a visible child resource
+					{
+						return true;
+					}
+				}
+				return false; //there were no children, or no children were publicly visible
 			}
 			catch(final SVNException svnException)
 			{
@@ -420,7 +449,8 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			final Collection<SVNDirEntry> dirEntries;
 			synchronized(svnRepository) //we aren't locking the actual repository, so we might as well synchronize our access to it at a local level rather than holding it across the children iteration
 			{
-				if(svnRepository.checkPath(resourceURIPath.toString(), -1) != SVNNodeKind.DIR) //only Subversion directories can have children
+				final SVNNodeKind nodeKind = checkNodeKind(svnRepository.checkPath(resourceURIPath.toString(), -1), resourceURI); //get and check the node kind, making sure the node exists
+				if(nodeKind != SVNNodeKind.DIR) //only Subversion directories can have children
 				{
 					return emptyList();
 				}
@@ -432,8 +462,13 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			final List<URFResource> childResources = new ArrayList<URFResource>();
 			for(final SVNDirEntry dirEntry : dirEntries) //for each of the child resource directory entries
 			{
-				final URI childResourceURI = resourceURI.resolve(dirEntry.getRelativePath()); //determine the full URI
+				final URI childResourceURI = getRepositoryResourceURI(resourceURI, dirEntry); //get the public URI for this resource
 				if(childResourceURI.equals(resourceURI)) //ignore the resource itself
+				{
+					continue;
+				}
+				final URI sourceChildResourceURI = getSourceResourceURI(childResourceURI); //get the private version of this child resource
+				if(!isSourceResourceVisible(sourceChildResourceURI)) //ignore invisible resources
 				{
 					continue;
 				}
@@ -521,7 +556,8 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 
 	/**
 	 * Stores the contents of a new or existing resource with the given optional description and contents from an input stream. The resource URI is guaranteed to
-	 * be normalized and valid for the repository and the repository is guaranteed to be open.
+	 * be normalized and valid for the repository and the repository is guaranteed to be open. The directory entry, if any, is guaranteed to be correct for the
+	 * type of resoure being created.
 	 * @param resourceURI The reference URI to use to identify the resource.
 	 * @param resourceDescription A description of the resource, or <code>null</code> if the resource properties should not be altered; the resource URI is
 	 *          ignored.
@@ -652,8 +688,15 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
 			synchronized(svnRepository)
 			{
+
 				try
 				{
+					final SVNNodeKind nodeKind = svnRepository.checkPath(resourceURIPath.toString(), -1); //see what kind of resource this is
+					if(nodeKind == SVNNodeKind.NONE) //if there is no node
+					{
+						return; //the node doesn't exist, so no need to delete it
+					}
+					checkNodeKind(nodeKind, resourceURI); //make sure the node is the correct kind for our resource URI
 					final ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource deletion.", null, true, null); //get a commit editor to the repository
 					try
 					{
@@ -687,11 +730,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			try
 			{
 				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the directory entry for this resource
-				final SVNNodeKind nodeKind = dirEntry.getKind();
-				if(nodeKind == SVNNodeKind.NONE) //make sure we have a resource at this URI
-				{
-					throw new ResourceNotFoundException(resourceURI);
-				}
+				final SVNNodeKind nodeKind = checkNodeKind(dirEntry.getKind(), resourceURI); //make sure the node is the correct kind for our resource URI, and that the node exists
 				final ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource property modification.", null, true, null); //get a commit editor to the repository
 				try
 				{
@@ -873,17 +912,12 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			try
 			{
 				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the directory entry for this resource
-				final SVNNodeKind nodeKind = dirEntry.getKind();
-				if(nodeKind == SVNNodeKind.NONE) //make sure we have a resource at this URI
-				{
-					throw new ResourceNotFoundException(resourceURI);
-				}
+				checkNodeKind(dirEntry.getKind(), resourceURI); //make sure the node is the correct kind for our resource URI, and that the node exists
 				final SVNNodeKind destinationNodeKind = svnRepository.checkPath(destinationURIPath.toString(), -1);
 				if(destinationNodeKind != SVNNodeKind.NONE && !overwrite) //if the destination resource already exists but we shouldn't overwrite
 				{
 					throw new ResourceStateException(destinationURI, "Destination resource already exists.");
 				}
-				//TODO add a checkNodeKind(resourceURI) here and all over the place to ensure that we don't have a file for a collection and vice/versa
 				final ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource copy.", null, true, null); //get a commit editor to the repository
 				try
 				{
@@ -922,22 +956,6 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	}
 
 	/**
-	 * Creates a resource description to represent a single SVNKit node if its properties are not yet known. The resource is assumed to exist. This method is
-	 * thread-safe.
-	 * @param urf The URF data model to use when creating this resource.
-	 * @param resourceURI The URI of the resource being described.
-	 * @param dirEntry The directory entry for the Subversion node.
-	 * @return A resource description of the given SVNKit node.
-	 * @throws NullPointerException if the given data model, resource URI, and/or directory entry is <code>null</code>.
-	 * @throws SVNException if there is an error creating the resource description.
-	 * @throws IllegalArgumentException if a non-collection URI is given to access a directory.
-	 */
-	protected URFResource createResourceDescription(final URF urf, final URI resourceURI, final SVNDirEntry dirEntry) throws SVNException, ResourceIOException //TODO recheck all these exception types
-	{
-		return createResourceDescription(urf, resourceURI, dirEntry, null);
-	}
-
-	/**
 	 * Determines whether the given property is in a reserved namespace. Reserved namespaces include:
 	 * <ul>
 	 * <li>{@link SVNProperty#SVN_PREFIX}.</li>
@@ -953,7 +971,24 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	}
 
 	/**
-	 * Creates a resource description to represent a single SVNKit node. The resource is assumed to exist. This method is thread-safe.
+	 * Creates a resource description to represent a single SVNKit node if its properties are not yet known. The resource is assumed to exist. This method is
+	 * thread-safe. The directory entry is guaranteed to be the correct kind for the given resource URI.
+	 * @param urf The URF data model to use when creating this resource.
+	 * @param resourceURI The URI of the resource being described.
+	 * @param dirEntry The directory entry for the Subversion node.
+	 * @return A resource description of the given SVNKit node.
+	 * @throws NullPointerException if the given data model, resource URI, and/or directory entry is <code>null</code>.
+	 * @throws SVNException if there is an error creating the resource description.
+	 * @throws IllegalArgumentException if a non-collection URI is given to access a directory.
+	 */
+	protected URFResource createResourceDescription(final URF urf, final URI resourceURI, final SVNDirEntry dirEntry) throws SVNException, ResourceIOException //TODO recheck all these exception types
+	{
+		return createResourceDescription(urf, resourceURI, dirEntry, null);
+	}
+
+	/**
+	 * Creates a resource description to represent a single SVNKit node. The resource is assumed to exist. The directory entry is guaranteed to be the correct
+	 * kind for the given resource URI. This method is thread-safe.
 	 * @param urf The URF data model to use when creating this resource.
 	 * @param resourceURI The URI of the resource being described.
 	 * @param dirEntry The directory entry for the Subversion node.
@@ -977,7 +1012,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		{
 			if(nodeKind == SVNNodeKind.DIR) //if this is a directory
 			{
-				if(!isCollectionURI(resourceURI)) //if a non-collection URI was used for the directory
+				if(!isCollectionURI(resourceURI)) //if a non-collection URI was used for the directory TODO change to a checkNodeKind()
 				{
 					throw new IllegalArgumentException("Non-collection URI " + resourceURI + " used for directory " + resourceURI);
 				}
@@ -1050,6 +1085,40 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			//TODO fix synchronize-last-modified-time business; see WebDavRepository
 		}
 		return resource; //return the resource that represents the file
+	}
+
+	/**
+	 * Checks to ensure that the given node kind is appropriate for the given resource URI.
+	 * @param nodeKind The kind of node found in the Subversion repository.
+	 * @param resourceURI The URI of the resource the node represents.
+	 * @return The given node kind.
+	 * @throws NullPointerException if the given node kind and/or resource URI is <code>null</code>.
+	 * @throws ResourceNotFoundException if the given node kind is {@link SVNNodeKind#NONE}.
+	 * @throws ResourceStateException If the given node kind is for a file and the resource URI is for a collection resource, or if the given node kind is for a
+	 *           directory the resource URI is for a non-collection resource.
+	 */
+	protected static SVNNodeKind checkNodeKind(final SVNNodeKind nodeKind, final URI resourceURI) throws ResourceNotFoundException, ResourceStateException
+	{
+		if(nodeKind == SVNNodeKind.NONE) //make sure we have a resource at this URI
+		{
+			throw new ResourceNotFoundException(resourceURI);
+		}
+		if(isCollectionURI(resourceURI)) //collections
+		{
+			if(nodeKind != SVNNodeKind.DIR) //if this is not a directory
+			{
+				throw new ResourceStateException(resourceURI, "Found non-directory node kind " + nodeKind + " for resource URI " + resourceURI);
+			}
+		}
+		else
+		//non-collections
+		{
+			if(nodeKind != SVNNodeKind.FILE) //if this is not a file
+			{
+				throw new ResourceStateException(resourceURI, "Found non-file node kind " + nodeKind + " for resource URI " + resourceURI);
+			}
+		}
+		return nodeKind;
 	}
 
 	/** {@inheritDoc} This version calls clears and releases the password, if any. */

@@ -577,7 +577,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 				for(final NameValuePair<URI, Map<WebDAVPropertyName, WebDAVProperty>> propertyMap : propertyMaps) //look at each property map
 				{
 					final URI childResourcePrivateURI = propertyMap.getName(); //get the private URI of the child resource this property list represents
-					if(isSourceResourceVisible(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI)) //if the associated child resource is public and the property list is *not* for this resource
+					if(isSourceResourceVisible(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI)) //if the associated child resource is visible and the property list is *not* for this resource
 					{
 						final URI childResourcePublicURI = getRepositoryResourceURI(childResourcePrivateURI); //get the public URI of this child resource
 						if(getSubrepository(childResourcePublicURI) == this) //if this child wouldn't be located in a subrepository (i.e. ignore resources obscured by subrepositories)

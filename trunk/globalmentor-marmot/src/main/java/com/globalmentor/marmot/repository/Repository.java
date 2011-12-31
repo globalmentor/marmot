@@ -360,6 +360,7 @@ public interface Repository extends Disposable
 	 * @return <code>true</code> if the specified resource has child resources.
 	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if there is an error accessing the repository.
 	 */
 	public boolean hasChildren(final URI resourceURI) throws ResourceIOException;

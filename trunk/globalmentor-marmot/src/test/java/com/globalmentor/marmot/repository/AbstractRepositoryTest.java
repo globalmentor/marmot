@@ -32,6 +32,7 @@ import java.util.*;
 
 import org.junit.*;
 
+import com.globalmentor.collections.Sets;
 import com.globalmentor.java.Bytes;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.test.AbstractTest;
@@ -352,6 +353,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * <li>Checking the existence of a deeply-nested resource inside a collection.</li>
 	 * <li>Copying a deeply-nested resource up the hierarchy inside a collection.</li>
 	 * <li>Copying a deeply-nested collection resource up the hierarchy inside a collection.</li>
+	 * <li>Verifying that child collection descriptions use collection URIs.</li>
 	 * <li>Deleting a deeply-nested collection resource with all its contents.</li>
 	 * </ul>
 	 */
@@ -416,6 +418,9 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		newResourceContents = repository.getResourceContents(copyCollectionResourceURI); //read the contents of the resource copied along with the collection
 		assertThat("Retrieved contents of copied collection nested resource not what expected.", newResourceContents, equalTo(resourceContents));
 		checkResourceProperties(newResourceDescription, resourcePropertiesResource.getProperties()); //see if the resource in the copied collection has the same properties
+		final List<URFResource> collection3Children = repository.getChildResourceDescriptions(collection3URI); //make sure the URIs of the children are what we expect
+		assertThat("URIs of child resources not what expected", Sets.immutableSetOf(collection3Children), equalTo(Sets.<URFResource> immutableSetOf(
+				new DefaultURFResource(collection4URI), new DefaultURFResource(copyResourceURI), new DefaultURFResource(copyCollectionURI))));
 		//move resource up hierarchy
 		final URI moveResourceURI = collection3URI.resolve("move.bin");
 		repository.moveResource(resourceURI, moveResourceURI); //move the resource to test1/test2/test3/move.bin

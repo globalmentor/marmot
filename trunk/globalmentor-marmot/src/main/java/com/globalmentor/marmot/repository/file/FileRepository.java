@@ -289,7 +289,23 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	protected boolean hasChildrenImpl(final URI resourceURI) throws ResourceIOException
 	{
 		final File resourceFile = new File(getSourceResourceURI(resourceURI)); //create a file object for the resource
-		return isCollectionURI(resourceURI) && resourceFile.isDirectory() && resourceFile.listFiles(getFileFilter()).length > 0; //see if this is a directory and there is more than one file in this directory
+		try
+		{
+			if(isCollectionURI(resourceURI))
+			{
+				checkDirectoryExists(resourceFile);
+				return resourceFile.listFiles(getFileFilter()).length > 0; //see if there is more than one file in this directory meeting our criteria
+			}
+			else
+			{
+				checkFileExists(resourceFile);
+				return false;
+			}
+		}
+		catch(final IOException ioException) //if an I/O exception occurs
+		{
+			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
+		}
 	}
 
 	/** {@inheritDoc} This implementation does not include child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
@@ -307,27 +323,31 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 				final File[] files = resourceDirectory.listFiles(getFileFilter()); //get a list of all files in the directory
 				for(final File file : files) //for each file in the directory
 				{
-					final URI childResourcePublicURI = getRepositoryResourceURI(toURI(file)); //get a public URI to represent the file resource
-					if(getSubrepository(childResourcePublicURI) == this) //if this child wouldn't be located in a subrepository (i.e. ignore resources obscured by subrepositories)
+					final URI childResourcePrivateURI=toURI(file);
+					if(isSourceResourceVisible(childResourcePrivateURI)) //if the associated child resource is visible
 					{
-						if(resourceFilter == null || resourceFilter.isPass(childResourcePublicURI)) //if we should include this resource based upon its URI
+						final URI childResourcePublicURI = getRepositoryResourceURI(childResourcePrivateURI); //get a public URI to represent the file resource
+						if(getSubrepository(childResourcePublicURI) == this) //if this child wouldn't be located in a subrepository (i.e. ignore resources obscured by subrepositories)
 						{
-							final URFResource childResourceDescription;
-							try
+							if(resourceFilter == null || resourceFilter.isPass(childResourcePublicURI)) //if we should include this resource based upon its URI
 							{
-								childResourceDescription = createResourceDescription(urf, childResourcePublicURI, file); //create a resource description for this file
-							}
-							catch(final IOException ioException) //if an I/O exception occurs
-							{
-								throw toResourceIOException(getRepositoryResourceURI(toURI(file)), ioException); //translate the exception to a resource I/O exception and throw that, using a public URI to represent the file resource
-							}
-							if(resourceFilter == null || resourceFilter.isPass(childResourceDescription)) //if we should include this resource based upon its description
-							{
-								childResourceList.add(childResourceDescription); //add the resource to our list
-								if(depth != 0 && file.isDirectory()) //if this file is a directory and we haven't reached the bottom
+								final URFResource childResourceDescription;
+								try
 								{
-									final int newDepth = depth != INFINITE_DEPTH ? depth - 1 : depth; //reduce the depth by one, unless we're using the unlimited depth value
-									childResourceList.addAll(getChildResourceDescriptions(childResourcePublicURI, resourceFilter, newDepth)); //get a list of child descriptions for the resource we just created and add them to the list
+									childResourceDescription = createResourceDescription(urf, childResourcePublicURI, file); //create a resource description for this file
+								}
+								catch(final IOException ioException) //if an I/O exception occurs
+								{
+									throw toResourceIOException(getRepositoryResourceURI(toURI(file)), ioException); //translate the exception to a resource I/O exception and throw that, using a public URI to represent the file resource
+								}
+								if(resourceFilter == null || resourceFilter.isPass(childResourceDescription)) //if we should include this resource based upon its description
+								{
+									childResourceList.add(childResourceDescription); //add the resource to our list
+									if(depth != 0 && file.isDirectory()) //if this file is a directory and we haven't reached the bottom
+									{
+										final int newDepth = depth != INFINITE_DEPTH ? depth - 1 : depth; //reduce the depth by one, unless we're using the unlimited depth value
+										childResourceList.addAll(getChildResourceDescriptions(childResourcePublicURI, resourceFilter, newDepth)); //get a list of child descriptions for the resource we just created and add them to the list
+									}
 								}
 							}
 						}

@@ -822,6 +822,7 @@ public abstract class AbstractRepository implements Repository
 	 * the repository and the repository is guaranteed to be open.
 	 * @param resourceURI The URI of the resource.
 	 * @return <code>true</code> if the specified resource has child resources.
+	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if there is an error accessing the repository.
 	 */
 	protected abstract boolean hasChildrenImpl(final URI resourceURI) throws ResourceIOException;
