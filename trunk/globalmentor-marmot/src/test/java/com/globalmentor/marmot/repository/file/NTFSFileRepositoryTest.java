@@ -16,6 +16,9 @@
 
 package com.globalmentor.marmot.repository.file;
 
+import static com.globalmentor.java.OperatingSystem.*;
+import static org.junit.Assume.*;
+
 import com.globalmentor.marmot.repository.Repository;
 
 /**
@@ -33,6 +36,7 @@ public class NTFSFileRepositoryTest extends AbstractFileRepositoryTest
 	@Override
 	protected Repository createRepository()
 	{
+		assumeTrue(isWindowsOS()); //only run this test on Windows TODO improve to actually check for the presence of an NTFS file system, which is more correct
 		return new NTFSFileRepository(getTempDirectory());
 	}
 
