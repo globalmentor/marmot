@@ -35,11 +35,17 @@ import org.junit.*;
 import com.globalmentor.java.Bytes;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.test.AbstractTest;
+import com.globalmentor.time.Time;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.dcmi.DCMI;
 
 /**
  * Abstract base class for running tests on repositories.
+ * 
+ * <p>
+ * Because some platforms (notably the Linux ext3 file system) do not maintain millisecond-level content modified precision, these test compare all times using
+ * only second-level precision.
+ * </p>
  * 
  * @author Garret Wilson
  */
@@ -217,7 +223,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	protected void testResourceContentBytes(final URI resourceURI, final boolean streamCreate, final byte[]... contents) throws IOException
 	{
 		checkArgumentPositive(contents.length);
-		Date before = new Date();
+		Time before = new Time().floor(Time.Resolution.SECONDS);
 		final Repository repository = getRepository();
 		URFResource newResourceDescription;
 		if(streamCreate) //if we should create the resource using a stream
@@ -237,7 +243,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		{
 			newResourceDescription = repository.createResource(resourceURI, contents[0]); //create an initial resource with contents
 		}
-		Date after = new Date();
+		Time after = new Time().floor(Time.Resolution.SECONDS);
 		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
 		assertThat("Invalid content length of created resource.", getContentLength(newResourceDescription), equalTo((long)contents[0].length));
 		checkCreatedResourceDateTimes(newResourceDescription, before, after);
@@ -256,7 +262,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 			{
 				outputStream.close(); //close the output stream
 			}
-			after = new Date();
+			after = new Time().floor(Time.Resolution.SECONDS);
 			newResourceDescription = repository.getResourceDescription(resourceURI); //get an updated description of the resource
 			assertTrue("Changed resource doesn't exist.", repository.resourceExists(resourceURI));
 			assertThat("Invalid content length of changed resource.", getContentLength(newResourceDescription), equalTo((long)changedContent.length));
@@ -282,17 +288,17 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		final int contentLength = (1 << 10) + 1;
 		final Repository repository = getRepository();
 		final byte[] resourceContents = Bytes.createRandom(contentLength); //create random contents
-		final Date beforeCreateCollection = new Date();
+		final Time beforeCreateCollection = new Time().floor(Time.Resolution.SECONDS);
 		final URI collectionURI = repository.getRootURI().resolve("test/"); //determine a test collection URI
 		final URFResource newCollectionDescription = repository.createCollectionResource(collectionURI);
 		assertTrue("Created collection resource doesn't exist.", repository.resourceExists(collectionURI));
 		assertThat("Invalid content length of created collection resource.", getContentLength(newCollectionDescription), equalTo(0L));
-		final Date beforeCreateResource = new Date();
+		final Time beforeCreateResource = new Time().floor(Time.Resolution.SECONDS);
 		final URI resourceURI = collectionURI.resolve("test.bin"); //determine a test resource URI
 		final URFResource newResourceDescription = repository.createResource(resourceURI, resourceContents); //create a resource with random contents
 		assertTrue("Created resource doesn't exist.", repository.resourceExists(resourceURI));
 		checkCreatedResourceDateTimes(newCollectionDescription, beforeCreateCollection, beforeCreateResource);
-		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, new Date());
+		checkCreatedResourceDateTimes(newResourceDescription, beforeCreateResource, new Time().floor(Time.Resolution.SECONDS));
 		assertThat("Invalid content length of created resource.", getContentLength(newResourceDescription), equalTo((long)contentLength));
 		final byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
 		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(resourceContents));
@@ -479,28 +485,28 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	/**
 	 * Ensures that the dates of a created resource are valid.
 	 * @param resourceDescription The description of the created resource.
-	 * @param beforeDate Some date before the creation of the file
-	 * @param afterDate Some date after the creation of the file
+	 * @param before Some time before the creation of the file
+	 * @param after Some time after the creation of the file
 	 */
-	protected void checkCreatedResourceDateTimes(final URFResource resourceDescription, final Date beforeDate, final Date afterDate)
+	protected void checkCreatedResourceDateTimes(final URFResource resourceDescription, final Time before, final Time after)
 	{
-		final URFDateTime modifiedDateTime = getModified(resourceDescription);
+		Time modified = getModified(resourceDescription);
 		if(!isCollectionURI(resourceDescription.getURI())) //modified datetime is optional for collections
 		{
-			assertNotNull("Missing modified datetime.", modifiedDateTime);
+			assertNotNull("Missing modified datetime.", modified);
 		}
-		if(modifiedDateTime != null)
+		if(modified != null)
 		{
-			assertTrue(
-					"Modified datetime not in expected range (" + beforeDate.getTime() + ", " + modifiedDateTime.getTime() + ", " + afterDate.getTime() + ")",
-					(modifiedDateTime.equals(beforeDate) || modifiedDateTime.after(beforeDate))
-							&& (modifiedDateTime.equals(afterDate) || modifiedDateTime.before(afterDate)));
+			modified = modified.floor(Time.Resolution.SECONDS);
+			assertTrue("Modified datetime not in expected range (" + before + ", " + modified + ", " + after + ")",
+					(modified.equals(before) || modified.after(before)) && (modified.equals(after) || modified.before(after)));
 		}
-		final URFDateTime createdDateTime = getCreated(resourceDescription);
-		if(createdDateTime != null)
+		Time created = getCreated(resourceDescription);
+		if(created != null)
 		{
-			assertTrue("Modified datetime not equal to created datetime.", !createdDateTime.after(modifiedDateTime)); //in all the repositories, the created time should never be past the modified time
-			//TODO bring back when all repositories support retrieving saved modified date			assertThat("Modified datetime not equal to created datetime.", createdDateTime, equalTo(modifiedDateTime));
+			created = created.floor(Time.Resolution.SECONDS);
+			assertTrue("Modified datetime not equal to created datetime.", !created.after(modified)); //in all the repositories, the created time should never be past the modified time
+			//TODO bring back when all repositories support retrieving saved modified date			assertThat("Modified datetime not equal to created datetime.", created, equalTo(modified));
 		}
 	}
 
@@ -518,9 +524,9 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		final Repository repository = getRepository();
 		final URFResource newResourceDescription = repository.getResourceDescription(resourceURI); //get the initial description
 		final long contentLength = getContentLength(newResourceDescription);
-		final URFDateTime createdDateTime = getCreated(newResourceDescription); //optional
-		final URFDateTime modifiedDateTime = getModified(newResourceDescription);
-		final long propertyCount = 1L + (createdDateTime != null ? 1L : 0L) + (modifiedDateTime != null ? 1L : 0L);
+		Time created = getCreated(newResourceDescription); //optional
+		Time modified = getModified(newResourceDescription);
+		final long propertyCount = 1L + (created != null ? 1L : 0L) + (modified != null ? 1L : 0L);
 		assertThat(newResourceDescription.getPropertyCount(), equalTo(propertyCount)); //content length, content created, content modified
 		final URFResource propertiesResource = createTestProperties(resourceURI); //create test properties
 		URFResource updatedResourceDescription = repository.setResourceProperties(resourceURI, propertiesResource.getProperties()); //set those properties individually
@@ -529,13 +535,15 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		assertThat(updatedResourceDescription.getPropertyCount(), equalTo(propertyCount + propertiesResource.getPropertyCount())); //see if the new property count is correct 
 		checkResourceProperties(updatedResourceDescription, propertiesResource.getProperties()); //see if the resource now has the given properties
 		assertThat("Content length changed.", getContentLength(updatedResourceDescription), equalTo(contentLength));
-		if(createdDateTime != null)
+		if(created != null)
 		{
-			assertThat("Created date changed.", getCreated(updatedResourceDescription), equalTo(createdDateTime));
+			created = created.floor(Time.Resolution.SECONDS);
+			assertThat("Created date changed.", getCreated(updatedResourceDescription).floor(Time.Resolution.SECONDS), equalTo(created));
 		}
-		if(modifiedDateTime != null)
+		if(modified != null)
 		{
-			assertThat("Modified date changed.", getModified(updatedResourceDescription), equalTo(modifiedDateTime));
+			modified = modified.floor(Time.Resolution.SECONDS);
+			assertThat("Modified date changed.", getModified(updatedResourceDescription).floor(Time.Resolution.SECONDS), equalTo(modified));
 		}
 		final String newTitle = "Modified Title";
 		setTitle(propertiesResource, newTitle); //update our title in our local properties
