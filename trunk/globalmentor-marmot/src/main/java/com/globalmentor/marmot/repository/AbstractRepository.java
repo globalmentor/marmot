@@ -47,7 +47,7 @@ import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.marmot.Marmot.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 import static com.globalmentor.net.URIs.*;
-import static com.globalmentor.urf.TURF.*;
+import static com.globalmentor.urf.URF.*;
 import static com.globalmentor.urf.content.Content.*;
 
 /**
@@ -1764,6 +1764,11 @@ public abstract class AbstractRepository implements Repository
 	 * Moves a resource to another URI in this repository, overwriting any resource at the destination only if requested. The resource URI is guaranteed to be
 	 * normalized and valid for the repository (not the root), and the repository is guaranteed to be open. The destination resource URI is guaranteed not to be a
 	 * child of the source resource URI.
+	 * <p>
+	 * A default implementation of this method is provided that delegates to {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)} followed by
+	 * {@link #deleteResourceImpl(URI)}, but in most cases subclasses should override this method to provide a more efficient implementation based upon the
+	 * underlying store.
+	 * </p>
 	 * @param resourceURI The URI of the resource to be copied.
 	 * @param destinationURI The URI to which the resource should be copied.
 	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
@@ -1773,8 +1778,12 @@ public abstract class AbstractRepository implements Repository
 	 * @throws ResourceIOException if there is an error moving the resource.
 	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
 	 */
-	protected abstract void moveResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
-			throws ResourceIOException; //TODO here and in all the move methods, make sure we're not moving from collection to non-collection and vice-versa
+	protected void moveResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
+			throws ResourceIOException //TODO here and in all the move methods, make sure we're not moving from collection to non-collection and vice-versa
+	{
+		copyResourceImpl(resourceURI, destinationURI, overwrite, progressListener); //copy the resource
+		deleteResourceImpl(resourceURI); //delete the resource
+	}
 
 	//inter-repository move
 
@@ -2048,7 +2057,8 @@ public abstract class AbstractRepository implements Repository
 	}
 
 	/**
-	 * Creates a single text value for to represent the given URF property and value(s). At least one property must be given.
+	 * Creates a single text value to represent the given URF property and value(s). At least one property must be given. If a single text property is provided
+	 * that does not begin with {@link TURF#SIGNATURE}, the value is stored unmodified. Otherwise, a TURF description is created and stored as the text value.
 	 * <p>
 	 * This method is part of a pair of methods to allow multiple typed values encoded in a single string for repositories that don't natively allow multiple or
 	 * typed properties.
@@ -2073,7 +2083,7 @@ public abstract class AbstractRepository implements Repository
 		}
 		URFProperty property = propertyIterator.next(); //get the first property
 		final URI propertyURI = property.getPropertyURI(); //get the URI of the URF property
-		//TODO why don't we check to see if there is only one text property, and simply return the text value of that property? was this an oversight in an earlier implementation? we would need to still encode it if the real string starts with the TURF signature
+		URFResource propertyValue; //keep track of the last property value
 		final URFResource propertyDescription = new DefaultURFResource(resourceURI); //create a new resource description just for this property
 		do //for each URF property
 		{
@@ -2081,6 +2091,7 @@ public abstract class AbstractRepository implements Repository
 			{
 				throw new IllegalArgumentException("All URF properties expected to have property URI " + propertyURI + "; found " + property.getPropertyURI() + ".");
 			}
+			propertyValue = property.getValue(); //note the property value
 			propertyDescription.addProperty(property); //add this property to the resource
 			if(propertyIterator.hasNext()) //get the next property
 			{
@@ -2088,6 +2099,14 @@ public abstract class AbstractRepository implements Repository
 			}
 		}
 		while(propertyIterator.hasNext());
+		if(propertyDescription.getPropertyCount() == 1) //if we only wound up with a single property
+		{
+			final String textValue = asString(propertyValue); //see if we value is a simple string
+			if(textValue != null && !textValue.startsWith(TURF.SIGNATURE)) //if we have a single string variable that doesn't start with the TURF signature
+			{
+				return new NameValuePair<URI, String>(propertyURI, textValue); //abandon use of the description---just return the string value itself 
+			}
+		}
 		return new NameValuePair<URI, String>(propertyURI, Strings.write(resourceURI, propertyDescription, getDescriptionIO(), UTF_8_CHARSET)); //write the description to a string, using the resource URI as the base URI
 	}
 
@@ -2113,7 +2132,7 @@ public abstract class AbstractRepository implements Repository
 	 */
 	protected void decodePropertiesTextValue(final URFResource resource, final URI propertyURI, final String propertyTextValue)
 	{
-		if(propertyTextValue.startsWith(SIGNATURE)) //if this property value is stored in TURF
+		if(propertyTextValue.startsWith(TURF.SIGNATURE)) //if this property value is stored in TURF
 		{
 			try
 			{
