@@ -741,25 +741,27 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * @param propertyURIs The set of URF property URIs to match.
 	 * @return The set of names of WebDAV properties that match the given URF property URIs.
 	 */
-	protected Set<WebDAVPropertyName> getWebDAVPropertyNames(final List<WebDAVProperty> webdavProperties, final Set<URI> urfPropertyURIs)
-	{
-		final Set<WebDAVPropertyName> webdavPropertyNames = new HashSet<WebDAVPropertyName>(); //create a set to find out how many matching WebDAV properties there are
-		for(final WebDAVProperty webdavProperty : webdavProperties) //look at each of the WebDAV properties
+	/*TODO del if not needed
+		protected Set<WebDAVPropertyName> getWebDAVPropertyNames(final List<WebDAVProperty> webdavProperties, final Set<URI> urfPropertyURIs)
 		{
-			final WebDAVPropertyName webdavPropertyName = webdavProperty.getName(); //get the property namespace
-			final URI urfPropertyURI = getURFPropertyURI(webdavPropertyName); //get the URI of the corresponding URF property, if any
-			if(urfPropertyURI != null && urfPropertyURIs.contains(urfPropertyURI)) //if there is a valid URF property and the property is one of the URF properties in question
+			final Set<WebDAVPropertyName> webdavPropertyNames = new HashSet<WebDAVPropertyName>(); //create a set to find out how many matching WebDAV properties there are
+			for(final WebDAVProperty webdavProperty : webdavProperties) //look at each of the WebDAV properties
 			{
-				webdavPropertyNames.add(webdavPropertyName); //this WebDAV property matches
+				final WebDAVPropertyName webdavPropertyName = webdavProperty.getName(); //get the property namespace
+				final URI urfPropertyURI = getURFPropertyURI(webdavPropertyName); //get the URI of the corresponding URF property, if any
+				if(urfPropertyURI != null && urfPropertyURIs.contains(urfPropertyURI)) //if there is a valid URF property and the property is one of the URF properties in question
+				{
+					webdavPropertyNames.add(webdavPropertyName); //this WebDAV property matches
+				}
 			}
+			return webdavPropertyNames; //return the WebDAV property names we collected		
 		}
-		return webdavPropertyNames; //return the WebDAV property names we collected		
-	}
+	*/
 
 	/**
 	 * {@inheritDoc} This implementation does not support removing specific properties by value.
-	 * @exception UnsupportedOperationException if a property is requested to be removed by value.
-	 * @exception UnsupportedOperationException if a property is requested to be added without the property URI first being removed (i.e. a property addition
+	 * @throws UnsupportedOperationException if a property is requested to be removed by value.
+	 * @throws UnsupportedOperationException if a property is requested to be added without the property URI first being removed (i.e. a property addition
 	 *              instead of a property setting).
 	 */
 	@Override
@@ -803,10 +805,10 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * @param resourceAlteration The specification of the alterations to be performed on the resource.
 	 * @param webdavResource The WebDAV resource to be modified.
 	 * @return The updated description of the resource.
-	 * @exception NullPointerException if the given resource URI, resource alteration, and/or WebDAV resource is <code>null</code>.
-	 * @exception IOException if the resource properties could not be altered.
-	 * @exception DataException if some data we retrieved was not as expected.
-	 * @exception UnsupportedOperationException if a property is requested to be removed by value.
+	 * @throws NullPointerException if the given resource URI, resource alteration, and/or WebDAV resource is <code>null</code>.
+	 * @throws IOException if the resource properties could not be altered.
+	 * @throws DataException if some data we retrieved was not as expected.
+	 * @throws UnsupportedOperationException if a property is requested to be removed by value.
 	 */
 	protected URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration, final WebDAVResource webdavResource)
 			throws IOException, DataException
@@ -983,9 +985,9 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * @param resourceURI The URI of the resource being described.
 	 * @param properties The map of WebDAV properties.
 	 * @return A resource representing the given WebDAV properties.
-	 * @exception NullPointerException if one or more of the provided properties has a value of <code>null</code>.
-	 * @exception IOException if the resource description could not load addition needed data.
-	 * @exception DataException if the data was not what was expected.
+	 * @throws NullPointerException if one or more of the provided properties has a value of <code>null</code>.
+	 * @throws IOException if the resource description could not load addition needed data.
+	 * @throws DataException if the data was not what was expected.
 	 */
 	protected URFResource createResourceDescription(final URF urf, final URI resourceURI, final Map<WebDAVPropertyName, WebDAVProperty> properties)
 			throws IOException, DataException
@@ -1401,7 +1403,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		 * @param resourceAlteration The specification of the alterations to be performed on the resource.
 		 * @param webdavResource The WebDAV resource for updating the WebDAV properties.
 		 * @param passwordAuthentication The password authentication being used, or <code>null</code> if no password authentication is given.
-		 * @exception NullPointerException if the given output stream, resourceURI, resource alteration, and/or WebDAV resource is <code>null</code>.
+		 * @throws NullPointerException if the given output stream, resourceURI, resource alteration, and/or WebDAV resource is <code>null</code>.
 		 */
 		public DescriptionWriterOutputStreamDecorator(final OutputStream outputStream, final URI resourceURI, final URFResourceAlteration resourceAlteration,
 				final WebDAVResource webdavResource, final PasswordAuthentication passwordAuthentication)
@@ -1415,7 +1417,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 
 		/**
 		 * Called after the stream is successfully closed. This version updates the WebDAV properties to reflect the given resource description.
-		 * @exception ResourceIOException if an I/O error occurs.
+		 * @throws ResourceIOException if an I/O error occurs.
 		 */
 		protected void afterClose() throws ResourceIOException
 		{

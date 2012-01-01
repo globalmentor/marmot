@@ -2044,16 +2044,20 @@ public abstract class AbstractRepository implements Repository
 	 * This method is part of a set for encoding/decoding entire property URIs as a single property local name for those repository types that don't allow
 	 * specific namespaces to be set.
 	 * </p>
+	 * <p>
+	 * This implementation also converts legacy namespaces into canonical URF namespaces.
+	 * </p>
 	 * @param webdavPropertyName The name of the WebDAV property.
 	 * @return The URI of the URF property to represent the given property local name.
 	 * @throws IllegalArgumentException if the given local name has no valid absolute URF property URI encoded in it.
 	 * @see #PROPERTY_NAME_URI_ESCAPE_CHAR
 	 * @see #encodePropertyURILocalName(URI)
+	 * @see URF#convertLegacyNamespacedURI(URI)
 	 */
 	protected static URI decodePropertyURILocalName(final String propertyLocalName)
 	{
 		final String urfPRopertyURI = decode(propertyLocalName, PROPERTY_NAME_URI_ESCAPE_CHAR); //the URF property URI may be encoded as the local name of the custom property
-		return checkAbsolute(URI.create(urfPRopertyURI)); //create an URF property URI from the decoded local name and make sure it is absolute
+		return convertLegacyNamespacedURI(checkAbsolute(URI.create(urfPRopertyURI))); //create an URF property URI from the decoded local name and make sure it is absolute; convert any legacy namespaced URIs
 	}
 
 	/**
@@ -2139,10 +2143,16 @@ public abstract class AbstractRepository implements Repository
 				//read a description of the resource from the property, recognizing the resource serialized with URI "" as indicating the given resource
 				final URFResource propertyDescription = getDescriptionIO().read(createURF(), new ByteArrayInputStream(propertyTextValue.getBytes(UTF_8_CHARSET)),
 						resource.getURI());
-				resource.removePropertyValues(propertyURI); //if we were successful (that is, the property text value had no errors), remove any values already present for this value 
+				resource.removePropertyValues(propertyURI); //if we were successful (that is, the property text value had no errors), remove any values already present for this value
+				long addedPropertyCount = 0;
 				for(final URFProperty property : propertyDescription.getProperties(propertyURI)) //for each read property that we expect in the description
 				{
+					++addedPropertyCount;
 					resource.addProperty(property); //add this property to the given description
+				}
+				if(addedPropertyCount == 0) //if no properties were added, something wasn't quite right---we should have always some properties; maybe they weren't stored with the correct URI 
+				{
+					Log.warn("No properties found for URI " + propertyURI + " in description: " + propertyTextValue);
 				}
 			}
 			catch(final IOException ioException) //if we had any problem interpreting the text value as TURF
