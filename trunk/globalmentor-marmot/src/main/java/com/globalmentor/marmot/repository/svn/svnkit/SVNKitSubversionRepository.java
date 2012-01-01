@@ -49,6 +49,7 @@ import com.globalmentor.model.NameValuePair;
 import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
+import com.globalmentor.util.DataException;
 
 /**
  * Subversion repository implemented by SVNKit.
@@ -303,6 +304,10 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		{
 			throw toResourceIOException(resourceURI, svnException);
 		}
+		catch(final DataException dataException) //if the data wasn't correct
+		{
+			throw toResourceIOException(resourceURI, dataException); //translate the exception to a resource I/O exception and throw that
+		}
 	}
 
 	/** {@inheritDoc} For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any. */
@@ -506,6 +511,10 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		{
 			throw toResourceIOException(resourceURI, svnException);
 		}
+		catch(final DataException dataException) //if the data wasn't correct
+		{
+			throw toResourceIOException(resourceURI, dataException); //translate the exception to a resource I/O exception and throw that
+		}
 	}
 
 	/** {@inheritDoc} This implementation updates resource properties before storing the contents of the resource. */
@@ -550,6 +559,10 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			catch(final SVNException svnException)
 			{
 				throw toResourceIOException(resourceURI, svnException);
+			}
+			catch(final DataException dataException) //if the data wasn't correct
+			{
+				throw toResourceIOException(resourceURI, dataException); //translate the exception to a resource I/O exception and throw that
 			}
 		}
 	}
@@ -674,6 +687,10 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			{
 				throw toResourceIOException(resourceURI, svnException);
 			}
+			catch(final DataException dataException) //if the data wasn't correct
+			{
+				throw toResourceIOException(resourceURI, dataException); //translate the exception to a resource I/O exception and throw that
+			}
 		}
 	}
 
@@ -769,6 +786,10 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			{
 				throw toResourceIOException(resourceURI, svnException);
 			}
+			catch(final DataException dataException) //if the data wasn't correct
+			{
+				throw toResourceIOException(resourceURI, dataException); //translate the exception to a resource I/O exception and throw that
+			}
 		}
 	}
 
@@ -787,11 +808,13 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	 * @throws NullPointerException if the given resource URI, resource alteration, editor, and/or node kind is <code>null</code>.
 	 * @throws NullPointerException if the given directory entry is <code>null</code> and a property addition (as opposed to a property setting, that is, a
 	 *           property addition without a corresponding property URI removal) is requested.
-	 * @throws IOException if the resource properties could not be altered.
 	 * @throws UnsupportedOperationException if a property is requested to be removed by value.
+	 * @throws SVNException if there is an error creating the resource description.
+	 * @throws IOException if the resource properties could not be altered.
+	 * @throws DataException if the data was not what was expected.
 	 */
 	protected void alterResourceProperties(final URI resourceURI, final URFResourceAlteration resourceAlteration, final ISVNEditor editor,
-			final SVNDirEntry dirEntry, final SVNNodeKind nodeKind) throws SVNException, IOException
+			final SVNDirEntry dirEntry, final SVNNodeKind nodeKind) throws SVNException, IOException, DataException
 	{
 		final boolean isDir = nodeKind == SVNNodeKind.DIR; //see if this is a directory or a file being modified
 		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
@@ -978,10 +1001,13 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	 * @param dirEntry The directory entry for the Subversion node.
 	 * @return A resource description of the given SVNKit node.
 	 * @throws NullPointerException if the given data model, resource URI, and/or directory entry is <code>null</code>.
-	 * @throws SVNException if there is an error creating the resource description.
 	 * @throws IllegalArgumentException if a non-collection URI is given to access a directory.
+	 * @throws SVNException if there is an error creating the resource description.
+	 * @throws ResourceIOException if there was an error accessing the resource description.
+	 * @throws DataException if the data was not what was expected.
 	 */
-	protected URFResource createResourceDescription(final URF urf, final URI resourceURI, final SVNDirEntry dirEntry) throws SVNException, ResourceIOException //TODO recheck all these exception types
+	protected URFResource createResourceDescription(final URF urf, final URI resourceURI, final SVNDirEntry dirEntry) throws SVNException, ResourceIOException,
+			DataException
 	{
 		return createResourceDescription(urf, resourceURI, dirEntry, null);
 	}
@@ -995,11 +1021,13 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	 * @param properties The properties that are known, or <code>null</code> if properties have not yet been retrieved for the resource.
 	 * @return A resource description of the given SVNKit node.
 	 * @throws NullPointerException if the given data model, resource URI, and/or directory entry is <code>null</code>.
-	 * @throws SVNException if there is an error creating the resource description.
 	 * @throws IllegalArgumentException if a non-collection URI is given to access a directory.
+	 * @throws SVNException if there is an error creating the resource description.
+	 * @throws ResourceIOException if there was an error accessing the resource description.
+	 * @throws DataException if the data was not what was expected.
 	 */
 	protected URFResource createResourceDescription(final URF urf, final URI resourceURI, final SVNDirEntry dirEntry, SVNProperties properties)
-			throws SVNException, ResourceIOException
+			throws SVNException, ResourceIOException, DataException
 	{
 		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
 		final URFResource resource = urf.createResource(resourceURI); //create a default resource description
@@ -1012,7 +1040,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		{
 			if(nodeKind == SVNNodeKind.DIR) //if this is a directory
 			{
-				if(!isCollectionURI(resourceURI)) //if a non-collection URI was used for the directory TODO change to a checkNodeKind()
+				if(!isCollectionURI(resourceURI)) //if a non-collection URI was used for the directory
 				{
 					throw new IllegalArgumentException("Non-collection URI " + resourceURI + " used for directory " + resourceURI);
 				}
@@ -1056,6 +1084,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 						throw new ResourceIOException(resourceURI, "Unrecognized directory entry node kind: " + nodeKind);
 					}
 				}
+				final Map<URI, String> propertyURITextValues = new HashMap<URI, String>(); //create a map to store the text values to set---after we update any legacy forms
 				@SuppressWarnings("unchecked")
 				final Map<String, SVNPropertyValue> propertyValues = (Map<String, SVNPropertyValue>)properties.asMap(); //get a map of the Subversion properties
 				for(final Map.Entry<String, SVNPropertyValue> propertyValueEntry : propertyValues.entrySet()) //look at the Subversion properties
@@ -1067,11 +1096,23 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 						try
 						{
 							final URI propertyURI = decodePropertyURILocalName(propertyName); //the URF property URI may be encoded as the local name of the Subversion custom property
-							decodePropertiesTextValue(resource, propertyURI, propertyValueEntry.getValue().getString()); //decode the text value into the resource
+							propertyURITextValues.put(propertyURI, propertyValueEntry.getValue().getString()); //store the text value temporarily; we'll come back and update them later
 						}
 						catch(final IllegalArgumentException illegalArgumentException) //if the Subversion custom property local name wasn't an encoded URI, ignore the error and skip this property
 						{
 						}
+					}
+				}
+				updateLegacyNamespacedProperties(propertyURITextValues); //update any legacy properties
+				for(final Map.Entry<URI, String> propertyURITextValueEntries : propertyURITextValues.entrySet()) //actually go through and set the values for the properties we retrieved
+				{
+					try
+					{
+						decodePropertiesTextValue(resource, propertyURITextValueEntries.getKey(), propertyURITextValueEntries.getValue()); //decode the text value into the resource
+					}
+					catch(final IllegalArgumentException illegalArgumentException) //if the property text value wasn't encoded properly
+					{
+						throw new DataException(illegalArgumentException);
 					}
 				}
 			}

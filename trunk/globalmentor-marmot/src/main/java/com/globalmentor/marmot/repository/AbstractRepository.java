@@ -2044,20 +2044,62 @@ public abstract class AbstractRepository implements Repository
 	 * This method is part of a set for encoding/decoding entire property URIs as a single property local name for those repository types that don't allow
 	 * specific namespaces to be set.
 	 * </p>
-	 * <p>
-	 * This implementation also converts legacy namespaces into canonical URF namespaces.
-	 * </p>
 	 * @param webdavPropertyName The name of the WebDAV property.
 	 * @return The URI of the URF property to represent the given property local name.
 	 * @throws IllegalArgumentException if the given local name has no valid absolute URF property URI encoded in it.
 	 * @see #PROPERTY_NAME_URI_ESCAPE_CHAR
 	 * @see #encodePropertyURILocalName(URI)
-	 * @see URF#convertLegacyNamespacedURI(URI)
 	 */
 	protected static URI decodePropertyURILocalName(final String propertyLocalName)
 	{
 		final String urfPRopertyURI = decode(propertyLocalName, PROPERTY_NAME_URI_ESCAPE_CHAR); //the URF property URI may be encoded as the local name of the custom property
-		return convertLegacyNamespacedURI(checkAbsolute(URI.create(urfPRopertyURI))); //create an URF property URI from the decoded local name and make sure it is absolute; convert any legacy namespaced URIs
+		return checkAbsolute(URI.create(urfPRopertyURI)); //create an URF property URI from the decoded local name and make sure it is absolute
+	}
+
+	/**
+	 * Updates a map of some sort of property representations by converting legacy namespaced properties to the canonical namespaced properties.
+	 * <p>
+	 * Each legacy namespaced property is converted to canonical form. If the canonical form already exists, the legacy namespaced property is removed. Otherwise,
+	 * it is placed back in the map using the canonical property URI. Essentially, legacy namespace properties will be converted to canonical form, but later
+	 * explicit canonical form properties will always override the legacy forms.
+	 * </p>
+	 * <p>
+	 * This method is useful for preprocessing all gathered properties from some underlying store before they are actually updated in the resource description
+	 * being retrieved.
+	 * </p>
+	 * @param <V> Some type of property representation in the map, keyed to property URIs.
+	 * @param <M> The type of map holding the property representations.
+	 * @param propertyURIValueMap The map of some sort of property representations, keyed to the property URI (some of which may be in legacy form).
+	 * @return A map with no legacy form property representations.
+	 * @throws NullPointerException if the given map is <code>null</code>.
+	 * @see URF#convertLegacyNamespacedURI(URI)
+	 */
+	protected static <V, M extends Map<URI, V>> void updateLegacyNamespacedProperties(final M propertyURIValueMap)
+	{
+		//start by iterating through the keys of the map; most of the time, we probably won't have to change anything
+		Iterator<URI> propertyURIIterator = propertyURIValueMap.keySet().iterator();
+		Set<URI> keySet = null; //if something needs to be changed, we'll have to make a copy of the keys so we can modify the map
+		while(propertyURIIterator.hasNext())
+		{
+			final URI legacyPropertyURI = propertyURIIterator.next(); //get the next property URI---which *may* or may not be a legacy URI
+			final URI canonicalPropertyURI = convertLegacyNamespacedURI(legacyPropertyURI); //convert it from a legacy form
+			if(!canonicalPropertyURI.equals(legacyPropertyURI)) //if the property URI changed (signaling that this was legacy property URI form)
+			{
+				if(keySet == null) //if we don't have a set of keys yet, we were in read-only mode; now make a copy of the keys and start over
+				{
+					keySet = new HashSet<URI>(propertyURIValueMap.keySet()); //make a copy of the keys
+					propertyURIIterator = keySet.iterator(); //we'll switch to a new iterator that essentially starts over iterating through the propertyURIs---but in a separate copy this time
+					continue; //bail from this iteration
+				}
+				//now we know we're in write mode---we can change the map
+				if(!propertyURIValueMap.containsKey(canonicalPropertyURI)) //if the map doesn't already have a canonical form of this legacy URI (the canonical form always wins)
+				{
+					final V value = propertyURIValueMap.get(legacyPropertyURI); //get the value for the legacy form
+					propertyURIValueMap.put(canonicalPropertyURI, value); //put the value in the map, this time keyed to the canonical form
+				}
+				propertyURIValueMap.remove(legacyPropertyURI); //either way, we remove the legacy form---it was either updated or obsoleted
+			}
+		}
 	}
 
 	/**

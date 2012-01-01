@@ -761,8 +761,8 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	/**
 	 * {@inheritDoc} This implementation does not support removing specific properties by value.
 	 * @throws UnsupportedOperationException if a property is requested to be removed by value.
-	 * @throws UnsupportedOperationException if a property is requested to be added without the property URI first being removed (i.e. a property addition
-	 *              instead of a property setting).
+	 * @throws UnsupportedOperationException if a property is requested to be added without the property URI first being removed (i.e. a property addition instead
+	 *           of a property setting).
 	 */
 	@Override
 	protected URFResource alterResourcePropertiesImpl(final URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException
@@ -1081,11 +1081,11 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		{
 			resource.removePropertyValues(Content.TYPE_PROPERTY_URI); //remove any content type properties (Apache mod_dav adds a "httpd/unix-directory" pseudo MIME type for collections, for example)
 		}
+		final Map<URI, String> propertyURITextValues = new HashMap<URI, String>(); //create a map to store the text values to set---after we update any legacy forms
 		for(final WebDAVProperty webdavProperty : properties.values()) //now process the  set URF properties so that they will override the other properties
 		{
 			final WebDAVPropertyName propertyName = webdavProperty.getName(); //get the property name
 			final String propertyNamespace = propertyName.getNamespace(); //get the string version of the property namespace
-			final String propertyLocalName = propertyName.getLocalName(); //get the local name of the property
 			final WebDAVPropertyValue propertyValue = webdavProperty.getValue(); //get the value of the property
 			if(!ignoredWebDAVNamespaces.contains(propertyNamespace)) //if this is not a namespace to ignore
 			{
@@ -1094,40 +1094,24 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 				//Log.trace("URF property URI", urfPropertyURI);
 				if(urfPropertyURI != null && propertyValue != null) //if there is a corresponding URF property and there is an actual value specified (URF does not define a null value) TODO fix null
 				{
-
 					if(propertyValue instanceof WebDAVLiteralPropertyValue) //if the value is a literal (we don't yet support complex WebDAV properties)
 					{
 						final String propertyTextValue = ((WebDAVLiteralPropertyValue)propertyValue).getText(); //get the text value of the property
-						try
-						{
-							decodePropertiesTextValue(resource, urfPropertyURI, propertyTextValue); //decode the properties from the single text value and update the resource
-						}
-						catch(final IllegalArgumentException illegalArgumentException) //if the property text value wasn't encoded properly
-						{
-							//TODO fix								throw new DataException(ioException);
-							Log.warn("Error parsing resource; removing", resourceURI, "property", urfPropertyURI, "with value", propertyTextValue, illegalArgumentException);
-							//TODO eventually leave the bad property; for now, it's probably an anomaly from older development versions, so remove it
-							final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
-							try
-							{
-								final WebDAVResource webdavResource = new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource
-								webdavResource.removeProperties(propertyName); //remove the bad properties
-							}
-							catch(final IOException ioException2) //if an I/O exception occurs
-							{
-								Log.error(ioException2); //just log the error; we shouldn't bring the application down over this
-							}
-							finally
-							{
-								if(passwordAuthentication != null) //if we used password authentication
-								{
-									fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
-								}
-							}
-
-						}
+						propertyURITextValues.put(urfPropertyURI, propertyTextValue); //store the text value temporarily; we'll come back and update them later
 					}
 				}
+			}
+		}
+		updateLegacyNamespacedProperties(propertyURITextValues); //update any legacy properties
+		for(final Map.Entry<URI, String> propertyURITextValueEntries : propertyURITextValues.entrySet()) //actually go through and set the values for the properties we retrieved
+		{
+			try
+			{
+				decodePropertiesTextValue(resource, propertyURITextValueEntries.getKey(), propertyURITextValueEntries.getValue()); //decode the text value into the resource
+			}
+			catch(final IllegalArgumentException illegalArgumentException) //if the property text value wasn't encoded properly
+			{
+				throw new DataException(illegalArgumentException);
 			}
 		}
 		URFDateTime created = getCreated(resource); //try to determine the creation date and time; the stored creation time will always trump everything else
