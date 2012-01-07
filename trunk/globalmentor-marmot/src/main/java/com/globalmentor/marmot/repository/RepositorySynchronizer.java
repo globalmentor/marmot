@@ -1,5 +1,5 @@
 /*
- * Copyright © 1996-2011 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 1996-2012 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,12 +67,15 @@ public class RepositorySynchronizer
 		IGNORE;
 	}
 
-	/**The progress listener for logging progress.*/
+	/** The progress listener for logging progress. */
 	private final ProgressListener progressListener = new LogProgressListener();
 
-	/**@return The progress listener for logging progress.*/
-	protected ProgressListener getProgressListener() {return progressListener;}
-	
+	/** @return The progress listener for logging progress. */
+	protected ProgressListener getProgressListener()
+	{
+		return progressListener;
+	}
+
 	/** Whether this is a test run; if <code>true</code>, no modifications will be made. */
 	private boolean test = false;
 
@@ -231,7 +234,7 @@ public class RepositorySynchronizer
 	 * @param sourceResourceURI The URI of the source resource.
 	 * @param destinationRepository The repository in which the destination resource lies.
 	 * @param destinationResourceURI The URI of the destination resource.
-	 * @throws IOException if there is an I/O error whle synchronizing the resources.
+	 * @throws IOException if there is an I/O error while synchronizing the resources.
 	 */
 	public void synchronize(final Repository sourceRepository, final URI sourceResourceURI, final Repository destinationRepository,
 			final URI destinationResourceURI) throws IOException
@@ -258,7 +261,7 @@ public class RepositorySynchronizer
 	 * @param destinationBaseURI The base URI in the destination repository; the root of the destination tree being synchronized.
 	 * @param destinationResourceURI The URI of the destination resource.
 	 * @param destinationResourceDescription The description of the destination resource, or <code>null</code> if the destination resource does not exist.
-	 * @throws IOException if there is an I/O error whle synchronizing the resources.
+	 * @throws IOException if there is an I/O error while synchronizing the resources.
 	 * @throws IllegalArgumentException if one of the resources is a collection and the other is not.
 	 */
 	protected void synchronize(final Repository sourceRepository, final URI sourceBaseURI, final URI sourceResourceURI, URFResource sourceResourceDescription,
@@ -358,6 +361,9 @@ public class RepositorySynchronizer
 					destinationResourceDescription, destinationContentModified); //see if the content of the two resources are synchronized
 			if(!isContentSynchronized)//if the source and destination are not synchronized
 			{
+				Log.debug(getTestStatus(), "Content not synchronized:");
+				Log.debug('\t', URF.toString(sourceResourceDescription));
+				Log.debug('\t', URF.toString(destinationResourceDescription));
 				final Resolution resolution = getContentResolution();
 				resolveContent(resolution, sourceRepository, sourceResourceDescription, sourceContentModified, destinationRepository, destinationResourceDescription,
 						destinationContentModified); //resolve the discrepancy between source and destination

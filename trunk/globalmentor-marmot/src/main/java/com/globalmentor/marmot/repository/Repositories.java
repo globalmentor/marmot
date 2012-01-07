@@ -1,5 +1,5 @@
 /*
- * Copyright © 2011 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 2011-2012 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,12 @@
 
 package com.globalmentor.marmot.repository;
 
+import static com.globalmentor.java.Appendables.*;
 import static com.globalmentor.java.Conditions.*;
-import static com.globalmentor.java.Strings.*;
 
 import java.io.*;
 import java.net.URI;
 
-import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.urf.*;
 
 /**
@@ -32,67 +31,90 @@ import com.globalmentor.urf.*;
  */
 public class Repositories
 {
-	
-	public static URFTURFGenerator createPrintURFGenerator(final URI baseURI)
+
+	/**
+	 * Prints the given resource to the given appendable.
+	 * @param resource The resource to print.
+	 * @param appendable The appendable to which the resource should be printed.
+	 * @return The given appendable.
+	 * @throws NullPointerException if the given resource and/or appendable is <code>null</code>.
+	 * @throws IOException if there was an error writing to the appendable.
+	 */
+	public static <A extends Appendable> A print(final URFResource resource, final A appendable) throws IOException
 	{
-		final URFTURFGenerator urfTURFGenerator = new URFTURFGenerator(baseURI);
-		urfTURFGenerator.setFormatted(false);
-		urfTURFGenerator.setPropertyNamespacePrefixesForced(true);
-		return urfTURFGenerator;
-		
+		URFTURFGenerator.forPrint(false).generateResources(appendable, false, resource).append('\n');
+		return appendable;
 	}
 
-	public static void print(final URFResource resource, final PrintStream printStream)
+	/**
+	 * Prints all resources in the given repository to the given appendable.
+	 * @param repository The repository to print.
+	 * @param appendable The appendable to which the repository should be printed.
+	 * @return The given appendable.
+	 * @throws NullPointerException if the given repository and/or appendable is <code>null</code>.
+	 * @throws IOException if there was an error writing to the appendable.
+	 * @throws IOException if there was an error accessing a repository or writing to the appendable.
+	 */
+	public static <A extends Appendable> A print(final Repository repository, final A appendable) throws IOException
+	{
+		return print(repository, repository.getRootURI(), appendable);
+	}
+
+	/**
+	 * Prints the identified resource and all ancestors in the repository to the given appendable.
+	 * @param repository The repository in which the resource lies.
+	 * @param resourceURI The URI identifying the resource to print.
+	 * @param appendable The appendable to which the resource should be printed.
+	 * @return The given appendable.
+	 * @throws NullPointerException if the given repository, resource URI, and/or appendable is <code>null</code>.
+	 * @throws IOException if there was an error accessing a repository or writing to the appendable.
+	 */
+	public static <A extends Appendable> A print(final Repository repository, final URI resourceURI, final A appendable) throws IOException
+	{
+		return print(repository, repository.getResourceDescription(resourceURI), appendable);
+	}
+
+	/**
+	 * Prints the provided resource and all ancestors in the repository to the given appendable.
+	 * @param repository The repository in which the resource lies.
+	 * @param resource The resource to print.
+	 * @param appendable The appendable to which the resource should be printed.
+	 * @return The given appendable.
+	 * @throws NullPointerException if the given repository, resource, and/or appendable is <code>null</code>.
+	 * @throws IOException if there was an error accessing a repository or writing to the appendable.
+	 */
+	public static <A extends Appendable> A print(final Repository repository, final URFResource resource, final A appendable) throws IOException
+	{
+		return print(repository, resource, 0, appendable, URFTURFGenerator.forPrint(repository.getRootURI(), false));
+	}
+
+	/**
+	 * Prints the provided resource and all ancestors in the repository to the given appendable.
+	 * @param repository The repository in which the resource lies.
+	 * @param resource The resource to print.
+	 * @param level The zero-based level of the resource to be printed.
+	 * @param appendable The appendable to which the resource should be printed.
+	 * @return The given appendable.
+	 * @throws NullPointerException if the given repository, resource, and/or appendable is <code>null</code>.
+	 * @throws IOException if there was an error accessing a repository or writing to the appendable.
+	 */
+	public static <A extends Appendable> A print(final Repository repository, final URFResource resource, final int level, final A appendable,
+			final URFTURFGenerator urfTURFGenerator) throws IOException
 	{
 		try
 		{
-			printStream.println(createPrintURFGenerator(null).generateResources(new StringBuilder(), false, resource).toString()); //TODO testing
+			append(appendable, '\t', level); //indent
+			urfTURFGenerator.generateResources(appendable, false, resource).append('\n');
 		}
 		catch(final IOException ioException)
 		{
 			throw unexpected(ioException);
 		}
-	}
-	
-	public static void print(final Repository repository, final PrintStream printStream) throws ResourceIOException
-	{
-		print(repository, repository.getRootURI(), printStream);
-	}
-
-	public static void print(final Repository repository, final URI resourceURI, final PrintStream printStream) throws ResourceIOException
-	{
-		print(repository, repository.getResourceDescription(resourceURI), printStream);
-	}
-
-	public static void print(final Repository repository, final URFResource resource, final PrintStream printStream) throws ResourceIOException
-	{
-		print(repository, resource, 0, printStream, createPrintURFGenerator(repository.getRootURI()));
-	}
-
-	public static void print(final Repository repository, final URFResource resource, final int level, final PrintStream printStream,
-			final URFTURFGenerator urfTURFGenerator) throws ResourceIOException
-	{
-		/*TODO del
-				printStream.print(createString('\t', level)); //indent
-				printStream.println(DefaultResource.toString(resource)); //<<uri>>
-				printStream.print(createString('\t', level)); //indent
-				printStream.print('[');
-		*/
-		try
-		{
-			printStream.print(createString('\t', level)); //indent
-			printStream.println(urfTURFGenerator.generateResources(new StringBuilder(), false, resource).toString()); //TODO testing
-		}
-		catch(final IOException ioException)
-		{
-			throw unexpected(ioException);
-		}
-		//		printStream.println(']');
 		for(final URFResource childResourceDescription : repository.getChildResourceDescriptions(resource.getURI()))
 		{
-			print(repository, childResourceDescription, level + 1, printStream, urfTURFGenerator);
-
+			print(repository, childResourceDescription, level + 1, appendable, urfTURFGenerator);
 		}
+		return appendable;
 	}
 
 }

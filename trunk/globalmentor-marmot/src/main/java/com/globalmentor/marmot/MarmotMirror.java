@@ -1,5 +1,5 @@
 /*
- * Copyright © 1996-2011 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 1996-2012 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ public class MarmotMirror extends AbstractApplication
 	public final static String COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2006-2011 GlobalMentor, Inc. All Rights Reserved.";	//TODO i18n
 
 	/**The version of the application.*/
-	public final static String VERSION="1.2 build 2022-10-08";
+	public final static String VERSION="1.3 build 2012-01-07";
 
 	/**Application command-line parameters.*/
 	public enum Parameter
