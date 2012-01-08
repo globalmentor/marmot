@@ -361,9 +361,6 @@ public class RepositorySynchronizer
 					destinationResourceDescription, destinationContentModified); //see if the content of the two resources are synchronized
 			if(!isContentSynchronized)//if the source and destination are not synchronized
 			{
-				Log.debug(getTestStatus(), "Content not synchronized:");
-				Log.debug('\t', URF.toString(sourceResourceDescription));
-				Log.debug('\t', URF.toString(destinationResourceDescription));
 				final Resolution resolution = getContentResolution();
 				resolveContent(resolution, sourceRepository, sourceResourceDescription, sourceContentModified, destinationRepository, destinationResourceDescription,
 						destinationContentModified); //resolve the discrepancy between source and destination
@@ -539,6 +536,8 @@ public class RepositorySynchronizer
 		final URI inputResourceURI = inputResourceDescription.getURI();
 		final URI outputResourceURI = outputResourceDescription.getURI();
 		Log.info(getTestStatus(), "Resolve content:", resolution, "copy", inputResourceURI, outputResourceURI);
+		Log.debug(getTestStatus(), URF.toString(sourceResourceDescription));
+		Log.debug(getTestStatus(), URF.toString(destinationResourceDescription));
 		if(!isTest()) //if this is not just a test
 		{
 			final long inputContentLength = getContentLength(inputResourceDescription); //get the size of the input resource, if we know it
@@ -725,6 +724,8 @@ public class RepositorySynchronizer
 		}
 		if(!outputPropertyURIRemovals.isEmpty() || !outputPropertyAdditions.isEmpty()) //if we have something to change
 		{
+			Log.debug(getTestStatus(), URF.toString(sourceResourceDescription));
+			Log.debug(getTestStatus(), URF.toString(destinationResourceDescription));
 			final URFResourceAlteration outputResourceAlteration = new DefaultURFResourceAlteration(outputPropertyURIRemovals, outputPropertyAdditions);
 			if(!isTest()) //if this is not just a test
 			{
