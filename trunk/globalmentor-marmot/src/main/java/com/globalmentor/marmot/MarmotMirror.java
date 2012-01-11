@@ -49,10 +49,10 @@ public class MarmotMirror extends AbstractApplication
 	public final static String TITLE="Marmot Mirror"+TRADE_MARK_SIGN_CHAR;
 
 	/**The application copyright.*/
-	public final static String COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2006-2011 GlobalMentor, Inc. All Rights Reserved.";	//TODO i18n
+	public final static String COPYRIGHT="Copyright "+COPYRIGHT_SIGN+" 2006-2012 GlobalMentor, Inc. All Rights Reserved.";	//TODO i18n
 
 	/**The version of the application.*/
-	public final static String VERSION="1.3 build 2012-01-07";
+	public final static String VERSION="1.5 build 2012-01-10";
 
 	/**Application command-line parameters.*/
 	public enum Parameter

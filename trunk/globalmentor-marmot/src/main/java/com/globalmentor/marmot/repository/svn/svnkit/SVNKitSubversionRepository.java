@@ -35,7 +35,6 @@ import static org.tmatesoft.svn.core.SVNProperty.*;
 
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.io.InputStreams.*;
-import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.Conditions.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.content.Content.*;
@@ -329,7 +328,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					final SVNNodeKind contentNodeKind = svnRepository.checkPath(contentURIPath.toString(), -1); //see what kind of resource the content is
 					if(contentNodeKind == SVNNodeKind.NONE) //if we're looking for collection content, this is not a problem---the collection simply has no content
 					{
-						return new ByteArrayInputStream(NO_BYTES); //return an input stream to an empty byte array TODO create an EmptyInputStream class
+						return EMPTY_INPUT_STREAM;
 					}
 					else if(contentNodeKind != SVNNodeKind.FILE) //if the content file not a file
 					{
