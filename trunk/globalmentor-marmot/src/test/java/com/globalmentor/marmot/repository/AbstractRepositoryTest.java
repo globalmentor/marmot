@@ -1,5 +1,5 @@
 /*
- * Copyright © 2011 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 2011-2012 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,6 +120,29 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		final int initialContentLength = (1 << 10) + 1;
 		final URI resourceURI = repository.getRootURI().resolve("test/"); //determine a test collection resource URI
 		testResourceContentBytes(resourceURI, false, Bytes.createRandom(initialContentLength));
+	}
+
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Creating an empty resource.</li>
+	 * <li>The ability to detect that a non-collection resource is not a collection resource.</li>
+	 * <li>Creating an empty collection resource.</li>
+	 * <li>The ability to detect that a collection resource is not a non-collection resource.</li>
+	 * </ul>
+	 */
+	@Test
+	public void testResourceCollectionDifferentiation() throws IOException
+	{
+		//test a resource
+		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
+		repository.createResource(resourceURI, NO_BYTES); //create a resource with random contents		
+		assertTrue("Created empty resource doesn't exist.", repository.resourceExists(resourceURI));
+		assertFalse("Shadowing collection resource exists.", repository.resourceExists(repository.getRootURI().resolve("test.bin/")));
+		final URI collectionResourceURI = repository.getRootURI().resolve("test/"); //determine a test collection resource URI
+		repository.createCollectionResource(collectionResourceURI);
+		assertTrue("Created collection resource doesn't exist.", repository.resourceExists(collectionResourceURI));
+		assertFalse("Shadowing resource exists.", repository.resourceExists(repository.getRootURI().resolve("test")));
 	}
 
 	/**

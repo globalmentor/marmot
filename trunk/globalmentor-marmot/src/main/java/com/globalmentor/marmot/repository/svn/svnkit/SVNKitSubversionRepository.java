@@ -1,5 +1,5 @@
 /*
- * Copyright © 2011 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 2011-2012 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -270,12 +270,15 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			{
 				nodeKind = svnRepository.checkPath(resourceURIPath.toString(), -1); //see what kind of resource this is
 			}
-			if(nodeKind == SVNNodeKind.NONE) //if there is no node
+			final boolean isCollection = isCollectionURI(resourceURI);
+			if(isCollection) //if the resource is a collection
 			{
-				return false; //the resource doesn't exist
+				return nodeKind == SVNNodeKind.DIR;
 			}
-			checkNodeKind(nodeKind, resourceURI); //make sure the node is the correct kind for our resource URI
-			return true;
+			else
+			{
+				return nodeKind == SVNNodeKind.FILE;
+			}
 		}
 		catch(final SVNException svnException)
 		{
