@@ -1,5 +1,5 @@
 /*
- * Copyright © 1996-2011 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 1996-2012 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -184,7 +184,14 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		}
 		final boolean isCollectionURI = isCollectionURI(resourceURI); //see if the URI specifies a collection
 		final File file = new File(privateResourceURI); //get the file object for this resource
-		return file.exists() && (isCollectionURI || !file.isDirectory()); //see if the file of the private URI exists; don't allow a non-collection URI to find a non-directory URI, though (file systems usually don't allow both a file and a directory of the same name, so they allow the ending-slash form to be optional)
+		if(isCollectionURI) //if this should be a collection
+		{
+			return file.isDirectory(); //see if a directory exists
+		}
+		else
+		{
+			return file.exists() && !file.isDirectory(); //see if a non-directory file exists; don't allow non-collection URI find a directory (file systems usually don't allow both a file and a directory of the same name, so they allow the ending-slash form to be optional)
+		}
 	}
 
 	/** {@inheritDoc} */
@@ -323,7 +330,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 				final File[] files = resourceDirectory.listFiles(getFileFilter()); //get a list of all files in the directory
 				for(final File file : files) //for each file in the directory
 				{
-					final URI childResourcePrivateURI=toURI(file);
+					final URI childResourcePrivateURI = toURI(file);
 					if(isSourceResourceVisible(childResourcePrivateURI)) //if the associated child resource is visible
 					{
 						final URI childResourcePublicURI = getRepositoryResourceURI(childResourcePrivateURI); //get a public URI to represent the file resource
