@@ -34,7 +34,9 @@ import org.junit.*;
 
 import com.globalmentor.collections.Sets;
 import com.globalmentor.java.Bytes;
+import com.globalmentor.log.Log;
 import com.globalmentor.net.ResourceIOException;
+import com.globalmentor.net.URIPath;
 import com.globalmentor.test.AbstractTest;
 import com.globalmentor.time.Time;
 import com.globalmentor.urf.*;
@@ -89,6 +91,8 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		final int initialContentLength = (1 << 10) + 1;
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		testResourceContentBytes(resourceURI, false, Bytes.createRandom(initialContentLength));
+		repository.deleteResource(resourceURI); //delete the resource we created
+		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
 	}
 
 	/**
@@ -103,6 +107,8 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	{
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		testResourceContentBytes(resourceURI, false, NO_BYTES);
+		repository.deleteResource(resourceURI); //delete the resource we created
+		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
 	}
 
 	/**
@@ -120,6 +126,8 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		final int initialContentLength = (1 << 10) + 1;
 		final URI resourceURI = repository.getRootURI().resolve("test/"); //determine a test collection resource URI
 		testResourceContentBytes(resourceURI, false, Bytes.createRandom(initialContentLength));
+		repository.deleteResource(resourceURI); //delete the resource we created
+		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
 	}
 
 	/**
@@ -148,6 +156,35 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	/**
 	 * Tests:
 	 * <ul>
+	 * <li>Creating a collection resource with an i18n name and verifying its existence.</li>
+	 * <li>Creating a resource with an i18n name using supplied contents and verifying its existence.</li>
+	 * <li>Verifying that the i18n named resource is listed as a child of the i18n names collection.</li>
+	 * <li>Deleting an i18n named resource.</li>
+	 * <li>Deleting an i18n named collection.</li>
+	 * </ul>
+	 */
+	@Test
+	public void testI18n() throws IOException
+	{
+		final int initialContentLength = (1 << 10) + 1;
+		final URI collectionResourceURI = repository.getRootURI().resolve(URIPath.encode("voc\u00ea-forr\u00f3-arrasta-p\u00e9-cora\u00e7\u00e3o-\u4eba/")); //collection: você-forró-arrasta-pé-coração-人
+		Log.debug("Collection URI: " + collectionResourceURI);
+		repository.createCollectionResource(collectionResourceURI);
+		final URI resourceURI = collectionResourceURI.resolve(URIPath.encode("\u0915\u0941\u091b-\u0915\u0941\u091b-\u0939\u094b\u0924\u093e-\u0939\u0948-\u4eba")); //resource: você-forró-arrasta-pé-coração/कुछ-कुछ-होता-है-人
+		Log.debug("Resource URI: " + resourceURI);
+		testResourceContentBytes(resourceURI, false, Bytes.createRandom(initialContentLength));
+		final List<URFResource> collectionChildren = repository.getChildResourceDescriptions(collectionResourceURI); //make sure the URIs of the children are what we expect
+		assertThat("URIs of i18n child resource not what expected", Sets.immutableSetOf(collectionChildren),
+				equalTo(Sets.<URFResource> immutableSetOf(new DefaultURFResource(resourceURI))));
+		repository.deleteResource(resourceURI); //delete the resource we created
+		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
+		repository.deleteResource(collectionResourceURI); //delete the collection resource we created
+		assertFalse("Deleted collection resource still exists.", repository.resourceExists(collectionResourceURI));
+	}
+
+	/**
+	 * Tests:
+	 * <ul>
 	 * <li>Creating a resource using supplied binary contents.</li>
 	 * <li>Checking the existence of a resource.</li>
 	 * <li>Changing the binary contents of a resource using an output stream.</li>
@@ -161,6 +198,8 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		testResourceContentBytes(resourceURI, false, new byte[0], Bytes.createRandom(initialContentLength), Bytes.createRandom(initialContentLength * 2),
 				Bytes.createRandom(initialContentLength * 3), new byte[0], Bytes.createRandom(initialContentLength)); //try three different sizes of binary content
+		repository.deleteResource(resourceURI); //delete the resource we created
+		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
 	}
 
 	/**
@@ -179,6 +218,8 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		final URI resourceURI = repository.getRootURI().resolve("test/"); //determine a test collection resource URI
 		testResourceContentBytes(resourceURI, false, new byte[0], Bytes.createRandom(initialContentLength), Bytes.createRandom(initialContentLength * 2),
 				Bytes.createRandom(initialContentLength * 3), new byte[0], Bytes.createRandom(initialContentLength)); //try three different sizes of binary content
+		repository.deleteResource(resourceURI); //delete the resource we created
+		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
 	}
 
 	/**
@@ -196,6 +237,8 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		testResourceContentBytes(resourceURI, false, "This is a test.".getBytes(UTF_8_CHARSET), "This is a test.\nThis is a second line.".getBytes(UTF_8_CHARSET),
 				"This really is a test.\nThis is a second line.".getBytes(UTF_8_CHARSET), "This is just a test.".getBytes(UTF_8_CHARSET)); //try three different sizes of text content
+		repository.deleteResource(resourceURI); //delete the resource we created
+		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
 	}
 
 	/**
@@ -212,6 +255,8 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		final int contentLength = (1 << 3) + 1; //>8
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		testResourceContentBytes(resourceURI, true, Bytes.createRandom(contentLength));
+		repository.deleteResource(resourceURI); //delete the resource we created
+		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
 	}
 
 	/**
@@ -228,6 +273,8 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		final int contentLength = (1 << 20) + 1; //>1MB
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		testResourceContentBytes(resourceURI, true, Bytes.createRandom(contentLength));
+		repository.deleteResource(resourceURI); //delete the resource we created
+		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
 	}
 
 	/**
@@ -236,7 +283,6 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * <li>Creating a resource using supplied contents.</li>
 	 * <li>Checking the existence of a resource.</li>
 	 * <li>If more than one content array is provided, changing the contents of a resource using an output stream.</li>
-	 * <li>Deleting a resource.</li>
 	 * </ul>
 	 * @param resourceURI The URI of the resource to create.
 	 * @param streamCreate Whether the resource should initially be created using an output stream rather than supplying the bytes.
@@ -292,8 +338,6 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 			assertThat("Invalid content length of changed resource.", getContentLength(newResourceDescription), equalTo((long)changedContent.length));
 			checkCreatedResourceDateTimes(newResourceDescription, before, after);
 		}
-		repository.deleteResource(resourceURI); //delete the resource we created
-		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
 	}
 
 	/**

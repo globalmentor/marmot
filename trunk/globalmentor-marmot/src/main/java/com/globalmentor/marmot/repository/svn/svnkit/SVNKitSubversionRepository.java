@@ -43,6 +43,7 @@ import com.globalmentor.collections.CollectionMap;
 import com.globalmentor.collections.HashSetHashMap;
 import com.globalmentor.event.ProgressListener;
 import com.globalmentor.io.*;
+import com.globalmentor.log.Log;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.model.NameValuePair;
 import com.globalmentor.net.*;
@@ -142,6 +143,19 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		return new SVNKitSubversionRepository(publicRepositoryURI, privateRepositoryURI); //create and return a new file repository
 	}
 
+	/**
+	 * Translates a public URI in the repository to a decoded path relative to the public URI, suitable for use with SVNKit.
+	 * @param resourceURI The URI in the public URI namespace.
+	 * @return The decoded path of the resource relative to the public URI.
+	 * @throws NullPointerException if the given resource URI is <code>null</code>.
+	 * @throws IllegalArgumentException if the given resource URI is not in the public resource namespace.
+	 */
+	/*TODO del if not needed
+		protected String getResourceRelativePath(final URI resourceURI)
+		{
+		}
+	*/
+
 	/** The username to use in accessing the repository, or <code>null</code> if no username is specified. */
 	private String username = null;
 
@@ -201,7 +215,9 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	protected URI getRepositoryResourceURI(final URI baseURI, final SVNDirEntry dirEntry)
 	{
 		final String relativePath = checkArgumentNotNull(dirEntry.getRelativePath(), "Directory entry has no relative path: " + dirEntry);
-		URI resourceURI = baseURI.resolve(relativePath); //get the supposed resource URI
+		URI resourceURI = baseURI.resolve(URIPath.encode(relativePath)); //get the supposed resource URI, encoding the relative path
+		//TODO del Log.debug("getting repository resource for base URI", baseURI, "relative path", relativePath);
+		//TODO del URI resourceURI = baseURI.resolve(relativePath); //get the supposed resource URI
 		if(dirEntry.getKind() == SVNNodeKind.DIR) //if this is a directory
 		{
 			resourceURI = toCollectionURI(resourceURI); //make sure the resulting URI represents a collection
@@ -268,7 +284,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
 			synchronized(svnRepository)
 			{
-				nodeKind = svnRepository.checkPath(resourceURIPath.toString(), -1); //see what kind of resource this is
+				nodeKind = svnRepository.checkPath(resourceURIPath.toDecodedString(), -1); //see what kind of resource this is
 			}
 			final boolean isCollection = isCollectionURI(resourceURI);
 			if(isCollection) //if the resource is a collection
@@ -297,7 +313,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
 			synchronized(svnRepository)
 			{
-				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the directory entry for this resource
+				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toDecodedString(), -1); //get the directory entry for this resource
 				checkNodeKind(dirEntry.getKind(), resourceURI); //make sure the node is the correct kind for our resource URI, and that the node exists
 				return createResourceDescription(urf, resourceURI, dirEntry); //create and return a description of the resource
 			}
@@ -322,13 +338,13 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			try
 			{
 				final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
-				checkNodeKind(svnRepository.checkPath(resourceURIPath.toString(), -1), resourceURI); //see what kind of resource this is, verifying the node kind and making sure the node exists
+				checkNodeKind(svnRepository.checkPath(resourceURIPath.toDecodedString(), -1), resourceURI); //see what kind of resource this is, verifying the node kind and making sure the node exists
 				final URIPath contentURIPath; //we'll determine the URI path to use for content
 				final boolean isCollection = isCollectionURI(resourceURI);
 				if(isCollection) //if the resource is a collection
 				{
 					contentURIPath = resourceURIPath.resolve(COLLECTION_CONTENT_NAME); //the URI path to use for content uses the special collection content resource
-					final SVNNodeKind contentNodeKind = svnRepository.checkPath(contentURIPath.toString(), -1); //see what kind of resource the content is
+					final SVNNodeKind contentNodeKind = svnRepository.checkPath(contentURIPath.toDecodedString(), -1); //see what kind of resource the content is
 					if(contentNodeKind == SVNNodeKind.NONE) //if we're looking for collection content, this is not a problem---the collection simply has no content
 					{
 						return EMPTY_INPUT_STREAM;
@@ -344,7 +360,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					contentURIPath = resourceURIPath; //we'll get the content from the file itself
 				}
 				final TempOutputStream tempOutputStream = new TempOutputStream(false); //create a temporary output stream that won't automatically delete its contents when closed
-				svnRepository.getFile(contentURIPath.toString(), -1, null, tempOutputStream); //retrieve the contents of the content file; if SVNKit closes the output stream, it won't matter, because we turned off auto-dispose
+				svnRepository.getFile(contentURIPath.toDecodedString(), -1, null, tempOutputStream); //retrieve the contents of the content file; if SVNKit closes the output stream, it won't matter, because we turned off auto-dispose
 				try
 				{
 					return tempOutputStream.getInputStream(); //return an input stream to the data; the returned input stream will delete the temporary file, if any
@@ -372,7 +388,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		{
 			try
 			{
-				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the directory entry for this resource
+				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toDecodedString(), -1); //get the directory entry for this resource
 				checkNodeKind(dirEntry.getKind(), resourceURI); //make sure the node is the correct kind for our resource URI, and that the node exists
 				final TempOutputStream tempOutputStream = new TempOutputStream() //create a new temporary output stream that, before it is closed, will save the collected bytes to the existing resource
 				{
@@ -415,13 +431,13 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		{
 			try
 			{
-				final SVNNodeKind nodeKind = checkNodeKind(svnRepository.checkPath(resourceURIPath.toString(), -1), resourceURI); //get and check the node kind, making sure the node exists
+				final SVNNodeKind nodeKind = checkNodeKind(svnRepository.checkPath(resourceURIPath.toDecodedString(), -1), resourceURI); //get and check the node kind, making sure the node exists
 				if(nodeKind != SVNNodeKind.DIR) //only Subversion directories can have children
 				{
 					return false;
 				}
 				@SuppressWarnings("unchecked")
-				final Collection<SVNDirEntry> childDirEntries = svnRepository.getDir(resourceURIPath.toString(), -1, null, (Collection<?>)null); //get a collection of child directory entries
+				final Collection<SVNDirEntry> childDirEntries = svnRepository.getDir(resourceURIPath.toDecodedString(), -1, null, (Collection<?>)null); //get a collection of child directory entries
 				for(final SVNDirEntry childDirEntry : childDirEntries) //make sure one of the directory entries is visible
 				{
 					final URI childResourceURI = getRepositoryResourceURI(resourceURI, childDirEntry); //get the public URI for this resource
@@ -456,13 +472,13 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			final Collection<SVNDirEntry> dirEntries;
 			synchronized(svnRepository) //we aren't locking the actual repository, so we might as well synchronize our access to it at a local level rather than holding it across the children iteration
 			{
-				final SVNNodeKind nodeKind = checkNodeKind(svnRepository.checkPath(resourceURIPath.toString(), -1), resourceURI); //get and check the node kind, making sure the node exists
+				final SVNNodeKind nodeKind = checkNodeKind(svnRepository.checkPath(resourceURIPath.toDecodedString(), -1), resourceURI); //get and check the node kind, making sure the node exists
 				if(nodeKind != SVNNodeKind.DIR) //only Subversion directories can have children
 				{
 					return emptyList();
 				}
 				@SuppressWarnings("unchecked")
-				final Collection<SVNDirEntry> childDirEntries = svnRepository.getDir(resourceURIPath.toString(), -1, null, (Collection<?>)null); //get a collection of child directory entries
+				final Collection<SVNDirEntry> childDirEntries = svnRepository.getDir(resourceURIPath.toDecodedString(), -1, null, (Collection<?>)null); //get a collection of child directory entries
 				dirEntries = childDirEntries; //save the directory entries; distinct variables are used solely to suppress the unchecked cast warning at a smaller granularity
 			}
 			final URF urf = createURF(); //create a new URF data model
@@ -555,7 +571,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			{
 				setResourceContents(resourceURI, resourceDescription, null, new ByteArrayInputStream(resourceContents)); //create the resource, providing the resource contents in an input stream
 				final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
-				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the updated directory entry for this resource
+				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toDecodedString(), -1); //get the updated directory entry for this resource
 				return createResourceDescription(createURF(), resourceURI, dirEntry); //create and return the latest description of the resource
 			}
 			catch(final SVNException svnException)
@@ -604,7 +620,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			{
 				//see if we have a content resource; if the collection doesn't exist yet, then of course the content file doesn't yet exist
 				//this check must be done outside of an edit or we will get a SVNKit reentrant error
-				final boolean contentFileExists = dirEntry != null ? svnRepository.checkPath(contentURIPath.toString(), -1) != SVNNodeKind.NONE : false;
+				final boolean contentFileExists = dirEntry != null ? svnRepository.checkPath(contentURIPath.toDecodedString(), -1) != SVNNodeKind.NONE : false;
 				//TODO probably transfer the check for a non-collection content file existing here as well, so this variable will be put to use for both kinds of resources
 				final ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource creation.", null, true, null); //get a commit editor to the repository
 				try
@@ -614,11 +630,11 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					{
 						if(dirEntry != null) //if the directory supposedly exists
 						{
-							editor.openDir(resourceURIPath.toString(), -1); //open the directory for modification
+							editor.openDir(resourceURIPath.toDecodedString(), -1); //open the directory for modification
 						}
 						else
 						{
-							editor.addDir(resourceURIPath.toString(), null, -1); //show that we are adding a directory to the repository
+							editor.addDir(resourceURIPath.toDecodedString(), null, -1); //show that we are adding a directory to the repository
 						}
 						final boolean hasContent = !isEmpty(inputStream); //see if content is given
 						//if the directory already exists, we need to always make sure the content file, if any, is up-to-date;
@@ -632,16 +648,16 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 								//if(hasContent) //if we have content to write
 								if(contentFileExists) //if the content file exists
 								{
-									editor.openFile(contentURIPath.toString(), -1); //open the content file for modification
+									editor.openFile(contentURIPath.toDecodedString(), -1); //open the content file for modification
 								}
 								else
 								{
-									editor.addFile(contentURIPath.toString(), null, -1); //add the content file
+									editor.addFile(contentURIPath.toDecodedString(), null, -1); //add the content file
 								}
-								editor.applyTextDelta(contentURIPath.toString(), null); //start with a blank checksum; we'll not compare the file to any existing file, even when updating files
+								editor.applyTextDelta(contentURIPath.toDecodedString(), null); //start with a blank checksum; we'll not compare the file to any existing file, even when updating files
 								final SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
-								final String checksum = deltaGenerator.sendDelta(contentURIPath.toString(), inputStream, editor, true); //create a new delta for the contents
-								editor.closeFile(contentURIPath.toString(), checksum); //finish the content file addition
+								final String checksum = deltaGenerator.sendDelta(contentURIPath.toDecodedString(), inputStream, editor, true); //create a new delta for the contents
+								editor.closeFile(contentURIPath.toDecodedString(), checksum); //finish the content file addition
 							}
 						}
 						if(resourceDescription != null) //if we have a description of the resource, set its properties
@@ -656,21 +672,21 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					{
 						if(dirEntry != null) //if the file supposedly exists
 						{
-							editor.openFile(resourceURIPath.toString(), -1); //open the file for modification
+							editor.openFile(resourceURIPath.toDecodedString(), -1); //open the file for modification
 						}
 						else
 						{
-							editor.addFile(resourceURIPath.toString(), null, -1); //show that we are adding a file to the repository
+							editor.addFile(resourceURIPath.toDecodedString(), null, -1); //show that we are adding a file to the repository
 						}
-						editor.applyTextDelta(resourceURIPath.toString(), null); //start with a blank checksum; we'll not compare the file to any existing file, even when updating files
+						editor.applyTextDelta(resourceURIPath.toDecodedString(), null); //start with a blank checksum; we'll not compare the file to any existing file, even when updating files
 						final SVNDeltaGenerator deltaGenerator = new SVNDeltaGenerator();
-						final String checksum = deltaGenerator.sendDelta(resourceURIPath.toString(), inputStream, editor, true); //create a new delta for the contents
+						final String checksum = deltaGenerator.sendDelta(resourceURIPath.toDecodedString(), inputStream, editor, true); //create a new delta for the contents
 						if(resourceDescription != null) //if we have a description of the resource, set its properties
 						{
 							alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), editor, dirEntry,
 									SVNNodeKind.FILE); //alter the properties to be exactly those specified by the given resource description
 						}
-						editor.closeFile(resourceURIPath.toString(), checksum); //finish the file addition
+						editor.closeFile(resourceURIPath.toDecodedString(), checksum); //finish the file addition
 					}
 					editor.closeDir(); //close the root
 					editor.closeEdit(); //try to finalize the edit
@@ -710,7 +726,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 
 				try
 				{
-					final SVNNodeKind nodeKind = svnRepository.checkPath(resourceURIPath.toString(), -1); //see what kind of resource this is
+					final SVNNodeKind nodeKind = svnRepository.checkPath(resourceURIPath.toDecodedString(), -1); //see what kind of resource this is
 					if(nodeKind == SVNNodeKind.NONE) //if there is no node
 					{
 						return; //the node doesn't exist, so no need to delete it
@@ -720,7 +736,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					try
 					{
 						editor.openRoot(-1); //open the root to start making changes
-						editor.deleteEntry(resourceURIPath.toString(), -1); //delete the directory
+						editor.deleteEntry(resourceURIPath.toDecodedString(), -1); //delete the directory
 						editor.closeDir(); //close the root
 						editor.closeEdit(); //try to finalize the edit
 					}
@@ -748,7 +764,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		{
 			try
 			{
-				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the directory entry for this resource
+				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toDecodedString(), -1); //get the directory entry for this resource
 				final SVNNodeKind nodeKind = checkNodeKind(dirEntry.getKind(), resourceURI); //make sure the node is the correct kind for our resource URI, and that the node exists
 				final ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource property modification.", null, true, null); //get a commit editor to the repository
 				try
@@ -756,11 +772,11 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					editor.openRoot(-1); //open the root to start making changes
 					if(nodeKind == SVNNodeKind.FILE) //open the file or directory for editing
 					{
-						editor.openFile(resourceURIPath.toString(), -1);
+						editor.openFile(resourceURIPath.toDecodedString(), -1);
 					}
 					else if(nodeKind == SVNNodeKind.DIR)
 					{
-						editor.openDir(resourceURIPath.toString(), -1);
+						editor.openDir(resourceURIPath.toDecodedString(), -1);
 					}
 					else
 					{
@@ -769,7 +785,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					alterResourceProperties(resourceURI, resourceAlteration, editor, dirEntry, nodeKind); //create alter the properties of this resource
 					if(nodeKind == SVNNodeKind.FILE) //if this was a file, close its edits
 					{
-						editor.closeFile(resourceURIPath.toString(), null);
+						editor.closeFile(resourceURIPath.toDecodedString(), null);
 					}
 					editor.closeEdit(); //try to finalize the edit
 				}
@@ -878,7 +894,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			}
 			else
 			{
-				editor.changeFileProperty(resourceURIPath.toString(), propertyName, propertyValue);
+				editor.changeFileProperty(resourceURIPath.toDecodedString(), propertyName, propertyValue);
 			}
 		}
 	}
@@ -936,9 +952,9 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		{
 			try
 			{
-				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toString(), -1); //get the directory entry for this resource
+				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toDecodedString(), -1); //get the directory entry for this resource
 				checkNodeKind(dirEntry.getKind(), resourceURI); //make sure the node is the correct kind for our resource URI, and that the node exists
-				final SVNNodeKind destinationNodeKind = svnRepository.checkPath(destinationURIPath.toString(), -1);
+				final SVNNodeKind destinationNodeKind = svnRepository.checkPath(destinationURIPath.toDecodedString(), -1);
 				if(destinationNodeKind != SVNNodeKind.NONE && !overwrite) //if the destination resource already exists but we shouldn't overwrite
 				{
 					throw new ResourceStateException(destinationURI, "Destination resource already exists.");
@@ -949,20 +965,20 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					editor.openRoot(-1); //open the root to start making changes
 					if(destinationNodeKind != SVNNodeKind.NONE) //if the destination resource already exists
 					{
-						editor.deleteEntry(destinationURIPath.toString(), -1); //delete the destination resource
+						editor.deleteEntry(destinationURIPath.toDecodedString(), -1); //delete the destination resource
 					}
 					if(isCollectionURI(resourceURI)) //if we're copying a collection
 					{
-						editor.addDir(destinationURIPath.toString(), resourceURIPath.toString(), dirEntry.getRevision()); //copy the existing directory at its latest revision
+						editor.addDir(destinationURIPath.toDecodedString(), resourceURIPath.toDecodedString(), dirEntry.getRevision()); //copy the existing directory at its latest revision
 						editor.closeDir(); //close the copied directory
 					}
 					else
 					{
-						editor.addFile(destinationURIPath.toString(), resourceURIPath.toString(), dirEntry.getRevision()); //copy the existing file at its latest revision
+						editor.addFile(destinationURIPath.toDecodedString(), resourceURIPath.toDecodedString(), dirEntry.getRevision()); //copy the existing file at its latest revision
 					}
 					if(move) //if this is a move
 					{
-						editor.deleteEntry(resourceURIPath.toString(), -1); //delete the source resource
+						editor.deleteEntry(resourceURIPath.toDecodedString(), -1); //delete the source resource
 					}
 					editor.closeDir(); //close the root
 					editor.closeEdit(); //try to finalize the edit
@@ -1048,7 +1064,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 				}
 				final URI contentURI = resolve(resourceURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content
 				final URIPath contentURIPath = getResourceURIPath(contentURI);
-				final SVNDirEntry contentDirEntry = svnRepository.info(contentURIPath.toString(), -1); //get the directory entry for the special collection content resource
+				final SVNDirEntry contentDirEntry = svnRepository.info(contentURIPath.toDecodedString(), -1); //get the directory entry for the special collection content resource
 				if(contentDirEntry != null) //if there is a special collection content file
 				{
 					contentLength = contentDirEntry.getSize(); //use the size of the special collection content resource
@@ -1075,11 +1091,11 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					properties = new SVNProperties(); //load the properties from the repository
 					if(nodeKind == SVNNodeKind.FILE) //open the file or directory for editing
 					{
-						svnRepository.getFile(resourceURIPath.toString(), -1, properties, null);
+						svnRepository.getFile(resourceURIPath.toDecodedString(), -1, properties, null);
 					}
 					else if(nodeKind == SVNNodeKind.DIR)
 					{
-						svnRepository.getDir(resourceURIPath.toString(), -1, properties, (Collection<?>)null);
+						svnRepository.getDir(resourceURIPath.toDecodedString(), -1, properties, (Collection<?>)null);
 					}
 					else
 					{

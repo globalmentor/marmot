@@ -115,7 +115,7 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	/**
 	 * Translates a public URI in the repository to a URI path relative to the public URI.
 	 * @param resourceURI The URI in the public URI namespace.
-	 * @return A URI equivalent to the public URI in the private URI namespace.
+	 * @return The URI path of the resource relative to the public URI.
 	 * @throws NullPointerException if the given resource URI is <code>null</code>.
 	 * @throws IllegalArgumentException if the given resource URI is not in the public resource namespace.
 	 */

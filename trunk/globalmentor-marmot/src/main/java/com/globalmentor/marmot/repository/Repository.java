@@ -249,6 +249,12 @@ public interface Repository extends Disposable
 
 	/**
 	 * Checks to make sure the resource designated by the given resource URI is within this repository.
+	 * The URI is normalized and canonicalized to ensure that:
+	 * <ul>
+	 * 	<li>Its path segments are normalized.</li>
+	 * 	<li>It only contains valid URI characters.</li>
+	 * 	<li>Encoded characters are in canonical case.</li>
+	 * </ul>
 	 * @param resourceURI The URI of the resource to check.
 	 * @return The normalized form of the given resource URI.
 	 * @throws NullPointerException if the given resource URI is <code>null</code>.

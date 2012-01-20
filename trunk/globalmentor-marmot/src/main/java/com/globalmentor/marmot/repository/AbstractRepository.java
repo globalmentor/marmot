@@ -390,7 +390,7 @@ public abstract class AbstractRepository implements Repository
 	 */
 	public URI checkResourceURI(URI resourceURI) throws IllegalArgumentException
 	{
-		resourceURI = normalize(checkInstance(resourceURI, "Resource URI cannot be null.")); //normalize the URI
+		resourceURI = canonicalize(normalize(checkInstance(resourceURI, "Resource URI cannot be null."))); //normalize and canonicalize the URI
 		if(!isChild(getRootURI(), resourceURI)) //if the given resource URI does not designate a resource within this repository's URI namespace (this will normalize the URI, but as we need to return a normalized form it's better to normalize first so that actual normalization changes won't have to be done twice)
 		{
 			throw new IllegalArgumentException(resourceURI + " does not designate a resource within the repository " + getRootURI());
