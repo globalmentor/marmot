@@ -40,6 +40,10 @@ import static com.globalmentor.urf.TURF.*;
 /**
  * Repository stored in a file system.
  * <p>
+ * This implementation considers {@link Content#CREATED_PROPERTY_URI} to be a live property, although it is never retrieved because Java 6 cannot access the
+ * file creation time.
+ * </p>
+ * <p>
  * This implementation uses the file last modified timestamp to store the {@value Content#MODIFIED_PROPERTY_URI} property. The content modified property is not
  * saved for collections with no content. The creation timestamp {@value Content#CREATED_PROPERTY_URI} is not stored in order to prevent needless creation of
  * description files.
@@ -49,7 +53,7 @@ import static com.globalmentor.urf.TURF.*;
  * </p>
  * @author Garret Wilson
  */
-public class FileRepository extends AbstractHierarchicalSourceRepository	//TODO make Content.created a live property and be done with it; make the synchronizer ignore the created date
+public class FileRepository extends AbstractHierarchicalSourceRepository //TODO make Content.created a live property and be done with it; make the synchronizer ignore the created date
 {
 
 	//TODO see http://lists.apple.com/archives/java-dev/2006/Aug/msg00325.html ; fix non-ASCII characters getting in filename URI
@@ -151,6 +155,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository	//TODO 
 	public FileRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
 	{
 		super(publicRepositoryURI, privateRepositoryURI); //construct the parent class
+		addLivePropertyURI(Content.CREATED_PROPERTY_URI); //this repository considers content created a live property
 		/*TODO decide if how we want initialization to occur, especially using PLOOP
 				if(!FILE_SCHEME.equals(privateRepositoryURI.getScheme()))	//if the private repository URI scheme is not the file scheme
 				{
@@ -726,13 +731,6 @@ public class FileRepository extends AbstractHierarchicalSourceRepository	//TODO 
 		{
 			setModified(resource, contentModified); //set the modified timestamp as the last modified date
 		}
-		/*TODO del; don't use a creation date in the file repository
-				final URFDateTime created=getCreated(resource);	//try to determine the creation date and time; the stored creation time will always trump everything else
-				if(created==null)	//if there is no creation date
-				{
-					setCreated(resource, contentModified);	//set the created time as the last modified date of the file, as Java doesn't allow access to the creation time
-				}
-		*/
 		return resource; //return the resource that represents the file
 	}
 
@@ -826,10 +824,8 @@ public class FileRepository extends AbstractHierarchicalSourceRepository	//TODO 
 	}
 
 	/**
-	 * Saves a resource description for a single file. Live properties are ignored. If the {@value Content#MODIFIED_PROPERTY_URI} property is present, it is not
-	 * saved and the file modified time is updated to match that value. If the {@value Content#CREATED_PROPERTY_URI} property is present and it is identical to
-	 * the {@value Content#MODIFIED_PROPERTY_URI} property, it is not saved. (This is to prevent creating description files/streams for every file created.) If
-	 * the {@value Content#CREATED_PROPERTY_URI} property is present and the resource is a collection with no content, it is not saved. If the resource
+	 * Saves a resource description for a single file. Live properties, including {@value Content#CREATED_PROPERTY_URI}, are ignored. If the
+	 * {@value Content#MODIFIED_PROPERTY_URI} property is present, it is not saved and the file modified time is updated to match that value. If the resource
 	 * description file does not exist and there are no properties to save, no resource description file is created.
 	 * <p>
 	 * If the {@link Content#MODIFIED_PROPERTY_URI} property is being set/added, all previous values are ignored (i.e. the {@link Content#MODIFIED_PROPERTY_URI}
@@ -865,15 +861,6 @@ public class FileRepository extends AbstractHierarchicalSourceRepository	//TODO 
 		if(modified != null) //if the last modified time was indicated
 		{
 			resourceDescription.removePropertyValues(Content.MODIFIED_PROPERTY_URI); //remove all last-modified values from the description we'll actually save
-		}
-		final URFDateTime created = getCreated(resourceDescription); //see if the description indicates the created time
-		if(created != null) //if the created time is present
-		{
-			if((modified != null && created.getTime() == modified.getTime()) //if the created time is the same as the modified time TODO decide how useful these are
-					|| (isCollection && contentFile == resourceFile)) //or if this is a collection with no content
-			{
-				resourceDescription.removePropertyValues(Content.CREATED_PROPERTY_URI); //remove all created timestamp values from the description to save, as Java can't distinguish between content created and modified and they'll both be initialized from the same value, anyway, when reading
-			}
 		}
 		final File resourceDescriptionFile = getResourceDescriptionFile(resourceFile); //get the file for storing the description
 		if(resourceDescription.hasProperties() || resourceDescriptionFile.exists()) //if there are any properties to set (otherwise, don't create an empty properties file) or the description file already exists
