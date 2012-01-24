@@ -123,6 +123,8 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	public SVNKitSubversionRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
 	{
 		super(publicRepositoryURI, privateRepositoryURI); //construct the parent class
+		addLivePropertyURI(Content.CREATED_PROPERTY_URI); //this repository considers content created a live property
+		addLivePropertyURI(Content.MODIFIED_PROPERTY_URI); //this repository considers content modified a live property
 		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO = (URFResourceTURFIO<URFResource>)getDescriptionIO(); //get the description I/O
 		urfResourceDescriptionIO.setBOMWritten(false); //turn off BOM generation
 		urfResourceDescriptionIO.setFormatted(false); //turn off formatting
