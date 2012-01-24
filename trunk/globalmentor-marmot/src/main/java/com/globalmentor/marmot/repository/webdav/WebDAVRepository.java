@@ -63,13 +63,11 @@ import org.w3c.dom.*;
  * WebDAV property name is formed using the URF property URI as the namespace and the string {@value #URF_TOKEN_LOCAL_NAME} as a local name, because WebDAV
  * requires that each property have a separate namespace and local name.
  * </p>
- * 
  * <p>
  * This implementation stores the {@value Content#MODIFIED_PROPERTY_URI} property normally on all resources, including collections---notably, that property is
  * not stored with the {@link AbstractRepository#COLLECTION_CONTENT_NAME} resource. This implementation considers the
  * {@link AbstractRepository#COLLECTION_CONTENT_NAME} property to be a live property.
  * </p>
- * 
  * <p>
  * This implementation requires exact URIs and does not follow HTTP redirects. Any redirection responses are interpreted as indicating that the resource does
  * not exist.
@@ -1119,30 +1117,24 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 				throw new DataException(illegalArgumentException);
 			}
 		}
-		/*TODO fix synchronization to ignore or delete
-				URFDateTime created = getCreated(resource); //try to determine the creation date and time; the stored creation time will always trump everything else
-				if(created == null) //if no creation time is specified
+		final WebDAVProperty webdavCreationDateProperty = properties.get(CREATION_DATE_PROPERTY_NAME); //D:creationdate (live property)
+		if(webdavCreationDateProperty != null)
+		{
+			final WebDAVPropertyValue propertyValue = webdavCreationDateProperty.getValue(); //get the value of the property
+			if(propertyValue != null)
+			{
+				final String creationDateString = propertyValue.getText();
+				try
 				{
-					final WebDAVProperty webdavCreationDateProperty = properties.get(CREATION_DATE_PROPERTY_NAME); //D:creationdate
-					if(webdavCreationDateProperty != null)
-					{
-						final WebDAVPropertyValue propertyValue = webdavCreationDateProperty.getValue(); //get the value of the property
-						if(propertyValue != null)
-						{
-							final String creationDateString = propertyValue.getText();
-							try
-							{
-								created = URFDateTime.valueOfTimestamp(creationDateString); //parse the creation date; the WebDAV D:creationdate property uses the RFC 3339 Internet timestamp ISO 8601 profile
-								setCreated(resource, created); //set the created date time
-							}
-							catch(final IllegalArgumentException illegalArgumentException) //if the creation date does not have the correct syntax
-							{
-								throw new DataException("Illegal WebDAV " + CREATION_DATE_PROPERTY_NAME.getLocalName() + " value: " + creationDateString, illegalArgumentException);
-							}
-						}
-					}
+					URFDateTime created = URFDateTime.valueOfTimestamp(creationDateString); //parse the creation date; the WebDAV D:creationdate property uses the RFC 3339 Internet timestamp ISO 8601 profile
+					setCreated(resource, created); //set the created date time
 				}
-		*/
+				catch(final IllegalArgumentException illegalArgumentException) //if the creation date does not have the correct syntax
+				{
+					throw new DataException("Illegal WebDAV " + CREATION_DATE_PROPERTY_NAME.getLocalName() + " value: " + creationDateString, illegalArgumentException);
+				}
+			}
+		}
 		URFDateTime modified = getModified(resource); //try to determine the modified date and time; the stored modified time will always trump everything else
 		if(modified == null) //if no modified time is specified
 		{

@@ -53,7 +53,7 @@ import static com.globalmentor.urf.TURF.*;
  * </p>
  * @author Garret Wilson
  */
-public class FileRepository extends AbstractHierarchicalSourceRepository //TODO make Content.created a live property and be done with it; make the synchronizer ignore the created date
+public class FileRepository extends AbstractHierarchicalSourceRepository
 {
 
 	//TODO see http://lists.apple.com/archives/java-dev/2006/Aug/msg00325.html ; fix non-ASCII characters getting in filename URI
