@@ -46,19 +46,19 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 	/** The Subversion custom property namespace converted to a string for quick string comparisons. */
 	protected final static String SUBVERSION_CUSTOM_NAMESPACE = SUBVERSION_CUSTOM_NAMESPACE_URI.toString();
 
-	/** The Subversion version of the synchronization WebDAV get last modified property. */
-	protected final static WebDAVPropertyName SUBVERSION_SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME = new WebDAVPropertyName(SUBVERSION_CUSTOM_NAMESPACE,
-			SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME.getLocalName());	//TODO fix; was this accidentally not used?
+//	/** The Subversion version of the synchronization WebDAV get last modified property. */
+//	protected final static WebDAVPropertyName SUBVERSION_SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME = new WebDAVPropertyName(SUBVERSION_CUSTOM_NAMESPACE,
+//			SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME.getLocalName());	//TODO fix; was this accidentally not used?
 
-	/**
-	 * Determines the WebDAV property name to represent the synchronization WebDAV get last modified property. This version returns a version of the property
-	 * compatible with Subversion.
-	 * @return The WebDAV property name to use in representing the synchronization WebDAV get last modified property.
-	 */
-	protected WebDAVPropertyName getSyncWebDAVGetLastModifiedWebDAVPropertyName()
-	{
-		return SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME;	//TODO maybe just return null and abandon this altogether for Subversion
-	}
+//	/**
+//	 * Determines the WebDAV property name to represent the synchronization WebDAV get last modified property. This version returns a version of the property
+//	 * compatible with Subversion.
+//	 * @return The WebDAV property name to use in representing the synchronization WebDAV get last modified property.
+//	 */
+//	protected WebDAVPropertyName getSyncWebDAVGetLastModifiedWebDAVPropertyName()
+//	{
+//		return SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME;	//TODO maybe just return null and abandon this altogether for Subversion
+//	}
 
 	/**
 	 * Default constructor with no root URI defined. The root URI must be defined before the repository is opened.

@@ -31,6 +31,7 @@ import com.globalmentor.marmot.repository.svn.svnkit.SVNKitSubversionRepository;
  * Tests repositories using an SVNKit-based Subversion repository.
  * 
  * @author Garret Wilson
+ * @see SVNKitSubversionRepository
  */
 public class SVNKitSubversionRepositoryTest extends AbstractFileRepositoryTest
 {

@@ -59,10 +59,7 @@ import com.globalmentor.util.DataException;
  * </p>
  * 
  * <p>
- * This implementation stores explicit {@link Content#CREATED_PROPERTY_URI} and {@link Content#MODIFIED_PROPERTY_URI} properties for all resources, but the
- * resource live last modified timestamp will override the given content modified date when retrieving properties. For collections, the
- * {@link Content#MODIFIED_PROPERTY_URI} property is stored on the actual collection resource, but the retrieved live content modified date is retrieved from
- * the content resource, if any.
+ * This implementation considers {@link Content#CREATED_PROPERTY_URI} and {@link Content#MODIFIED_PROPERTY_URI} to be live properties.
  * </p>
  * @author Garret Wilson
  */
@@ -588,7 +585,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	/**
 	 * Stores the contents of a new or existing resource with the given optional description and contents from an input stream. The resource URI is guaranteed to
 	 * be normalized and valid for the repository and the repository is guaranteed to be open. The directory entry, if any, is guaranteed to be correct for the
-	 * type of resoure being created.
+	 * type of resource being created.
 	 * @param resourceURI The reference URI to use to identify the resource.
 	 * @param resourceDescription A description of the resource, or <code>null</code> if the resource properties should not be altered; the resource URI is
 	 *          ignored.
@@ -764,7 +761,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		{
 			try
 			{
-				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toDecodedString(), -1); //get the directory entry for this resource
+				SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toDecodedString(), -1); //get the directory entry for this resource
 				final SVNNodeKind nodeKind = checkNodeKind(dirEntry.getKind(), resourceURI); //make sure the node is the correct kind for our resource URI, and that the node exists
 				final ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource property modification.", null, true, null); //get a commit editor to the repository
 				try
@@ -794,6 +791,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					editor.abortEdit(); //abort the edit we had scheduled
 					throw svnException; //rethrow the exception
 				}
+				dirEntry = svnRepository.info(resourceURIPath.toDecodedString(), -1); //get updated directory entry for this resource---after all, we just altered properties
 				return createResourceDescription(createURF(), resourceURI, dirEntry); //get the latest description of the resource and return it
 			}
 			catch(final IOException ioException)
@@ -848,7 +846,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		for(final URFProperty propertyAddition : resourceAlteration.getPropertyAdditions()) //look at all the property additions
 		{
 			final URI propertyURI = propertyAddition.getPropertyURI(); //get the URI of the URF property
-			if(!livePropertyURIs.contains(propertyURI)) //if this is not a live property
+			if(!livePropertyURIs.contains(propertyURI)) //don't add live properties
 			{
 				if(!resourceAlteration.getPropertyURIRemovals().contains(propertyURI)) //if a property addition was requested instead of a property setting (i.e. without first removing all the URI properties), we'll need to first gather the existing properties
 				{

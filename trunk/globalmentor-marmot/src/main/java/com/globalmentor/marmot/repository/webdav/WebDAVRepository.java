@@ -63,6 +63,13 @@ import org.w3c.dom.*;
  * WebDAV property name is formed using the URF property URI as the namespace and the string {@value #URF_TOKEN_LOCAL_NAME} as a local name, because WebDAV
  * requires that each property have a separate namespace and local name.
  * </p>
+ * 
+ * <p>
+ * This implementation stores the {@value Content#MODIFIED_PROPERTY_URI} property normally on all resources, including collections---notably, that property is
+ * not stored with the {@link AbstractRepository#COLLECTION_CONTENT_NAME} resource. This implementation considers the
+ * {@link AbstractRepository#COLLECTION_CONTENT_NAME} property to be a live property.
+ * </p>
+ * 
  * <p>
  * This implementation requires exact URIs and does not follow HTTP redirects. Any redirection responses are interpreted as indicating that the resource does
  * not exist.
@@ -79,25 +86,6 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 
 	/** The URI to the Marmot WebDAV repository namespace. */
 	public final static URI MARMOT_WEBDAV_REPOSITORY_NAMESPACE_URI = Marmot.MARMOT_NAMESPACE_URI.resolve("repository/webdav/");
-
-	/**
-	 * The server's last modified time, using RFC 1123 format, reported by the {@value WebDAV#GET_LAST_MODIFIED_PROPERTY_NAME} property when the
-	 * {@link Content#MODIFIED_PROPERTY_URI} property was written. This is stored as a duplicate time value so that it can be detected if any other software
-	 * modified the file without Marmot's knowledge. If the value of this property matches the {@value WebDAV#GET_LAST_MODIFIED_PROPERTY_NAME} property, it will
-	 * be assumed that {@value Content#MODIFIED_PROPERTY_URI} stores the correct last modified time set by this repository.
-	 */
-	protected final static WebDAVPropertyName SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME = new WebDAVPropertyName(MARMOT_WEBDAV_REPOSITORY_NAMESPACE_URI,
-			"syncWebDAVGetLastModified");
-
-	/**
-	 * Determines the WebDAV property name to represent the synchronization WebDAV get last modified property.
-	 * @return The WebDAV property name to use in representing the synchronization WebDAV get last modified property, or <code>null</code> if no synchronization
-	 *         last modified property should be used.
-	 */
-	protected WebDAVPropertyName getSyncWebDAVGetLastModifiedWebDAVPropertyName()
-	{
-		return SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME;
-	}
 
 	//TODO the current technique of erasing the password after each call may become obsolete when the HTTP client supports persistent connections
 
@@ -188,6 +176,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	{
 		super(publicRepositoryURI, privateRepositoryURI); //construct the parent class
 		this.httpClient = httpClient; //save the HTTP client
+		addLivePropertyURI(Content.CREATED_PROPERTY_URI); //this repository considers content created a live property
 		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO = (URFResourceTURFIO<URFResource>)getDescriptionIO(); //get the description I/O
 		urfResourceDescriptionIO.setBOMWritten(false); //turn off BOM generation
 		urfResourceDescriptionIO.setFormatted(false); //turn off formatting
@@ -368,7 +357,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 
 	/** {@inheritDoc} This implementation returns <code>false</code> for all resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
 	@Override
-	protected boolean resourceExistsImpl(URI resourceURI) throws ResourceIOException
+	protected boolean resourceExistsImpl(final URI resourceURI) throws ResourceIOException
 	{
 		final URI privateResourceURI = getSourceResourceURI(resourceURI); //get the resource URI in the private space
 		if(!isSourceResourceVisible(privateResourceURI)) //if this resource should not be public
@@ -797,9 +786,8 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * the additions but the last one.
 	 * </p>
 	 * <p>
-	 * If the {@link Content#MODIFIED_PROPERTY_URI} property is being set/added, the property returned by
-	 * {@link #getSyncWebDAVGetLastModifiedWebDAVPropertyName()}, if any, will be updated with the current value of the
-	 * {@link WebDAV#GET_LAST_MODIFIED_PROPERTY_NAME} property.
+	 * If the {@link Content#MODIFIED_PROPERTY_URI} property is being set/added, all previous values are ignored (i.e. the {@link Content#MODIFIED_PROPERTY_URI}
+	 * is always considered to be <em>set</em>, and never <em>add</em>). Removal of {@link Content#MODIFIED_PROPERTY_URI} is ignored.
 	 * </p>
 	 * @param resourceURI The reference URI of the resource.
 	 * @param resourceAlteration The specification of the alterations to be performed on the resource.
@@ -821,72 +809,70 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		final Set<URI> propertyURIRemovals = new HashSet<URI>(resourceAlteration.getPropertyURIRemovals()); //get the property URI removals, which we'll optimize based upon the property settings
 		Map<WebDAVPropertyName, WebDAVProperty> properties = null; //we'll only retrieve properties if needed
 		URFResource resourceDescription = null; //we'll only retrieve the existing resource description if needed
-		boolean hasContentModifiedAddition = false; //we'll determine if the content modified properties is being added
+		//		final boolean isCollection = isCollectionURI(resourceURI); //see if we're modifying the properties of a collection
+		//		URI contentURI = null;
+		//		URFProperty collectionModifiedPropertyAddition = null; //we'll set this if we're updating the content modified time of a collection
 		//determine the URF properties that should be added for each URF property
 		final CollectionMap<URI, URFProperty, Set<URFProperty>> urfPropertyURIPropertyAdditions = new HashSetHashMap<URI, URFProperty>(); //create a map of sets of properties to add, keyed to their property URIs, so that we can find multiple property values for a single property if present
 		for(final URFProperty propertyAddition : resourceAlteration.getPropertyAdditions()) //look at all the property additions
 		{
 			final URI propertyURI = propertyAddition.getPropertyURI(); //get the URI of the URF property
-			if(!hasContentModifiedAddition && propertyURI.equals(MODIFIED_PROPERTY_URI)) //if we're setting the content modified property, later we'll need to write the synchronization last modified property
+			if(livePropertyURIs.contains(propertyURI)) //don't add live properties
 			{
-				hasContentModifiedAddition = true;
+				continue;
 			}
-			if(!livePropertyURIs.contains(propertyURI)) //if this is not a live property
-			{
-				if(!resourceAlteration.getPropertyURIRemovals().contains(propertyURI)) //if a property addition was requested instead of a property setting (i.e. without first removing all the URI properties), we'll need to first gather the existing properties
-				{
-					if(resourceDescription == null) //if we don't yet have a description for the resource
-					{
-						final URF urf = createURF(); //create a new URF data model
-						final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
-						try
+			/*TODO del if not needed
+						if(isCollection && Content.MODIFIED_PROPERTY_URI.equals(propertyURI)) //if this is the content modified property for a collection, treat it separately later if we're using a separate collection content resource
 						{
-							properties = webdavResource.propFind(); //get the properties of this resource
-							resourceDescription = createResourceDescription(urf, resourceURI, properties); //create a resource from this URI and property list
-						}
-						finally
-						{
-							if(passwordAuthentication != null) //if we used password authentication
+							contentURI = resolve(resourceURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content
+							final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
+							try
 							{
-								fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
+								final WebDAVResource contentWebDAVResource = new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource for the special collection content resource
+								if(contentWebDAVResource.exists()) //if there is a special collection content resource
+								{
+									collectionModifiedPropertyAddition = propertyAddition; //we'll modify the content modified value on the separate content resource
+									continue; //don't update this property on this resource---use a separate resource later
+								}
+							}
+							finally
+							{
+								if(passwordAuthentication != null) //if we used password authentication
+								{
+									fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
+								}
 							}
 						}
-					}
-					for(final URFProperty existingProperty : resourceDescription.getProperties(propertyURI)) //gather the existing properties; we'll have to combine them all into one WebDAV property
-					{
-						urfPropertyURIPropertyAdditions.addItem(propertyURI, existingProperty); //indicate that this is another URF property to add for this property URI
-					}
-				}
-				urfPropertyURIPropertyAdditions.addItem(propertyURI, propertyAddition); //indicate that this is another URF property to add/set for this property URI
-				propertyURIRemovals.remove(propertyURI); //indicate that we don't have to  remove this property, because it will be removed by setting it
-			}
-		}
-		WebDAVPropertyValue syncWebDAVGetLastContentModified = null;
-		if(hasContentModifiedAddition) //if we're setting the content modified property, write the synchronization last modified property
-		{
-			if(resourceDescription == null) //if we don't yet have a description for the resource
+			*/
+			if(!resourceAlteration.getPropertyURIRemovals().contains(propertyURI)) //if a property addition was requested instead of a property setting (i.e. without first removing all the URI properties), we'll need to first gather the existing properties
 			{
-				final URF urf = createURF(); //create a new URF data model
-				final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
-				try
+				if(resourceDescription == null) //if we don't yet have a description for the resource
 				{
-					properties = webdavResource.propFind(); //get the properties of this resource
-					resourceDescription = createResourceDescription(urf, resourceURI, properties); //create a resource from this URI and property list
-				}
-				finally
-				{
-					if(passwordAuthentication != null) //if we used password authentication
+					final URF urf = createURF(); //create a new URF data model
+					final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
+					try
 					{
-						fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
+						properties = webdavResource.propFind(); //get the properties of this resource
+						resourceDescription = createResourceDescription(urf, resourceURI, properties); //create a resource from this URI and property list
+					}
+					finally
+					{
+						if(passwordAuthentication != null) //if we used password authentication
+						{
+							fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
+						}
 					}
 				}
+				for(final URFProperty existingProperty : resourceDescription.getProperties(propertyURI)) //gather the existing properties; we'll have to combine them all into one WebDAV property
+				{
+					urfPropertyURIPropertyAdditions.addItem(propertyURI, existingProperty); //indicate that this is another URF property to add for this property URI
+				}
 			}
-			final WebDAVProperty syncWebDAVGetLastContentModifiedProperty = properties.get(GET_LAST_MODIFIED_PROPERTY_NAME); //get the last WebDAV getlastmodified we know of
-			if(syncWebDAVGetLastContentModifiedProperty != null) //if we know of a getlastmodified property
-			{
-				syncWebDAVGetLastContentModified = syncWebDAVGetLastContentModifiedProperty.getValue(); //get the value
-			}
+			urfPropertyURIPropertyAdditions.addItem(propertyURI, propertyAddition); //indicate that this is another URF property to add/set for this property URI
+			propertyURIRemovals.remove(propertyURI); //indicate that we don't have to remove this property, because it will be removed by setting it
 		}
+		propertyURIRemovals.remove(Content.MODIFIED_PROPERTY_URI); //we never allow adding of content modified---only setting
+		//at this point we have only properties to set and properties to remove
 		//convert the URF property additions to WebDAV properties
 		final Set<WebDAVProperty> setWebDAVProperties = new HashSet<WebDAVProperty>(); //keep track of which WebDAV properties to set based upon the URF properties to add
 		for(final Map.Entry<URI, Set<URFProperty>> urfPropertyURIPropertyAdditionEntries : urfPropertyURIPropertyAdditions.entrySet())
@@ -895,24 +881,43 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			final WebDAVProperty webdavProperty = createWebDAVProperty(resourceURI, urfPropertyAdditions); //create a WebDAV property and value for these URF property
 			setWebDAVProperties.add(webdavProperty); //add this WebDAV property to the set of properties to set
 		}
-		if(syncWebDAVGetLastContentModified != null && getSyncWebDAVGetLastModifiedWebDAVPropertyName() != null) //if we have a synchronize property to write
-		{
-			setWebDAVProperties.add(new WebDAVProperty(getSyncWebDAVGetLastModifiedWebDAVPropertyName(), syncWebDAVGetLastContentModified)); //we'll update the last time we knew of a getlastmodified
-		}
 		//determine the WebDAV properties to remove
 		final Set<WebDAVPropertyName> removeWebDAVPropertyNames = new HashSet<WebDAVPropertyName>(); //keep track of which WebDAV property names to remove
 		for(final URI propertyURIRemoval : propertyURIRemovals) //look at all the property removals left after removing that which are irrelevant
 		{
 			final WebDAVPropertyName webdavPropertyName = createWebDAVPropertyName(propertyURIRemoval); //create a WebDAV property name from the URF property URI
-			removeWebDAVPropertyNames.add(webdavPropertyName); //add this WebDAV property name to the set of property names to remove
+			if(!livePropertyURIs.contains(propertyURIRemoval)) //if this is not a live property
+			{
+				removeWebDAVPropertyNames.add(webdavPropertyName); //add this WebDAV property name to the set of property names to remove
+			}
 		}
-		//ignore removal of live properties
-		for(final URI livePropertyURI : livePropertyURIs) //look at all live properties
+		if(!removeWebDAVPropertyNames.isEmpty() || !setWebDAVProperties.isEmpty()) //if we have something to remove or set
 		{
-			final WebDAVPropertyName liveWebDAVPropertyName = createWebDAVPropertyName(livePropertyURI); //create a WebDAV property name for the live property URI
-			removeWebDAVPropertyNames.remove(liveWebDAVPropertyName); //don't remove this property after all, as it's a live property
+			webdavResource.propPatch(removeWebDAVPropertyNames, setWebDAVProperties); //remove and set WebDAV properties
 		}
-		webdavResource.propPatch(removeWebDAVPropertyNames, setWebDAVProperties); //remove and set WebDAV properties
+		/*TODO del if not needed
+				if(collectionModifiedPropertyAddition != null) //if we are setting the modified property of a collection with a separate content resource
+				{
+					final WebDAVProperty modifiedWebdavProperty = createWebDAVProperty(resourceURI, urfPropertyAdditions); //create a WebDAV property and value for these URF property
+					
+					
+					assert contentURI != null;
+					final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
+					try
+					{
+						final WebDAVResource contentWebDAVResource = new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource for the special collection content resource
+						alterResourceProperties(contentURI, DefaultURFResourceAlteration.createSetPropertiesAlteration(collectionModifiedPropertyAddition),
+								contentWebDAVResource); //update the content resource's content modified date					
+					}
+					finally
+					{
+						if(passwordAuthentication != null) //if we used password authentication
+						{
+							fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
+						}
+					}
+				}
+		*/
 		final Map<WebDAVPropertyName, WebDAVProperty> newProperties = webdavResource.propFind(); //get the properties of this resource
 		return createResourceDescription(createURF(), resourceURI, newProperties); //create a resource from this URI and property list
 	}
@@ -1114,165 +1119,53 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 				throw new DataException(illegalArgumentException);
 			}
 		}
-		URFDateTime created = getCreated(resource); //try to determine the creation date and time; the stored creation time will always trump everything else
-		/*TODO del automatic content.created update 
-				if(created==null)	//if no creation time is specified
+		/*TODO fix synchronization to ignore or delete
+				URFDateTime created = getCreated(resource); //try to determine the creation date and time; the stored creation time will always trump everything else
+				if(created == null) //if no creation time is specified
 				{
-					final WebDAVProperty srtCreationTimeProperty=properties.get(SRTWebDAV.DEPRECATED_CREATION_TIME_PROPERTY_NAME);	//check for the SRT creation date which, if set by WebDrive, will trump the WebDAV creation date
-					if(srtCreationTimeProperty!=null)
+					final WebDAVProperty webdavCreationDateProperty = properties.get(CREATION_DATE_PROPERTY_NAME); //D:creationdate
+					if(webdavCreationDateProperty != null)
 					{
-						final WebDAVPropertyValue propertyValue=srtCreationTimeProperty.getValue();	//get the value of the property
-						if(propertyValue!=null)
+						final WebDAVPropertyValue propertyValue = webdavCreationDateProperty.getValue(); //get the value of the property
+						if(propertyValue != null)
 						{
-							final String creationDateString=propertyValue.getText();	//get the D:creationdate string
+							final String creationDateString = propertyValue.getText();
 							try
 							{
-								created=URFDateTime.valueOfTimestamp(creationDateString);	//parse the creation date
+								created = URFDateTime.valueOfTimestamp(creationDateString); //parse the creation date; the WebDAV D:creationdate property uses the RFC 3339 Internet timestamp ISO 8601 profile
+								setCreated(resource, created); //set the created date time
 							}
-							catch(final IllegalArgumentException illegalArgumentException)	//if the SRT creation date does not have the correct syntax, just log a warning; the SRT properties shouldn't break things if they aren't correct
+							catch(final IllegalArgumentException illegalArgumentException) //if the creation date does not have the correct syntax
 							{
-								Log.warn("Invalid "+CREATION_DATE_PROPERTY_NAME.getLocalName()+" value: "+creationDateString, illegalArgumentException);
+								throw new DataException("Illegal WebDAV " + CREATION_DATE_PROPERTY_NAME.getLocalName() + " value: " + creationDateString, illegalArgumentException);
 							}
 						}
-					}
-					if(created==null)	//if there was no SRT creation date, use the WebDAV creation date
-					{
-						final WebDAVProperty webdavCreationDateProperty=properties.get(CREATION_DATE_PROPERTY_NAME);	//D:creationdate
-						if(webdavCreationDateProperty!=null)
-						{
-							final WebDAVPropertyValue propertyValue=webdavCreationDateProperty.getValue();	//get the value of the property
-							if(propertyValue!=null)
-							{
-								final String creationDateString=propertyValue.getText();
-								try
-								{
-									created=URFDateTime.valueOfTimestamp(creationDateString);	//parse the creation date; the WebDAV D:creationdate property uses the RFC 3339 Internet timestamp ISO 8601 profile
-								}
-								catch(final IllegalArgumentException illegalArgumentException)	//if the creation date does not have the correct syntax
-								{
-									throw new DataException("Illegal WebDAV "+CREATION_DATE_PROPERTY_NAME.getLocalName()+" value: "+creationDateString, illegalArgumentException);
-								}
-							}
-						}
-					}
-					if(created!=null)	//if we know the created date and time
-					{
-						setCreated(resource, created);	//set the created date time
 					}
 				}
 		*/
-		URFDateTime webdavGetLastModified = null; //try to determine the modified date and time as WebDAV reports it
-		final WebDAVProperty webdavLastModifiedProperty = contentProperties.get(GET_LAST_MODIFIED_PROPERTY_NAME); //D:getlastmodified
-		if(webdavLastModifiedProperty != null)
+		URFDateTime modified = getModified(resource); //try to determine the modified date and time; the stored modified time will always trump everything else
+		if(modified == null) //if no modified time is specified
 		{
-			final WebDAVPropertyValue propertyValue = webdavLastModifiedProperty.getValue(); //get the value of the property
-			if(propertyValue != null)
+			final WebDAVProperty webdavLastModifiedProperty = contentProperties.get(GET_LAST_MODIFIED_PROPERTY_NAME); //D:getlastmodified
+			if(webdavLastModifiedProperty != null)
 			{
-				final String lastModifiedDateString = propertyValue.getText().trim(); //get the last modified date string
-				try
+				final WebDAVPropertyValue propertyValue = webdavLastModifiedProperty.getValue(); //get the value of the property
+				if(propertyValue != null)
 				{
-					final DateFormat httpDateFormat = new HTTPDateFormat(HTTPDateFormat.Style.RFC1123); //create an HTTP date formatter; the WebDAV D:getlastmodified property prefers the RFC 1123 style, as does HTTP
-					webdavGetLastModified = new URFDateTime(httpDateFormat.parse(lastModifiedDateString)); //parse the last modified date
-				}
-				catch(final java.text.ParseException parseException) //if the last modified time is not the correct type
-				{
-					throw new DataException("Illegal WebDAV " + GET_LAST_MODIFIED_PROPERTY_NAME.getLocalName() + " value: " + lastModifiedDateString, parseException);
-				}
-			}
-		}
-		URFDateTime modified = getModified(resource); //try to determine the modified date and time; the stored modified time will always trump everything else, unless the time is out of sync
-		if(modified != null && getSyncWebDAVGetLastModifiedWebDAVPropertyName() != null) //if we have an explicit modified date and time, verify that the file hasn't changed externally to Marmot
-		{
-			final WebDAVProperty syncWebDAVGetLastModifiedProperty = contentProperties.get(getSyncWebDAVGetLastModifiedWebDAVPropertyName()); //check sync modified time to see if we should use our modified value
-			if(syncWebDAVGetLastModifiedProperty != null)
-			{
-				final WebDAVPropertyValue syncWebDAVGetLastModifiedPropertyValue = syncWebDAVGetLastModifiedProperty.getValue(); //get the value of the property
-				if(syncWebDAVGetLastModifiedPropertyValue != null)
-				{
-					final String syncLastModifiedDateString = syncWebDAVGetLastModifiedPropertyValue.getText().trim(); //get the last modified date string
+					final String lastModifiedDateString = propertyValue.getText().trim(); //get the last modified date string
 					try
 					{
 						final DateFormat httpDateFormat = new HTTPDateFormat(HTTPDateFormat.Style.RFC1123); //create an HTTP date formatter; the WebDAV D:getlastmodified property prefers the RFC 1123 style, as does HTTP
-						final Date syncLastModifiedDate = httpDateFormat.parse(syncLastModifiedDateString); //parse the last modified date
-						if(syncLastModifiedDate.compareTo(webdavGetLastModified) < 0) //if the sync record of the last modified time is less than what it is now
-						{
-							modified = null; //don't use the explicit modified date and time; the resource must have been modified since we modified it
-						}
+						modified = new URFDateTime(httpDateFormat.parse(lastModifiedDateString)); //parse the last modified date
+						setModified(resource, modified); //set the modified date time
 					}
 					catch(final java.text.ParseException parseException) //if the last modified time is not the correct type
 					{
-						throw new DataException("Illegal WebDAV " + GET_LAST_MODIFIED_PROPERTY_NAME.getLocalName() + " value: " + syncLastModifiedDateString,
-								parseException);
+						throw new DataException("Illegal WebDAV " + GET_LAST_MODIFIED_PROPERTY_NAME.getLocalName() + " value: " + lastModifiedDateString, parseException);
 					}
 				}
 			}
 		}
-		if(modified == null) //if no modification date is indicated
-		{
-			if(webdavGetLastModified != null) //if there is a WebDAV last modified time
-			{
-				modified = webdavGetLastModified; //use the WebDAV last modified time unless we need to modify it
-			}
-			URFDateTime srtModified = null; //try to parse the SRT modified date
-			final WebDAVProperty srtModifiedTimeProperty = contentProperties.get(SRTWebDAV.DEPRECATED_MODIFIED_TIME_PROPERTY_NAME); //check for the SRT modification date which may override the modified date return by WebDrive
-			if(srtModifiedTimeProperty != null)
-			{
-				final WebDAVPropertyValue srtModifiedTimePropertyValue = srtModifiedTimeProperty.getValue(); //get the value of the property
-				if(srtModifiedTimePropertyValue != null)
-				{
-					final String srtModifiedTimeString = srtModifiedTimePropertyValue.getText();
-					try
-					{
-						srtModified = URFDateTime.valueOfTimestamp(srtModifiedTimeString); //parse the SRT modified date
-						if(modified != null) //if there is a WebDAV modified time, make sure we should override it
-						{
-							final WebDAVProperty srtTimestampProperty = contentProperties.get(SRTWebDAV.DEPRECATED_TIMESTAMP_PROPERTY_NAME); //check for the SRT timestamp to see if we should use the SRT modified value
-							if(srtTimestampProperty != null)
-							{
-								final WebDAVPropertyValue srtTimestampPropertyValue = srtTimestampProperty.getValue(); //get the value of the property
-								if(srtTimestampPropertyValue != null)
-								{
-									final String srtTimestampString = srtTimestampPropertyValue.getText();
-									try
-									{
-										final URFDateTime srtTimestamp = URFDateTime.valueOfTimestamp(srtTimestampString); //parse the SRT timestamp
-										if(srtTimestamp.compareTo(modified) < 0) //if the SRT record of the last modified time is less than what it is now
-										{
-											srtModified = null; //don't use the SRT modified date and time; the resource must have been modified since WebDrive modified it
-										}
-									}
-									catch(final IllegalArgumentException illegalArgumentException) //if the SRT timestamp does not have the correct syntax, just log a warning; the SRT properties shouldn't break things if they aren't correct
-									{
-										Log.warn("Invalid " + SRTWebDAV.DEPRECATED_TIMESTAMP_PROPERTY_NAME.getLocalName() + " value: " + srtTimestampString,
-												illegalArgumentException);
-									}
-								}
-							}
-						}
-					}
-					catch(final IllegalArgumentException illegalArgumentException) //if the SRT modification date does not have the correct syntax, just log a warning; the SRT properties shouldn't break things if they aren't correct
-					{
-						Log.warn("Invalid " + SRTWebDAV.DEPRECATED_MODIFIED_TIME_PROPERTY_NAME.getLocalName() + " value: " + srtModifiedTimeString,
-								illegalArgumentException);
-					}
-				}
-			}
-			if(srtModified != null) //if the SRT modified time should override the WebDAV modified time, if any
-			{
-				modified = srtModified; //override the WebDAV modified time, if any
-			}
-			if(modified != null) //if we know the last modified time
-			{
-				setModified(resource, modified); //set the modified date time
-			}
-		}
-
-		/*TODO del
-				if(!isCollection)	//if this is not a collection, try to get the content type of the resource if it wasn't specified already
-				{
-					updateContentType(resource);	//update the content type information based upon the repository defaults
-				}
-		*/
 		//TODO fix filename encoding/decoding---there's no way to know what operating system the server is using
 
 		//TODO encode in UTF-8

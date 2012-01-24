@@ -22,6 +22,7 @@ import com.globalmentor.marmot.repository.Repository;
  * Tests repositories using a standard file system.
  * 
  * @author Garret Wilson
+ * @see FileRepository
  */
 public class FileRepositoryTest extends AbstractFileRepositoryTest
 {

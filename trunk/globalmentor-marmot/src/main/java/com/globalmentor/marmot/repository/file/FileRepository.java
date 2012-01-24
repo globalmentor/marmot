@@ -41,7 +41,7 @@ import static com.globalmentor.urf.TURF.*;
  * Repository stored in a file system.
  * <p>
  * This implementation uses the file last modified timestamp to store the {@value Content#MODIFIED_PROPERTY_URI} property. The content modified property is not
- * saved for collections with no content. The creation timestamp {@value Content#MODIFIED_PROPERTY_URI} is not stored in order to prevent needless creation of
+ * saved for collections with no content. The creation timestamp {@value Content#CREATED_PROPERTY_URI} is not stored in order to prevent needless creation of
  * description files.
  * </p>
  * <p>
@@ -49,7 +49,7 @@ import static com.globalmentor.urf.TURF.*;
  * </p>
  * @author Garret Wilson
  */
-public class FileRepository extends AbstractHierarchicalSourceRepository
+public class FileRepository extends AbstractHierarchicalSourceRepository	//TODO make Content.created a live property and be done with it; make the synchronizer ignore the created date
 {
 
 	//TODO see http://lists.apple.com/archives/java-dev/2006/Aug/msg00325.html ; fix non-ASCII characters getting in filename URI
@@ -831,6 +831,10 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	 * the {@value Content#MODIFIED_PROPERTY_URI} property, it is not saved. (This is to prevent creating description files/streams for every file created.) If
 	 * the {@value Content#CREATED_PROPERTY_URI} property is present and the resource is a collection with no content, it is not saved. If the resource
 	 * description file does not exist and there are no properties to save, no resource description file is created.
+	 * <p>
+	 * If the {@link Content#MODIFIED_PROPERTY_URI} property is being set/added, all previous values are ignored (i.e. the {@link Content#MODIFIED_PROPERTY_URI}
+	 * is always considered to be <em>set</em>, and never <em>add</em>).
+	 * </p>
 	 * @param resourceDescription The resource description to save; the resource URI is ignored.
 	 * @param resourceFile The file of a resource.
 	 * @throws IOException if there is an error save the resource description.

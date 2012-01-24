@@ -65,7 +65,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	}
 
 	@Before
-	public void before()
+	public void before() throws IOException
 	{
 		repository = createRepository();
 	}
@@ -87,7 +87,6 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	@Test
 	public void testCreateResourceBytes() throws IOException
 	{
-
 		final int initialContentLength = (1 << 10) + 1;
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		testResourceContentBytes(resourceURI, false, Bytes.createRandom(initialContentLength));
@@ -168,10 +167,8 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	{
 		final int initialContentLength = (1 << 10) + 1;
 		final URI collectionResourceURI = repository.getRootURI().resolve(URIPath.encode("voc\u00ea-forr\u00f3-arrasta-p\u00e9-cora\u00e7\u00e3o-\u4eba/")); //collection: você-forró-arrasta-pé-coração-人
-		Log.debug("Collection URI: " + collectionResourceURI);
 		repository.createCollectionResource(collectionResourceURI);
 		final URI resourceURI = collectionResourceURI.resolve(URIPath.encode("\u0915\u0941\u091b-\u0915\u0941\u091b-\u0939\u094b\u0924\u093e-\u0939\u0948-\u4eba")); //resource: você-forró-arrasta-pé-coração/कुछ-कुछ-होता-है-人
-		Log.debug("Resource URI: " + resourceURI);
 		testResourceContentBytes(resourceURI, false, Bytes.createRandom(initialContentLength));
 		final List<URFResource> collectionChildren = repository.getChildResourceDescriptions(collectionResourceURI); //make sure the URIs of the children are what we expect
 		assertThat("URIs of i18n child resource not what expected", Sets.immutableSetOf(collectionChildren),
@@ -684,7 +681,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	}
 
 	@After
-	public void after()
+	public void after() throws IOException
 	{
 		repository = null;
 	}

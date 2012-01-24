@@ -32,12 +32,12 @@ import com.globalmentor.java.Strings;
 import com.globalmentor.log.Log;
 import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.security.MarmotSecurity;
-import com.globalmentor.model.NameValuePair;
-import com.globalmentor.model.ReadWriteLockObjectHolder;
+import com.globalmentor.model.*;
 import com.globalmentor.net.*;
 import com.globalmentor.urf.*;
 import com.globalmentor.urf.content.Content;
 
+import static com.globalmentor.collections.Sets.*;
 import static com.globalmentor.io.Charsets.*;
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Bytes.*;
@@ -89,14 +89,47 @@ public abstract class AbstractRepository implements Repository
 	/** The resource factory for resources in the Marmot security namespace. */
 	protected final static URFResourceFactory MARMOT_SECURITY_RESOURCE_FACTORY = new JavaURFResourceFactory(MarmotSecurity.class.getPackage());
 
+	/** The set of URIs that are considered live by default. */
+	public final static Set<URI> DEFAULT_LIVE_PROPERTY_URIS = immutableSetOf(Content.ACCESSED_PROPERTY_URI, Content.LENGTH_PROPERTY_URI);
+
 	/**
 	 * The name of a resource used to store the content of a collection. Normally the only properties stored with this special resource are the
-	 * {@link Content#LENGTH_PROPERTY_URI} and {@link Content#MODIFIED_PROPERTY_URI} properties.
+	 * {@link Content#LENGTH_PROPERTY_URI} and {@link Content#MODIFIED_PROPERTY_URI} properties; all other properties are stored with the logical collection
+	 * resource the contents of which this hidden resource contains.
 	 */
 	public final static String COLLECTION_CONTENT_NAME = "@"; //TODO add checks to prevent this resource from being accessed directly
 
 	/** The set of URIs that are considered live. */
-	protected final static Set<URI> LIVE_PROPERTY_URIS = unmodifiableSet(new HashSet<URI>(asList(Content.ACCESSED_PROPERTY_URI, Content.LENGTH_PROPERTY_URI)));
+	private Set<URI> livePropertyURIs = DEFAULT_LIVE_PROPERTY_URIS;
+
+	/**
+	 * Adds a property considered live.
+	 * @param livePropertyURI The additional property to consider live.
+	 */
+	protected void addLivePropertyURI(final URI livePropertyURI)
+	{
+		livePropertyURIs = immutableSetOf(livePropertyURIs, livePropertyURI); //add this live property to our existing live properties
+	}
+
+	/**
+	 * Retrieves the live properties, which dynamically determined attributes of the resource such as content size.
+	 * @return The thread-safe set of URIs of live properties.
+	 */
+	public Set<URI> getLivePropertyURIs()
+	{
+		return livePropertyURIs;
+	}
+
+	/**
+	 * Determines whether the indicated property is is a live, dynamically determined property.
+	 * @param propertyURI The URI identifying the property.
+	 * @return <code>true</code> if the property is a live property.
+	 * @throws NullPointerException if the given property URI is <code>null</code>.
+	 */
+	public boolean isLivePropertyURI(final URI propertyURI)
+	{
+		return getLivePropertyURIs().contains(checkInstance(propertyURI, "Property URI cannot be null."));
+	}
 
 	/** The I/O implementation that writes and reads a resource with the same reference URI as its base URI. */
 	private final URFIO<URFResource> descriptionIO;
@@ -593,26 +626,6 @@ public abstract class AbstractRepository implements Repository
 	 */
 	protected void closeImpl() throws ResourceIOException
 	{
-	}
-
-	/**
-	 * Retrieves the live properties, which dynamically determined attributes of the resource such as content size.
-	 * @return The thread-safe set of URIs of live properties.
-	 */
-	public Set<URI> getLivePropertyURIs()
-	{
-		return LIVE_PROPERTY_URIS;
-	}
-
-	/**
-	 * Determines whether the indicated property is is a live, dynamically determined property.
-	 * @param propertyURI The URI identifying the property.
-	 * @return <code>true</code> if the property is a live property.
-	 * @throws NullPointerException if the given property URI is <code>null</code>.
-	 */
-	public boolean isLivePropertyURI(final URI propertyURI)
-	{
-		return getLivePropertyURIs().contains(checkInstance(propertyURI, "Property URI cannot be null."));
 	}
 
 	/**
