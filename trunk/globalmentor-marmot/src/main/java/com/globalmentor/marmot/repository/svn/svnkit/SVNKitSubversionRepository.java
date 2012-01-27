@@ -35,8 +35,10 @@ import static org.tmatesoft.svn.core.SVNProperty.*;
 
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.io.InputStreams.*;
+import static com.globalmentor.java.Characters.*;
 import static com.globalmentor.java.Conditions.*;
 import static com.globalmentor.net.URIs.*;
+import static com.globalmentor.urf.URF.*;
 import static com.globalmentor.urf.content.Content.*;
 
 import com.globalmentor.collections.CollectionMap;
@@ -74,6 +76,27 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		SVNRepositoryFactoryImpl.setup();
 	}
 
+	/** The obsolete property for synchronizing last-modified times. */
+	@Deprecated
+	protected final static String OBSOLETE_SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME = "syncWebDAVGetLastModified";
+
+	/** The obsolete character used to escape URIs to encode them as property names in another namespace. */
+	@Deprecated
+	protected final static char OBSOLETE_PROPERTY_NAME_URI_ESCAPE_CHAR = MIDDLE_DOT_CHAR;
+
+	/**
+	 * Decodes a property URI from an obsolete property name encoding
+	 * @param propertyLocalName The name of the WebDAV property.
+	 * @return The URI of the URF property to represent the given property local name.
+	 * @throws IllegalArgumentException if the given local name has no valid absolute URF property URI encoded in it.
+	 */
+	@Deprecated
+	protected static URI decodeObsoletePropertyURILocalName(final String propertyLocalName)
+	{
+		final String urfPRopertyURI = decode(propertyLocalName, PROPERTY_NAME_URI_ESCAPE_CHAR); //the URF property URI may be encoded as the local name of the custom property
+		return checkAbsolute(URI.create(urfPRopertyURI)); //create an URF property URI from the decoded local name and make sure it is absolute
+	}
+	
 	/**
 	 * Default constructor with no root URI defined. The root URI must be defined before the repository is opened.
 	 */
@@ -1006,7 +1029,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	 * @return <code>true</code> if the property is in one of the known reserved namespaces.
 	 * @throws NullPointerException if the given property name is <code>null</code>.
 	 */
-	protected boolean isReservedNamespaceProperty(final String propertyName)
+	protected static boolean isReservedNamespaceProperty(final String propertyName)
 	{
 		return propertyName.startsWith(SVN_PREFIX) || propertyName.startsWith(SVNKIT_PREFIX);
 	}
@@ -1089,7 +1112,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 				if(properties == null) //if no properties were given
 				{
 					properties = new SVNProperties(); //load the properties from the repository
-					if(nodeKind == SVNNodeKind.FILE) //open the file or directory for editing
+					if(nodeKind == SVNNodeKind.FILE) //get the properties based upon the node type
 					{
 						svnRepository.getFile(resourceURIPath.toDecodedString(), -1, properties, null);
 					}
@@ -1197,4 +1220,266 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			}
 		}
 	}
+
+	/**
+	 * Traverses all resources in the repository starting from the root. Traversal is synchronized on the repository.
+	 * @param visitor The visitor to visit the resource.
+	 * @return <code>true</code> if traversal should continue to other nodes or <code>false</code> if traversal should stop.
+	 * @throws SVNException if there is an error accessing the repository.
+	 * @see #getRootURI()
+	 */
+	public boolean traverse(final Visitor visitor) throws SVNException
+	{
+		return traverse(getRootURI(), visitor); //traverse starting at the root
+	}
+
+	/**
+	 * Traverses a resource and its descendants. Traversal is synchronized on the repository.
+	 * @param resourceURI The URI of the resource that will be traversed.
+	 * @param visitor The visitor to visit the resource.
+	 * @return <code>true</code> if traversal should continue to other nodes or <code>false</code> if traversal should stop.
+	 * @throws SVNException if there is an error accessing the repository.
+	 */
+	public boolean traverse(final URI resourceURI, final Visitor visitor) throws SVNException
+	{
+		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
+		final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
+		synchronized(svnRepository) //we aren't locking the actual repository, so we might as well synchronize our access to it at a local level rather than holding it across the children iteration
+		{
+			final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toDecodedString(), -1); //get the directory entry for this resource
+			return traverse(resourceURI, dirEntry, visitor);
+		}
+	}
+
+	/**
+	 * Traverses a resource and its descendants. Traversal is synchronized on the repository.
+	 * @param resourceURI The URI of the resource that will be traversed.
+	 * @param dirEntry The directory entry of the resource.
+	 * @param visitor The visitor to visit the resource.
+	 * @return <code>true</code> if traversal should continue to other nodes or <code>false</code> if traversal should stop.
+	 * @throws SVNException if there is an error accessing the repository.
+	 */
+	protected boolean traverse(final URI resourceURI, final SVNDirEntry dirEntry, final Visitor visitor) throws SVNException
+	{
+		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
+		final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
+		synchronized(svnRepository) //we aren't locking the actual repository, so we might as well synchronize our access to it at a local level rather than holding it across the children iteration
+		{
+			if(!visitor.visit(resourceURI, resourceURIPath, svnRepository, dirEntry)) //visit the directory entry; if we should stop traversal
+			{
+				return false;
+			}
+			if(dirEntry.getKind() == SVNNodeKind.DIR) //if this is a directory
+			{
+				return traverseChildren(resourceURI, dirEntry, visitor); //traverse its children
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Traverses the children of a resource and their descendants. Traversal is synchronized on the repository.
+	 * @param resourceURI The URI of the resource the children of which will be traversed.
+	 * @param dirEntry The directory entry of the resource.
+	 * @param visitor The visitor to visit the resource.
+	 * @return <code>true</code> if traversal should continue to other nodes or <code>false</code> if traversal should stop.
+	 * @throws SVNException if the given directory entry does not represent a directory.
+	 * @throws SVNException if there is an error accessing the repository.
+	 * @see #getSVNRepository()
+	 */
+	protected boolean traverseChildren(final URI resourceURI, final SVNDirEntry dirEntry, final Visitor visitor) throws SVNException
+	{
+		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
+		final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
+		synchronized(svnRepository) //we aren't locking the actual repository, so we might as well synchronize our access to it at a local level rather than holding it across the children iteration
+		{
+			@SuppressWarnings("unchecked")
+			final Collection<SVNDirEntry> childDirEntries = svnRepository.getDir(resourceURIPath.toDecodedString(), -1, null, (Collection<?>)null); //get a collection of child directory entries
+			for(final SVNDirEntry childDirEntry : childDirEntries) //for each of the child resource directory entries
+			{
+				final URI childResourceURI = getRepositoryResourceURI(resourceURI, childDirEntry); //get the public URI for the child resource
+				if(childResourceURI.equals(resourceURI)) //ignore the resource itself
+				{
+					continue;
+				}
+				if(!traverse(childResourceURI, childDirEntry, visitor)) //traverse this child; if we should stop traversal
+				{
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Represents a visitor that can visit each node during traversal.
+	 * 
+	 * @author Garret Wilson
+	 */
+	public interface Visitor
+	{
+
+		/**
+		 * Visits the given node.
+		 * @param resourceURI The URI of the resource being traversed.
+		 * @param resourceURIPath The relative path of the resource within the repository.
+		 * @param svnRepository The SVNKit repository.
+		 * @param svnDirEntry The SVNKit directory entry of the resource being traversed.
+		 * @return <code>true</code> if traversal should continue to other nodes or <code>false</code> if traversal should stop.
+		 * @throws SVNException if there is an error accessing the repository.
+		 */
+		public boolean visit(final URI resourceURI, final URIPath resourceURIPath, final SVNRepository svnRepository, final SVNDirEntry svnDirEntry)
+				throws SVNException;
+
+	}
+
+	/**
+	 * Represents a visitor that can visit the properties of each node during traversal.
+	 * 
+	 * @author Garret Wilson
+	 */
+	public abstract static class AbstractPropertyVisitor implements Visitor
+	{
+
+		@Override
+		public boolean visit(final URI resourceURI, final URIPath resourceURIPath, final SVNRepository svnRepository, final SVNDirEntry svnDirEntry)
+				throws SVNException
+		{
+			if(svnDirEntry.hasProperties()) //if there are properties
+			{
+				final SVNNodeKind nodeKind = svnDirEntry.getKind();
+				final SVNProperties properties = new SVNProperties(); //load the properties from the repository
+				if(nodeKind == SVNNodeKind.FILE) //get the properties based upon the node type
+				{
+					svnRepository.getFile(resourceURIPath.toDecodedString(), -1, properties, null);
+				}
+				else if(nodeKind == SVNNodeKind.DIR)
+				{
+					svnRepository.getDir(resourceURIPath.toDecodedString(), -1, properties, (Collection<?>)null);
+				}
+				else
+				{
+					throw unexpected("Resource " + resourceURI + " unrecognized directory entry node kind: " + nodeKind);
+				}
+				@SuppressWarnings("unchecked")
+				final Map<String, SVNPropertyValue> propertyValues = (Map<String, SVNPropertyValue>)properties.asMap(); //get a map of the Subversion properties
+				for(final Map.Entry<String, SVNPropertyValue> propertyValueEntry : propertyValues.entrySet()) //look at the Subversion properties
+				{
+					if(!visitProperty(resourceURI, resourceURIPath, svnRepository, svnDirEntry, propertyValueEntry.getKey(), propertyValueEntry.getValue())) //visit this property; if we should stop visiting
+					{
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+
+		/**
+		 * Visits a property of a node.
+		 * @param resourceURI The URI of the resource being traversed.
+		 * @param resourceURIPath The relative path of the resource within the repository.
+		 * @param svnRepository The SVNKit repository.
+		 * @param svnDirEntry The SVNKit directory entry of the resource being traversed.
+		 * @param propertyName The name of the property.
+		 * @param svnPropertyValue The value of the property.
+		 * @return <code>true</code> if traversal should continue to other nodes or <code>false</code> if traversal should stop.
+		 * @throws SVNException if there is an error accessing the repository.
+		 */
+		protected abstract boolean visitProperty(final URI resourceURI, final URIPath resourceURIPath, final SVNRepository svnRepository,
+				final SVNDirEntry svnDirEntry, final String propertyName, final SVNPropertyValue svnPropertyValue) throws SVNException;
+	}
+
+	/**
+	 * Visitor to collect a map of property renames for each resource.
+	 * 
+	 * @author Garret Wilson
+	 */
+	public abstract static class CollectPropertyRenameVisitor extends AbstractPropertyVisitor
+	{
+		/**
+		 * The map of maps of property names and values to be renamed for each resource, identified by URI. A value of <code>null</code> indicates the property
+		 * should simply be removed.
+		 */
+		private final Map<URI, Map<String, SVNPropertyValue>> resourcePropertyRenames = new HashMap<URI, Map<String, SVNPropertyValue>>();
+
+		/**
+		 * @return The map of maps of property names and values to be renamed for each resource, identified by URI; a value of <code>null</code> indicates the
+		 *         property should simply be removed.
+		 */
+		public Map<URI, Map<String, SVNPropertyValue>> getResourcePropertyRenames()
+		{
+			return resourcePropertyRenames;
+		}
+
+		/** {@inheritDoc} This version first ensures there is a property value map for this resource. */
+		@Override
+		public boolean visit(final URI resourceURI, final URIPath resourceURIPath, final SVNRepository svnRepository, final SVNDirEntry svnDirEntry)
+				throws SVNException
+		{
+			//Log.info(AbstractResource.toString(resourceURI));
+			if(!resourcePropertyRenames.containsKey(resourceURI)) //if there is no property map for this resource, create one
+			{
+				resourcePropertyRenames.put(resourceURI, new HashMap<String, SVNPropertyValue>());
+			}
+			return super.visit(resourceURI, resourceURIPath, svnRepository, svnDirEntry);
+		}
+
+		/** {@inheritDoc} This implementation stores the names of properties that should be renamed. */
+		@Override
+		protected boolean visitProperty(URI resourceURI, URIPath resourceURIPath, SVNRepository svnRepository, SVNDirEntry svnDirEntry, String propertyName,
+				SVNPropertyValue svnPropertyValue) throws SVNException
+		{
+			final String newPropertyName = getNewPropertyName(propertyName, svnPropertyValue); //see if we should rename this property
+			if(newPropertyName == null || !newPropertyName.equals(propertyName)) //if the property name changed
+			{
+				//Log.info(CHARACTER_TABULATION_CHAR, propertyName, newPropertyName);
+				resourcePropertyRenames.get(resourceURI).put(propertyName, newPropertyName != null ? svnPropertyValue : null); //store the value, or null if we should remove the property altogether
+			}
+			return true;
+		}
+
+		/**
+		 * Gets the new name of the indicated property.
+		 * @param propertyName The name of the property to possibly be renamed.
+		 * @param svnPropertyValue The value of the property.
+		 * @return The new name of the property; or the same name if the property should not be renamed; or <code>null</code> if the property should be removed
+		 *         altogether.
+		 */
+		protected abstract String getNewPropertyName(final String propertyName, final SVNPropertyValue svnPropertyValue);
+
+	}
+
+	/**
+	 * Visitor to collect obsolete property names.
+	 * 
+	 * @author Garret Wilson
+	 */
+	public static class CollectObsoletePropertyNamesVisitor extends CollectPropertyRenameVisitor
+	{
+
+		@Override
+		protected String getNewPropertyName(final String propertyName, final SVNPropertyValue svnPropertyValue)
+		{
+			if(!isReservedNamespaceProperty(propertyName) && svnPropertyValue.isString()) //if this is a non-reserved Subversion property with a string value
+			{
+				if(OBSOLETE_SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME.equals(propertyName)) //remove the last-modified synchronization property name
+				{
+					return null;
+				}
+				try
+				{
+					URI propertyURI = decodeObsoletePropertyURILocalName(propertyName); //see if this is an obsolete property name
+					propertyURI = convertLegacyNamespacedURI(propertyURI); //convert it from a legacy form if needed
+					return "change"; //TODO fix
+				}
+				catch(final IllegalArgumentException illegalArgumentException) //if the custom property local name wasn't an encoded URI, ignore the error and skip this property
+				{
+				}
+			}
+			return propertyName; //otherwise, the property should be unmodified
+		}
+
+	}
+
+
 }

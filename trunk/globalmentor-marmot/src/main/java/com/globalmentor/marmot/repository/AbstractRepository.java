@@ -2057,7 +2057,7 @@ public abstract class AbstractRepository implements Repository
 	 * This method is part of a set for encoding/decoding entire property URIs as a single property local name for those repository types that don't allow
 	 * specific namespaces to be set.
 	 * </p>
-	 * @param webdavPropertyName The name of the WebDAV property.
+	 * @param propertyLocalName The local name of the property.
 	 * @return The URI of the URF property to represent the given property local name.
 	 * @throws IllegalArgumentException if the given local name has no valid absolute URF property URI encoded in it.
 	 * @see #PROPERTY_NAME_URI_ESCAPE_CHAR
@@ -2138,7 +2138,7 @@ public abstract class AbstractRepository implements Repository
 		final Iterator<URFProperty> propertyIterator = properties.iterator();
 		if(!propertyIterator.hasNext()) //if no properties are given
 		{
-			throw new IllegalArgumentException("At least one URF property must be provided to create a WebDAV property.");
+			throw new IllegalArgumentException("At least one URF property must be provided to create an encoded property.");
 		}
 		URFProperty property = propertyIterator.next(); //get the first property
 		final URI propertyURI = property.getPropertyURI(); //get the URI of the URF property
