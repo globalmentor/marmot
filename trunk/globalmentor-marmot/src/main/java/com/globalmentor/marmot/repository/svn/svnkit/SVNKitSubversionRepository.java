@@ -37,12 +37,12 @@ import static com.globalmentor.io.Files.*;
 import static com.globalmentor.io.InputStreams.*;
 import static com.globalmentor.java.Characters.*;
 import static com.globalmentor.java.Conditions.*;
+import static com.globalmentor.marmot.repository.svn.MarmotSubversion.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.URF.*;
 import static com.globalmentor.urf.content.Content.*;
 
-import com.globalmentor.collections.CollectionMap;
-import com.globalmentor.collections.HashSetHashMap;
+import com.globalmentor.collections.*;
 import com.globalmentor.event.ProgressListener;
 import com.globalmentor.io.*;
 import com.globalmentor.log.Log;
@@ -76,27 +76,6 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		SVNRepositoryFactoryImpl.setup();
 	}
 
-	/** The obsolete property for synchronizing last-modified times. */
-	@Deprecated
-	protected final static String OBSOLETE_SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME = "syncWebDAVGetLastModified";
-
-	/** The obsolete character used to escape URIs to encode them as property names in another namespace. */
-	@Deprecated
-	protected final static char OBSOLETE_PROPERTY_NAME_URI_ESCAPE_CHAR = MIDDLE_DOT_CHAR;
-
-	/**
-	 * Decodes a property URI from an obsolete property name encoding
-	 * @param propertyLocalName The name of the WebDAV property.
-	 * @return The URI of the URF property to represent the given property local name.
-	 * @throws IllegalArgumentException if the given local name has no valid absolute URF property URI encoded in it.
-	 */
-	@Deprecated
-	protected static URI decodeObsoletePropertyURILocalName(final String propertyLocalName)
-	{
-		final String urfPRopertyURI = decode(propertyLocalName, PROPERTY_NAME_URI_ESCAPE_CHAR); //the URF property URI may be encoded as the local name of the custom property
-		return checkAbsolute(URI.create(urfPRopertyURI)); //create an URF property URI from the decoded local name and make sure it is absolute
-	}
-	
 	/**
 	 * Default constructor with no root URI defined. The root URI must be defined before the repository is opened.
 	 */
@@ -896,14 +875,14 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		{
 			final Set<URFProperty> urfPropertyAdditions = urfPropertyURIPropertyAdditionEntries.getValue(); //get the URF properties to add
 			final NameValuePair<URI, String> propertyTextValue = encodePropertiesTextValue(resourceURI, urfPropertyAdditions); //encode the properties into a single value
-			setSVNKitProperties.put(encodePropertyURILocalName(propertyTextValue.getName()), SVNPropertyValue.create(propertyTextValue.getValue())); //store this value for later setting
+			setSVNKitProperties.put(encodePropertyURIPropertyName(propertyTextValue.getName()), SVNPropertyValue.create(propertyTextValue.getValue())); //store this value for later setting
 		}
 		//determine the properties to remove
 		for(final URI propertyURIRemoval : propertyURIRemovals) //look at all the property removals left after removing that which are irrelevant
 		{
 			if(!livePropertyURIs.contains(propertyURIRemoval)) //if this is not a live property
 			{
-				setSVNKitProperties.put(encodePropertyURILocalName(propertyURIRemoval), null); //in SVNKit a null value indicates that the property should be removed
+				setSVNKitProperties.put(encodePropertyURIPropertyName(propertyURIRemoval), null); //in SVNKit a null value indicates that the property should be removed
 			}
 		}
 		//actually set/remove the properties
@@ -1136,7 +1115,8 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					{
 						try
 						{
-							final URI propertyURI = decodePropertyURILocalName(propertyName); //the URF property URI may be encoded as the local name of the Subversion custom property
+							//TODO once legacy properties are changed, check for the Marmot.ID namespace
+							final URI propertyURI = decodePropertyURIPropertyName(propertyName); //the URF property URI may be encoded in the Subversion custom property
 							propertyURITextValues.put(propertyURI, propertyValueEntry.getValue().getString()); //store the text value temporarily; we'll come back and update them later
 						}
 						catch(final IllegalArgumentException illegalArgumentException) //if the Subversion custom property local name wasn't an encoded URI, ignore the error and skip this property
@@ -1416,7 +1396,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		public boolean visit(final URI resourceURI, final URIPath resourceURIPath, final SVNRepository svnRepository, final SVNDirEntry svnDirEntry)
 				throws SVNException
 		{
-			//Log.info(AbstractResource.toString(resourceURI));
+			Log.info(AbstractResource.toString(resourceURI));
 			if(!resourcePropertyRenames.containsKey(resourceURI)) //if there is no property map for this resource, create one
 			{
 				resourcePropertyRenames.put(resourceURI, new HashMap<String, SVNPropertyValue>());
@@ -1432,7 +1412,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			final String newPropertyName = getNewPropertyName(propertyName, svnPropertyValue); //see if we should rename this property
 			if(newPropertyName == null || !newPropertyName.equals(propertyName)) //if the property name changed
 			{
-				//Log.info(CHARACTER_TABULATION_CHAR, propertyName, newPropertyName);
+				Log.info(CHARACTER_TABULATION_CHAR, propertyName, newPropertyName);
 				resourcePropertyRenames.get(resourceURI).put(propertyName, newPropertyName != null ? svnPropertyValue : null); //store the value, or null if we should remove the property altogether
 			}
 			return true;
@@ -1470,7 +1450,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 				{
 					URI propertyURI = decodeObsoletePropertyURILocalName(propertyName); //see if this is an obsolete property name
 					propertyURI = convertLegacyNamespacedURI(propertyURI); //convert it from a legacy form if needed
-					return "change"; //TODO fix
+					return URIs.plainEncode(propertyURI); //simple-encode the property URI
 				}
 				catch(final IllegalArgumentException illegalArgumentException) //if the custom property local name wasn't an encoded URI, ignore the error and skip this property
 				{
@@ -1480,6 +1460,4 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		}
 
 	}
-
-
 }

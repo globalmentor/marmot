@@ -44,7 +44,6 @@ import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.Characters.*;
 import static com.globalmentor.java.Conditions.*;
 import static com.globalmentor.java.Objects.*;
-import static com.globalmentor.marmot.Marmot.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.URF.*;
@@ -535,7 +534,7 @@ public abstract class AbstractRepository implements Repository
 	{
 		this.rootURI = rootURI != null ? normalize(rootURI) : null;
 		this.descriptionIO = checkInstance(descriptionIO, "Description I/O cannot be null."); //save the description I/O
-		registerResourceFactory(MARMOT_NAMESPACE_URI, MARMOT_RESOURCE_FACTORY); //register the Marmot factory
+		registerResourceFactory(Marmot.NAMESPACE_URI, MARMOT_RESOURCE_FACTORY); //register the Marmot factory
 		registerResourceFactory(MARMOT_SECURITY_NAMESPACE_URI, MARMOT_SECURITY_RESOURCE_FACTORY); //register the Marmot resource factory
 	}
 
@@ -2022,51 +2021,6 @@ public abstract class AbstractRepository implements Repository
 		{
 			super.finalize(); //always call the parent version
 		}
-	}
-
-	/** The character used to escape URIs to encode them as property names in another namespace. */
-	public final static char PROPERTY_NAME_URI_ESCAPE_CHAR = MIDDLE_DOT_CHAR;
-
-	/**
-	 * Determines the a property name to represent an URF property by encoded the URF property URI to be a simple local name.
-	 * <p>
-	 * The standard URI escape character, {@value URIs#ESCAPE_CHAR}, may not be a valid name character for e.g. Subversion using WebDAV, so
-	 * {@value #PROPERTY_NAME_URI_ESCAPE_CHAR}, which conveniently is not a valid URI character, is used instead.
-	 * </p>
-	 * <p>
-	 * This method is part of a set for encoding/decoding entire property URIs as a single property local name for those repository types that don't allow
-	 * specific namespaces to be set.
-	 * </p>
-	 * @param urfPropertyURI The URI of the URF property to represent.
-	 * @return A property name to use in representing an URF property with the given URF property URI.
-	 * @see #PROPERTY_NAME_URI_ESCAPE_CHAR
-	 * @see #decodePropertyURILocalName(String)
-	 */
-	protected static String encodePropertyURILocalName(final URI urfPropertyURI)
-	{
-		return encode(urfPropertyURI, PROPERTY_NAME_URI_ESCAPE_CHAR);
-	}
-
-	/**
-	 * Determines the URF property to represent the given property local name, which is assumed to have a full property URI encoded in it.
-	 * <p>
-	 * The standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name character, so {@value #PROPERTY_NAME_URI_ESCAPE_CHAR}, which conveniently
-	 * is not a valid URI character, is used instead.
-	 * </p>
-	 * <p>
-	 * This method is part of a set for encoding/decoding entire property URIs as a single property local name for those repository types that don't allow
-	 * specific namespaces to be set.
-	 * </p>
-	 * @param propertyLocalName The local name of the property.
-	 * @return The URI of the URF property to represent the given property local name.
-	 * @throws IllegalArgumentException if the given local name has no valid absolute URF property URI encoded in it.
-	 * @see #PROPERTY_NAME_URI_ESCAPE_CHAR
-	 * @see #encodePropertyURILocalName(URI)
-	 */
-	protected static URI decodePropertyURILocalName(final String propertyLocalName)
-	{
-		final String urfPRopertyURI = decode(propertyLocalName, PROPERTY_NAME_URI_ESCAPE_CHAR); //the URF property URI may be encoded as the local name of the custom property
-		return checkAbsolute(URI.create(urfPRopertyURI)); //create an URF property URI from the decoded local name and make sure it is absolute
 	}
 
 	/**

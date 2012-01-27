@@ -83,7 +83,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 {
 
 	/** The URI to the Marmot WebDAV repository namespace. */
-	public final static URI MARMOT_WEBDAV_REPOSITORY_NAMESPACE_URI = Marmot.MARMOT_NAMESPACE_URI.resolve("repository/webdav/");
+	public final static URI MARMOT_WEBDAV_REPOSITORY_NAMESPACE_URI = Marmot.NAMESPACE_URI.resolve("repository/webdav/");
 
 	//TODO the current technique of erasing the password after each call may become obsolete when the HTTP client supports persistent connections
 

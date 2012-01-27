@@ -23,10 +23,13 @@ import java.util.regex.Pattern;
  * 
  * @author Garret Wilson
  * 
- *         <a href="http://subversion.apache.org/">Apache Subversion</a>
+ * @see <a href="http://subversion.apache.org/">Apache Subversion</a>
  */
 public class Subversion
 {
+
+	/** The character used for separating the namespace ID from the rest of a Subversion property name. */
+	public final static char PROPERTY_NAMESPACE_SEPARATOR = ':';
 
 	/**
 	 * The pattern describing a valid Subversion property name as per <code>svn_prop_name_is_valid()</code>: (alpha/colon/underscore) character followed by any
@@ -34,4 +37,28 @@ public class Subversion
 	 */
 	public final Pattern PROPERTY_NAME_PATTERN = Pattern.compile("^[\\p{Alpha}:_][\\p{Alpha}\\p{Digit}\\-.:_]*$");
 
+	/**
+	 * Determines the namespace of the Subversion property. The namespace is the part before the namespace separator, if any.
+	 * @param propertyName The full property name.
+	 * @return The namespace of the Subversion property, or <code>null</code> if no namespace is present.
+	 * @throws NullPointerException if the given property name is <code>null</code>.
+	 */
+	public static String getPropertyNamespace(final String propertyName)
+	{
+		final int namespaceSeparatorIndex = propertyName.indexOf(PROPERTY_NAMESPACE_SEPARATOR);
+		return namespaceSeparatorIndex >= 0 ? propertyName.substring(0, namespaceSeparatorIndex) : null;
+	}
+
+	/**
+	 * Determines the local name of the Subversion property. The local name is the part after the namespace, or the entire property name if no namespace is
+	 * present.
+	 * @param propertyName The full property name.
+	 * @return The local name of the Subversion property.
+	 * @throws NullPointerException if the given property name is <code>null</code>.
+	 */
+	public static String getPropertyLocalName(final String propertyName)
+	{
+		final int namespaceSeparatorIndex = propertyName.indexOf(PROPERTY_NAMESPACE_SEPARATOR);
+		return namespaceSeparatorIndex >= 0 ? propertyName.substring(namespaceSeparatorIndex + 1) : propertyName;
+	}
 }

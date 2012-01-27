@@ -1,5 +1,5 @@
 /*
- * Copyright © 1996-2011 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 1996-2012 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,12 @@ import java.net.*;
 import java.util.Set;
 
 import com.globalmentor.marmot.repository.*;
+import com.globalmentor.marmot.repository.svn.MarmotSubversion;
 import com.globalmentor.net.URIs;
 import com.globalmentor.net.http.*;
 import com.globalmentor.net.http.webdav.*;
 
+import static com.globalmentor.marmot.repository.svn.MarmotSubversion.decodePropertyURIPropertyName;
 import static com.globalmentor.net.http.webdav.SubversionWebDAV.*;
 
 /**
@@ -33,9 +35,9 @@ import static com.globalmentor.net.http.webdav.SubversionWebDAV.*;
  * </p>
  * <p>
  * This version stores URF properties by using a URI that is the concatenation of {@value SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI} and the encoded
- * version of the URF property URI, using {@value AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR} as the escape character. The standard URI escape
- * character, {@value URIs#ESCAPE_CHAR}, is not a valid name character, so {@value AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR}, which conveniently is
- * not a valid URI character, is used instead.
+ * version of the URF property URI, using {@value AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR} as the escape character. The standard URI escape character,
+ * {@value URIs#ESCAPE_CHAR}, is not a valid name character, so {@value AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR}, which conveniently is not a valid URI
+ * character, is used instead.
  * </p>
  * @author Garret Wilson
  * @see Repositories
@@ -45,20 +47,6 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 
 	/** The Subversion custom property namespace converted to a string for quick string comparisons. */
 	protected final static String SUBVERSION_CUSTOM_NAMESPACE = SUBVERSION_CUSTOM_NAMESPACE_URI.toString();
-
-//	/** The Subversion version of the synchronization WebDAV get last modified property. */
-//	protected final static WebDAVPropertyName SUBVERSION_SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME = new WebDAVPropertyName(SUBVERSION_CUSTOM_NAMESPACE,
-//			SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME.getLocalName());	//TODO fix; was this accidentally not used?
-
-//	/**
-//	 * Determines the WebDAV property name to represent the synchronization WebDAV get last modified property. This version returns a version of the property
-//	 * compatible with Subversion.
-//	 * @return The WebDAV property name to use in representing the synchronization WebDAV get last modified property.
-//	 */
-//	protected WebDAVPropertyName getSyncWebDAVGetLastModifiedWebDAVPropertyName()
-//	{
-//		return SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME;	//TODO maybe just return null and abandon this altogether for Subversion
-//	}
 
 	/**
 	 * Default constructor with no root URI defined. The root URI must be defined before the repository is opened.
@@ -137,15 +125,14 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 	 */
 	protected WebDAVPropertyName createWebDAVPropertyName(final URI urfPropertyURI)
 	{
-		return new WebDAVPropertyName(SUBVERSION_CUSTOM_NAMESPACE, encodePropertyURILocalName(urfPropertyURI)); //create and return a new WebDAV property name in the Subversion custom property namespace
+		return new WebDAVPropertyName(SUBVERSION_CUSTOM_NAMESPACE, MarmotSubversion.encodePropertyURIPropertyName(urfPropertyURI)); //create and return a new WebDAV property name in the Subversion custom property namespace
 	}
 
 	/**
 	 * Determines the URF property to represent the given WebDAV property if possible. If the WebDAV property has a local name of
 	 * {@value SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI}, the decoded form of its local name, if an absolute URI, will be used as the URF property URI.
-	 * The standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name character, so
-	 * {@value AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR}, which conveniently is not a valid URI character, is used instead. Otherwise, this method
-	 * delegates to the super version.
+	 * The standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name character, so {@value AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR},
+	 * which conveniently is not a valid URI character, is used instead. Otherwise, this method delegates to the super version.
 	 * @param webdavPropertyName The name of the WebDAV property.
 	 * @return The URI of the URF property to represent the given WebDAV property, or <code>null</code> if the given WebDAV property cannot be represented in URF.
 	 * @see SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI
@@ -158,7 +145,8 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 		{
 			try
 			{
-				return decodePropertyURILocalName(webdavPropertyName.getLocalName()); //the URF property URI may be encoded as the local name of the Subversion custom property
+				//TODO once legacy properties are changed, check for the Marmot.ID namespace
+				return decodePropertyURIPropertyName(webdavPropertyName.getLocalName()); //the URF property URI may be encoded as the local name of the Subversion custom property
 			}
 			catch(final IllegalArgumentException illegalArgumentException) //if the Subversion custom property local name wasn't an encoded URI, ignore the error and use the property normally
 			{
