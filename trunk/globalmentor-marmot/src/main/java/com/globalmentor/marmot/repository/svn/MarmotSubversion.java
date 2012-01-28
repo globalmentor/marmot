@@ -40,7 +40,7 @@ public class MarmotSubversion
 
 	/** The obsolete character used to escape URIs to encode them as property names in another namespace. */
 	@Deprecated
-	private final static char OBSOLETE_PROPERTY_NAME_URI_ESCAPE_CHAR = MIDDLE_DOT_CHAR;
+	public final static char OBSOLETE_PROPERTY_NAME_URI_ESCAPE_CHAR = MIDDLE_DOT_CHAR;
 
 	/**
 	 * Decodes a property URI from an obsolete property name encoding

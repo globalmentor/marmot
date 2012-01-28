@@ -248,12 +248,11 @@ public interface Repository extends Disposable
 	public boolean isLivePropertyURI(final URI propertyURI);
 
 	/**
-	 * Checks to make sure the resource designated by the given resource URI is within this repository.
-	 * The URI is normalized and canonicalized to ensure that:
+	 * Checks to make sure the resource designated by the given resource URI is within this repository. The URI is normalized and canonicalized to ensure that:
 	 * <ul>
-	 * 	<li>Its path segments are normalized.</li>
-	 * 	<li>It only contains valid URI characters.</li>
-	 * 	<li>Encoded characters are in canonical case.</li>
+	 * <li>Its path segments are normalized.</li>
+	 * <li>It only contains valid URI characters.</li>
+	 * <li>Encoded characters are in canonical case.</li>
 	 * </ul>
 	 * @param resourceURI The URI of the resource to check.
 	 * @return The normalized form of the given resource URI.
@@ -766,7 +765,9 @@ public interface Repository extends Disposable
 
 	/**
 	 * Moves a resource to another URI in this repository. Any resource at the destination URI will be replaced.
-	 * <p>The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.</p>
+	 * <p>
+	 * The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.
+	 * </p>
 	 * @param resourceURI The URI of the resource to be copied.
 	 * @param destinationURI The URI to which the resource should be copied.
 	 * @param progressListener A listener to be notified of progress, or <code>null</code> if no progress notifications is requested.
@@ -781,7 +782,9 @@ public interface Repository extends Disposable
 
 	/**
 	 * Moves a resource to another URI in this repository, overwriting any resource at the destination only if requested.
-	 * <p>The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.</p>
+	 * <p>
+	 * The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.
+	 * </p>
 	 * @param resourceURI The URI of the resource to be copied.
 	 * @param destinationURI The URI to which the resource should be copied.
 	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
@@ -798,7 +801,9 @@ public interface Repository extends Disposable
 
 	/**
 	 * Moves a resource to another URI in this repository, overwriting any resource at the destination only if requested.
-	 * <p>The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.</p>
+	 * <p>
+	 * The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.
+	 * </p>
 	 * @param resourceURI The URI of the resource to be copied.
 	 * @param destinationURI The URI to which the resource should be copied.
 	 * @param overwrite <code>true</code> if any existing resource at the destination should be overwritten, or <code>false</code> if an existing resource at the
@@ -819,7 +824,9 @@ public interface Repository extends Disposable
 
 	/**
 	 * Moves a resource to the specified URI in the specified repository. Any resource at the destination URI will be replaced.
-	 * <p>The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.</p>
+	 * <p>
+	 * The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.
+	 * </p>
 	 * @param resourceURI The URI of the resource to be copied.
 	 * @param destinationRepository The repository to which the resource should be copied, which may be this repository.
 	 * @param destinationURI The URI to which the resource should be copied.
@@ -834,7 +841,9 @@ public interface Repository extends Disposable
 
 	/**
 	 * Moves a resource to the specified URI in the specified repository. Any resource at the destination URI will be replaced.
-	 * <p>The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.</p>
+	 * <p>
+	 * The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.
+	 * </p>
 	 * @param resourceURI The URI of the resource to be copied.
 	 * @param destinationRepository The repository to which the resource should be copied, which may be this repository.
 	 * @param destinationURI The URI to which the resource should be copied.
@@ -851,7 +860,9 @@ public interface Repository extends Disposable
 
 	/**
 	 * Moves a resource to the specified URI in the specified repository, overwriting any resource at the destination only if requested.
-	 * <p>The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.</p>
+	 * <p>
+	 * The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.
+	 * </p>
 	 * @param resourceURI The URI of the resource to be copied.
 	 * @param destinationRepository The repository to which the resource should be copied, which may be this repository.
 	 * @param destinationURI The URI to which the resource should be copied.
@@ -870,7 +881,9 @@ public interface Repository extends Disposable
 
 	/**
 	 * Moves a resource to the specified URI in the specified repository, overwriting any resource at the destination only if requested.
-	 * <p>The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.</p>
+	 * <p>
+	 * The resource at the root of the repository, represented by {@link #getRootURI()}, cannot be moved and will result in an {@link IllegalArgumentException}.
+	 * </p>
 	 * @param resourceURI The URI of the resource to be copied.
 	 * @param destinationRepository The repository to which the resource should be copied, which may be this repository.
 	 * @param destinationURI The URI to which the resource should be copied.

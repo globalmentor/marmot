@@ -42,10 +42,12 @@ import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.urf.URF.*;
 import static com.globalmentor.urf.content.Content.*;
 
+import com.globalmentor.apache.subversion.Subversion;
 import com.globalmentor.collections.*;
 import com.globalmentor.event.ProgressListener;
 import com.globalmentor.io.*;
 import com.globalmentor.log.Log;
+import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.model.NameValuePair;
 import com.globalmentor.net.*;
@@ -1245,7 +1247,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
 		synchronized(svnRepository) //we aren't locking the actual repository, so we might as well synchronize our access to it at a local level rather than holding it across the children iteration
 		{
-			if(!visitor.visit(resourceURI, resourceURIPath, svnRepository, dirEntry)) //visit the directory entry; if we should stop traversal
+			if(!visitor.visit(this, resourceURI, resourceURIPath, svnRepository, dirEntry)) //visit the directory entry; if we should stop traversal
 			{
 				return false;
 			}
@@ -1301,15 +1303,16 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 
 		/**
 		 * Visits the given node.
-		 * @param resourceURI The URI of the resource being traversed.
+		 * @param repository The Marmot repository.
+		 * @param resourceURI The URI of the resource being visited.
 		 * @param resourceURIPath The relative path of the resource within the repository.
 		 * @param svnRepository The SVNKit repository.
 		 * @param svnDirEntry The SVNKit directory entry of the resource being traversed.
 		 * @return <code>true</code> if traversal should continue to other nodes or <code>false</code> if traversal should stop.
 		 * @throws SVNException if there is an error accessing the repository.
 		 */
-		public boolean visit(final URI resourceURI, final URIPath resourceURIPath, final SVNRepository svnRepository, final SVNDirEntry svnDirEntry)
-				throws SVNException;
+		public boolean visit(final SVNKitSubversionRepository repository, final URI resourceURI, final URIPath resourceURIPath, final SVNRepository svnRepository,
+				final SVNDirEntry svnDirEntry) throws SVNException;
 
 	}
 
@@ -1322,8 +1325,8 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	{
 
 		@Override
-		public boolean visit(final URI resourceURI, final URIPath resourceURIPath, final SVNRepository svnRepository, final SVNDirEntry svnDirEntry)
-				throws SVNException
+		public boolean visit(final SVNKitSubversionRepository repository, final URI resourceURI, final URIPath resourceURIPath, final SVNRepository svnRepository,
+				final SVNDirEntry svnDirEntry) throws SVNException
 		{
 			if(svnDirEntry.hasProperties()) //if there are properties
 			{
@@ -1345,7 +1348,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 				final Map<String, SVNPropertyValue> propertyValues = (Map<String, SVNPropertyValue>)properties.asMap(); //get a map of the Subversion properties
 				for(final Map.Entry<String, SVNPropertyValue> propertyValueEntry : propertyValues.entrySet()) //look at the Subversion properties
 				{
-					if(!visitProperty(resourceURI, resourceURIPath, svnRepository, svnDirEntry, propertyValueEntry.getKey(), propertyValueEntry.getValue())) //visit this property; if we should stop visiting
+					if(!visitProperty(repository, resourceURI, resourceURIPath, svnRepository, svnDirEntry, propertyValueEntry.getKey(), propertyValueEntry.getValue())) //visit this property; if we should stop visiting
 					{
 						return false;
 					}
@@ -1356,7 +1359,8 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 
 		/**
 		 * Visits a property of a node.
-		 * @param resourceURI The URI of the resource being traversed.
+		 * @param repository The Marmot repository.
+		 * @param resourceURI The URI of the resource being visited.
 		 * @param resourceURIPath The relative path of the resource within the repository.
 		 * @param svnRepository The SVNKit repository.
 		 * @param svnDirEntry The SVNKit directory entry of the resource being traversed.
@@ -1365,99 +1369,248 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		 * @return <code>true</code> if traversal should continue to other nodes or <code>false</code> if traversal should stop.
 		 * @throws SVNException if there is an error accessing the repository.
 		 */
-		protected abstract boolean visitProperty(final URI resourceURI, final URIPath resourceURIPath, final SVNRepository svnRepository,
-				final SVNDirEntry svnDirEntry, final String propertyName, final SVNPropertyValue svnPropertyValue) throws SVNException;
+		protected abstract boolean visitProperty(final SVNKitSubversionRepository repository, final URI resourceURI, final URIPath resourceURIPath,
+				final SVNRepository svnRepository, final SVNDirEntry svnDirEntry, final String propertyName, final SVNPropertyValue svnPropertyValue)
+				throws SVNException;
 	}
 
 	/**
-	 * Visitor to collect a map of property renames for each resource.
+	 * Visitor to collect a map of property changes for each resource.
 	 * 
 	 * @author Garret Wilson
 	 */
-	public abstract static class CollectPropertyRenameVisitor extends AbstractPropertyVisitor
+	public abstract static class CollectPropertyChangesVisitor extends AbstractPropertyVisitor
 	{
 		/**
-		 * The map of maps of property names and values to be renamed for each resource, identified by URI. A value of <code>null</code> indicates the property
-		 * should simply be removed.
+		 * The map of maps of property renames and value changes for each resource, identified by URI. A {@link NameValuePair} value of <code>null</code> indicates
+		 * the property should simply be removed.
 		 */
-		private final Map<URI, Map<String, SVNPropertyValue>> resourcePropertyRenames = new HashMap<URI, Map<String, SVNPropertyValue>>();
+		private final Map<URI, Map<String, NameValuePair<String, SVNPropertyValue>>> resourcePropertyChanges = new HashMap<URI, Map<String, NameValuePair<String, SVNPropertyValue>>>();
 
 		/**
-		 * @return The map of maps of property names and values to be renamed for each resource, identified by URI; a value of <code>null</code> indicates the
-		 *         property should simply be removed.
+		 * @return The map of maps of property renames and value changes for each resource, identified by URI; a {@link NameValuePair} value of <code>null</code>
+		 *         indicates the property should simply be removed.
 		 */
-		public Map<URI, Map<String, SVNPropertyValue>> getResourcePropertyRenames()
+		public Map<URI, Map<String, NameValuePair<String, SVNPropertyValue>>> getResourcePropertyChanges()
 		{
-			return resourcePropertyRenames;
+			return resourcePropertyChanges;
 		}
 
 		/** {@inheritDoc} This version first ensures there is a property value map for this resource. */
 		@Override
-		public boolean visit(final URI resourceURI, final URIPath resourceURIPath, final SVNRepository svnRepository, final SVNDirEntry svnDirEntry)
-				throws SVNException
+		public boolean visit(final SVNKitSubversionRepository repository, final URI resourceURI, final URIPath resourceURIPath, final SVNRepository svnRepository,
+				final SVNDirEntry svnDirEntry) throws SVNException
 		{
 			Log.info(AbstractResource.toString(resourceURI));
-			if(!resourcePropertyRenames.containsKey(resourceURI)) //if there is no property map for this resource, create one
+			if(!resourcePropertyChanges.containsKey(resourceURI)) //if there is no property map for this resource, create one
 			{
-				resourcePropertyRenames.put(resourceURI, new HashMap<String, SVNPropertyValue>());
+				resourcePropertyChanges.put(resourceURI, new HashMap<String, NameValuePair<String, SVNPropertyValue>>());
 			}
-			return super.visit(resourceURI, resourceURIPath, svnRepository, svnDirEntry);
+			return super.visit(repository, resourceURI, resourceURIPath, svnRepository, svnDirEntry);
 		}
 
 		/** {@inheritDoc} This implementation stores the names of properties that should be renamed. */
 		@Override
-		protected boolean visitProperty(URI resourceURI, URIPath resourceURIPath, SVNRepository svnRepository, SVNDirEntry svnDirEntry, String propertyName,
-				SVNPropertyValue svnPropertyValue) throws SVNException
+		protected boolean visitProperty(final SVNKitSubversionRepository repository, URI resourceURI, URIPath resourceURIPath, SVNRepository svnRepository,
+				SVNDirEntry svnDirEntry, String propertyName, SVNPropertyValue svnPropertyValue) throws SVNException
 		{
-			final String newPropertyName = getNewPropertyName(propertyName, svnPropertyValue); //see if we should rename this property
-			if(newPropertyName == null || !newPropertyName.equals(propertyName)) //if the property name changed
+			final NameValuePair<String, SVNPropertyValue> property = new NameValuePair<String, SVNPropertyValue>(propertyName, svnPropertyValue);
+			final NameValuePair<String, SVNPropertyValue> newProperty = getNewProperty(repository, resourceURI, property); //see if we should change this property
+			if(!property.equals(newProperty)) //if the property changed or was deleted altogether
 			{
-				Log.info(CHARACTER_TABULATION_CHAR, propertyName, newPropertyName);
-				resourcePropertyRenames.get(resourceURI).put(propertyName, newPropertyName != null ? svnPropertyValue : null); //store the value, or null if we should remove the property altogether
+				Log.info(CHARACTER_TABULATION_CHAR, "-", property);
+				if(newProperty != null)
+				{
+					Log.info(CHARACTER_TABULATION_CHAR, "+", newProperty);
+				}
+				resourcePropertyChanges.get(resourceURI).put(propertyName, newProperty); //store the new value (which may be null if the property is to be removed)
 			}
 			return true;
 		}
 
 		/**
-		 * Gets the new name of the indicated property.
+		 * Gets the new name and value of the indicated property.
+		 * @param repository The Marmot repository.
+		 * @param resourceURI The URI of the resource being visited.
 		 * @param propertyName The name of the property to possibly be renamed.
 		 * @param svnPropertyValue The value of the property.
-		 * @return The new name of the property; or the same name if the property should not be renamed; or <code>null</code> if the property should be removed
+		 * @return The new name and value of the property (a different name indicates a property rename), or <code>null</code> if the property should be removed
 		 *         altogether.
+		 * @throws IllegalArgumentException if the property value is not valid.
 		 */
-		protected abstract String getNewPropertyName(final String propertyName, final SVNPropertyValue svnPropertyValue);
+		protected abstract NameValuePair<String, SVNPropertyValue> getNewProperty(final SVNKitSubversionRepository repository, final URI resourceURI,
+				final NameValuePair<String, SVNPropertyValue> property);
+
+		/**
+		 * Commits the collected property names to the given repository.
+		 * @param repository The repository to which the renames should be committed.
+		 * @throws SVNException if there is an error accessing the repository.
+		 */
+		public void commitRenames(final SVNKitSubversionRepository repository) throws SVNException
+		{
+			final SVNRepository svnRepository = repository.getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
+			synchronized(svnRepository)
+			{
+				final ISVNEditor editor = svnRepository.getCommitEditor("Marmot obsolete property removals and renames.", null, true, null); //get a commit editor to the repository
+				try
+				{
+					editor.openRoot(-1); //open the root to start making changes
+					for(final Map.Entry<URI, Map<String, NameValuePair<String, SVNPropertyValue>>> resourcePropertyChangesEntry : getResourcePropertyChanges().entrySet()) //look at all the resources
+					{
+						if(!resourcePropertyChangesEntry.getValue().isEmpty()) //if there are property renames
+						{
+							final URI resourceURI = resourcePropertyChangesEntry.getKey();
+							final URIPath resourceURIPath = repository.getResourceURIPath(resourceURI); //get the path to the resource
+							if(resourceURIPath.isCollection()) //open the file or directory for editing
+							{
+								editor.openDir(resourceURIPath.toDecodedString(), -1);
+							}
+							else
+							{
+								editor.openFile(resourceURIPath.toDecodedString(), -1);
+							}
+							for(final Map.Entry<String, NameValuePair<String, SVNPropertyValue>> propertyChangesEntry : resourcePropertyChangesEntry.getValue().entrySet()) //look at all the properties to change
+							{
+								final String propertyName = propertyChangesEntry.getKey(); //get the property name
+								final NameValuePair<String, SVNPropertyValue> newProperty = propertyChangesEntry.getValue(); //get the new property; if it is null, it will be removed
+								final String newPropertyName = newProperty != null ? newProperty.getName() : null; //get the new property name
+								if(resourceURIPath.isCollection())
+								{
+									if(!propertyName.equals(newPropertyName)) //if the name is changing or the property is being removed altogether
+									{
+										editor.changeDirProperty(propertyName, null); //remove the property
+									}
+									if(newProperty != null) //if we should rename the property or change property value
+									{
+										editor.changeDirProperty(newPropertyName, newProperty.getValue()); //add a property with a different name and/or a different value
+									}
+								}
+								else
+								{
+									if(!propertyName.equals(newPropertyName)) //if the name is changing or the property is being removed altogether
+									{
+										editor.changeFileProperty(resourceURIPath.toDecodedString(), propertyName, null); //remove the property
+									}
+									if(newPropertyName != null) //if we should rename the property or change property value
+									{
+										editor.changeFileProperty(resourceURIPath.toDecodedString(), newPropertyName, newProperty.getValue()); //add a property with a different name and/or a different value
+									}
+								}
+							}
+							if(!resourceURIPath.isCollection()) //if this was a file, close its edits
+							{
+								editor.closeFile(resourceURIPath.toDecodedString(), null);
+							}
+						}
+					}
+					editor.closeEdit(); //try to finalize the edit
+				}
+				catch(final SVNException svnException)
+				{
+					editor.abortEdit(); //abort the edit we had scheduled
+					throw svnException; //rethrow the exception
+				}
+			}
+		}
 
 	}
 
 	/**
-	 * Visitor to collect obsolete property names.
+	 * Visitor to collect obsolete property names and optionally commit removals and renames.
 	 * 
 	 * @author Garret Wilson
 	 */
-	public static class CollectObsoletePropertyNamesVisitor extends CollectPropertyRenameVisitor
+	public static class CollectObsoletePropertyChangesVisitor extends CollectPropertyChangesVisitor
 	{
 
+		/** {@inheritDoc} This version removes the obsolete synchronization property and renames obsolete property names. */
 		@Override
-		protected String getNewPropertyName(final String propertyName, final SVNPropertyValue svnPropertyValue)
+		protected NameValuePair<String, SVNPropertyValue> getNewProperty(final SVNKitSubversionRepository repository, final URI resourceURI,
+				final NameValuePair<String, SVNPropertyValue> property)
 		{
+			String propertyName = property.getName();
+			final SVNPropertyValue svnPropertyValue = property.getValue();
 			if(!isReservedNamespaceProperty(propertyName) && svnPropertyValue.isString()) //if this is a non-reserved Subversion property with a string value
 			{
 				if(OBSOLETE_SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME.equals(propertyName)) //remove the last-modified synchronization property name
 				{
 					return null;
 				}
-				try
+				if(!Marmot.ID.equals(Subversion.getPropertyNamespace(propertyName)) && propertyName.indexOf(OBSOLETE_PROPERTY_NAME_URI_ESCAPE_CHAR) >= 0) //if this isn't an up-to-date Marmot property and it has an obsolete escape character in it
 				{
-					URI propertyURI = decodeObsoletePropertyURILocalName(propertyName); //see if this is an obsolete property name
-					propertyURI = convertLegacyNamespacedURI(propertyURI); //convert it from a legacy form if needed
-					return URIs.plainEncode(propertyURI); //simple-encode the property URI
-				}
-				catch(final IllegalArgumentException illegalArgumentException) //if the custom property local name wasn't an encoded URI, ignore the error and skip this property
-				{
+					try
+					{
+						URI propertyURI = decodeObsoletePropertyURILocalName(propertyName); //see if this is an obsolete property name
+						propertyURI = convertLegacyNamespacedURI(propertyURI); //convert it from a legacy form if needed
+						//read and save the value to make sure it's in the preferred form
+						final URFResource resource = repository.createURF().createResource(resourceURI); //create a default resource description
+						repository.decodePropertiesTextValue(resource, propertyURI, svnPropertyValue.getString()); //decode the text value into the resource
+						final NameValuePair<URI, String> propertyTextValue;
+						try
+						{
+							propertyTextValue = repository.encodePropertiesTextValue(resourceURI, resource.getProperties(propertyURI)); //encode the properties back into a single value
+						}
+						catch(final IOException ioException)
+						{
+							throw unexpected(ioException);
+						}
+						propertyName = encodePropertyURIPropertyName(propertyURI); //encode the property URI to the new preferred form
+						return new NameValuePair<String, SVNPropertyValue>(propertyName, SVNPropertyValue.create(propertyTextValue.getValue())); //return the new property name and value
+					}
+					catch(final IllegalArgumentException illegalArgumentException) //if the custom property local name wasn't an encoded URI, ignore the error and skip this property
+					{
+					}
 				}
 			}
-			return propertyName; //otherwise, the property should be unmodified
+			return property; //otherwise, the property should be unmodified
 		}
 
 	}
+
+	/**
+	 * Updates a Subversion repository by removing obsolete properties and renaming other legacy property names.
+	 * <p>
+	 * Arguments:
+	 * <dl>
+	 * <dt><var>repository</var></dt>
+	 * <dd>The URI or directory name of the repository.</dd>
+	 * <dt>[<code>--test</code>]</dt>
+	 * <dd>Lists the property renames that will occur but no changes are made.</dt>
+	 * </dl>
+	 * @param args The command-line arguments
+	 */
+	public static void main(final String[] args)
+	{
+		if(args.length == 0)
+		{
+			Log.info("Updates a Subversion repository by removing obsolete properties and renaming other legacy property names.");
+			Log.info("\tSVNKitSubversionRepository repository [--test]");
+			return;
+		}
+		final URI repositoryURI = guessAbsoluteURI(args[0]);
+		final boolean isTest = args.length > 1 && "--test".equals(args[1]);
+		if(isTest)
+		{
+			Log.info("(test)");
+		}
+		final SVNKitSubversionRepository repository = new SVNKitSubversionRepository(repositoryURI);
+		try
+		{
+			repository.open(); //open the repository
+			final CollectObsoletePropertyChangesVisitor visitor = new CollectObsoletePropertyChangesVisitor();
+			repository.traverse(visitor); //collect the property names
+			if(!isTest) //if this is not a test
+			{
+				Log.info("Committing property renames...");
+				visitor.commitRenames(repository); //commit the renames
+				Log.info("Commit finished.");
+			}
+			repository.close();
+		}
+		catch(final Exception exception)
+		{
+			Log.error(exception);
+		}
+	}
+
 }

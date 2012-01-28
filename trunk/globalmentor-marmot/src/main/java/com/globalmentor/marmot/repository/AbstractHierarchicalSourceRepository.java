@@ -113,11 +113,13 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	}
 
 	/**
-	 * Translates a public URI in the repository to a URI path relative to the public URI.
+	 * Translates a public URI in the repository to a URI path relative to the public URI. This is a convenience method that relativizes the URI of the resource
+	 * to the root URI of the repository.
 	 * @param resourceURI The URI in the public URI namespace.
 	 * @return The URI path of the resource relative to the public URI.
 	 * @throws NullPointerException if the given resource URI is <code>null</code>.
 	 * @throws IllegalArgumentException if the given resource URI is not in the public resource namespace.
+	 * @see #getRootURI()
 	 */
 	protected URIPath getResourceURIPath(final URI resourceURI)
 	{
@@ -158,7 +160,8 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	 */
 	protected abstract Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI);
 
-	/**{@inheritDoc} This version ensures that there is a source URI specified.
+	/**
+	 * {@inheritDoc} This version ensures that there is a source URI specified.
 	 * @throws IllegalStateException if there is no source URI specified.
 	 * @see #getSourceURI()
 	 */
@@ -191,15 +194,16 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 		return true; //publish all other resources
 	}
 
+	/**
+	 * Implementation to determine if the resource at the given URI exists.
+	 * <p>
+	 * This version returns <code>false</code> for all resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
+	 * @param resourceURI The URI of the resource to check.
+	 * @return <code>true</code> if the resource exists, else <code>false</code>.
+	 * @exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	 * @exception ResourceIOException if there is an error accessing the repository.
+	 */
+	//TODo del	protected boolean resourceExistsImpl(URI resourceURI) throws ResourceIOException
 
-	/**Implementation to determine if the resource at the given URI exists.
-	<p>This version returns <code>false</code> for all resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
-	@param resourceURI The URI of the resource to check.
-	@return <code>true</code> if the resource exists, else <code>false</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	@exception ResourceIOException if there is an error accessing the repository.
-	*/
-//TODo del	protected boolean resourceExistsImpl(URI resourceURI) throws ResourceIOException
-	
 }
