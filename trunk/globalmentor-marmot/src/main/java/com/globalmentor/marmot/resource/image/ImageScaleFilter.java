@@ -68,6 +68,9 @@ public class ImageScaleFilter implements ResourceContentFilter	//TODO remove dep
 	/**The dimensions of the preview aspect.*/
 	public final static Dimension2D PREVIEW_DIMENSIONS=new ImmutableDimension2D(800, 600);
 
+	/**The dimensions of the figure aspect.*/
+	public final static Dimension2D FIGURE_DIMENSIONS=new ImmutableDimension2D(400, 300);
+	
 	/**The dimensions of the thumbnail aspect.*/
 	public final static Dimension2D THUMBNAIL_DIMENSIONS=new ImmutableDimension2D(200, 600);
 
@@ -86,6 +89,9 @@ public class ImageScaleFilter implements ResourceContentFilter	//TODO remove dep
 		{
 			case preview:
 				aspectDimensions=PREVIEW_DIMENSIONS;
+				break;
+			case figure:
+				aspectDimensions=FIGURE_DIMENSIONS;
 				break;
 			case thumbnail:
 				aspectDimensions=THUMBNAIL_DIMENSIONS;

@@ -1,5 +1,5 @@
 /*
- * Copyright © 1996-2008 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 1996-2012 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,10 @@
 
 package com.globalmentor.marmot.resource;
 
-/**Presentation-related tasks relating to resources.
-@author Garret Wilson
-*/
+/**
+ * Presentation-related tasks relating to resources.
+ * @author Garret Wilson
+ */
 public interface ResourcePresentation
 {
 }

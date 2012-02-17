@@ -1,5 +1,5 @@
 /*
- * Copyright © 1996-2008 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 1996-2012 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,18 @@ package com.globalmentor.marmot.resource.image;
 
 import com.globalmentor.marmot.resource.ResourceAspect;
 
-/**Available images aspects.
-@author Garret Wilson
-*/
+/**
+ * Available images aspects.
+ * @author Garret Wilson
+ */
 public enum ImageAspect implements ResourceAspect
 {
-	/**Dimensions appropriate for presenting as a preview.*/
+	/** Dimensions appropriate for presenting as a figure. */
+	figure,
+
+	/** Dimensions appropriate for presenting as a preview. */
 	preview,
 
-	/**Dimensions appropriate for presenting as a thumbnail.*/
+	/** Dimensions appropriate for presenting as a thumbnail. */
 	thumbnail;
 }
