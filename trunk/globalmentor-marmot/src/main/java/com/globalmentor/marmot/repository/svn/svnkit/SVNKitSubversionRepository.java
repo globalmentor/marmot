@@ -317,7 +317,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			synchronized(svnRepository)
 			{
 				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toDecodedString(), -1); //get the directory entry for this resource
-				checkNodeKind(dirEntry.getKind(), resourceURI); //make sure the node is the correct kind for our resource URI, and that the node exists
+				checkNodeKind(dirEntry, resourceURI); //make sure the node is the correct kind for our resource URI, and that the node exists
 				return createResourceDescription(urf, resourceURI, dirEntry); //create and return a description of the resource
 			}
 		}
@@ -392,7 +392,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			try
 			{
 				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toDecodedString(), -1); //get the directory entry for this resource
-				checkNodeKind(dirEntry.getKind(), resourceURI); //make sure the node is the correct kind for our resource URI, and that the node exists
+				checkNodeKind(dirEntry, resourceURI); //make sure the node is the correct kind for our resource URI, and that the node exists
 				final TempOutputStream tempOutputStream = new TempOutputStream() //create a new temporary output stream that, before it is closed, will save the collected bytes to the existing resource
 				{
 					@Override
@@ -768,7 +768,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			try
 			{
 				SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toDecodedString(), -1); //get the directory entry for this resource
-				final SVNNodeKind nodeKind = checkNodeKind(dirEntry.getKind(), resourceURI); //make sure the node is the correct kind for our resource URI, and that the node exists
+				final SVNNodeKind nodeKind = checkNodeKind(dirEntry, resourceURI); //make sure the node is the correct kind for our resource URI, and that the node exists
 				final ISVNEditor editor = svnRepository.getCommitEditor("Marmot resource property modification.", null, true, null); //get a commit editor to the repository
 				try
 				{
@@ -957,7 +957,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			try
 			{
 				final SVNDirEntry dirEntry = svnRepository.info(resourceURIPath.toDecodedString(), -1); //get the directory entry for this resource
-				checkNodeKind(dirEntry.getKind(), resourceURI); //make sure the node is the correct kind for our resource URI, and that the node exists
+				checkNodeKind(dirEntry, resourceURI); //make sure the node is the correct kind for our resource URI, and that the node exists
 				final SVNNodeKind destinationNodeKind = svnRepository.checkPath(destinationURIPath.toDecodedString(), -1);
 				if(destinationNodeKind != SVNNodeKind.NONE && !overwrite) //if the destination resource already exists but we shouldn't overwrite
 				{
@@ -1152,7 +1152,33 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	}
 
 	/**
+	 * Checks to ensure that the node kind of the given directory entry is appropriate for the given resource URI.
+	 * <p>
+	 * This method is appropriate to be called with the result, which may be <code>null</code>, of {@link SVNRepository#info(String, long)}.
+	 * </p>
+	 * @param dirEntry The directory entry containing the kind of node found in the Subversion repository, or <code>null</code> if the node does not exist.
+	 * @param resourceURI The URI of the resource the node represents.
+	 * @return The node kind of the directory entry.
+	 * @throws NullPointerException if the given resource URI is <code>null</code>.
+	 * @throws ResourceNotFoundException if the given directory entry is <code>null</code> or if its node kind is {@link SVNNodeKind#NONE}.
+	 * @throws ResourceStateException If the given node kind is for a file and the resource URI is for a collection resource, or if the given node kind is for a
+	 *           directory the resource URI is for a non-collection resource.
+	 * @see SVNDirEntry#getKind()
+	 */
+	protected static SVNNodeKind checkNodeKind(final SVNDirEntry dirEntry, final URI resourceURI) throws ResourceNotFoundException, ResourceStateException
+	{
+		if(dirEntry == null) //make sure we have a resource at this URI
+		{
+			throw new ResourceNotFoundException(resourceURI);
+		}
+		return checkNodeKind(dirEntry.getKind(), resourceURI); //check the directory entry's node kind
+	}
+
+	/**
 	 * Checks to ensure that the given node kind is appropriate for the given resource URI.
+	 * <p>
+	 * This method is appropriate to be called with the result of {@link SVNRepository#checkPath(String, long)}.
+	 * </p>
 	 * @param nodeKind The kind of node found in the Subversion repository.
 	 * @param resourceURI The URI of the resource the node represents.
 	 * @return The given node kind.

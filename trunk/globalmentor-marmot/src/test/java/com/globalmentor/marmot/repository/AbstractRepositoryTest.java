@@ -36,6 +36,7 @@ import com.globalmentor.collections.Sets;
 import com.globalmentor.java.Bytes;
 import com.globalmentor.log.Log;
 import com.globalmentor.net.ResourceIOException;
+import com.globalmentor.net.ResourceNotFoundException;
 import com.globalmentor.net.URIPath;
 import com.globalmentor.test.AbstractTest;
 import com.globalmentor.time.Time;
@@ -549,6 +550,19 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		assertFalse("Deleted moved collection resource still exists.", repository.resourceExists(moveCollectionURI));
 		assertFalse("Deleted moved collection copied nested resource still exists.", repository.resourceExists(moveCollectionCopyResourceURI));
 		assertFalse("Deleted moved collection moved nested resource still exists.", repository.resourceExists(moveCollectionCopyResourceURI));
+	}
+
+	/**
+	 * Tests:
+	 * <ul>
+	 * <li>Retrieving the description of a non-existing resource.</li>
+	 * </ul>
+	 */
+	@Test(expected = ResourceNotFoundException.class)
+	public void testMissingResourceDescription() throws ResourceIOException
+	{
+		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
+		repository.getResourceDescription(resourceURI); //get a description of a resource that does not exist, which should throw an exception
 	}
 
 	/**
