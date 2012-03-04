@@ -33,16 +33,15 @@ import static java.util.Arrays.*;
 import static java.util.Collections.*;
 import static org.tmatesoft.svn.core.SVNProperty.*;
 
+import static com.globalmentor.apache.subversion.Subversion.*;
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.io.InputStreams.*;
 import static com.globalmentor.java.Characters.*;
 import static com.globalmentor.java.Conditions.*;
 import static com.globalmentor.marmot.repository.svn.MarmotSubversion.*;
 import static com.globalmentor.net.URIs.*;
-import static com.globalmentor.urf.URF.*;
 import static com.globalmentor.urf.content.Content.*;
 
-import com.globalmentor.apache.subversion.Subversion;
 import com.globalmentor.collections.*;
 import com.globalmentor.event.ProgressListener;
 import com.globalmentor.io.*;
@@ -1115,14 +1114,17 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 					final SVNPropertyValue propertyValue = propertyValueEntry.getValue();
 					if(!isReservedNamespaceProperty(propertyName) && propertyValue.isString()) //if this is a non-reserved Subversion property with a string value
 					{
-						try
+						if(propertyName.startsWith(PROPERTY_PREFIX) || Marmot.ID.equals(getPropertyNamespace(propertyName))) //TODO once legacy properties are changed, remove namespace check
 						{
-							//TODO once legacy properties are changed, check for the Marmot.ID namespace
-							final URI propertyURI = decodePropertyURIPropertyName(propertyName); //the URF property URI may be encoded in the Subversion custom property
-							propertyURITextValues.put(propertyURI, propertyValueEntry.getValue().getString()); //store the text value temporarily; we'll come back and update them later
-						}
-						catch(final IllegalArgumentException illegalArgumentException) //if the Subversion custom property local name wasn't an encoded URI, ignore the error and skip this property
-						{
+							try
+							{
+								final URI propertyURI = decodePropertyURIPropertyName(propertyName); //the URF property URI may be encoded in the Subversion custom property
+								propertyURITextValues.put(propertyURI, propertyValueEntry.getValue().getString()); //store the text value temporarily; we'll come back and update them later
+							}
+							catch(final IllegalArgumentException illegalArgumentException) //if the Subversion custom property name wasn't encoded properly
+							{
+								throw new DataException(illegalArgumentException);
+							}
 						}
 					}
 				}
@@ -1549,7 +1551,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	public static class CollectObsoletePropertyChangesVisitor extends CollectPropertyChangesVisitor
 	{
 
-		/** {@inheritDoc} This version removes the obsolete synchronization property and renames obsolete property names. */
+		/** {@inheritDoc} This version renames obsolete property names. */
 		@Override
 		protected NameValuePair<String, SVNPropertyValue> getNewProperty(final SVNKitSubversionRepository repository, final URI resourceURI,
 				final NameValuePair<String, SVNPropertyValue> property)
@@ -1558,34 +1560,10 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			final SVNPropertyValue svnPropertyValue = property.getValue();
 			if(!isReservedNamespaceProperty(propertyName) && svnPropertyValue.isString()) //if this is a non-reserved Subversion property with a string value
 			{
-				if(OBSOLETE_SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME.equals(propertyName)) //remove the last-modified synchronization property name
+				if(propertyName.startsWith(OBSOLETE_PROPERTY_PREFIX)) //if the property is "marmot:*"
 				{
-					return null;
-				}
-				if(!Marmot.ID.equals(Subversion.getPropertyNamespace(propertyName)) && propertyName.indexOf(OBSOLETE_PROPERTY_NAME_URI_ESCAPE_CHAR) >= 0) //if this isn't an up-to-date Marmot property and it has an obsolete escape character in it
-				{
-					try
-					{
-						URI propertyURI = decodeObsoletePropertyURILocalName(propertyName); //see if this is an obsolete property name
-						propertyURI = convertLegacyNamespacedURI(propertyURI); //convert it from a legacy form if needed
-						//read and save the value to make sure it's in the preferred form
-						final URFResource resource = repository.createURF().createResource(resourceURI); //create a default resource description
-						repository.decodePropertiesTextValue(resource, propertyURI, svnPropertyValue.getString()); //decode the text value into the resource
-						final NameValuePair<URI, String> propertyTextValue;
-						try
-						{
-							propertyTextValue = repository.encodePropertiesTextValue(resourceURI, resource.getProperties(propertyURI)); //encode the properties back into a single value
-						}
-						catch(final IOException ioException)
-						{
-							throw unexpected(ioException);
-						}
-						propertyName = encodePropertyURIPropertyName(propertyURI); //encode the property URI to the new preferred form
-						return new NameValuePair<String, SVNPropertyValue>(propertyName, SVNPropertyValue.create(propertyTextValue.getValue())); //return the new property name and value
-					}
-					catch(final IllegalArgumentException illegalArgumentException) //if the custom property local name wasn't an encoded URI, ignore the error and skip this property
-					{
-					}
+					propertyName = PROPERTY_PREFIX + propertyName.substring(OBSOLETE_PROPERTY_PREFIX.length()); //change the property to "marmot-"
+					return new NameValuePair<String, SVNPropertyValue>(propertyName, property.getValue()); //return the new property name and value
 				}
 			}
 			return property; //otherwise, the property should be unmodified

@@ -34,26 +34,12 @@ import com.globalmentor.net.URIs;
 public class MarmotSubversion
 {
 
-	/** The obsolete property for synchronizing last-modified times. */
+	/** The obsolete prefix for Marmot properties: <code>marmot:</code>. */
 	@Deprecated
-	public final static String OBSOLETE_SYNC_WEBDAV_GET_LAST_MODIFIED_PROPERTY_NAME = "syncWebDAVGetLastModified";
+	public final static String OBSOLETE_PROPERTY_PREFIX = Marmot.ID + PROPERTY_NAMESPACE_SEPARATOR;
 
-	/** The obsolete character used to escape URIs to encode them as property names in another namespace. */
-	@Deprecated
-	public final static char OBSOLETE_PROPERTY_NAME_URI_ESCAPE_CHAR = MIDDLE_DOT_CHAR;
-
-	/**
-	 * Decodes a property URI from an obsolete property name encoding
-	 * @param propertyName The name of the Subversion property.
-	 * @return The URI of the URF property to represent the given property local name.
-	 * @throws IllegalArgumentException if the given local name has no valid absolute URF property URI encoded in it.
-	 */
-	@Deprecated
-	public static URI decodeObsoletePropertyURILocalName(final String propertyName)
-	{
-		final String urfPRopertyURI = decode(propertyName, OBSOLETE_PROPERTY_NAME_URI_ESCAPE_CHAR); //the URF property URI may be encoded as the local name of the custom property
-		return checkAbsolute(URI.create(urfPRopertyURI)); //create an URF property URI from the decoded local name and make sure it is absolute
-	}
+	/** The prefix for Marmot properties: <code>marmot-</code>. */
+	public final static String PROPERTY_PREFIX = Marmot.ID + HYPHEN_MINUS_CHAR;
 
 	/**
 	 * Determines the a property name to represent an URF property by encoded the URF property URI to be a simple local name. The name is created by
@@ -66,30 +52,34 @@ public class MarmotSubversion
 	 */
 	public static String encodePropertyURIPropertyName(final URI propertyURI)
 	{
-		return Marmot.ID + PROPERTY_NAMESPACE_SEPARATOR + plainEncode(propertyURI);
+		return PROPERTY_PREFIX + plainEncode(propertyURI);
 	}
 
 	/**
-	 * Determines the URI of the URF property to represent the given Marmot property local name. The property is assumed to be in the {@value Marmot#ID}
-	 * namespace.
+	 * Determines the URI of the URF property to represent the given Marmot property local name. The property must start with the {@value #PROPERTY_PREFIX}
+	 * prefix.
 	 * <p>
-	 * This implementation for the time being also supports decoding obsolete property forms if the property is not in the {@value Marmot#ID} namespace.
+	 * This implementation for the time being also supports decoding obsolete property forms in the {@value Marmot#ID} namespace.
 	 * </p>
 	 * @param propertyName The name of the property, which is assumed to be in the {@value Marmot#ID} namespace.
 	 * @return The URI of the URF property to represent the given property name.
 	 * @throws NullPointerException if the given property name is <code>null</code>.
-	 * @throws IllegalArgumentException if the given property name is not in the {@value Marmot#ID} namespace or is not a valid plain-encoded URI.
+	 * @throws IllegalArgumentException if the given property name does not start with the {@value #PROPERTY_PREFIX} prefix or is not a valid plain-encoded URI.
+	 * @see #PROPERTY_PREFIX
 	 * @see #encodePropertyURIPropertyName(URI)
 	 * @see URIs#plainDecode(String)
-	 * @see #decodeObsoletePropertyURILocalName(String)
 	 */
 	public static URI decodePropertyURIPropertyName(final String propertyName)
 	{
-		if(!Marmot.ID.equals(getPropertyNamespace(propertyName))) //if this property is not in the Marmot namespace
+		if(Marmot.ID.equals(getPropertyNamespace(propertyName))) //if this property is in the Marmot namespace TODO delete when legacy properties converted
 		{
-			return decodeObsoletePropertyURILocalName(propertyName); //perform legacy decoding
+			return plainDecode(getPropertyLocalName(propertyName)); //perform legacy decoding
 		}
-		return plainDecode(getPropertyLocalName(propertyName));
+		if(propertyName.startsWith(PROPERTY_PREFIX)) //if the property starts with "marmot-"
+		{
+			return plainDecode(propertyName.substring(PROPERTY_PREFIX.length()));
+		}
+		throw new IllegalArgumentException("The property name " + propertyName + " does not represent a Marmot Subversion property.");
 	}
 
 }

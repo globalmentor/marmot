@@ -19,12 +19,15 @@ package com.globalmentor.marmot.repository.webdav;
 import java.net.*;
 import java.util.Set;
 
+import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.marmot.repository.svn.MarmotSubversion;
 import com.globalmentor.net.URIs;
 import com.globalmentor.net.http.*;
 import com.globalmentor.net.http.webdav.*;
 
+import static com.globalmentor.apache.subversion.Subversion.getPropertyNamespace;
+import static com.globalmentor.marmot.repository.svn.MarmotSubversion.PROPERTY_PREFIX;
 import static com.globalmentor.marmot.repository.svn.MarmotSubversion.decodePropertyURIPropertyName;
 import static com.globalmentor.net.http.webdav.SubversionWebDAV.*;
 
@@ -135,6 +138,7 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 	 * which conveniently is not a valid URI character, is used instead. Otherwise, this method delegates to the super version.
 	 * @param webdavPropertyName The name of the WebDAV property.
 	 * @return The URI of the URF property to represent the given WebDAV property, or <code>null</code> if the given WebDAV property cannot be represented in URF.
+	 * @throws IllegalArgumentException if the given property is not encoded properly.
 	 * @see SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI
 	 * @see AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR
 	 * @see AbstractRepository#decodePropertyURILocalName(String)
@@ -143,13 +147,10 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 	{
 		if(SUBVERSION_CUSTOM_NAMESPACE.equals(webdavPropertyName.getNamespace())) //if this is the Subversion custom property namespace
 		{
-			try
+			final String propertyName = webdavPropertyName.getLocalName(); //get the property name
+			if(propertyName.startsWith(PROPERTY_PREFIX) || Marmot.ID.equals(getPropertyNamespace(propertyName))) //TODO once legacy properties are changed, remove namespace check
 			{
-				//TODO once legacy properties are changed, check for the Marmot.ID namespace
 				return decodePropertyURIPropertyName(webdavPropertyName.getLocalName()); //the URF property URI may be encoded as the local name of the Subversion custom property
-			}
-			catch(final IllegalArgumentException illegalArgumentException) //if the Subversion custom property local name wasn't an encoded URI, ignore the error and use the property normally
-			{
 			}
 		}
 		return super.getURFPropertyURI(webdavPropertyName); //if this doesn't appear to be an URF property, treat the property as a normal WebDAV property

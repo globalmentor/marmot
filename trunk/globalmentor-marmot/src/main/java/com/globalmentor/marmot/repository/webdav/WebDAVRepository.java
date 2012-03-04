@@ -273,6 +273,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * </p>
 	 * @param webdavPropertyName The name of the WebDAV property.
 	 * @return The URI of the URF property to represent the given WebDAV property, or <code>null</code> if the given WebDAV property cannot be represented in URF.
+	 * @throws IllegalArgumentException if the given property is not encoded properly.
 	 * @see #URF_TOKEN_LOCAL_NAME
 	 */
 	protected URI getURFPropertyURI(final WebDAVPropertyName webdavPropertyName)
@@ -1093,7 +1094,15 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			if(!ignoredWebDAVNamespaces.contains(propertyNamespace)) //if this is not a namespace to ignore
 			{
 				//Log.trace("looking at non-WebDAV property", propertyName);
-				final URI urfPropertyURI = getURFPropertyURI(propertyName); //get the URI of the corresponding URF property, if any
+				final URI urfPropertyURI;
+				try
+				{
+					urfPropertyURI = getURFPropertyURI(propertyName); //get the URI of the corresponding URF property, if any
+				}
+				catch(final IllegalArgumentException illegalArgumentException) //if the property name wasn't encoded properly
+				{
+					throw new DataException(illegalArgumentException);
+				}
 				//Log.trace("URF property URI", urfPropertyURI);
 				if(urfPropertyURI != null && propertyValue != null) //if there is a corresponding URF property and there is an actual value specified (URF does not define a null value) TODO fix null
 				{
