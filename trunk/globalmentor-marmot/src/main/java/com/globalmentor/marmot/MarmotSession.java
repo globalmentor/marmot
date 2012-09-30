@@ -19,13 +19,14 @@ package com.globalmentor.marmot;
 import java.nio.charset.Charset;
 import java.util.Set;
 
+import org.urframework.URFResource;
+import org.urframework.content.Content;
+
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.ResourceKit;
 import com.globalmentor.marmot.resource.ResourceKit.Capability;
 import com.globalmentor.marmot.security.MarmotSecurityManager;
 import com.globalmentor.net.ContentType;
-import com.globalmentor.urf.URFResource;
-import com.globalmentor.urf.content.Content;
 
 /**
  * Marmot session information.

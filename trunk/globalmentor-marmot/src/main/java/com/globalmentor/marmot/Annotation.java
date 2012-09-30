@@ -16,9 +16,10 @@
 
 package com.globalmentor.marmot;
 
+import org.urframework.*;
+import org.urframework.content.Content;
+
 import com.globalmentor.net.ContentType;
-import com.globalmentor.urf.*;
-import com.globalmentor.urf.content.Content;
 
 /**A resource annotation.
 @author Garret Wilson

@@ -18,7 +18,8 @@ package com.globalmentor.marmot.repository;
 
 import java.net.URI;
 
-import com.globalmentor.urf.URFResource;
+import org.urframework.URFResource;
+
 
 /**A filter adapter which allows all resources.
 Child implementations should override {@link #isPass(URI)} or {@link #isPass(URFResource)} to provide some filtering.

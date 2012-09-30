@@ -18,9 +18,10 @@ package com.globalmentor.marmot.repository;
 
 import java.net.*;
 
+import org.urframework.*;
+
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.net.URIPath;
-import com.globalmentor.urf.*;
 
 import static com.globalmentor.java.Conditions.*;
 import static com.globalmentor.java.Objects.*;

@@ -18,7 +18,8 @@ package com.globalmentor.marmot.repository;
 
 import java.net.URI;
 
-import com.globalmentor.urf.URFResource;
+import org.urframework.URFResource;
+
 
 /**A resource filter that filters on resource URI.
 This class automatically filters on collection and non-collection status.

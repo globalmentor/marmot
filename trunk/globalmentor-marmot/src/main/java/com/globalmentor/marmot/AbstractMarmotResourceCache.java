@@ -20,17 +20,18 @@ import java.io.*;
 import java.net.URI;
 import java.util.Date;
 
+import org.urframework.*;
+
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
-import static com.globalmentor.urf.content.Content.*;
+import static org.urframework.content.Content.*;
 
 import com.globalmentor.cache.AbstractFileCache;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.model.AbstractHashObject;
 import com.globalmentor.net.URIPath;
 import com.globalmentor.net.URIs;
-import com.globalmentor.urf.*;
 import com.globalmentor.util.*;
 
 /**An abstract implementation of a manager of cached Marmot resources.

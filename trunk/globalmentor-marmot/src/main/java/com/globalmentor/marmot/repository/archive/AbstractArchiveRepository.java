@@ -21,6 +21,8 @@ import static com.globalmentor.java.Objects.checkInstance;
 import java.io.*;
 import java.net.URI;
 
+import org.urframework.*;
+
 import com.globalmentor.cache.Cache;
 import com.globalmentor.config.ConfigurationException;
 import com.globalmentor.marmot.Marmot;
@@ -30,7 +32,6 @@ import com.globalmentor.net.URIPath;
 
 import static com.globalmentor.net.URIs.*;
 
-import com.globalmentor.urf.*;
 
 /**Abstract implementation of a repository backed by an archive resource.
 @param <A> The type of object representing a source archive.

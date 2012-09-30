@@ -20,14 +20,15 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 
+import org.urframework.URFResource;
+import org.urframework.maqro.MAQRO;
+
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.*;
 import com.globalmentor.net.ContentType;
 import com.globalmentor.net.ResourceIOException;
-import com.globalmentor.urf.URFResource;
-import com.globalmentor.urf.maqro.MAQRO;
 
-import static com.globalmentor.urf.maqro.MAQRO.*;
+import static org.urframework.maqro.MAQRO.*;
 
 /**Resource kit for handling mentoring activities and interactions.
 <p>Supported media types:</p>

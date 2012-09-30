@@ -18,7 +18,8 @@ package com.globalmentor.marmot;
 
 import java.net.URI;
 
-import com.globalmentor.urf.content.AbstractContentResource;
+import org.urframework.content.AbstractContentResource;
+
 
 /**The abstract base class of a resource annotation.
 @author Garret Wilson

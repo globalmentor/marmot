@@ -19,11 +19,12 @@ package com.globalmentor.marmot.repository.file;
 import java.io.*;
 import java.net.URI;
 
+import org.urframework.DefaultURFResourceAlteration;
+import org.urframework.URFResource;
+
 import com.globalmentor.io.Files;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.net.URIs;
-import com.globalmentor.urf.DefaultURFResourceAlteration;
-import com.globalmentor.urf.URFResource;
 
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.net.URIs.isCollectionURI;

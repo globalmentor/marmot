@@ -27,6 +27,9 @@ import static java.util.Collections.*;
 
 import java.util.concurrent.*;
 
+import org.urframework.*;
+import org.urframework.content.*;
+
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
 import com.globalmentor.marmot.repository.*;
@@ -35,8 +38,6 @@ import com.globalmentor.marmot.resource.ResourceKit.Capability;
 import com.globalmentor.marmot.security.*;
 import com.globalmentor.net.ContentType;
 import com.globalmentor.net.URIs;
-import com.globalmentor.urf.*;
-import com.globalmentor.urf.content.*;
 
 /**
  * A Marmot session with installed resource kits.

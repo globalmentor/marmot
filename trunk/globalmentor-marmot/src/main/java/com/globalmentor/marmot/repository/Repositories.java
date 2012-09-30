@@ -22,7 +22,8 @@ import static com.globalmentor.java.Conditions.*;
 import java.io.*;
 import java.net.URI;
 
-import com.globalmentor.urf.*;
+import org.urframework.*;
+
 
 /**
  * Constants and utilities for working with repositories.

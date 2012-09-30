@@ -19,13 +19,14 @@ package com.globalmentor.marmot.security;
 import java.net.URI;
 import java.util.Collection;
 
+import org.urframework.*;
+import org.urframework.select.UniversalSelector;
 
-import com.globalmentor.urf.*;
-import com.globalmentor.urf.select.UniversalSelector;
+
 
 import static com.globalmentor.java.Classes.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
-import static com.globalmentor.urf.URF.*;
+import static org.urframework.URF.*;
 
 /**Specifies access for a resource.
 @author Garret Wilson

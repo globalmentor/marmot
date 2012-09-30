@@ -27,10 +27,10 @@ import com.globalmentor.net.ContentType;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.text.xml.XMLIO;
 import static com.globalmentor.text.xml.XML.*;
-import com.globalmentor.urf.*;
 import static com.globalmentor.text.xml.xhtml.XHTML.*;
-import static com.globalmentor.urf.dcmi.DCMI.*;
+import static org.urframework.dcmi.DCMI.*;
 
+import org.urframework.*;
 import org.w3c.dom.*;
 
 /**Abstract resource kit for basic handling XHTML resources.

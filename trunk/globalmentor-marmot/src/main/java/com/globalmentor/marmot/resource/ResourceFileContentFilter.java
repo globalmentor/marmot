@@ -18,8 +18,9 @@ package com.globalmentor.marmot.resource;
 
 import java.io.*;
 
+import org.urframework.URFResource;
+
 import com.globalmentor.net.ResourceIOException;
-import com.globalmentor.urf.URFResource;
 
 /**A resource filter that also provides a file-based filtering method for more effecient filtering.
 Resource file filters must still support stream-based filtering.

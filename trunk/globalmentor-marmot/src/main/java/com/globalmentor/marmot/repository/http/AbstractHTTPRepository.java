@@ -22,15 +22,18 @@ import java.net.*;
 import java.text.DateFormat;
 import java.util.*;
 
+import org.urframework.*;
+import org.urframework.content.*;
+
 import static java.util.Arrays.*;
 import static java.util.Collections.*;
+import static org.urframework.TURF.*;
+import static org.urframework.URF.*;
+import static org.urframework.content.Content.*;
+import static org.urframework.dcmi.DCMI.*;
 
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.text.xml.XML.*;
-import static com.globalmentor.urf.TURF.*;
-import static com.globalmentor.urf.URF.*;
-import static com.globalmentor.urf.content.Content.*;
-import static com.globalmentor.urf.dcmi.DCMI.*;
 
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.model.Locales.*;
@@ -43,8 +46,6 @@ import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.net.*;
 import com.globalmentor.net.http.*;
-import com.globalmentor.urf.*;
-import com.globalmentor.urf.content.*;
 import com.globalmentor.util.*;
 
 /**

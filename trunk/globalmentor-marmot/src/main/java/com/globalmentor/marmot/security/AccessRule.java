@@ -18,12 +18,13 @@ package com.globalmentor.marmot.security;
 
 import java.net.URI;
 
+import org.urframework.select.*;
 
-import com.globalmentor.urf.select.*;
+
 
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
-import static com.globalmentor.urf.select.Select.*;
+import static org.urframework.select.Select.*;
 
 /**Specifies a rule for access to a resource.
 @author Garret Wilson

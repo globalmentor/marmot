@@ -22,8 +22,13 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.Collections;
 
+import org.urframework.*;
+import org.urframework.content.Content;
+
 import static java.util.Arrays.*;
 import static java.util.Collections.*;
+import static org.urframework.URF.*;
+import static org.urframework.content.Content.*;
 
 import com.globalmentor.collections.*;
 import com.globalmentor.event.ProgressListener;
@@ -34,8 +39,6 @@ import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.security.MarmotSecurity;
 import com.globalmentor.model.*;
 import com.globalmentor.net.*;
-import com.globalmentor.urf.*;
-import com.globalmentor.urf.content.Content;
 
 import static com.globalmentor.collections.Sets.*;
 import static com.globalmentor.io.Charsets.*;
@@ -46,8 +49,6 @@ import static com.globalmentor.java.Conditions.*;
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 import static com.globalmentor.net.URIs.*;
-import static com.globalmentor.urf.URF.*;
-import static com.globalmentor.urf.content.Content.*;
 
 /**
  * Abstract implementation of a repository with typical features.

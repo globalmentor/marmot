@@ -18,9 +18,11 @@ package com.globalmentor.marmot;
 
 import java.net.URI;
 
+import org.urframework.URFResource;
+
 import com.globalmentor.config.Configurator;
-import static com.globalmentor.urf.URF.*;
-import com.globalmentor.urf.URFResource;
+
+import static org.urframework.URF.*;
 
 /**
  * Constant values and utilities used by Marmot.

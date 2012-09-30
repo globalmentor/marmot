@@ -21,8 +21,12 @@ import java.net.URI;
 import java.util.*;
 
 import static java.util.Collections.emptyList;
+import static org.urframework.content.Content.*;
+
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import org.urframework.*;
 
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.CharSequences.*;
@@ -30,9 +34,7 @@ import com.globalmentor.marmot.repository.*;
 import com.globalmentor.net.*;
 
 import static com.globalmentor.net.URIs.*;
-import com.globalmentor.urf.*;
 
-import static com.globalmentor.urf.content.Content.*;
 
 /**A repository backed by a Zip archive resource.
 @author Garret Wilson

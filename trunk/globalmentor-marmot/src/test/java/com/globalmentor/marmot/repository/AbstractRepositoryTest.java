@@ -21,16 +21,18 @@ import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.Conditions.*;
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
-import static com.globalmentor.urf.content.Content.*;
-import static com.globalmentor.urf.dcmi.DCMI.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.urframework.content.Content.*;
+import static org.urframework.dcmi.DCMI.*;
 
 import java.io.*;
 import java.net.URI;
 import java.util.*;
 
 import org.junit.*;
+import org.urframework.*;
+import org.urframework.dcmi.DCMI;
 
 import com.globalmentor.collections.Sets;
 import com.globalmentor.java.Bytes;
@@ -40,8 +42,6 @@ import com.globalmentor.net.ResourceNotFoundException;
 import com.globalmentor.net.URIPath;
 import com.globalmentor.test.AbstractTest;
 import com.globalmentor.time.Time;
-import com.globalmentor.urf.*;
-import com.globalmentor.urf.dcmi.DCMI;
 
 /**
  * Abstract base class for running tests on repositories.

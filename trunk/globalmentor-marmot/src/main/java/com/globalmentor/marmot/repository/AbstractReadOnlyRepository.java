@@ -22,9 +22,10 @@ import java.io.*;
 import java.net.URI;
 import java.util.*;
 
+import org.urframework.*;
+
 import com.globalmentor.event.ProgressListener;
 import com.globalmentor.net.*;
-import com.globalmentor.urf.*;
 
 /**
  * Abstract implementation of a repository that does not allow resources to be modified.

@@ -19,14 +19,15 @@ package com.globalmentor.marmot;
 import java.io.IOException;
 import java.net.URI;
 
+import org.urframework.URFResource;
+import org.urframework.content.Content;
+
 import static com.globalmentor.java.Objects.*;
 
 import com.globalmentor.log.Log;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.net.ContentType;
 import com.globalmentor.net.URIPath;
-import com.globalmentor.urf.URFResource;
-import com.globalmentor.urf.content.Content;
 
 import static com.globalmentor.net.URIs.*;
 

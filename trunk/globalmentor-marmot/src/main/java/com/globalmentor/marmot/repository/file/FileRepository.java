@@ -20,22 +20,23 @@ import java.io.*;
 import java.net.URI;
 import java.util.*;
 
+import org.urframework.*;
+import org.urframework.content.Content;
+
 import static java.util.Collections.*;
+import static org.urframework.TURF.*;
+import static org.urframework.content.Content.*;
 
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
-import static com.globalmentor.urf.content.Content.*;
 
 import com.globalmentor.event.ProgressListener;
 import com.globalmentor.io.*;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.net.*;
-import com.globalmentor.urf.*;
-import com.globalmentor.urf.content.Content;
 
-import static com.globalmentor.urf.TURF.*;
 
 /**
  * Repository stored in a file system.

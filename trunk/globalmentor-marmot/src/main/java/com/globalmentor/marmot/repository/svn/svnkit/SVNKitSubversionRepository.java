@@ -28,10 +28,13 @@ import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
 import org.tmatesoft.svn.core.io.*;
 import org.tmatesoft.svn.core.io.diff.SVNDeltaGenerator;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
+import org.urframework.*;
+import org.urframework.content.Content;
 
 import static java.util.Arrays.*;
 import static java.util.Collections.*;
 import static org.tmatesoft.svn.core.SVNProperty.*;
+import static org.urframework.content.Content.*;
 
 import static com.globalmentor.apache.subversion.Subversion.*;
 import static com.globalmentor.io.Files.*;
@@ -40,7 +43,6 @@ import static com.globalmentor.java.Characters.*;
 import static com.globalmentor.java.Conditions.*;
 import static com.globalmentor.marmot.repository.svn.MarmotSubversion.*;
 import static com.globalmentor.net.URIs.*;
-import static com.globalmentor.urf.content.Content.*;
 
 import com.globalmentor.collections.*;
 import com.globalmentor.event.ProgressListener;
@@ -50,8 +52,6 @@ import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.model.NameValuePair;
 import com.globalmentor.net.*;
-import com.globalmentor.urf.*;
-import com.globalmentor.urf.content.Content;
 import com.globalmentor.util.DataException;
 
 /**

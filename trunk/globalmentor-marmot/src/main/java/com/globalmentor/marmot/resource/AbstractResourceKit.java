@@ -19,8 +19,14 @@ package com.globalmentor.marmot.resource;
 import java.io.*;
 import java.net.URI;
 import java.util.*;
+
+import org.urframework.*;
+import org.urframework.content.Content;
+
 import static java.util.Arrays.*;
 import static java.util.Collections.*;
+import static org.urframework.content.Content.*;
+import static org.urframework.dcmi.DCMI.*;
 
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.Enums.*;
@@ -32,10 +38,6 @@ import com.globalmentor.marmot.security.PermissionType;
 import com.globalmentor.net.ContentType;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.net.URIPath;
-import com.globalmentor.urf.*;
-import com.globalmentor.urf.content.Content;
-import static com.globalmentor.urf.content.Content.*;
-import static com.globalmentor.urf.dcmi.DCMI.*;
 
 /**Abstract implementation of a resource kit.
 @author Garret Wilson

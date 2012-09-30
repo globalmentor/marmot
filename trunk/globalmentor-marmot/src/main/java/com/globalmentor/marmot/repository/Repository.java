@@ -21,11 +21,12 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.*;
 
+import org.urframework.*;
+import org.urframework.content.Content;
+
 import com.globalmentor.event.ProgressListener;
 import com.globalmentor.java.Disposable;
 import com.globalmentor.net.*;
-import com.globalmentor.urf.*;
-import com.globalmentor.urf.content.Content;
 
 /**
  * A Marmot information store.

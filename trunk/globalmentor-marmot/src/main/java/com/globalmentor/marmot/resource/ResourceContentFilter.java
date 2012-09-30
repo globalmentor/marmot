@@ -18,8 +18,9 @@ package com.globalmentor.marmot.resource;
 
 import java.io.*;
 
+import org.urframework.URFResource;
+
 import com.globalmentor.net.ResourceIOException;
-import com.globalmentor.urf.URFResource;
 
 /**An object that can filter resource descriptions and content.
 @author Garret Wilson

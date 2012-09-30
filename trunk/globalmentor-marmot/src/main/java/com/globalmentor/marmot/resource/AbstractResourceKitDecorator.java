@@ -20,13 +20,14 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.Set;
 
+import org.urframework.URFResource;
+
 import static com.globalmentor.java.Objects.*;
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.PermissionType;
 import com.globalmentor.net.ContentType;
 import com.globalmentor.net.ResourceIOException;
-import com.globalmentor.urf.URFResource;
 
 /**A resource kit that decorates another resource kit.
 @author Garret Wilson

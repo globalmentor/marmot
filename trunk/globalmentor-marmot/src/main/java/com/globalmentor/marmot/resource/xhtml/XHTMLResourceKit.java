@@ -25,8 +25,9 @@ import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.text.xml.XML.*;
 import com.globalmentor.text.xml.xhtml.XHTML;
 import static com.globalmentor.text.xml.xhtml.XHTML.*;
-import com.globalmentor.urf.URFResource;
-import static com.globalmentor.urf.URF.*;
+import static org.urframework.URF.*;
+
+import org.urframework.URFResource;
 import org.w3c.dom.*;
 
 /**Resource kit for handling XHTML resources.

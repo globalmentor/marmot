@@ -16,7 +16,7 @@
 
 package com.globalmentor.marmot.security;
 
-import com.globalmentor.urf.URFResource;
+import org.urframework.URFResource;
 
 /**A permission in relation to a resource.
 @author Garret Wilson

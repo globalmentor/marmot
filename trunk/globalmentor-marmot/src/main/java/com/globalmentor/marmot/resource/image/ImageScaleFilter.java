@@ -32,6 +32,8 @@ import java.util.Iterator;
 import javax.imageio.*;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.stream.*;
+
+import org.urframework.URFResource;
 //JAI import javax.media.jai.*;
 
 import static com.globalmentor.java.Objects.*;
@@ -42,7 +44,6 @@ import com.globalmentor.awt.geom.*;
 import com.globalmentor.marmot.resource.ResourceFileContentFilter;
 import com.globalmentor.marmot.resource.ResourceContentFilter;
 import com.globalmentor.net.ResourceIOException;
-import com.globalmentor.urf.URFResource;
 
 /**A filter for scaling an image.
 @author Garret Wilson

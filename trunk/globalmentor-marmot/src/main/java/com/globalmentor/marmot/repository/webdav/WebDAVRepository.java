@@ -23,12 +23,12 @@ import java.util.*;
 
 import static java.util.Arrays.*;
 import static java.util.Collections.*;
+import static org.urframework.URF.*;
+import static org.urframework.content.Content.*;
+import static org.urframework.dcmi.DCMI.*;
 
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.text.xml.XML.*;
-import static com.globalmentor.urf.URF.*;
-import static com.globalmentor.urf.content.Content.*;
-import static com.globalmentor.urf.dcmi.DCMI.*;
 
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.model.Locales.*;
@@ -46,10 +46,10 @@ import com.globalmentor.model.NameValuePair;
 import com.globalmentor.net.*;
 import com.globalmentor.net.http.*;
 import com.globalmentor.net.http.webdav.*;
-import com.globalmentor.urf.*;
-import com.globalmentor.urf.content.*;
 import com.globalmentor.util.*;
 
+import org.urframework.*;
+import org.urframework.content.*;
 import org.w3c.dom.*;
 
 /**

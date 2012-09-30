@@ -22,6 +22,9 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.*;
 
+import org.urframework.*;
+import org.urframework.content.Content;
+
 import com.globalmentor.event.*;
 import com.globalmentor.io.Streams;
 
@@ -30,9 +33,7 @@ import com.globalmentor.log.*;
 import com.globalmentor.marmot.repository.Repository;
 import static com.globalmentor.net.URIs.*;
 
-import com.globalmentor.urf.*;
-import static com.globalmentor.urf.content.Content.*;
-import com.globalmentor.urf.content.Content;
+import static org.urframework.content.Content.*;
 
 /**
  * Marmot synchronization support.

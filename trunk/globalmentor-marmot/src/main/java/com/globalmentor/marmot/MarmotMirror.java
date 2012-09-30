@@ -19,6 +19,8 @@ package com.globalmentor.marmot;
 import java.io.IOException;
 import java.net.URI;
 
+import org.urframework.dcmi.DCMI;
+
 import static com.globalmentor.application.CommandLineArguments.*;
 import static com.globalmentor.java.Characters.*;
 import static com.globalmentor.java.Enums.*;
@@ -34,7 +36,6 @@ import com.globalmentor.marmot.repository.webdav.SubversionWebDAVRepository;
 import com.globalmentor.marmot.repository.webdav.WebDAVRepository;
 import com.globalmentor.net.URIs;
 import com.globalmentor.net.http.*;
-import com.globalmentor.urf.dcmi.DCMI;
 
 /**Command-line Marmot synchronization utility.
 @author Garret Wilson
