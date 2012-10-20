@@ -22,6 +22,8 @@ import java.io.*;
 import java.net.URI;
 
 import org.urframework.*;
+import org.urframework.io.URFIO;
+import org.urframework.io.URFResourceTURFIO;
 
 import com.globalmentor.cache.Cache;
 import com.globalmentor.config.ConfigurationException;

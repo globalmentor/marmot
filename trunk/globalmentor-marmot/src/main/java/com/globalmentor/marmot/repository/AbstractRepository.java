@@ -24,6 +24,8 @@ import java.util.Collections;
 
 import org.urframework.*;
 import org.urframework.content.Content;
+import org.urframework.io.URFIO;
+import org.urframework.io.URFResourceTURFIO;
 
 import static java.util.Arrays.*;
 import static java.util.Collections.*;

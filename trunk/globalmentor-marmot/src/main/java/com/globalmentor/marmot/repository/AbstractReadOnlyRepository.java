@@ -23,6 +23,8 @@ import java.net.URI;
 import java.util.*;
 
 import org.urframework.*;
+import org.urframework.io.URFIO;
+import org.urframework.io.URFResourceTURFIO;
 
 import com.globalmentor.event.ProgressListener;
 import com.globalmentor.net.*;

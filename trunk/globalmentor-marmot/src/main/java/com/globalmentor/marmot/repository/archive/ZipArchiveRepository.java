@@ -27,6 +27,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.urframework.*;
+import org.urframework.io.URFIO;
+import org.urframework.io.URFResourceTURFIO;
 
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.CharSequences.*;

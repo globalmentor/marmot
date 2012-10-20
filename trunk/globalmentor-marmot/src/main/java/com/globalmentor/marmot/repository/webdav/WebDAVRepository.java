@@ -50,6 +50,8 @@ import com.globalmentor.util.*;
 
 import org.urframework.*;
 import org.urframework.content.*;
+import org.urframework.io.URFIO;
+import org.urframework.io.URFResourceTURFIO;
 import org.w3c.dom.*;
 
 /**

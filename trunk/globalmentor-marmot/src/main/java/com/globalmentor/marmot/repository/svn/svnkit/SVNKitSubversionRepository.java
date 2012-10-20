@@ -30,6 +30,7 @@ import org.tmatesoft.svn.core.io.diff.SVNDeltaGenerator;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 import org.urframework.*;
 import org.urframework.content.Content;
+import org.urframework.io.URFResourceTURFIO;
 
 import static java.util.Arrays.*;
 import static java.util.Collections.*;

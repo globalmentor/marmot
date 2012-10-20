@@ -19,6 +19,8 @@ package com.globalmentor.marmot.repository;
 import java.net.*;
 
 import org.urframework.*;
+import org.urframework.io.URFIO;
+import org.urframework.io.URFResourceTURFIO;
 
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.net.URIPath;

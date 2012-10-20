@@ -22,6 +22,8 @@ import java.util.*;
 
 import org.urframework.*;
 import org.urframework.content.Content;
+import org.urframework.io.URFFiles;
+import org.urframework.io.URFResourceTURFIO;
 
 import static java.util.Collections.*;
 import static org.urframework.TURF.*;
@@ -36,7 +38,6 @@ import com.globalmentor.event.ProgressListener;
 import com.globalmentor.io.*;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.net.*;
-
 
 /**
  * Repository stored in a file system.
@@ -809,7 +810,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			final URFResource resource;
 			if(resourceDescriptionFile.exists()) //if there is a description file
 			{
-				resource = Files.read(resourceDescriptionFile, urf, resourceURI, getDescriptionIO()); //read the description using the given URF instance, using the resource URI as the base URI
+				resource = URFFiles.read(resourceDescriptionFile, urf, resourceURI, getDescriptionIO()); //read the description using the given URF instance, using the resource URI as the base URI
 			}
 			else
 			//if there is no description file
@@ -868,7 +869,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		{
 			try
 			{
-				Files.write(resourceDescriptionFile, resourceURI, resourceDescription, getDescriptionIO()); //write the description, using the resource URI as the base URI
+				URFFiles.write(resourceDescriptionFile, resourceURI, resourceDescription, getDescriptionIO()); //write the description, using the resource URI as the base URI
 			}
 			catch(final IOException ioException) //if an error occurs
 			{
