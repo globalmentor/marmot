@@ -35,6 +35,7 @@ import static org.urframework.content.Content.*;
 import com.globalmentor.collections.*;
 import com.globalmentor.event.ProgressListener;
 import com.globalmentor.io.*;
+import com.globalmentor.iso.datetime.ISODateTime;
 import com.globalmentor.java.Strings;
 import com.globalmentor.log.Log;
 import com.globalmentor.marmot.Marmot;
@@ -770,7 +771,7 @@ public abstract class AbstractRepository implements Repository
 
 	/**
 	 * {@inheritDoc} This version normalizes the URI, delegates to any subrepository if appropriate, and ensures the repository is open. Child classes should
-	 * override {@link #getResourceOutputStreamImpl(URI, URFDateTime)}.
+	 * override {@link #getResourceOutputStreamImpl(URI, ISODateTime)}.
 	 */
 	@Override
 	public final OutputStream getResourceOutputStream(URI resourceURI) throws ResourceIOException
@@ -782,15 +783,15 @@ public abstract class AbstractRepository implements Repository
 			return subrepository.getResourceOutputStream(resourceURI); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
-		return getResourceOutputStreamImpl(resourceURI, new URFDateTime()); //get an output stream with a new modified datetime of now
+		return getResourceOutputStreamImpl(resourceURI, new ISODateTime()); //get an output stream with a new modified datetime of now
 	}
 
 	/**
 	 * {@inheritDoc} This version normalizes the URI, delegates to any subrepository if appropriate, and ensures the repository is open. Child classes should
-	 * override {@link #getResourceOutputStreamImpl(URI, URFDateTime)}.
+	 * override {@link #getResourceOutputStreamImpl(URI, ISODateTime)}.
 	 */
 	@Override
-	public OutputStream getResourceOutputStream(URI resourceURI, final URFDateTime newContentModified) throws ResourceIOException
+	public OutputStream getResourceOutputStream(URI resourceURI, final ISODateTime newContentModified) throws ResourceIOException
 	{
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
@@ -813,7 +814,7 @@ public abstract class AbstractRepository implements Repository
 	 * @throws ResourceIOException if there is an error accessing the resource.
 	 * @see Content#MODIFIED_PROPERTY_URI
 	 */
-	protected abstract OutputStream getResourceOutputStreamImpl(final URI resourceURI, final URFDateTime newContentModified) throws ResourceIOException;
+	protected abstract OutputStream getResourceOutputStreamImpl(final URI resourceURI, final ISODateTime newContentModified) throws ResourceIOException;
 
 	/**
 	 * {@inheritDoc} This version normalizes the URI, delegates to any subrepository if appropriate, and ensures the repository is open. Child classes should
@@ -973,7 +974,7 @@ public abstract class AbstractRepository implements Repository
 		}
 		checkOpen(); //make sure the repository is open
 		final URFResource resourceDescription = new DefaultURFResource(resourceURI);
-		final URFDateTime dateTime = new URFDateTime(); //create a new timestamp representing this instant
+		final ISODateTime dateTime = new ISODateTime(); //create a new timestamp representing this instant
 		setCreated(resourceDescription, dateTime); //set the created and modified times to the current time 
 		setModified(resourceDescription, dateTime);
 		return createResourceImpl(resourceURI, resourceDescription); //create the resource with the default description
@@ -1025,7 +1026,7 @@ public abstract class AbstractRepository implements Repository
 		}
 		checkOpen(); //make sure the repository is open
 		final URFResource resourceDescription = new DefaultURFResource(resourceURI);
-		final URFDateTime dateTime = new URFDateTime(); //create a new timestamp representing this instant
+		final ISODateTime dateTime = new ISODateTime(); //create a new timestamp representing this instant
 		setCreated(resourceDescription, dateTime); //set the created and modified times to the current time 
 		setModified(resourceDescription, dateTime);
 		return createResourceImpl(resourceURI, resourceDescription, resourceContents); //create the resource with the default description

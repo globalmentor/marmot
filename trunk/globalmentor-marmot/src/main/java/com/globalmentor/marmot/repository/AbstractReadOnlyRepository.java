@@ -27,6 +27,7 @@ import org.urframework.io.URFIO;
 import org.urframework.io.URFResourceTURFIO;
 
 import com.globalmentor.event.ProgressListener;
+import com.globalmentor.iso.datetime.ISODateTime;
 import com.globalmentor.net.*;
 
 /**
@@ -134,7 +135,7 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 
 	/** {@inheritDoc} This implementation throws a {@link ResourceForbiddenException} if the resource URI exists. */
 	@Override
-	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, final URFDateTime newContentModified) throws ResourceIOException
+	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, final ISODateTime newContentModified) throws ResourceIOException
 	{
 		if(!resourceExists(resourceURI)) //if the resource doesn't exist
 		{

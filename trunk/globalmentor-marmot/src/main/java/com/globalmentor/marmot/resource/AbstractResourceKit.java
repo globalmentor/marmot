@@ -32,6 +32,8 @@ import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
+
+import com.globalmentor.iso.datetime.ISODateTime;
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.PermissionType;
@@ -275,7 +277,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 		{
 			setContentType(resource, contentType);	//set the content type
 		}
-		setDate(resource, new URFDateTime());	//set the date to the current date and time with no particular time zone
+		setDate(resource, new ISODateTime());	//set the date to the current date and time with no particular time zone
 		return resource;	//return the default resource
 	}
 

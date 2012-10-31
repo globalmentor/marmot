@@ -28,6 +28,7 @@ import static com.globalmentor.net.URIs.*;
 import static org.urframework.content.Content.*;
 
 import com.globalmentor.cache.AbstractFileCache;
+import com.globalmentor.iso.datetime.ISODateTime;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.model.AbstractHashObject;
 import com.globalmentor.net.URIPath;
@@ -135,7 +136,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		final Date cachedModifiedTime=cachedInfo.getModifiedTime();	//get the cached modified time of the resource
 		if(cachedModifiedTime!=null)	//if we know the modified time of the cached resource
 		{
-			final URFDateTime modifiedDateTime=getModified(resource);	//get the current modified date time of the resource
+			final ISODateTime modifiedDateTime=getModified(resource);	//get the current modified date time of the resource
 //Log.trace("cache: is stale?", resourceURI, "cached modified time", new URFDateTime(cachedModifiedTime), "resource modified time", modifiedDateTime, !cachedModifiedTime.equals(modifiedDateTime));
 			return !cachedModifiedTime.equals(modifiedDateTime);	//if the modified time doesn't match our record, the cache is stale; we don't have to worry about whether there is millisecond precision, as both values being compared should be coming from the same resource in the same repository
 		}
@@ -188,7 +189,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	{
 		final Repository repository=query.getRepository();	//get the repository
 		final URI resourceURI=query.getResourceURI();	//get the resource URI				
-		final URFDateTime modifiedDateTime=getModified(resource);	//get the last modified time of the resource before it is filtered
+		final ISODateTime modifiedDateTime=getModified(resource);	//get the last modified time of the resource before it is filtered
 		final String extension=URIs.getNameExtension(resourceURI);	//get the extension to use TODO important: check for a collection, as it may be possible to cache collection content in the future
 			//TODO important: check for null extension
 		File cacheFile=new File(cacheDirectory, cacheBaseName+FILENAME_EXTENSION_SEPARATOR+extension);	//create a filename in the form cacheDir/cacheBaseName.ext

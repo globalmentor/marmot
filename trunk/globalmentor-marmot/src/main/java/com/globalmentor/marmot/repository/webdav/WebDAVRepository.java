@@ -39,6 +39,7 @@ import com.globalmentor.collections.CollectionMap;
 import com.globalmentor.collections.HashSetHashMap;
 import com.globalmentor.event.ProgressListener;
 import com.globalmentor.io.*;
+import com.globalmentor.iso.datetime.ISODateTime;
 import com.globalmentor.log.Log;
 import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.repository.*;
@@ -464,7 +465,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 
 	/** {@inheritDoc} For collections, this implementation stores the content in the {@value #COLLECTION_CONTENT_NAME} file. */
 	@Override
-	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, final URFDateTime newContentModified) throws ResourceIOException
+	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, final ISODateTime newContentModified) throws ResourceIOException
 	{
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
 		try
@@ -1137,7 +1138,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 				final String creationDateString = propertyValue.getText();
 				try
 				{
-					URFDateTime created = URFDateTime.valueOfTimestamp(creationDateString); //parse the creation date; the WebDAV D:creationdate property uses the RFC 3339 Internet timestamp ISO 8601 profile
+					ISODateTime created = ISODateTime.valueOfTimestamp(creationDateString); //parse the creation date; the WebDAV D:creationdate property uses the RFC 3339 Internet timestamp ISO 8601 profile
 					setCreated(resource, created); //set the created date time
 				}
 				catch(final IllegalArgumentException illegalArgumentException) //if the creation date does not have the correct syntax
@@ -1146,7 +1147,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 				}
 			}
 		}
-		URFDateTime modified = getModified(resource); //try to determine the modified date and time; the stored modified time will always trump everything else
+		ISODateTime modified = getModified(resource); //try to determine the modified date and time; the stored modified time will always trump everything else
 		if(modified == null) //if no modified time is specified
 		{
 			final WebDAVProperty webdavLastModifiedProperty = contentProperties.get(GET_LAST_MODIFIED_PROPERTY_NAME); //D:getlastmodified
@@ -1159,7 +1160,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 					try
 					{
 						final DateFormat httpDateFormat = new HTTPDateFormat(HTTPDateFormat.Style.RFC1123); //create an HTTP date formatter; the WebDAV D:getlastmodified property prefers the RFC 1123 style, as does HTTP
-						modified = new URFDateTime(httpDateFormat.parse(lastModifiedDateString)); //parse the last modified date
+						modified = new ISODateTime(httpDateFormat.parse(lastModifiedDateString)); //parse the last modified date
 						setModified(resource, modified); //set the modified date time
 					}
 					catch(final java.text.ParseException parseException) //if the last modified time is not the correct type

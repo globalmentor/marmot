@@ -32,6 +32,8 @@ import org.urframework.io.URFResourceTURFIO;
 
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.CharSequences.*;
+
+import com.globalmentor.iso.datetime.ISODateTime;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.net.*;
 
@@ -354,13 +356,13 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 			resource.addAllProperties(configuredResource);	//add all the configured properties
 		}
 		long contentLength=0;	//we'll update the content length if we can
-		URFDateTime contentModified=null;	//we'll get the content modified from the file or, for a directory, from its content file, if any---but not from a directory itself
+		ISODateTime contentModified=null;	//we'll get the content modified from the file or, for a directory, from its content file, if any---but not from a directory itself
 		if(resourceZipEntry!=null)	//if this is not the root resource
 		{
 			if(!resourceZipEntry.isDirectory())	//if this is not a directory
 			{
 				contentLength=resourceZipEntry.getSize();	//use the uncompressed size of the zip entry
-				contentModified=new URFDateTime(resourceZipEntry.getTime());	//set the modified timestamp as the last modified date of the zip entry			
+				contentModified=new ISODateTime(resourceZipEntry.getTime());	//set the modified timestamp as the last modified date of the zip entry			
 			}
 		}
 		setContentLength(resource, contentLength);	//indicate the length of the content

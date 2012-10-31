@@ -35,6 +35,7 @@ import org.urframework.*;
 import org.urframework.dcmi.DCMI;
 
 import com.globalmentor.collections.Sets;
+import com.globalmentor.iso.datetime.ISODateTime;
 import com.globalmentor.java.Bytes;
 import com.globalmentor.log.Log;
 import com.globalmentor.net.ResourceIOException;
@@ -675,7 +676,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		final URFResource resource = new DefaultURFResource(resourceURI);
 		setTitle(resource, checkInstance(title));
 		setDescription(resource, checkInstance(description));
-		setDate(resource, new URFDateTime());
+		setDate(resource, new ISODateTime());
 		setLanguage(resource, Locale.ENGLISH);
 		return resource;
 	}

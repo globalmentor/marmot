@@ -48,6 +48,7 @@ import static com.globalmentor.net.URIs.*;
 import com.globalmentor.collections.*;
 import com.globalmentor.event.ProgressListener;
 import com.globalmentor.io.*;
+import com.globalmentor.iso.datetime.ISODateTime;
 import com.globalmentor.log.Log;
 import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.repository.*;
@@ -383,7 +384,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 
 	/** {@inheritDoc} For collections, this implementation stores the content in the {@value #COLLECTION_CONTENT_NAME} file. */
 	@Override
-	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, final URFDateTime newContentModified) throws ResourceIOException
+	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, final ISODateTime newContentModified) throws ResourceIOException
 	{
 		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
 		final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
@@ -1056,7 +1057,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		SVNNodeKind nodeKind = dirEntry.getKind(); //find out what kind of node this is
 		//		final String filename = resourceFile.getName(); //get the name of the file
 		final long contentLength; //we'll update the content length if we can
-		URFDateTime contentModified = null; //we'll get the content modified from the file or, for a directory, from its content file, if any---but not from a directory itself
+		ISODateTime contentModified = null; //we'll get the content modified from the file or, for a directory, from its content file, if any---but not from a directory itself
 		final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
 		synchronized(svnRepository)
 		{
@@ -1072,7 +1073,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 				if(contentDirEntry != null) //if there is a special collection content file
 				{
 					contentLength = contentDirEntry.getSize(); //use the size of the special collection content resource
-					contentModified = new URFDateTime(contentDirEntry.getDate()); //set the modified timestamp as the last modified date of the content file 
+					contentModified = new ISODateTime(contentDirEntry.getDate()); //set the modified timestamp as the last modified date of the content file 
 				}
 				else
 				//if there is no special collection content file
@@ -1086,7 +1087,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			//if this file is not a directory
 			{
 				contentLength = dirEntry.getSize(); //use the size of the file
-				contentModified = new URFDateTime(dirEntry.getDate()); //set the modified timestamp as the last modified date of the resource file			
+				contentModified = new ISODateTime(dirEntry.getDate()); //set the modified timestamp as the last modified date of the resource file			
 			}
 			if(dirEntry.hasProperties()) //if there are additional properties
 			{

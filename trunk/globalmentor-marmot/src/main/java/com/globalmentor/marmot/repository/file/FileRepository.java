@@ -36,6 +36,7 @@ import static com.globalmentor.net.URIs.*;
 
 import com.globalmentor.event.ProgressListener;
 import com.globalmentor.io.*;
+import com.globalmentor.iso.datetime.ISODateTime;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.net.*;
 
@@ -252,7 +253,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 
 	/** {@inheritDoc} For collections, this implementation stores the content in the {@value #COLLECTION_CONTENT_NAME} file. */
 	@Override
-	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, URFDateTime newContentModified) throws ResourceIOException
+	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, ISODateTime newContentModified) throws ResourceIOException
 	{
 		try
 		{
@@ -272,7 +273,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			}
 			if(newContentModified == null) //because we use the file modified value to keep track of the content modified property, we must *always* update the content modified, if only to keep the modified datetime we already have, because the file system will update this value automatically without our asking
 			{
-				newContentModified = new URFDateTime(contentFile.lastModified()); //get the current last modified date of the file; after the file is written, we'll update it with what it was before
+				newContentModified = new ISODateTime(contentFile.lastModified()); //get the current last modified date of the file; after the file is written, we'll update it with what it was before
 			}
 			final URF urf = createURF(); //create a new URF data model
 			final URFResource resourceDescription = createResourceDescription(urf, resourceURI, resourceFile); //get a description from a file created from the URI from the private namespace
@@ -701,7 +702,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		checkFileExists(resourceFile);
 		final URFResource resource = loadResourceDescription(urf, resourceFile); //load the resource description, if there is one
 		long contentLength = 0; //we'll update the content length if we can
-		URFDateTime contentModified = null; //we'll get the content modified from the file or, for a directory, from its content file, if any---but not from a directory itself
+		ISODateTime contentModified = null; //we'll get the content modified from the file or, for a directory, from its content file, if any---but not from a directory itself
 		if(resourceFile.isDirectory()) //if this is a directory
 		{
 			if(!isCollectionURI(resourceURI)) //if a non-collection URI was used for the directory
@@ -713,7 +714,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			if(contentFile.exists()) //if there is a special collection content resource
 			{
 				contentLength = contentFile.length(); //use the length of the special collection content resource
-				contentModified = new URFDateTime(contentFile.lastModified()); //set the modified timestamp as the last modified date of the content file			
+				contentModified = new ISODateTime(contentFile.lastModified()); //set the modified timestamp as the last modified date of the content file			
 			}
 		}
 		else
@@ -725,7 +726,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 						addLabel(resource, label); //add the unescaped filename without an extension as a label
 			*/
 			contentLength = resourceFile.length(); //use the file length
-			contentModified = new URFDateTime(resourceFile.lastModified()); //set the modified timestamp as the last modified date of the resource file			
+			contentModified = new ISODateTime(resourceFile.lastModified()); //set the modified timestamp as the last modified date of the resource file			
 			//TODO del			updateContentType(resource);	//update the content type information based upon the repository defaults
 		}
 		setContentLength(resource, contentLength); //indicate the length of the content
@@ -859,7 +860,7 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 		{
 			contentFile = resourceFile; //use the normal resource file
 		}
-		final URFDateTime modified = getModified(resourceDescription); //see if the description indicates the last modified time
+		final ISODateTime modified = getModified(resourceDescription); //see if the description indicates the last modified time
 		if(modified != null) //if the last modified time was indicated
 		{
 			resourceDescription.removePropertyValues(Content.MODIFIED_PROPERTY_URI); //remove all last-modified values from the description we'll actually save

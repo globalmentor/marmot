@@ -27,6 +27,7 @@ import org.urframework.content.Content;
 
 import com.globalmentor.event.*;
 import com.globalmentor.io.Streams;
+import com.globalmentor.iso.datetime.ISODateTime;
 
 import static com.globalmentor.java.Objects.*;
 import com.globalmentor.log.*;
@@ -542,7 +543,7 @@ public class RepositorySynchronizer
 		if(!isTest()) //if this is not just a test
 		{
 			final long inputContentLength = getContentLength(inputResourceDescription); //get the size of the input resource, if we know it
-			final URFDateTime inputContentModified = getModified(inputResourceDescription); //get the date of the input resource, if any
+			final ISODateTime inputContentModified = getModified(inputResourceDescription); //get the date of the input resource, if any
 			final InputStream inputStream = inputRepository.getResourceInputStream(inputResourceURI); //get an input stream to the input resource
 			try
 			{

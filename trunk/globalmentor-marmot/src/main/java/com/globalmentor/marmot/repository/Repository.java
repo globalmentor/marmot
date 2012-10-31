@@ -25,6 +25,7 @@ import org.urframework.*;
 import org.urframework.content.Content;
 
 import com.globalmentor.event.ProgressListener;
+import com.globalmentor.iso.datetime.ISODateTime;
 import com.globalmentor.java.Disposable;
 import com.globalmentor.net.*;
 
@@ -358,7 +359,7 @@ public interface Repository extends Disposable
 	 * @throws ResourceIOException if there is an error accessing the resource.
 	 * @see Content#MODIFIED_PROPERTY_URI
 	 */
-	public OutputStream getResourceOutputStream(final URI resourceURI, final URFDateTime newContentModified) throws ResourceIOException;
+	public OutputStream getResourceOutputStream(final URI resourceURI, final ISODateTime newContentModified) throws ResourceIOException;
 
 	/**
 	 * Determines whether the resource represented by the given URI has children.
