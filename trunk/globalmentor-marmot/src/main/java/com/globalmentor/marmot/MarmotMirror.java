@@ -19,8 +19,6 @@ package com.globalmentor.marmot;
 import java.io.IOException;
 import java.net.URI;
 
-import org.urframework.dcmi.DCMI;
-
 import static com.globalmentor.application.CommandLineArguments.*;
 import static com.globalmentor.java.Characters.*;
 import static com.globalmentor.java.Enums.*;
@@ -122,10 +120,9 @@ public class MarmotMirror extends AbstractApplication
 	*/
 	public MarmotMirror(final String[] args)
 	{
-		super(MARMOT_MIRROR_URI, args);	//construct the parent class
-		DCMI.setTitle(this, TITLE); //set the application name
-//TODO set version somehow
-		DCMI.setRights(this, COPYRIGHT); //set the application copyright
+		super(MARMOT_MIRROR_URI, TITLE, args);	//construct the parent class
+		//TODO set version somehow
+		//TODO set the copyright DCMI.setRights(this, COPYRIGHT); //set the application copyright
 	}
 
 	/**The main application method.
