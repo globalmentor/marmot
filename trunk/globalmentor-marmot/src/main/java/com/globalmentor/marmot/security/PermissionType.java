@@ -36,7 +36,7 @@ public enum PermissionType
 	
 	PREVIEW(PREVIEW_PERMISSION_CLASS_URI),
 	
-	EXECUTE(EXECUTE_PERMISSION_CLASS_URI),	//TODO maybe rename to "USE" and rename AccessLevelType.USE to something else
+	UTILIZE(UTILIZE_PERMISSION_CLASS_URI),
 	
 	READ(READ_PERMISSION_CLASS_URI),
 

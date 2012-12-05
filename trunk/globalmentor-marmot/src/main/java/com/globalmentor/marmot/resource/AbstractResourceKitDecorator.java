@@ -213,7 +213,7 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit
 	/**Determines whether the given permission is appropriate for accessing the identified aspect.
 	This prevents aspects from being accessed at lower permissions.
 	For example, a rogue user may attempt to retrieve a preview-permission aspect such as a high-resolution image
-	using a permission such as {@link PermissionType#EXECUTE} when a permission appropriate to the aspect, {@link PermissionType#PREVIEW},
+	using a permission such as {@link PermissionType#UTILIZE} when a permission appropriate to the aspect, {@link PermissionType#PREVIEW},
 	is not allowed to the user.
 	@param aspectID The serialized form of the ID of the aspect to be accessed.
 	@param permissionType The type of permission requested.

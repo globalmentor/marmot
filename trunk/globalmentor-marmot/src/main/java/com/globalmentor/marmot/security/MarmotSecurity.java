@@ -53,11 +53,11 @@ public class MarmotSecurity
 	public final static URI CUSTOM_ACCESS_LEVEL_CLASS_URI=createResourceURI(MARMOT_SECURITY_NAMESPACE_URI, "CustomAccessLevel");
 	/**Predefined access level type allowing no access.*/
 	public final static URI PRIVATE_ACCESS_LEVEL_CLASS_URI=createResourceURI(MARMOT_SECURITY_NAMESPACE_URI, "PrivateAccessLevel");
-	/**Predefined access level type allowing preview and execute permissions without discovery.*/
+	/**Predefined access level type allowing preview and utilize permissions without discovery.*/
 	public final static URI STEALTH_ACCESS_LEVEL_CLASS_URI=createResourceURI(MARMOT_SECURITY_NAMESPACE_URI, "StealthAccessLevel");
-	/**Predefined access level type allowing read and execute permissions of only a subset of the resource contents.*/
+	/**Predefined access level type allowing read and utilize permissions of only a subset of the resource contents.*/
 	public final static URI PREVIEW_ACCESS_LEVEL_CLASS_URI=createResourceURI(MARMOT_SECURITY_NAMESPACE_URI, "PreviewAccessLevel");
-	/**Predefined access level type preview and execute permissions but not read permissions.*/
+	/**Predefined access level type preview and utilize permissions but not read permissions.*/
 	public final static URI USE_ACCESS_LEVEL_CLASS_URI=createResourceURI(MARMOT_SECURITY_NAMESPACE_URI, "UseAccessLevel");
 	/**Predefined access level type allowing discover and read permissions.*/
 	public final static URI RETRIEVE_ACCESS_LEVEL_CLASS_URI=createResourceURI(MARMOT_SECURITY_NAMESPACE_URI, "RetrieveAccessLevel");
@@ -79,8 +79,8 @@ public class MarmotSecurity
 	public final static URI ANNOTATE_PERMISSION_CLASS_URI=createResourceURI(MARMOT_SECURITY_NAMESPACE_URI, "AnnotatePermission");
 	/**The principal may add annotations to the resource..*/
 	public final static URI PREVIEW_PERMISSION_CLASS_URI=createResourceURI(MARMOT_SECURITY_NAMESPACE_URI, "PreviewPermission");
-	/**The principal may add annotations to the resource.*/
-	public final static URI EXECUTE_PERMISSION_CLASS_URI=createResourceURI(MARMOT_SECURITY_NAMESPACE_URI, "ExecutePermission");
+	/**The principal may make use of the resource, such as executing the resource, but may not necessarily have access to the literal source contents.*/
+	public final static URI UTILIZE_PERMISSION_CLASS_URI=createResourceURI(MARMOT_SECURITY_NAMESPACE_URI, "UtilizePermission");
 	/**The principal may read the literal contents of the resource, including child listings for collections.*/
 	public final static URI READ_PERMISSION_CLASS_URI=createResourceURI(MARMOT_SECURITY_NAMESPACE_URI, "ReadPermission");
 	/**The principal may change, add, and remove resource properties.*/

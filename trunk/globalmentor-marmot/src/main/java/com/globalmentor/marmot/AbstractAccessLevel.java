@@ -174,7 +174,7 @@ public abstract class AbstractAccessLevel extends AbstractMarmotSecurityResource
 				return new AnnotatePermission();
 			case PREVIEW:
 				return new PreviewPermission();
-			case EXECUTE:
+			case UTILIZE:
 				return new ExecutePermission();
 			case READ:
 				return new ReadPermission();
