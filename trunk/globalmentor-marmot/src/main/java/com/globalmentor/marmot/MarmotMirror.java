@@ -132,8 +132,8 @@ public class MarmotMirror extends AbstractApplication
 	public int main()
 	{
 		final String[] args=getArgs();	//get the arguments
-		final String sourceRepositoryString=getOption(args, getSerializationName(Parameter.SOURCE_REPOSITORY));	//get the source repository parameter
-		final String destinationRepositoryString=getOption(args, getSerializationName(Parameter.DESTINATION_REPOSITORY));	//get the destination repository parameter
+		final String sourceRepositoryString=getOption(args, Parameter.SOURCE_REPOSITORY);	//get the source repository parameter
+		final String destinationRepositoryString=getOption(args, Parameter.DESTINATION_REPOSITORY);	//get the destination repository parameter
 		if(sourceRepositoryString==null || destinationRepositoryString==null)	//if the source and/or destination repository parameter is missing
 		{
 			System.out.println(TITLE);
@@ -184,53 +184,53 @@ public class MarmotMirror extends AbstractApplication
 		}
 		configureLog(args);	//configure logging TODO is this needed? isn't this done my AbstractAppliction?
 		final URI sourceRepositoryURI=guessAbsoluteURI(sourceRepositoryString);	//get the source repository URI
-		final String sourceResourceString=getOption(args, getSerializationName(Parameter.SOURCE_RESOURCE));	//get the source resource parameter
+		final String sourceResourceString=getOption(args, Parameter.SOURCE_RESOURCE);	//get the source resource parameter
 		final URI sourceResourceURI=sourceResourceString!=null ? guessAbsoluteURI(sourceResourceString) : sourceRepositoryURI;	//if the source resource is not specified, use the repository URI
 		final URI destinationRepositoryURI=guessAbsoluteURI(destinationRepositoryString);	//get the destination repository URI
-		final String destinationResourceString=getOption(args, getSerializationName(Parameter.DESTINATION_RESOURCE));	//get the destination resource parameter
+		final String destinationResourceString=getOption(args, Parameter.DESTINATION_RESOURCE);	//get the destination resource parameter
 		final URI destinationResourceURI=destinationResourceString!=null ? guessAbsoluteURI(destinationResourceString) : destinationRepositoryURI;	//if the destination resource is not specified, use the repository URI
-		HTTPClient.getInstance().setLogged(hasFlag(args, getSerializationName(Parameter.DEBUG_HTTP)));	//tell the HTTP client to log its data TODO generalize
-		final String sourceRepositoryTypeString=getOption(args, getSerializationName(Parameter.SOURCE_REPOSITORY_TYPE));
-		final Repository sourceRepository=createRepository(sourceRepositoryTypeString!=null ? getSerializedEnum(RepositoryType.class, sourceRepositoryTypeString) : null, sourceRepositoryURI, getOption(args, getSerializationName(Parameter.SOURCE_USERNAME)), getOption(args, getSerializationName(Parameter.SOURCE_PASSWORD)));	//create the correct type of repository for the source
-		final String destinationRepositoryTypeString=getOption(args, getSerializationName(Parameter.DESTINATION_REPOSITORY_TYPE));
-		final Repository destinationRepository=createRepository(destinationRepositoryTypeString!=null ? getSerializedEnum(RepositoryType.class, destinationRepositoryTypeString) : null, destinationRepositoryURI, getOption(args, getSerializationName(Parameter.DESTINATION_USERNAME)), getOption(args, getSerializationName(Parameter.DESTINATION_PASSWORD)));	//create the correct type of repository for the destination
+		HTTPClient.getInstance().setLogged(hasFlag(args, Parameter.DEBUG_HTTP));	//tell the HTTP client to log its data TODO generalize
+		final String sourceRepositoryTypeString=getOption(args, Parameter.SOURCE_REPOSITORY_TYPE);
+		final Repository sourceRepository=createRepository(sourceRepositoryTypeString!=null ? getSerializedEnum(RepositoryType.class, sourceRepositoryTypeString) : null, sourceRepositoryURI, getOption(args, Parameter.SOURCE_USERNAME), getOption(args, Parameter.SOURCE_PASSWORD));	//create the correct type of repository for the source
+		final String destinationRepositoryTypeString=getOption(args, Parameter.DESTINATION_REPOSITORY_TYPE);
+		final Repository destinationRepository=createRepository(destinationRepositoryTypeString!=null ? getSerializedEnum(RepositoryType.class, destinationRepositoryTypeString) : null, destinationRepositoryURI, getOption(args, Parameter.DESTINATION_USERNAME), getOption(args, Parameter.DESTINATION_PASSWORD));	//create the correct type of repository for the destination
 		try
 		{
 			final RepositorySynchronizer repositorySynchronizer=new RepositorySynchronizer();	//create a new synchronizer
-			final String resolutionString=getOption(args, getSerializationName(Parameter.RESOLUTION));	//set the resolutions if provided
+			final String resolutionString=getOption(args, Parameter.RESOLUTION);	//set the resolutions if provided
 			if(resolutionString!=null)
 			{
 				repositorySynchronizer.setResolution(getSerializedEnum(Resolution.class, resolutionString.toUpperCase()));
 			}
-			final String resourceResolutionString=getOption(args, getSerializationName(Parameter.RESOURCE_RESOLUTION));
+			final String resourceResolutionString=getOption(args, Parameter.RESOURCE_RESOLUTION);
 			if(resourceResolutionString!=null)
 			{
 				repositorySynchronizer.setResourceResolution(getSerializedEnum(Resolution.class, resourceResolutionString.toUpperCase()));
 			}
-			final String contentResolutionString=getOption(args, getSerializationName(Parameter.CONTENT_RESOLUTION));
+			final String contentResolutionString=getOption(args, Parameter.CONTENT_RESOLUTION);
 			if(contentResolutionString!=null)
 			{
 				repositorySynchronizer.setContentResolution(getSerializedEnum(Resolution.class, contentResolutionString.toUpperCase()));
 			}
-			final String metadataResolutionString=getOption(args, getSerializationName(Parameter.METADATA_RESOLUTION));
+			final String metadataResolutionString=getOption(args, Parameter.METADATA_RESOLUTION);
 			if(metadataResolutionString!=null)
 			{
 				repositorySynchronizer.setMetadataResolution(getSerializedEnum(Resolution.class, metadataResolutionString.toUpperCase()));
 			}
-			for(final String ignoreSourceResourceURIString:getOptions(args, getSerializationName(Parameter.IGNORE_SOURCE_RESOURCE)))	//look at all the source resources to ignore
+			for(final String ignoreSourceResourceURIString:getOptions(args, Parameter.IGNORE_SOURCE_RESOURCE))	//look at all the source resources to ignore
 			{
 				repositorySynchronizer.addIgnoreSourceResourceURI(guessAbsoluteURI(ignoreSourceResourceURIString));	//create a URI from the parameter and add this to the source resources to ignore
 			}
-			for(final String ignoreDestinationResourceURIString:getOptions(args, getSerializationName(Parameter.IGNORE_DESTINATION_RESOURCE)))	//look at all the destination resources to ignore
+			for(final String ignoreDestinationResourceURIString:getOptions(args, Parameter.IGNORE_DESTINATION_RESOURCE))	//look at all the destination resources to ignore
 			{
 				repositorySynchronizer.addIgnoreDestinationResourceURI(guessAbsoluteURI(ignoreDestinationResourceURIString));	//create a URI from the parameter and add this to the destination resources to ignore
 			}
-			for(final String ignorePropertyURIString:getOptions(args, getSerializationName(Parameter.IGNORE_PROPERTY)))	//look at all the properties to ignore
+			for(final String ignorePropertyURIString:getOptions(args, Parameter.IGNORE_PROPERTY))	//look at all the properties to ignore
 			{
 				repositorySynchronizer.addIgnorePropertyURI(URI.create(ignorePropertyURIString));	//create a URI from the parameter and add this to the properties to ignore
 			}
-			repositorySynchronizer.setForceContentModifiedProperty(hasFlag(args, getSerializationName(Parameter.FORCE_CONTENT_MODIFIED_PROPERTY)));	//specify whether the content modified property should be forced
-			repositorySynchronizer.setTest(hasFlag(args, getSerializationName(Parameter.TEST)));	//specify whether this is a test run
+			repositorySynchronizer.setForceContentModifiedProperty(hasFlag(args, Parameter.FORCE_CONTENT_MODIFIED_PROPERTY));	//specify whether the content modified property should be forced
+			repositorySynchronizer.setTest(hasFlag(args, Parameter.TEST));	//specify whether this is a test run
 			repositorySynchronizer.synchronize(sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI);	//synchronize the resources
 		}
 		catch(final IOException ioException)	//if there is an error
