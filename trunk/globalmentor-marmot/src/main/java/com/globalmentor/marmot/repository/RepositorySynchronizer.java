@@ -30,6 +30,8 @@ import com.globalmentor.io.Streams;
 import com.globalmentor.iso.datetime.ISODateTime;
 
 import static com.globalmentor.java.Objects.*;
+
+import com.globalmentor.lex.Identifier;
 import com.globalmentor.log.*;
 import com.globalmentor.marmot.repository.Repository;
 import static com.globalmentor.net.URIs.*;
@@ -50,7 +52,7 @@ public class RepositorySynchronizer
 	 * How to resolve a discrepancy between a source and a destination resource content or metadata. For orphan resources, {@link Resolution#SYNCHRONIZE} is
 	 * treated the same as {@link Resolution#BACKUP}.
 	 */
-	public enum Resolution
+	public enum Resolution implements Identifier
 	{
 		/** The source will overwrite the destination; the destination is intended to be a mirror of the source. */
 		BACKUP,

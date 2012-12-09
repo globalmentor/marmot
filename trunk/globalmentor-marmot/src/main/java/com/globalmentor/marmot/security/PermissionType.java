@@ -19,6 +19,8 @@ package com.globalmentor.marmot.security;
 import java.net.URI;
 import java.util.*;
 
+import com.globalmentor.lex.Identifier;
+
 
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
@@ -26,7 +28,7 @@ import static com.globalmentor.marmot.security.MarmotSecurity.*;
 /**The predefined permissions as an enum for working with permissions as a group.
 @author Garret Wilson
 */
-public enum PermissionType
+public enum PermissionType implements Identifier
 {
 	DISCOVER(DISCOVER_PERMISSION_CLASS_URI),
 

@@ -25,6 +25,7 @@ import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.net.URIs.*;
 
 import com.globalmentor.application.AbstractApplication;
+import com.globalmentor.lex.Identifier;
 import com.globalmentor.log.Log;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.marmot.repository.RepositorySynchronizer.Resolution;
@@ -54,7 +55,7 @@ public class MarmotMirror extends AbstractApplication
 	public final static String VERSION="1.5 build 2012-01-10";
 
 	/**Application command-line parameters.*/
-	public enum Parameter
+	public enum Parameter implements Identifier
 	{
 		/**The source repository.*/
 		SOURCE_REPOSITORY,
@@ -103,7 +104,7 @@ public class MarmotMirror extends AbstractApplication
 	}
 
 	/**The types of repository available.*/
-	public enum RepositoryType
+	public enum RepositoryType implements Identifier
 	{
 		/**A file system repository; {@link FileRepository}.*/
 		FILE,
