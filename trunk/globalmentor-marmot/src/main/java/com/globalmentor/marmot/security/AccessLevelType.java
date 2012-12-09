@@ -19,6 +19,8 @@ package com.globalmentor.marmot.security;
 import java.net.URI;
 import java.util.*;
 
+import com.globalmentor.lex.Identifier;
+
 
 import static com.globalmentor.java.Enums.*;
 import static com.globalmentor.java.Objects.*;
@@ -27,7 +29,7 @@ import static com.globalmentor.marmot.security.MarmotSecurity.*;
 /**The predefined access levels as an enum for working with access levels as a group.
 @author Garret Wilson
 */
-public enum AccessLevelType
+public enum AccessLevelType implements Identifier
 {
 
 	INHERITED(INHERITED_ACCESS_LEVEL_CLASS_URI),
