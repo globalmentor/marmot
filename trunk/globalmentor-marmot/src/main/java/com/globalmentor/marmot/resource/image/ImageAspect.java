@@ -25,11 +25,11 @@ import com.globalmentor.marmot.resource.ResourceAspect;
 public enum ImageAspect implements ResourceAspect
 {
 	/** Dimensions appropriate for presenting as a figure. */
-	figure,
+	FIGURE,
 
 	/** Dimensions appropriate for presenting as a preview. */
-	preview,
+	PREVIEW,
 
 	/** Dimensions appropriate for presenting as a thumbnail. */
-	thumbnail;
+	THUMBNAIL;
 }

@@ -70,7 +70,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	Values are fetched from the backing store if needed, with fetching optionally deferred until later.
 	@param repository The repository in which the resource is stored.
 	@param resourceURI The URI of the resource.
-	@param deferFetch Whether fetching, if needed, should be deffered and performed in an asynchronous thread.
+	@param deferFetch Whether fetching, if needed, should be deferred and performed in an asynchronous thread.
 	@return The cached value, or <code>null</code> if fetching was deferred.
 	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
 	@exception IOException if there was an error fetching the value from the backing store.

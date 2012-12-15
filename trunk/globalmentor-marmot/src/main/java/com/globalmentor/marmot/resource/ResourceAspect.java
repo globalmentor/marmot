@@ -1,5 +1,5 @@
 /*
- * Copyright © 1996-2008 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 1996-2012 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,14 @@
 
 package com.globalmentor.marmot.resource;
 
-/**Specifies an aspect of a resource, such as a preview image, an abridged book, or a looped sound.
-Resource aspects must provide a canonical lexical representation in the {@link #toString()} function that can be used for serialization.
-@author Garret Wilson
-*/
-public interface ResourceAspect
+import com.globalmentor.lex.Identifier;
+
+/**
+ * Specifies an aspect of a resource, such as a preview image, an abridged book, or a looped sound.
+ * 
+ * @author Garret Wilson
+ */
+public interface ResourceAspect extends Identifier
 {
 
 }

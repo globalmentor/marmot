@@ -88,13 +88,13 @@ public class ImageScaleFilter implements ResourceContentFilter	//TODO remove dep
 		final Dimension2D aspectDimensions;	//determine the aspect dimensions
 		switch(getImageAspect())	//see what image aspect is called for
 		{
-			case preview:
+			case PREVIEW:
 				aspectDimensions=PREVIEW_DIMENSIONS;
 				break;
-			case figure:
+			case FIGURE:
 				aspectDimensions=FIGURE_DIMENSIONS;
 				break;
-			case thumbnail:
+			case THUMBNAIL:
 				aspectDimensions=THUMBNAIL_DIMENSIONS;
 				break;
 			default:
