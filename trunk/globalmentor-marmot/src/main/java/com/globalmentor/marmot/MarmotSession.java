@@ -16,6 +16,7 @@
 
 package com.globalmentor.marmot;
 
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Set;
 
@@ -27,6 +28,7 @@ import com.globalmentor.marmot.resource.ResourceKit;
 import com.globalmentor.marmot.resource.ResourceKit.Capability;
 import com.globalmentor.marmot.security.MarmotSecurityManager;
 import com.globalmentor.net.ContentType;
+import com.globalmentor.net.ResourceIOException;
 
 /**
  * Marmot session information.
@@ -116,6 +118,47 @@ public interface MarmotSession<RK extends ResourceKit>
 	public RK getResourceKit(final Repository repository, final URFResource resource, final Capability... capabilities);
 
 	/**
+	 * Retrieves a resource kit appropriate for the given resource statically if possible, without further resource lookup. This method locates a resource kit in
+	 * the following priority:
+	 * <ol>
+	 * <li>The first resource kit supporting the resource content type determined by:
+	 * <ol>
+	 * <li>The given content type, if any.</li>
+	 * <li>The content determined if possible by {@link #getExtensionContentType(String)} from the resource URI extension.</li>
+	 * <ol></li>
+	 * <li>The resource description is retrieved as a last resort and the resource kit is determined by delegating to
+	 * {@link #getResourceKit(Repository, URFResource, Capability...)}.</li>
+	 * </ol>
+	 * @param repository The repository in which the resource resides.
+	 * @param resourceURI The URI of the resource in the given repository.
+	 * @param contentType The type of content the resource contains, or <code>null</code> if unknown.
+	 * @param capabilities The capabilities required for the resource kit.
+	 * @return A resource kit to handle the given resource with the given capabilities, if any, in relation to the resource; or <code>null</code> if there is no
+	 *         registered resource kit with the given capabilities in relation to the resource.
+	 * @throws ResourceIOException if an error occurred retrieving a description of the resource kit.
+	 * @see #{@link #getResourceKit(Repository, URFResource, Capability...)}
+	 */
+	public RK getResourceKit(final Repository repository, final URI resourceURI, final ContentType contentType, final Capability... capabilities)
+			throws ResourceIOException;
+
+	/**
+	 * Retrieves a resource kit appropriate for the given resource statically if possible, without further resource lookup. This method locates a resource kit
+	 * supporting the resource content type determined by:
+	 * <ol>
+	 * <li>The given content type, if any.</li>
+	 * <li>The content determined if possible by {@link #getExtensionContentType(String)} from the resource name extension.</li>
+	 * <ol>
+	 * @param repository The repository in which the resource resides.
+	 * @param resourceName The name part of the URI of the resource in the given repository.
+	 * @param contentType The type of content the resource contains, or <code>null</code> if unknown.
+	 * @param capabilities The capabilities required for the resource kit.
+	 * @return A resource kit to handle the given resource with the given capabilities, if any, in relation to the resource; or <code>null</code> if there is no
+	 *         registered resource kit with the given capabilities in relation to the resource.
+	 * @throws ResourceIOException if an error occurred retrieving a description of the resource kit.
+	 */
+	public RK getResourceKit(final String resourceName, final ContentType contentType, final Capability... capabilities);
+
+	/**
 	 * Retrieves a resource kit appropriate for a MIME content type. This method should only be used for special-purpose functionality; when accessing resources
 	 * {@link #getResourceKit(Repository, URFResource, Capability...)} should normally be used instead.
 	 * @param contentType The type of content the resource contains.
@@ -178,6 +221,22 @@ public interface MarmotSession<RK extends ResourceKit>
 	 * @return The content type for the given resource, or <code>null</code> if no content type can be determined for the given resource.
 	 */
 	public ContentType determineContentType(final URFResource resource);
+
+	/**
+	 * Determines the content type of a resource from its URI. This approach should only be used as a fall-back approach after more extensive searches have been
+	 * made e.g. by {@link #determineCharset(URFResource)}.
+	 * @param resourceURI The URI of the resource for which a content type should be determined.
+	 * @return The content type for the given resource, or <code>null</code> if no content type can be determined for the given resource.
+	 */
+	public ContentType determineContentType(final URI resourceURI);
+
+	/**
+	 * Determines the content type of a resource from its Name. This approach should only be used as a fall-back approach after more extensive searches have been
+	 * made e.g. by {@link #determineCharset(URFResource)}. The content type is determined by {@link #getExtensionContentType(String)}.
+	 * @param resourceName The name of the resource for which a content type should be determined.
+	 * @return The content type for the given resource, or <code>null</code> if no content type can be determined for the given resource.
+	 */
+	public ContentType determineContentType(final String resourceName);
 
 	/**
 	 * Determines the charset of a resource. The charset is determined in this order:

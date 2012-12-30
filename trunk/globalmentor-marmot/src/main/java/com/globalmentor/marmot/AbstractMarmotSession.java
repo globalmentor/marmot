@@ -37,6 +37,7 @@ import com.globalmentor.marmot.resource.*;
 import com.globalmentor.marmot.resource.ResourceKit.Capability;
 import com.globalmentor.marmot.security.*;
 import com.globalmentor.net.ContentType;
+import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.net.URIs;
 
 /**
@@ -273,7 +274,7 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 		final ContentType contentType = determineContentType(resource); //get the content type of the resource
 		if(contentType != null) //if we know the content type of the resource
 		{
-			resourceKit = getResourceKit(contentType, capabilities); //see if we have a resource kit registered for this media type and capabilities
+			resourceKit = getResourceKit(contentType, capabilities); //see if we have a resource kit registered for this content type and capabilities
 		}
 		//step 2: try to match a resource kit by resource type
 		if(resourceKit == null) //if we haven't yet found a resource kit, try to match a resource by resource type
@@ -327,27 +328,26 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 		return resourceKit; //return whatever resource kit we found, if any
 	}
 
-	/**
-	 * Retrieves a resource kit appropriate for the given resource information.
-	 * @param resourceURI The reference URI used to identify the resource.
-	 * @param typeURI The URI of the resource type, or <code>null</code> if no specific type is known.
-	 * @param mediaType The type of content the resource contains, or <code>null</code> if no MIME content type is known.
-	 * @return A resource kit to handle the given resource, or <code>null</code> if no appropriate resource kit is registered.
-	 */
-	/*TODO fix
-		public RK getResourceKit(final URI typeURI, final ContentType mediaType)
-		{	
-			RK resourceKit=null;	//start by assuming we won't find a resource kit
-				//step 1: try to match a resource kit by media type
-			resourceKit=getResourceKit(mediaType);	//see if we have a resource kit registered for this media type
-				//step 2: try to match a resource kit by resource type
-			if(resourceKit==null)	//if we haven't yet found a resource kit, try to match a resource by resource type
-			{
-				resourceKit=getResourceKit(typeURI);	//see if we have a resource kit registered for this resource type URI
-			}
-			return resourceKit;	//return whatever resource kit we found, if any
+	@Override
+	public RK getResourceKit(final Repository repository, final URI resourceURI, ContentType contentType, final Capability... capabilities)
+			throws ResourceIOException
+	{
+		if(contentType == null) //if no content type was given, try to find one
+		{
+			contentType = determineContentType(resourceURI); //try to determine the content type from the URI alone
 		}
-	*/
+		RK resourceKit = null;
+		if(contentType != null) //if we found a content type
+		{
+			resourceKit = getResourceKit(contentType, capabilities); //see if we have a resource kit registered for this content type and capabilities
+		}
+		if(resourceKit == null) //if we still don't have a resource kit
+		{
+			final URFResource resource = repository.getResourceDescription(resourceURI); //get the description of the resource from the repository
+			resourceKit = getResourceKit(repository, resource, capabilities); //try to get a resource kit based upon the complete description
+		}
+		return resourceKit;
+	}
 
 	/**
 	 * Retrieves a resource kit appropriate for the given resource based upon its type URI.
@@ -359,6 +359,16 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 	{
 		final RK resourceKit = resourceTypeResourceKitsMap.getItem(typeURI); //get the resource kit, if any, registered for this resource type URI
 		return resourceKit != null && resourceKit.hasCapabilities(capabilities) ? resourceKit : null; //return the resource kit if it has the given capabilities
+	}
+
+	@Override
+	public RK getResourceKit(final String resourceName, ContentType contentType, final Capability... capabilities)
+	{
+		if(contentType == null) //if no content type was given, try to find one
+		{
+			contentType = determineContentType(resourceName); //try to determine the content type from the resource name alone
+		}
+		return contentType != null ? getResourceKit(contentType, capabilities) : null; //see if we have a resource kit registered for this content type and capabilities
 	}
 
 	@Override
@@ -381,13 +391,30 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 		if(contentType == null) //if the resource does not indicate a content type
 		{
 			final URI resourceURI = resource.getURI(); //get the resource URI
-			final String resourceName = resourceURI != null && !isCollectionURI(resourceURI) ? URIs.getName(resourceURI) : null; //get the resource name, if any
-			if(resourceName != null && !resourceName.isEmpty()) //if we have a non-empty name (only collections URIs should return empty names, so this non-empty verification is redundant)
+			if(resourceURI != null)
 			{
-				contentType = getExtensionContentType(getNameExtension(resourceName)); //get the registered content type, if any, for the resource's extension (which may be null)
+				contentType = determineContentType(resourceURI); //try to determine the content type from the URI alone
 			}
 		}
 		return contentType;
+	}
+
+	/** {@inheritDoc} This implementation delegates to {@link #determineContentType(String)}. */
+	@Override
+	public ContentType determineContentType(final URI resourceURI)
+	{
+		final String resourceName = !isCollectionURI(resourceURI) ? URIs.getRawName(resourceURI) : null; //get the resource name, if any
+		if(resourceName != null) //if we have a resource name
+		{
+			return determineContentType(resourceName); //get the registered content type
+		}
+		return null;
+	}
+
+	@Override
+	public ContentType determineContentType(final String resourceName)
+	{
+		return getExtensionContentType(getNameExtension(resourceName)); //get the registered content type, if any, for the resource's extension (which may be null)
 	}
 
 	@Override
