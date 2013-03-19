@@ -32,7 +32,7 @@ Constructing this filter with no specified content types will not pass any resou
 This filter does not pass resources with no content type determined.
 @author Garret Wilson
 @see MarmotSession#determineContentType(URFResource)
-@see ContentType#match(ContentType)
+@see ContentType#hasBaseType(ContentType)
 */
 public class ResourceContentTypeFilter extends AbstractResourceFilter
 {
@@ -98,7 +98,7 @@ public class ResourceContentTypeFilter extends AbstractResourceFilter
 		{
 			for(final ContentType passContentType:contentTypes)	//for each content type to pass
 			{
-				if(passContentType.match(contentType))	//if the content type matches
+				if(passContentType.hasBaseType(contentType))	//if the content type matches
 				{
 					contentTypePass=true;	//we found a matching content type
 					break;	//stop checking

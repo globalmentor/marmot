@@ -329,7 +329,7 @@ public abstract class AbstractRepository implements Repository
 		final Map<ContentType, Charset> contentTypeCharsetMap = new HashMap<ContentType, Charset>(baseContentTypeCharsetMap.size()); //create a new map to hold actual content type objects
 		for(final Map.Entry<String, Charset> baseContentTypeCharsetEntry : baseContentTypeCharsetMap.entrySet()) //look at each mapping
 		{
-			contentTypeCharsetMap.put(ContentType.getInstance(baseContentTypeCharsetEntry.getKey()), baseContentTypeCharsetEntry.getValue()); //add this mapping to the map
+			contentTypeCharsetMap.put(ContentType.create(baseContentTypeCharsetEntry.getKey()), baseContentTypeCharsetEntry.getValue()); //add this mapping to the map
 		}
 		return unmodifiableMap(contentTypeCharsetMap); //return a read-only version of the map we created
 	}

@@ -40,8 +40,8 @@ public class ImageResourceKit extends AbstractResourceKit
 	/** Default constructor. */
 	public ImageResourceKit()
 	{
-		super(new ContentType[] { ContentType.getInstance(ContentType.IMAGE_PRIMARY_TYPE, GIF_SUBTYPE),
-				ContentType.getInstance(ContentType.IMAGE_PRIMARY_TYPE, JPEG_SUBTYPE), ContentType.getInstance(ContentType.IMAGE_PRIMARY_TYPE, PNG_SUBTYPE) });
+		super(new ContentType[] { ContentType.create(ContentType.IMAGE_PRIMARY_TYPE, GIF_SUBTYPE),
+				ContentType.create(ContentType.IMAGE_PRIMARY_TYPE, JPEG_SUBTYPE), ContentType.create(ContentType.IMAGE_PRIMARY_TYPE, PNG_SUBTYPE) });
 	}
 
 	/**
