@@ -1,5 +1,5 @@
 /*
- * Copyright © 1996-2012 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 1996-2013 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,6 +40,15 @@ import static org.urframework.content.Content.*;
 
 /**
  * Marmot synchronization support.
+ * <p>
+ * The repository synchronizer specifies both a <dfn>source</dfn> and <dfn>destination</dfn>, which are used to determine the direction of information flow for
+ * each {@link Resolution}. For example, for the {@link Resolution#BACKUP} resolution, information will always flow from the source to the destination. Within
+ * the context of each resource and for each aspect (resource, content, and metadata), an <dfn>input</dfn> and <dfn>output</dfn> resource will be determined
+ * based upon the resolution. For example, a resolution of {@link Resolution#CONSUME} will always result in the input and output resources matching the
+ * destination and source resources, respectively (i.e. reversed), but a resolution of {@link Resolution#CONSUME} will result in the input and output resources
+ * being redetermined in each situation based upon the criteria of {@link Resolution#CONSUME}. This affects which metadata will be unconditionally written if
+ * {@link #isForceWriteMetadata()} is set, for example.
+ * </p>
  * <p>
  * Synchronization occurs on three levels: individual resources (i.e. orphans), metadata, and content, each of which can have a different resolution specified.
  * </p>
@@ -171,6 +180,29 @@ public class RepositorySynchronizer
 	public void setForceContentModifiedProperty(final boolean forceContentModified)
 	{
 		this.forceContentModifiedProperty = forceContentModified;
+	}
+
+	private boolean forceWriteMetadata = false;
+
+	/**
+	 * Indicates whether metadata should be unconditionally written in the <em>output</em> resource, based upon the metadata resolution.
+	 * @return <code>true</code> if the output metadata should unconditionally be written.
+	 * @see #getMetadataResolution()
+	 */
+	public boolean isForceWriteMetadata()
+	{
+		return forceWriteMetadata;
+	}
+
+	/**
+	 * Sets whether metadata should be unconditionally written in the <em>output</em> resource, based upon the metadata resolution. For example, for the
+	 * {@link Resolution#CONSUME} resolution is used for metadata resolution, the output resource will be the <em>source</em> resource, the resource receiving
+	 * metadata modifications.
+	 * @param forceWriteMetadata Whether metadata should unconditionally be rewritten.
+	 */
+	public void setForceWriteMetadata(final boolean forceWriteMetadata)
+	{
+		this.forceWriteMetadata = forceWriteMetadata;
 	}
 
 	/** The set of source resource URIs to ignore when resolving discrepancies. */
@@ -582,6 +614,7 @@ public class RepositorySynchronizer
 	 * @param destinationContentModified The date and time at which the content of the destination was modified, or <code>null</code> if not known.
 	 * @throws NullPointerException if any of the given arguments are <code>null</code>.
 	 * @throws IOException if there is an I/O error while performing the action.
+	 * @see #isForceWriteMetadata()
 	 */
 	protected void resolveMetadata(Resolution resolution, final Repository sourceRepository, final URFResource sourceResourceDescription,
 			Date sourceContentModified, final Repository destinationRepository, final URFResource destinationResourceDescription, Date destinationContentModified)
@@ -726,7 +759,7 @@ public class RepositorySynchronizer
 				}
 			}
 		}
-		if(!outputPropertyURIRemovals.isEmpty() || !outputPropertyAdditions.isEmpty()) //if we have something to change
+		if(!outputPropertyURIRemovals.isEmpty() || !outputPropertyAdditions.isEmpty() || isForceWriteMetadata()) //if we have something to change, or if we should unconditionally write metadata
 		{
 			Log.debug(getTestStatus(), URF.toString(sourceResourceDescription));
 			Log.debug(getTestStatus(), URF.toString(destinationResourceDescription));

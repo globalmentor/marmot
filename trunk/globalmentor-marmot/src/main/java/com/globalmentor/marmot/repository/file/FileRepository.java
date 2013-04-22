@@ -1,5 +1,5 @@
 /*
- * Copyright © 1996-2012 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 1996-2013 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import static com.globalmentor.net.URIs.*;
 import com.globalmentor.event.ProgressListener;
 import com.globalmentor.io.*;
 import com.globalmentor.iso.datetime.ISODateTime;
+import com.globalmentor.log.Log;
 import com.globalmentor.marmot.repository.*;
 import com.globalmentor.net.*;
 
@@ -56,7 +57,7 @@ import com.globalmentor.net.*;
  * </p>
  * @author Garret Wilson
  */
-public class FileRepository extends AbstractHierarchicalSourceRepository
+public class FileRepository extends AbstractHierarchicalSourceRepository implements MaintenanceRepository
 {
 
 	//TODO see http://lists.apple.com/archives/java-dev/2006/Aug/msg00325.html ; fix non-ASCII characters getting in filename URI
@@ -806,24 +807,36 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 	{
 		final URI resourceURI = getRepositoryResourceURI(toURI(resourceFile)); //get a public URI to represent the file resource
 		final File resourceDescriptionFile = getResourceDescriptionFile(resourceFile); //get the file for storing the description
-		try
+		final URFResource resourceDescription;
+		if(resourceDescriptionFile.exists()) //if there is a description file
 		{
-			final URFResource resource;
-			if(resourceDescriptionFile.exists()) //if there is a description file
+			try
 			{
-				resource = URFFiles.read(resourceDescriptionFile, urf, resourceURI, getDescriptionIO()); //read the description using the given URF instance, using the resource URI as the base URI
+				resourceDescription = URFFiles.read(resourceDescriptionFile, urf, resourceURI, getDescriptionIO()); //read the description using the given URF instance, using the resource URI as the base URI
 			}
-			else
-			//if there is no description file
+			catch(final IOException ioException) //if an error occurs
 			{
-				resource = urf.createResource(resourceURI); //create a default resource description
+				throw new IOException("Error reading resource description from " + resourceDescriptionFile, ioException);
 			}
-			return resource; //return the resource description
+			if(isRewriteResourceDescriptions()) //repository maintenance: rewrite resource description
+			{
+				try
+				{
+					Log.debug("Rewriting resource description for resource", resourceFile, "in file", resourceDescriptionFile);
+					URFFiles.write(resourceDescriptionFile, resourceURI, resourceDescription, getDescriptionIO()); //write the description, using the resource URI as the base URI
+				}
+				catch(final IOException ioException) //if an error occurs
+				{
+					throw new IOException("Error rewriting resource description to " + resourceDescriptionFile, ioException);
+				}
+			}
 		}
-		catch(final IOException ioException) //if an error occurs
+		else
+		//if there is no description file
 		{
-			throw new IOException("Error reading resource description from " + resourceDescriptionFile, ioException);
+			resourceDescription = urf.createResource(resourceURI); //create a default resource description
 		}
+		return resourceDescription; //return the resource description
 	}
 
 	/**
@@ -965,5 +978,21 @@ public class FileRepository extends AbstractHierarchicalSourceRepository
 			}
 		}
 
+	}
+
+	//MaintenanceRepository
+
+	private boolean rewriteResourceDescriptions = false;
+
+	@Override
+	public boolean isRewriteResourceDescriptions()
+	{
+		return rewriteResourceDescriptions;
+	}
+
+	@Override
+	public void setRewriteResourceDescriptions(final boolean rewriteResourceDescriptions)
+	{
+		this.rewriteResourceDescriptions = rewriteResourceDescriptions;
 	}
 }
