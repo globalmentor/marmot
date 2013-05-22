@@ -1,5 +1,5 @@
 /*
- * Copyright © 1996-2011 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ * Copyright © 1996-2013 GlobalMentor, Inc. <http://www.globalmentor.com/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,6 @@
 
 package com.globalmentor.marmot.resource.image;
 
-/*TODO del ImageJ
-import ij.ImagePlus;
-import ij.io.FileSaver;
-import ij.process.ImageProcessor;
-*/
-
 import java.awt.*;
 import java.awt.geom.Dimension2D;
 import java.awt.image.BufferedImage;
@@ -36,11 +30,12 @@ import javax.imageio.stream.*;
 import org.urframework.URFResource;
 //JAI import javax.media.jai.*;
 
-import static com.globalmentor.java.Objects.*;
 
+import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.io.Files.*;
 
 import com.globalmentor.awt.geom.*;
+import com.globalmentor.log.Log;
 import com.globalmentor.marmot.resource.ResourceFileContentFilter;
 import com.globalmentor.marmot.resource.ResourceContentFilter;
 import com.globalmentor.net.ResourceIOException;
@@ -197,6 +192,11 @@ public class ImageScaleFilter implements ResourceContentFilter	//TODO remove dep
 			if(imageWriteParam.canWriteCompressed())	//if the writer can compress images (if we don't do this check, an exception will be thrown if the image writer doesn't support compression, e.g. for PNG files)
 			{
 				imageWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);	//indicate that we'll explicitly set the compression quality
+				final String[] compressionTypes=imageWriteParam.getCompressionTypes();	//get the available compression types, if any
+				if(compressionTypes!=null && compressionTypes.length>0)	//if there are compression types, one must be set or an error will be thrown; for example, a GIF provides compression types "LZW" and "lzw"
+				{
+					imageWriteParam.setCompressionType(compressionTypes[0]);	//use the first available compression type
+				}
 				imageWriteParam.setCompressionQuality(1.0f);	//use the highest quality available; see http://www.universalwebservices.net/web-programming-resources/java/adjust-jpeg-image-compression-quality-when-saving-images-in-java
 			}
 			final ImageOutputStream imageOutputStream=ImageIO.createImageOutputStream(outputStream);	//create an image output stream from the output stream
