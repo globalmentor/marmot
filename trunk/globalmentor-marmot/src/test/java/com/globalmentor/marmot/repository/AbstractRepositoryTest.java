@@ -37,10 +37,7 @@ import org.urframework.dcmi.DCMI;
 import com.globalmentor.collections.Sets;
 import com.globalmentor.iso.datetime.ISODateTime;
 import com.globalmentor.java.Bytes;
-import com.globalmentor.log.Log;
-import com.globalmentor.net.ResourceIOException;
-import com.globalmentor.net.ResourceNotFoundException;
-import com.globalmentor.net.URIPath;
+import com.globalmentor.net.*;
 import com.globalmentor.test.AbstractTest;
 import com.globalmentor.time.Time;
 
@@ -619,12 +616,12 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		assertThat(updatedResourceDescription.getPropertyCount(), equalTo(propertyCount + propertiesResource.getPropertyCount())); //see if the new property count is correct 
 		checkResourceProperties(updatedResourceDescription, propertiesResource.getProperties()); //see if the resource now has the given properties
 		assertThat("Content length changed.", getContentLength(updatedResourceDescription), equalTo(contentLength));
-		if(created != null)
+		if(created != null && !repository.isLivePropertyURI(CREATED_PROPERTY_URI)) //if the content.created property is live, we can't expect any particular values
 		{
 			created = created.floor(Time.Resolution.SECONDS);
 			assertThat("Created date changed.", getCreated(updatedResourceDescription).floor(Time.Resolution.SECONDS), equalTo(created));
 		}
-		if(modified != null)
+		if(modified != null && !repository.isLivePropertyURI(MODIFIED_PROPERTY_URI)) //if the content.modified property is live, we can't expect any particular values
 		{
 			modified = modified.floor(Time.Resolution.SECONDS);
 			assertThat("Modified date changed.", getModified(updatedResourceDescription).floor(Time.Resolution.SECONDS), equalTo(modified));

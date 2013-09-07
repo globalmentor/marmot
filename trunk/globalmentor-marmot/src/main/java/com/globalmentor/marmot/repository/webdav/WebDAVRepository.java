@@ -68,8 +68,8 @@ import org.w3c.dom.*;
  * </p>
  * <p>
  * This implementation stores the {@value Content#MODIFIED_PROPERTY_URI} property normally on all resources, including collections---notably, that property is
- * not stored with the {@link AbstractRepository#COLLECTION_CONTENT_NAME} resource. This implementation considers the
- * {@link AbstractRepository#COLLECTION_CONTENT_NAME} property to be a live property.
+ * not stored with the {@link AbstractRepository#COLLECTION_CONTENT_NAME} resource. This implementation considers the {@link Content#CREATED_PROPERTY_URI}
+ * property to be a live property.
  * </p>
  * <p>
  * This implementation requires exact URIs and does not follow HTTP redirects. Any redirection responses are interpreted as indicating that the resource does
