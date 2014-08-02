@@ -62,7 +62,7 @@ public enum PermissionType implements Identifier
 
 	/**Type URI constructor.
 	@param typeURI The URI indicating the URF type of this permission type.
-	@exception NullPointerException if the given type URI is <code>null</code>.
+	@throws NullPointerException if the given type URI is <code>null</code>.
 	*/
 	private PermissionType(final URI typeURI)
 	{
@@ -75,8 +75,8 @@ public enum PermissionType implements Identifier
 	/**Retrieves an permission type from the type URI.
 	@param permissionTypeURI The permission type URI.
 	@return The permission type with the given type URI.
-	@exception NullPointerException if the given permission type URI is <code>null</code>.
-	@exception IllegalArgumentException if the given permission type URI is not recognized.
+	@throws NullPointerException if the given permission type URI is <code>null</code>.
+	@throws IllegalArgumentException if the given permission type URI is not recognized.
 	*/
 	public static PermissionType getPermissionType(final URI permissionTypeURI)
 	{

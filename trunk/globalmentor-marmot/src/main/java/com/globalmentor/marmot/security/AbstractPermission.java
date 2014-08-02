@@ -38,7 +38,7 @@ public abstract class AbstractPermission extends AbstractMarmotSecurityResource 
 
 	/**URI constructor.
 	@param uri The URI for the new resource.
-	@exception IllegalArgumentException if this class does not correspond to an existing {@link PermissionType}.
+	@throws IllegalArgumentException if this class does not correspond to an existing {@link PermissionType}.
 	*/
 	public AbstractPermission(final URI uri)
 	{

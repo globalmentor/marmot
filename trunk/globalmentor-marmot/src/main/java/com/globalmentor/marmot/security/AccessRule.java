@@ -95,7 +95,7 @@ public class AccessRule extends AbstractMarmotSecurityResource
 	/**Creates an access level based upon an access level type.
 	@param accessLevelType The access level type for which an access level should be created.
 	@return A new access level for the given access level type.
-	@exception NullPointerException if the given access level type is <code>null</code>.
+	@throws NullPointerException if the given access level type is <code>null</code>.
 	*/
 	public static AccessLevel createAccessLevel(final AccessLevelType accessLevelType)
 	{

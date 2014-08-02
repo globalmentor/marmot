@@ -52,7 +52,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 
 	/**Capabilities constructor with no support for content type or types.
 	@param capabilities The capabilities provided by this resource kit.
-	@exception NullPointerException if the capabilities is <code>null</code>.
+	@throws NullPointerException if the capabilities is <code>null</code>.
 	*/
 	public AbstractXHTMLResourceKit(final Capability... capabilities)
 	{
@@ -62,7 +62,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 	/**Content types and capabilities constructor with no default extension.
 	@param supportedContentType The content type supported by this resource kit.
 	@param capabilities The capabilities provided by this resource kit.
-	@exception NullPointerException if the supported content type and/or capabilities is <code>null</code>.
+	@throws NullPointerException if the supported content type and/or capabilities is <code>null</code>.
 	*/
 	public AbstractXHTMLResourceKit(final ContentType supportedContentType, final Capability... capabilities)
 	{
@@ -72,7 +72,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 	/**Content types and capabilities constructor with no default extension.
 	@param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
 	@param capabilities The capabilities provided by this resource kit.
-	@exception NullPointerException if the supported content types array and/or capabilities is <code>null</code>.
+	@throws NullPointerException if the supported content types array and/or capabilities is <code>null</code>.
 	*/
 	public AbstractXHTMLResourceKit(final ContentType[] supportedContentTypes, final Capability... capabilities)
 	{
@@ -82,7 +82,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 	/**Resource type and capabilities constructor with no default extension.
 	@param supportedResourceType The URI for the resource type this resource kit supports.
 	@param capabilities The capabilities provided by this resource kit.
-	@exception NullPointerException if the supported resource types and/or capabilities is <code>null</code>.
+	@throws NullPointerException if the supported resource types and/or capabilities is <code>null</code>.
 	*/
 	public AbstractXHTMLResourceKit(final URI supportedResourceType, final Capability... capabilities)
 	{
@@ -92,7 +92,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 	/**Resource types and capabilities constructor with no default extension.
 	@param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
 	@param capabilities The capabilities provided by this resource kit.
-	@exception NullPointerException if the supported resource types array and/or capabilities is <code>null</code>.
+	@throws NullPointerException if the supported resource types array and/or capabilities is <code>null</code>.
 	*/
 	public AbstractXHTMLResourceKit(final URI[] supportedResourceTypes, final Capability... capabilities)
 	{
@@ -104,7 +104,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 	@param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
 	@param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
 	@param capabilities The capabilities provided by this resource kit.
-	@exception NullPointerException if the supported content types array and/or the supported resource types array is <code>null</code>.
+	@throws NullPointerException if the supported content types array and/or the supported resource types array is <code>null</code>.
 	*/
 	public AbstractXHTMLResourceKit(final ContentType[] supportedContentTypes, final URI[] supportedResourceTypes, final Capability... capabilities)
 	{
@@ -114,7 +114,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 	/**Default extension and capabilities constructor with no support for content type or types.
 	@param defaultNameExtension The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
 	@param capabilities The capabilities provided by this resource kit.
-	@exception NullPointerException if the capabilities is <code>null</code>.
+	@throws NullPointerException if the capabilities is <code>null</code>.
 	*/
 	public AbstractXHTMLResourceKit(final String defaultNameExtension, final Capability... capabilities)
 	{
@@ -125,7 +125,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 	@param supportedContentType The content type supported by this resource kit.
 	@param defaultNameExtension The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
 	@param capabilities The capabilities provided by this resource kit.
-	@exception NullPointerException if the supported content type and/or capabilities is <code>null</code>.
+	@throws NullPointerException if the supported content type and/or capabilities is <code>null</code>.
 	*/
 	public AbstractXHTMLResourceKit(final ContentType supportedContentType, final String defaultNameExtension, final Capability... capabilities)
 	{
@@ -136,7 +136,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 	@param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
 	@param defaultNameExtension The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
 	@param capabilities The capabilities provided by this resource kit.
-	@exception NullPointerException if the supported content types array and/or capabilities is <code>null</code>.
+	@throws NullPointerException if the supported content types array and/or capabilities is <code>null</code>.
 	*/
 	public AbstractXHTMLResourceKit(final ContentType[] supportedContentTypes, final String defaultNameExtension, final Capability... capabilities)
 	{
@@ -147,7 +147,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 	@param supportedResourceType The URI for the resource type this resource kit supports.
 	@param defaultNameExtension The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
 	@param capabilities The capabilities provided by this resource kit.
-	@exception NullPointerException if the supported resource types and/or capabilities is <code>null</code>.
+	@throws NullPointerException if the supported resource types and/or capabilities is <code>null</code>.
 	*/
 	public AbstractXHTMLResourceKit(final URI supportedResourceType, final String defaultNameExtension, final Capability... capabilities)
 	{
@@ -158,7 +158,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 	@param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
 	@param defaultNameExtension The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
 	@param capabilities The capabilities provided by this resource kit.
-	@exception NullPointerException if the supported resource types array and/or capabilities is <code>null</code>.
+	@throws NullPointerException if the supported resource types array and/or capabilities is <code>null</code>.
 	*/
 	public AbstractXHTMLResourceKit(final URI[] supportedResourceTypes, final String defaultNameExtension, final Capability... capabilities)
 	{
@@ -171,7 +171,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 	@param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
 	@param defaultNameExtension The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an extension.
 	@param capabilities The capabilities provided by this resource kit.
-	@exception NullPointerException if the supported content types array and/or the supported resource types array is <code>null</code>.
+	@throws NullPointerException if the supported content types array and/or the supported resource types array is <code>null</code>.
 	*/
 	public AbstractXHTMLResourceKit(final ContentType[] supportedContentTypes, final URI[] supportedResourceTypes, final String defaultNameExtension, final Capability... capabilities)
 	{
@@ -182,9 +182,9 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 	This version returns <code>true</code>.
 	@param repository The repository that contains the resource.
 	@param resourceURI The reference URI to use to identify the resource, which may not exist.
-	@exception NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception ResourceIOException if the default resource content could not be written.
+	@throws NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
+	@throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@throws ResourceIOException if the default resource content could not be written.
 	@see #writeDefaultResourceContent(Repository, URI, URFResource)
 	@see #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)
 	*/
@@ -197,9 +197,9 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit
 	@param repository The repository that contains the resource.
 	@param resourceURI The reference URI to use to identify the resource, which may not exist.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
-	@exception NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception ResourceIOException if the default resource content could not be written.
+	@throws NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
+	@throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@throws ResourceIOException if the default resource content could not be written.
 	*/
 	public void writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription, final OutputStream outputStream) throws ResourceIOException
 	{

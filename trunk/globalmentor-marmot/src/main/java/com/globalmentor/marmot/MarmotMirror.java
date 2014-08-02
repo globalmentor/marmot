@@ -304,7 +304,7 @@ public class MarmotMirror extends AbstractApplication
 	 * @param username The username of the repository, or <code>null</code> if no username is appropriate.
 	 * @param password The password of the repository, or <code>null</code> if no password is appropriate.
 	 * @return A repository for the given URI.
-	 * @exception IllegalArgumentException if the type of the given repository URI cannot be determined.
+	 * @throws IllegalArgumentException if the type of the given repository URI cannot be determined.
 	 */
 	protected static Repository createRepository(RepositoryType repositoryType, final URI repositoryURI, final String username, final String password)
 	{

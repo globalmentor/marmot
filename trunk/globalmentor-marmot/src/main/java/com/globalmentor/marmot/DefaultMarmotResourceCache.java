@@ -71,7 +71,7 @@ public class DefaultMarmotResourceCache extends AbstractMarmotResourceCache<Abst
 	@param repository The repository in which the resource is stored.
 	@param resourceURI The URI of the resource.
 	@return A query for for requesting the resource from the cache.
-	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
 	*/
 	protected DefaultMarmotResourceCacheQuery createQuery(final Repository repository, final URI resourceURI)
 	{
@@ -99,7 +99,7 @@ public class DefaultMarmotResourceCache extends AbstractMarmotResourceCache<Abst
 		/**Repository and resource URI constructor.
 		@param repository The repository in which the resource is stored.
 		@param resourceURI The URI of the resource.
-		@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
+		@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
 		*/
 		public DefaultMarmotResourceCacheQuery(final Repository repository, final URI resourceURI)
 		{

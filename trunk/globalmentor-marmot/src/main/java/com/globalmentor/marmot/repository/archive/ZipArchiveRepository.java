@@ -77,7 +77,7 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile>
 	@param rootURI The URI identifying the location of this repository.
 	@param sourceResourceURI The URI identifying the private namespace managed by this repository.
 	@param descriptionIO The I/O implementation that writes and reads a resource with the same reference URI as its base URI.
-	@exception NullPointerException if the given description I/O is <code>null</code>.
+	@throws NullPointerException if the given description I/O is <code>null</code>.
 	*/
 	public ZipArchiveRepository(final URI rootURI, final URI sourceResourceURI, final URFIO<URFResource> descriptionIO)
 	{

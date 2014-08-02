@@ -48,8 +48,8 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 	 * Adds a resource description to supplement the default resource descriptions.
 	 * @param resource The resource description to add.
 	 * @return The resource description previously configured with the given URI, or <code>null</code> if no resource was previously configured.
-	 * @exception NullPointerException if the given resource is <code>null</code>.
-	 * @exception IllegalArgumentException if the given resource does not reside inside this repository.
+	 * @throws NullPointerException if the given resource is <code>null</code>.
+	 * @throws IllegalArgumentException if the given resource does not reside inside this repository.
 	 */
 	public URFResource storeResource(final URFResource resource)
 	{
@@ -61,8 +61,8 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 	 * Returns the resource description configured for the given URI.
 	 * @param resourceURI The URI of the resource the description of which to return.
 	 * @return The resource with a description configured for the given URI, or <code>null</code> if there is no resource configured for the given URI.
-	 * @exception NullPointerException if the given URI is <code>null</code>.
-	 * @exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws NullPointerException if the given URI is <code>null</code>.
+	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	 */
 	protected URFResource retrieveResource(URI resourceURI)
 	{
@@ -74,8 +74,8 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 	 * Removes the resource description configured for the given URI.
 	 * @param resourceURI The URI of the resource the description of which to remove.
 	 * @return The removed resource with a description configured for the given URI, or <code>null</code> if there is no resource configured for the given URI.
-	 * @exception NullPointerException if the given URI is <code>null</code>.
-	 * @exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws NullPointerException if the given URI is <code>null</code>.
+	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	 */
 	protected URFResource removeResource(URI resourceURI)
 	{
@@ -92,8 +92,8 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 	/**
 	 * Stores multiple resources.
 	 * @param resources The resources to store.
-	 * @exception NullPointerException if a given resources is <code>null</code>.
-	 * @exception IllegalArgumentException if a given resource does not reside inside this repository.
+	 * @throws NullPointerException if a given resources is <code>null</code>.
+	 * @throws IllegalArgumentException if a given resource does not reside inside this repository.
 	 * @see #storeResource(URFResource)
 	 */
 	public void setResources(final Set<URFResource> resources)
@@ -126,7 +126,7 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 	 * Root URI description I/O constructor.
 	 * @param rootURI The URI identifying the location of this repository.
 	 * @param descriptionIO The I/O implementation that writes and reads a resource with the same reference URI as its base URI.
-	 * @exception NullPointerException if the description I/O is <code>null</code>.
+	 * @throws NullPointerException if the description I/O is <code>null</code>.
 	 */
 	public AbstractReadOnlyRepository(final URI rootURI, final URFIO<URFResource> descriptionIO)
 	{

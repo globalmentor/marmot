@@ -203,9 +203,9 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	 * This version returns <code>false</code> for all resources for which {@link #isSourceResourcePublic(URI)} returns <code>false</code>.
 	 * @param resourceURI The URI of the resource to check.
 	 * @return <code>true</code> if the resource exists, else <code>false</code>.
-	 * @exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @exception ResourceIOException if there is an error accessing the repository.
+	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	 * @throws ResourceIOException if there is an error accessing the repository.
 	 */
 	//TODo del	protected boolean resourceExistsImpl(URI resourceURI) throws ResourceIOException
 

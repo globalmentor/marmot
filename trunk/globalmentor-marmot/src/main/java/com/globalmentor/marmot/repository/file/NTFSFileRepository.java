@@ -47,7 +47,7 @@ public class NTFSFileRepository extends FileRepository
 
 	/**File constructor with no separate private URI namespace.
 	@param repositoryDirectory The file identifying the directory of this repository.
-	@exception NullPointerException if the given repository directory is <code>null</code>.
+	@throws NullPointerException if the given repository directory is <code>null</code>.
 	*/
 	public NTFSFileRepository(final File repositoryDirectory)
 	{
@@ -57,8 +57,8 @@ public class NTFSFileRepository extends FileRepository
 	/**URI constructor with no separate private URI namespace.
 	The given repository URI should end in a slash.
 	@param repositoryURI The URI identifying the location of this repository.
-	@exception NullPointerException if the given repository URI is <code>null</code>.
-	@exception IllegalArgumentException if the repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
+	@throws NullPointerException if the given repository URI is <code>null</code>.
+	@throws IllegalArgumentException if the repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
 	*/
 	public NTFSFileRepository(final URI repositoryURI)
 	{
@@ -68,7 +68,7 @@ public class NTFSFileRepository extends FileRepository
 	/**Public repository URI and private repository directory constructor.
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryDirectory The file identifying the private directory of the repository.
-	@exception NullPointerException if the given repository URI and/or the given directory is <code>null</code>.
+	@throws NullPointerException if the given repository URI and/or the given directory is <code>null</code>.
 	*/
 	public NTFSFileRepository(final URI publicRepositoryURI, final File privateRepositoryDirectory)
 	{
@@ -79,8 +79,8 @@ public class NTFSFileRepository extends FileRepository
 	The given private repository URI should end in a slash.
 	@param publicRepositoryURI The URI identifying the location of this repository.
 	@param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	@exception NullPointerException if one of the given repository URIs is <code>null</code>.
-	@exception IllegalArgumentException if the private repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
+	@throws NullPointerException if one of the given repository URIs is <code>null</code>.
+	@throws IllegalArgumentException if the private repository URI does not use the {@value URIs#FILE_SCHEME} scheme.
 	*/
 	public NTFSFileRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
 	{
@@ -123,7 +123,7 @@ public class NTFSFileRepository extends FileRepository
 	@param resourceURI The URI of the resource to access.
 	@param resourceFile The file representing the resource.
 	@return An output stream to the resource represented by given resource file.
-	@exception IOException if there is an error accessing the resource.
+	@throws IOException if there is an error accessing the resource.
 	*/
 	protected OutputStream getResourceOutputStream(final URI resourceURI, final File resourceFile) throws IOException
 	{

@@ -30,7 +30,7 @@ public abstract class AbstractAnnotation extends AbstractContentResource impleme
 	/**URI and type namespace URI constructor.
 	@param uri The URI for the resource, or <code>null</code> if the resource should have no URI.
 	@param typeNamespaceURI The namespace URI of the URI of the type to be added.
-	@exception NullPointerException if the given type type namespace URI is <code>null</code>.
+	@throws NullPointerException if the given type type namespace URI is <code>null</code>.
 	*/
 	public AbstractAnnotation(final URI uri, final URI typeNamespaceURI)
 	{

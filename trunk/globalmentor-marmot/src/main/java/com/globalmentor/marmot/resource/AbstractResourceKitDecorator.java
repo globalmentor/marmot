@@ -48,7 +48,7 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit
 	/**
 	 * Decorated resource kit constructor.
 	 * @param resourceKit The resource kit to decorate.
-	 * @exception NullPointerException if the given resource kit is <code>null</code>.
+	 * @throws NullPointerException if the given resource kit is <code>null</code>.
 	 */
 	public AbstractResourceKitDecorator(final ResourceKit resourceKit)
 	{
@@ -166,8 +166,8 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit
 	 * @param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
 	 * @param aspectID The ID of the aspect requested.
 	 * @return <code>true</code> if access to the given aspect is allowed for the user in relation to the indicated resource, else <code>false</code>.
-	 * @exception NullPointerException if the given owner, repository, resource URI, and/or permission type is <code>null</code>.
-	 * @exception ResourceIOException if there is an error accessing the repository.
+	 * @throws NullPointerException if the given owner, repository, resource URI, and/or permission type is <code>null</code>.
+	 * @throws ResourceIOException if there is an error accessing the repository.
 	 */
 	//TODO fix	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType permissionType) throws ResourceIOException;
 

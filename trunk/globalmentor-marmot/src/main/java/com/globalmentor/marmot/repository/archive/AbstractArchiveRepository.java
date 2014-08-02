@@ -95,7 +95,7 @@ public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepos
 
 		/**Sets the source resource of this repository's information in another repository.
 		@param sourceResourceURI The source resource for this repository.
-		@exception NullPointerException if the given resource URI is <code>null</code>.
+		@throws NullPointerException if the given resource URI is <code>null</code>.
 		@throws IllegalArgumentException if the given source resource URI is not absolute or is a collection URI.
 		*/
 		public void setSourceResourceURI(final URI sourceResourceURI)
@@ -134,7 +134,7 @@ public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepos
 	@param rootURI The URI identifying the location of this repository.
 	@param sourceResourceURI The URI identifying the private namespace managed by this repository.
 	@param descriptionIO The I/O implementation that writes and reads a resource with the same reference URI as its base URI.
-	@exception NullPointerException the given description I/O is <code>null</code>.
+	@throws NullPointerException the given description I/O is <code>null</code>.
 	@throws IllegalArgumentException if the given source resource URI is not absolute or is a collection URI.
 	*/
 	public AbstractArchiveRepository(final URI rootURI, final URI sourceResourceURI, final URFIO<URFResource> descriptionIO)

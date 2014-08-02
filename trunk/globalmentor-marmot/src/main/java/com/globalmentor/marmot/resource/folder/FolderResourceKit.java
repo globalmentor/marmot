@@ -44,9 +44,9 @@ public class FolderResourceKit extends AbstractResourceKit
 	@param parentResourceURI The URI to of the parent resource.
 	@param resourceName The unencoded simple name of the child resource.
 	@return The URI of the child resource.
-	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception ResourceIOException if there is an error accessing the repository.
+	@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@throws ResourceIOException if there is an error accessing the repository.
 	@see #getDefaultNameExtension()
 	*/
 	public URI getChildResourceURI(final Repository repository, final URI parentResourceURI, final String resourceName) throws ResourceIOException

@@ -54,7 +54,7 @@ public class ImageScaleFilter implements ResourceContentFilter	//TODO remove dep
 
 	/**Image aspect constructor.
 	@param imageAspect The aspect of the image.
-	@exception NullPointerException if the given image aspect is <code>null</code>.
+	@throws NullPointerException if the given image aspect is <code>null</code>.
 	*/
 	public ImageScaleFilter(final ImageAspect imageAspect)
 	{
@@ -75,7 +75,7 @@ public class ImageScaleFilter implements ResourceContentFilter	//TODO remove dep
 	@param inputStream The source of the resource content to filter.
 	@param outputStream The destination of the filtered resource content.
 	@return The new description of the filtered resource content.
-	@exception ResourceIOException if there is an error filtering the resource.
+	@throws ResourceIOException if there is an error filtering the resource.
 	*/
 	public URFResource filter(final URFResource resource, final InputStream inputStream, final OutputStream outputStream) throws ResourceIOException	//TODO review http://archives.java.sun.com/cgi-bin/wa?A2=ind0311&L=jai-interest&F=&S=&P=15036 and http://www.leptonica.com/scaling.html
 	{
@@ -235,7 +235,7 @@ public class ImageScaleFilter implements ResourceContentFilter	//TODO remove dep
 	@param inputFile The source of the resource content to filter.
 	@param outputFile The destination of the filtered resource content.
 	@return The new description of the filtered resource content.
-	@exception ResourceIOException if there is an error filtering the resource.
+	@throws ResourceIOException if there is an error filtering the resource.
 	*/
 /*TODO del; this is too slow
 	public URFResource filter(final URFResource resource, final File inputFile, final File outputFile) throws ResourceIOException

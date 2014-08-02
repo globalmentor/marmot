@@ -50,9 +50,9 @@ public class MAQROResourceKit extends AbstractResourceKit
 	@param repository The repository that contains the resource.
 	@param resourceURI The reference URI to use to identify the resource, which may not exist.
 	@param resourceDescription A description of the resource; the resource URI is ignored.
-	@exception NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
-	@exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	@exception ResourceIOException if the default resource content could not be written.
+	@throws NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
+	@throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	@throws ResourceIOException if the default resource content could not be written.
 	*/
 	public void writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription, final OutputStream outputStream) throws ResourceIOException
 	{

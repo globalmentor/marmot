@@ -106,7 +106,7 @@ public enum AccessLevelType implements Identifier
 
 	/**Type URI constructor.
 	@param typeURI The URI indicating the URF type of this access level.
-	@exception NullPointerException if the given type URI is <code>null</code>.
+	@throws NullPointerException if the given type URI is <code>null</code>.
 	*/
 	private AccessLevelType(final URI typeURI, final PermissionType... permissionTypes)
 	{
@@ -120,8 +120,8 @@ public enum AccessLevelType implements Identifier
 	/**Retrieves an access level from the type URI.
 	@param accessLevelTypeURI The access level type URI.
 	@return The access level with the given type URI.
-	@exception NullPointerException if the given access level type URI is <code>null</code>.
-	@exception IllegalArgumentException if the given access level type URI is not recognized.
+	@throws NullPointerException if the given access level type URI is <code>null</code>.
+	@throws IllegalArgumentException if the given access level type URI is not recognized.
 	*/
 	public static AccessLevelType getAccessLevelType(final URI accessLevelTypeURI)
 	{

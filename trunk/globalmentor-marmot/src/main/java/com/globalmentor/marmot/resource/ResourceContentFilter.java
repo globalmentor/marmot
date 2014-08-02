@@ -33,7 +33,7 @@ public interface ResourceContentFilter
 	@param inputStream The source of the resource content to filter.
 	@param outputStream The destination of the filtered resource content.
 	@return The new description of the filtered resource content.
-	@exception ResourceIOException if there is an error filtering the resource.
+	@throws ResourceIOException if there is an error filtering the resource.
 	*/
 	public URFResource filter(final URFResource resource, final InputStream inputStream, final OutputStream outputStream) throws ResourceIOException;
 }

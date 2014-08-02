@@ -43,7 +43,7 @@ public abstract class AbstractAccessLevel extends AbstractMarmotSecurityResource
 
 	/**URI constructor.
 	@param uri The URI for the new resource.
-	@exception IllegalArgumentException if this class does not correspond to an existing {@link AccessLevelType}.
+	@throws IllegalArgumentException if this class does not correspond to an existing {@link AccessLevelType}.
 	*/
 	public AbstractAccessLevel(final URI uri)
 	{
@@ -160,7 +160,7 @@ public abstract class AbstractAccessLevel extends AbstractMarmotSecurityResource
 	/**Creates an permission based upon an permission type.
 	@param permissionType The permission type for which an permission should be created.
 	@return A new permission for the given access type.
-	@exception NullPointerException if the given access type is <code>null</code>.
+	@throws NullPointerException if the given access type is <code>null</code>.
 	*/
 	public static Permission createPermission(final PermissionType permissionType)
 	{

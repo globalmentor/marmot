@@ -301,10 +301,10 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 	 * @param resourceURI The reference URI to use to identify the resource.
 	 * @param resourceDescription A description of the resource; the resource URI is ignored.
 	 * @return An output stream for storing the contents of the resource.
-	 * @exception NullPointerException if the given resource URI and/or resource description is <code>null</code>.
-	 * @exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @exception ResourceIOException if the resource could not be created.
+	 * @throws NullPointerException if the given resource URI and/or resource description is <code>null</code>.
+	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	 * @throws ResourceIOException if the resource could not be created.
 	 */
 	/*TODO fix
 		public OutputStream createResource(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException	//TODO fix to prevent resources with special names
@@ -347,10 +347,10 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 	 * @param resourceDescription A description of the resource; the resource URI is ignored.
 	 * @param resourceContents The contents to store in the resource.
 	 * @return A description of the resource that was created.
-	 * @exception NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
-	 * @exception IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @exception IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @exception ResourceIOException if the resource could not be created.
+	 * @throws NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
+	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	 * @throws ResourceIOException if the resource could not be created.
 	 */
 	/*TODO fix
 		public URFResource createResource(URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException	//TODO fix to prevent resources with special names

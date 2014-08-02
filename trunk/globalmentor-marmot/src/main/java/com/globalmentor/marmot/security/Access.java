@@ -51,7 +51,7 @@ public class Access extends URFListResource<AccessRule>
 	/**Collection constructor with no URI.
 	The elements of the specified collection will be added to this list in the order they are returned by the collection's iterator.
 	@param collection The collection whose elements are to be placed into this list.
-	@exception NullPointerException if the specified collection is <code>null</code>.
+	@throws NullPointerException if the specified collection is <code>null</code>.
 	*/
 	public Access(final Collection<? extends AccessRule> collection)
 	{
@@ -62,7 +62,7 @@ public class Access extends URFListResource<AccessRule>
 	The elements of the specified collection will be added to this list in the order they are returned by the collection's iterator.
 	@param uri The URI for the resource, or <code>null</code> if the resource should have no URI.
 	@param collection The collection whose elements are to be placed into this list.
-	@exception NullPointerException if the specified collection is <code>null</code>.
+	@throws NullPointerException if the specified collection is <code>null</code>.
 	*/
 	public Access(final URI uri, final Collection<? extends AccessRule> collection)
 	{

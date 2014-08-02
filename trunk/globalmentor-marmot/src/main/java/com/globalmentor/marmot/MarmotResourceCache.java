@@ -34,8 +34,8 @@ public interface MarmotResourceCache<Q> extends Cache<Q, File>
 	@param repository The repository in which the resource is stored.
 	@param resourceURI The URI of the resource.
 	@return The cached value.
-	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	@exception IOException if there was an error fetching the value from the backing store.
+	@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@throws IOException if there was an error fetching the value from the backing store.
 	@see #get(Object)
 	*/
 	public File get(final Repository repository, final URI resourceURI) throws IOException;
@@ -46,8 +46,8 @@ public interface MarmotResourceCache<Q> extends Cache<Q, File>
 	@param resourceURI The URI of the resource.
 	@param deferFetch Whether fetching, if needed, should be deffered and performed in an asynchronous thread.
 	@return The cached value, or <code>null</code> if fetching was deferred.
-	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	@exception IOException if there was an error fetching the value from the backing store.
+	@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@throws IOException if there was an error fetching the value from the backing store.
 	@see #get(Object, boolean)
 	*/
 	public File get(final Repository repository, final URI resourceURI, final boolean deferFetch) throws IOException;
@@ -57,8 +57,8 @@ public interface MarmotResourceCache<Q> extends Cache<Q, File>
 	@param repository The repository in which the resource is stored.
 	@param resourceURI The URI of the resource.
 	@return The cached data.
-	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	@exception IOException if there was an error fetching the data from the backing store.
+	@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@throws IOException if there was an error fetching the data from the backing store.
 	@see #getData(Object)
 	*/
 	public Data<File> getData(final Repository repository, final URI resourceURI) throws IOException;
@@ -69,8 +69,8 @@ public interface MarmotResourceCache<Q> extends Cache<Q, File>
 	@param resourceURI The URI of the resource.
 	@param deferFetch Whether fetching, if needed, should be deffered and performed in an asynchronous thread.
 	@return The cached data, or <code>null</code> if fetching was deferred.
-	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	@exception IOException if there was an error fetching the data from the backing store.
+	@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@throws IOException if there was an error fetching the data from the backing store.
 	@see #getData(Object, boolean)
 	*/
 	public Data<File> getData(final Repository repository, final URI resourceURI, final boolean deferFetch) throws IOException;

@@ -43,9 +43,9 @@ public interface MarmotSecurityManager
 	@param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
 	@param permissionTypes The types of permission requested.
 	@return <code>true</code> if all of the given permissions are allowed for the user in relation to the indicated resource, else <code>false</code>.
-	@exception NullPointerException if the given owner, repository, resource URI, and/or permission type is <code>null</code>.
-	@exception IllegalArgumentException if no permission types are given. 
-	@exception ResourceIOException if there is an error accessing the repository.
+	@throws NullPointerException if the given owner, repository, resource URI, and/or permission type is <code>null</code>.
+	@throws IllegalArgumentException if no permission types are given. 
+	@throws ResourceIOException if there is an error accessing the repository.
 	*/
 	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType... permissionTypes) throws ResourceIOException;
 
@@ -57,9 +57,9 @@ public interface MarmotSecurityManager
 	@param checkAncestors Whether all the resource's ancestors are required to have the indicated permissions as well.
 	@param permissionTypes The types of permission requested.
 	@return <code>true</code> if all of the given permissions are allowed for the user in relation to the indicated resource, else <code>false</code>.
-	@exception NullPointerException if the given owner, repository, resource URI, and/or permission type is <code>null</code>.
-	@exception IllegalArgumentException if no permission types are given. 
-	@exception ResourceIOException if there is an error accessing the repository.
+	@throws NullPointerException if the given owner, repository, resource URI, and/or permission type is <code>null</code>.
+	@throws IllegalArgumentException if no permission types are given. 
+	@throws ResourceIOException if there is an error accessing the repository.
 	*/
 	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final boolean checkAncestors, final PermissionType... permissionTypes) throws ResourceIOException;
 	
@@ -70,9 +70,9 @@ public interface MarmotSecurityManager
 	@param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
 	@param permissionTypes The type of permission requested, one of which must be allowed.
 	@return <code>true</code> if one of the given permissions is allowed for the user in relation to the indicated resource, else <code>false</code>.
-	@exception NullPointerException if the given owner, repository, resource URI, permission types, and/or a permissions type is <code>null</code>.
-	@exception IllegalArgumentException if no permission types are given. 
-	@exception ResourceIOException if there is an error accessing the repository.
+	@throws NullPointerException if the given owner, repository, resource URI, permission types, and/or a permissions type is <code>null</code>.
+	@throws IllegalArgumentException if no permission types are given. 
+	@throws ResourceIOException if there is an error accessing the repository.
 	*/
 	public boolean isOneAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType... permissionTypes) throws ResourceIOException;
 
@@ -82,8 +82,8 @@ public interface MarmotSecurityManager
 	@param repository The repository that contains the resource.
 	@param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
 	@return <code>true</code> if the some permission is allowed for the user in relation to the indicated resource, else <code>false</code>.
-	@exception NullPointerException if the given owner, repository, and/or resource URI is <code>null</code>.
-	@exception ResourceIOException if there is an error accessing the repository.
+	@throws NullPointerException if the given owner, repository, and/or resource URI is <code>null</code>.
+	@throws ResourceIOException if there is an error accessing the repository.
 	*/
 	public boolean isSomethingAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user) throws ResourceIOException;
 
@@ -95,8 +95,8 @@ public interface MarmotSecurityManager
 	@param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
 	@param permissionTypeURI The type of permission requested, indicated by permission type URI.
 	@return <code>true</code> if the given permission is allowed for the user in relation to the indicated resource, else <code>false</code>.
-	@exception NullPointerException if the given owner, repository, resource type, and/or permission URI is <code>null</code>.
-	@exception ResourceIOException if there is an error accessing the repository.
+	@throws NullPointerException if the given owner, repository, resource type, and/or permission URI is <code>null</code>.
+	@throws ResourceIOException if there is an error accessing the repository.
 	*/
 //TODO del if nto needed	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final URI permissionTypeURI) throws ResourceIOException;
 

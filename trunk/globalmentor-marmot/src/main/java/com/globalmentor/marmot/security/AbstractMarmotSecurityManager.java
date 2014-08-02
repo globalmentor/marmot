@@ -40,8 +40,8 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 	@param repository The repository that contains the resource.
 	@param permissionType The type of permission requested.
 	@return <code>true</code> if the given permission is valid in relation to the indicated resource, else <code>false</code>.
-	@exception NullPointerException if the given repository, resource URI, and/or permission type is <code>null</code>.
-	@exception ResourceIOException if there is an error accessing the repository.
+	@throws NullPointerException if the given repository, resource URI, and/or permission type is <code>null</code>.
+	@throws ResourceIOException if there is an error accessing the repository.
 	*/
 	protected boolean isPermissionValid(final Repository repository, final URI resourceURI, final PermissionType permissionType) throws ResourceIOException
 	{
@@ -155,8 +155,8 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 	@param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
 	@param permissionTypeURI The type of permission requested, indicated by permission type URI.
 	@return <code>true</code> if the given permission is allowed for the user in relation to the indicated resource, else <code>false</code>.
-	@exception NullPointerException if the given owner, repository, resource type, and/or permission URI is <code>null</code>.
-	@exception ResourceIOException if there is an error accessing the repository.
+	@throws NullPointerException if the given owner, repository, resource type, and/or permission URI is <code>null</code>.
+	@throws ResourceIOException if there is an error accessing the repository.
 	*/
 /*TODO del if not needed
 	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final URI permissionTypeURI) throws ResourceIOException
@@ -171,8 +171,8 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 	@param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
 	@param permissionTypeURI The type of permission requested, indicated by permission type URI.
 	@return A {@link Boolean} value indicating whether this permission was allowed or denied for this user, or <code>null</code> if no access rule was specified for this user or the resource does not exist.
-	@exception NullPointerException if the given owner, repository, resource type, and/or permission URI is <code>null</code>.
-	@exception ResourceIOException if there is an error accessing the repository.
+	@throws NullPointerException if the given owner, repository, resource type, and/or permission URI is <code>null</code>.
+	@throws ResourceIOException if there is an error accessing the repository.
 	*/
 /*TODO del if not needed
 	protected Boolean getAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final URI permissionTypeURI) throws ResourceIOException
@@ -190,8 +190,8 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager
 	@param repository The repository that contains the resource.
 	@param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
 	@return A set of all permission types allowed the user in relation to the given resoruce.
-	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	@exception ResourceIOException if there is an error accessing the repository.
+	@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@throws ResourceIOException if there is an error accessing the repository.
 	*/
 	public Set<PermissionType> getAllowedPermissionTypes(final Repository repository, final URI resourceURI, final Principal user) throws ResourceIOException
 	{

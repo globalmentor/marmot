@@ -57,8 +57,8 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	@param repository The repository in which the resource is stored.
 	@param resourceURI The URI of the resource.
 	@return The cached value.
-	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	@exception IOException if there was an error fetching the value from the backing store.
+	@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@throws IOException if there was an error fetching the value from the backing store.
 	@see #get(Object)
 	*/
 	public final File get(final Repository repository, final URI resourceURI) throws IOException
@@ -72,8 +72,8 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	@param resourceURI The URI of the resource.
 	@param deferFetch Whether fetching, if needed, should be deferred and performed in an asynchronous thread.
 	@return The cached value, or <code>null</code> if fetching was deferred.
-	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	@exception IOException if there was an error fetching the value from the backing store.
+	@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@throws IOException if there was an error fetching the value from the backing store.
 	@see #get(Object, boolean)
 	*/
 	public final File get(final Repository repository, final URI resourceURI, final boolean deferFetch) throws IOException
@@ -87,8 +87,8 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	@param repository The repository in which the resource is stored.
 	@param resourceURI The URI of the resource.
 	@return The cached data.
-	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	@exception IOException if there was an error fetching the data from the backing store.
+	@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@throws IOException if there was an error fetching the data from the backing store.
 	@see #getData(Object)
 	*/
 	public final Data<File> getData(final Repository repository, final URI resourceURI) throws IOException {
@@ -101,8 +101,8 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	@param resourceURI The URI of the resource.
 	@param deferFetch Whether fetching, if needed, should be deffered and performed in an asynchronous thread.
 	@return The cached data, or <code>null</code> if fetching was deferred.
-	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	@exception IOException if there was an error fetching the data from the backing store.
+	@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@throws IOException if there was an error fetching the data from the backing store.
 	@see #getData(Object, boolean)
 	*/
 	public final Data<File> getData(final Repository repository, final URI resourceURI, final boolean deferFetch) throws IOException {
@@ -113,7 +113,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	@param repository The repository in which the resource is stored.
 	@param resourceURI The URI of the resource.
 	@return A query for for requesting the resource from the cache.
-	@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
 	*/
 	protected abstract Q createQuery(final Repository repository, final URI resourceURI);
 
@@ -122,7 +122,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	@param query The query for requesting a value from the cache.
 	@param cachedInfo The information that is cached.
 	@return <code>true</code> if the cached information has become stale.
-	@exception IOException if there was an error checking the cached information for staleness.
+	@throws IOException if there was an error checking the cached information for staleness.
 	*/
 	public boolean isStaleData(final Q query, final FileData cachedInfo) throws IOException
 	{
@@ -146,7 +146,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	/**Fetches data from the backing store.
 	@param query The query for requesting a value from the cache.
 	@return New information to cache.
-	@exception IOException if there was an error fetching the value from the backing store.
+	@throws IOException if there was an error fetching the value from the backing store.
 	@see #getCacheDirectory(AbstractMarmotResourceCacheQuery)
 	@see #getCacheBaseName(AbstractMarmotResourceCacheQuery)
 	*/
@@ -183,7 +183,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	@param cacheDirectory The directory in which to store the cached file.
 	@param cacheBaseName The base name to use for the cached file.
 	@return New information to cache.
-	@exception IOException if there was an error fetching the value from the backing store.
+	@throws IOException if there was an error fetching the value from the backing store.
 	*/
 	protected FileData fetch(final Q query, final URFResource resource, final File cacheDirectory, final String cacheBaseName) throws IOException
 	{
@@ -219,7 +219,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	This version deletes the file used for caching.
 	@param key The key for the cached information.
 	@param cachedInfo The information that is cached.
-	@exception IOException if there was an error discarding the cached information.
+	@throws IOException if there was an error discarding the cached information.
 	*/
 /*TODO fix, maybe; but how will we know whether the file can be deleted? maybe it's still being used 
 	public void discard(final ResourceCacheKey key, final CachedResourceInfo cachedInfo) throws IOException
@@ -256,7 +256,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		@param repository The repository in which the resource is stored.
 		@param resourceURI The URI of the resource.
 		@param key The key for looking up data for the query.
-		@exception NullPointerException if the given repository, resource URI, and/or key is <code>null</code>.
+		@throws NullPointerException if the given repository, resource URI, and/or key is <code>null</code>.
 		*/
 		public AbstractMarmotResourceCacheQuery(final Repository repository, final URI resourceURI, final KK key)
 		{
@@ -287,7 +287,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		/**Repository and resource URI constructor.
 		@param repository The repository in which the resource is stored.
 		@param resourceURI The URI of the resource.
-		@exception NullPointerException if the given repository and/or resource URI is <code>null</code>.
+		@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
 		*/
 		public MarmotResourceCacheKey(final Repository repository, final URI resourceURI)
 		{
@@ -299,7 +299,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		@param repository The repository in which the resource is stored.
 		@param resourceURI The URI of the resource.
 		@param objects The objects for hashing and equality, any or all of which can be <code>null</code>.
-		@exception NullPointerException if the given repository, resource URI, and/or objects is <code>null</code>.
+		@throws NullPointerException if the given repository, resource URI, and/or objects is <code>null</code>.
 		*/
 		protected MarmotResourceCacheKey(final Repository repository, final URI resourceURI, final Object... objects)
 		{
