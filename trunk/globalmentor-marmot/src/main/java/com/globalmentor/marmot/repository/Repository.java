@@ -65,8 +65,7 @@ import com.globalmentor.net.*;
  * </p>
  * @author Garret Wilson
  */
-public interface Repository extends Disposable
-{
+public interface Repository extends Disposable {
 
 	/** The value indicating an infinite depth when retrieving child resource descriptions. */
 	public static int INFINITE_DEPTH = -1;

@@ -41,28 +41,23 @@ import com.globalmentor.net.http.webdav.WebDAVResource;
  */
 //ignored for normal builds because of time, authentication, and test server provisioning needs
 @Ignore
-public class WebDAVRepositoryTest extends AbstractRepositoryTest
-{
+public class WebDAVRepositoryTest extends AbstractRepositoryTest {
 
 	/** @return Password authentication for accessing the repository. */
-	protected PasswordAuthentication getPasswordAuthentication()
-	{
+	protected PasswordAuthentication getPasswordAuthentication() {
 		return new PasswordAuthentication("test", System.getProperty("password", "invalid").toCharArray());
 	}
 
 	/** @return The URI identifying the collection used for testing. */
-	protected URI getTestCollectionResourceURI()
-	{
+	protected URI getTestCollectionResourceURI() {
 		return URI.create("https://dav.globalmentor.com/test/junit/");
 	}
 
 	@Override
-	public void before() throws IOException
-	{
+	public void before() throws IOException {
 		//HTTPClient.getInstance().setLogged(true);
 		final WebDAVResource junitTestCollectionResource = new WebDAVResource(getTestCollectionResourceURI(), getPasswordAuthentication());
-		if(junitTestCollectionResource.exists()) //get rid of the JUnit test collection if it exists
-		{
+		if(junitTestCollectionResource.exists()) { //get rid of the JUnit test collection if it exists
 			junitTestCollectionResource.delete();
 		}
 		junitTestCollectionResource.mkCol(); //create the collection so that it will be available to serve as a repository
@@ -70,8 +65,7 @@ public class WebDAVRepositoryTest extends AbstractRepositoryTest
 	}
 
 	@Override
-	protected Repository createRepository()
-	{
+	protected Repository createRepository() {
 		final WebDAVRepository webDAVRepository = new WebDAVRepository(getTestCollectionResourceURI());
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication();
 		webDAVRepository.setUsername(passwordAuthentication.getUserName());
@@ -80,11 +74,9 @@ public class WebDAVRepositoryTest extends AbstractRepositoryTest
 	}
 
 	@Override
-	public void after() throws IOException
-	{
+	public void after() throws IOException {
 		final WebDAVResource junitTestCollectionResource = new WebDAVResource(getTestCollectionResourceURI(), getPasswordAuthentication());
-		if(junitTestCollectionResource.exists()) //get rid of the JUnit test collection
-		{
+		if(junitTestCollectionResource.exists()) { //get rid of the JUnit test collection
 			junitTestCollectionResource.delete();
 		}
 		super.after();

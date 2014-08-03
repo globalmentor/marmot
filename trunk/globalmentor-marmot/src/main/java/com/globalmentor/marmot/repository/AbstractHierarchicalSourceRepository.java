@@ -33,15 +33,13 @@ import static com.globalmentor.net.URIs.*;
  * Abstract implementation of a repository that is backed by a source that users a hierarchy of URIs paralleling the URIs of the resources in the repository.
  * @author Garret Wilson
  */
-public abstract class AbstractHierarchicalSourceRepository extends AbstractRepository
-{
+public abstract class AbstractHierarchicalSourceRepository extends AbstractRepository {
 
 	/** The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository. */
 	private URI sourceURI = null;
 
 	/** @return The base URI of the private URI namespace being managed, which may be the same as the public URI of this repository. */
-	public URI getSourceURI()
-	{
+	public URI getSourceURI() {
 		return sourceURI;
 	}
 
@@ -52,11 +50,9 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	 * @throws IllegalArgumentException if the given source resource URI is not absolute or is not a collection URI.
 	 * @see #setRootURI(URI)
 	 */
-	public void setSourceURI(final URI sourceURI)
-	{
+	public void setSourceURI(final URI sourceURI) {
 		this.sourceURI = checkCollectionURI(checkAbsolute(normalize(checkInstance(sourceURI, "Source URI must not be null."))));
-		if(getRootURI() == null) //if no root URI has been set
-		{
+		if(getRootURI() == null) { //if no root URI has been set
 			setRootURI(this.sourceURI); //update the root URI to match the source URI
 		}
 	}
@@ -65,8 +61,7 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	 * URI constructor with no separate private URI namespace.
 	 * @param rootURI The URI identifying the location of this repository.
 	 */
-	public AbstractHierarchicalSourceRepository(final URI rootURI)
-	{
+	public AbstractHierarchicalSourceRepository(final URI rootURI) {
 		this(rootURI, rootURI); //use the same repository URI as the public and private namespaces
 	}
 
@@ -76,8 +71,7 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	 * @param sourceURI The URI identifying the private namespace managed by this repository.
 	 * @throws IllegalArgumentException if the given source URI is not absolute or is not a collection URI.
 	 */
-	public AbstractHierarchicalSourceRepository(final URI rootURI, final URI sourceURI)
-	{
+	public AbstractHierarchicalSourceRepository(final URI rootURI, final URI sourceURI) {
 		this(rootURI, sourceURI, createDefaultURFResourceDescriptionIO()); //create a default resource description I/O using TURF
 	}
 
@@ -89,8 +83,7 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	 * @throws NullPointerException the given description I/O is <code>null</code>.
 	 * @throws IllegalArgumentException if the given source URI is not absolute or is not a collection URI.
 	 */
-	public AbstractHierarchicalSourceRepository(final URI rootURI, final URI sourceURI, final URFIO<URFResource> descriptionIO)
-	{
+	public AbstractHierarchicalSourceRepository(final URI rootURI, final URI sourceURI, final URFIO<URFResource> descriptionIO) {
 		super(rootURI, descriptionIO);
 		this.sourceURI = sourceURI != null ? checkCollectionURI(checkAbsolute(normalize(sourceURI))) : null;
 	}
@@ -100,8 +93,7 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	 * @param publicURI The URI in the public URI namespace.
 	 * @return A URI equivalent to the public URI in the private URI namespace.
 	 */
-	protected URI getSourceResourceURI(final URI publicURI)
-	{
+	protected URI getSourceResourceURI(final URI publicURI) {
 		return changeBase(publicURI, getRootURI(), getSourceURI()); //change the base of the URI from the public URI namespace to the private URI namespace
 	}
 
@@ -110,8 +102,7 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	 * @param sourceURI The URI in the private URI namespace.
 	 * @return A URI equivalent to the private URI in the public repository URI namespace.
 	 */
-	protected URI getRepositoryResourceURI(final URI sourceURI)
-	{
+	protected URI getRepositoryResourceURI(final URI sourceURI) {
 		return changeBase(sourceURI, getSourceURI(), getRootURI()); //change the base of the URI from the private URI namespace to the public URI namespace
 	}
 
@@ -124,8 +115,7 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	 * @throws IllegalArgumentException if the given resource URI is not in the public resource namespace.
 	 * @see #getRootURI()
 	 */
-	protected URIPath getResourceURIPath(final URI resourceURI)
-	{
+	protected URIPath getResourceURIPath(final URI resourceURI) {
 		return URIPath.relativize(getRootURI(), resourceURI);
 	}
 
@@ -136,8 +126,7 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	 * @throws NullPointerException if the given private repository path is <code>null</code>.
 	 * @throws IllegalArgumentException if the given subrepository path is absolute and/or is not a collection.
 	 */
-	public final Repository createSubrepository(final URIPath subrepositoryPath)
-	{
+	public final Repository createSubrepository(final URIPath subrepositoryPath) {
 		return createSubrepository(resolve(getRootURI(), subrepositoryPath.checkRelative().checkCollection().toURI()), subrepositoryPath); //resolve the subrepository path to the public repository URI		
 	}
 
@@ -149,8 +138,7 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	 * @throws NullPointerException if the given public repository URI and/or private repository path is <code>null</code>.
 	 * @throws IllegalArgumentException if the given private repository path is absolute and/or is not a collection.
 	 */
-	public final Repository createSubrepository(final URI publicRepositoryURI, final URIPath privateSubrepositoryPath)
-	{
+	public final Repository createSubrepository(final URI publicRepositoryURI, final URIPath privateSubrepositoryPath) {
 		return createSubrepository(publicRepositoryURI, resolve(getSourceURI(), privateSubrepositoryPath.checkRelative().checkCollection().toURI())); //resolve the subrepository path to the private repository URI		
 	}
 
@@ -169,8 +157,7 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	 * @see #getSourceURI()
 	 */
 	@Override
-	protected void openImpl() throws ResourceIOException
-	{
+	protected void openImpl() throws ResourceIOException {
 		checkState(getSourceURI() != null, "Cannot open repository without source URI specified.");
 		super.openImpl();
 	}
@@ -187,11 +174,9 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	 *         space.
 	 * @throws NullPointerException if the given URI is <code>null</code>.
 	 */
-	protected boolean isSourceResourceVisible(final URI privateResourceURI)
-	{
+	protected boolean isSourceResourceVisible(final URI privateResourceURI) {
 		final String rawName = getRawName(privateResourceURI); //get the raw name of the resource
-		if(COLLECTION_CONTENT_NAME.equals(rawName)) //if this is the collection contents
-		{
+		if(COLLECTION_CONTENT_NAME.equals(rawName)) { //if this is the collection contents
 			return false; //don't publish the collection contents file
 		}
 		return true; //publish all other resources

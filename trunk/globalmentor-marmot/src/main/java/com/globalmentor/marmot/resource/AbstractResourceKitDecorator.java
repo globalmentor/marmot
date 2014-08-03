@@ -33,15 +33,13 @@ import com.globalmentor.net.ResourceIOException;
  * A resource kit that decorates another resource kit.
  * @author Garret Wilson
  */
-public abstract class AbstractResourceKitDecorator implements ResourceKit
-{
+public abstract class AbstractResourceKitDecorator implements ResourceKit {
 
 	/** The decorated resource kit. */
 	private final ResourceKit resourceKit;
 
 	/** @return The decorated resource kit. */
-	protected ResourceKit getResourceKit()
-	{
+	protected ResourceKit getResourceKit() {
 		return resourceKit;
 	}
 
@@ -50,112 +48,94 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit
 	 * @param resourceKit The resource kit to decorate.
 	 * @throws NullPointerException if the given resource kit is <code>null</code>.
 	 */
-	public AbstractResourceKitDecorator(final ResourceKit resourceKit)
-	{
+	public AbstractResourceKitDecorator(final ResourceKit resourceKit) {
 		this.resourceKit = checkInstance(resourceKit, "Resource kit cannot be null.");
 	}
 
 	@Override
-	public MarmotSession<?> getMarmotSession()
-	{
+	public MarmotSession<?> getMarmotSession() {
 		return getResourceKit().getMarmotSession();
 	}
 
 	@Override
-	public void setMarmotSession(final MarmotSession<?> marmot)
-	{
+	public void setMarmotSession(final MarmotSession<?> marmot) {
 		getResourceKit().setMarmotSession(marmot);
 	}
 
 	@Override
-	public ContentType getDefaultContentType()
-	{
+	public ContentType getDefaultContentType() {
 		return getResourceKit().getDefaultContentType();
 	}
 
 	@Override
-	public Set<ContentType> getSupportedContentTypes()
-	{
+	public Set<ContentType> getSupportedContentTypes() {
 		return getResourceKit().getSupportedContentTypes();
 	}
 
 	@Override
-	public Set<URI> getSupportedResourceTypes()
-	{
+	public Set<URI> getSupportedResourceTypes() {
 		return getResourceKit().getSupportedResourceTypes();
 	}
 
 	@Override
-	public String getDefaultNameExtension()
-	{
+	public String getDefaultNameExtension() {
 		return getResourceKit().getDefaultNameExtension();
 	}
 
 	@Override
-	public Set<Capability> getCapabilities()
-	{
+	public Set<Capability> getCapabilities() {
 		return getResourceKit().getCapabilities();
 	}
 
 	@Override
-	public boolean hasCapabilities(final Capability... capabilities)
-	{
+	public boolean hasCapabilities(final Capability... capabilities) {
 		return getResourceKit().hasCapabilities(capabilities);
 	}
 
 	@Override
-	public URFResource getDefaultResourceDescription(final Repository repository, final URI resourceURI) throws ResourceIOException
-	{
+	public URFResource getDefaultResourceDescription(final Repository repository, final URI resourceURI) throws ResourceIOException {
 		return getResourceKit().getDefaultResourceDescription(repository, resourceURI);
 	}
 
 	@Override
-	public void initializeResourceDescription(final Repository repository, final URFResource resource) throws ResourceIOException
-	{
+	public void initializeResourceDescription(final Repository repository, final URFResource resource) throws ResourceIOException {
 		getResourceKit().initializeResourceDescription(repository, resource);
 	}
 
 	@Override
-	public URI getChildResourceCollectionURI(final Repository repository, final URI parentResourceURI) throws ResourceIOException
-	{
+	public URI getChildResourceCollectionURI(final Repository repository, final URI parentResourceURI) throws ResourceIOException {
 		return getResourceKit().getChildResourceCollectionURI(repository, parentResourceURI);
 	}
 
 	@Override
-	public URI getChildResourceURI(final Repository repository, final URI parentResourceURI, final String resourceName) throws ResourceIOException
-	{
+	public URI getChildResourceURI(final Repository repository, final URI parentResourceURI, final String resourceName) throws ResourceIOException {
 		return getResourceKit().getChildResourceURI(repository, parentResourceURI, resourceName);
 	}
 
 	@Override
-	public URFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException
-	{
+	public URFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException {
 		return getResourceKit().createResource(repository, resourceURI);
 	}
 
 	@Override
-	public URFResource createResource(final Repository repository, final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
-	{
+	public URFResource createResource(final Repository repository, final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException {
 		return getResourceKit().createResource(repository, resourceURI, resourceDescription);
 	}
 
 	@Override
-	public boolean hasDefaultResourceContent(final Repository repository, final URI resourceURI) throws ResourceIOException
-	{
+	public boolean hasDefaultResourceContent(final Repository repository, final URI resourceURI) throws ResourceIOException {
 		return getResourceKit().hasDefaultResourceContent(repository, resourceURI);
 	}
 
 	@Override
 	public URFResource writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription)
-			throws ResourceIOException
-	{
+			throws ResourceIOException {
 		return getResourceKit().writeDefaultResourceContent(repository, resourceURI, resourceDescription);
 	}
 
 	@Override
 	public void writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription,
-			final OutputStream outputStream) throws ResourceIOException
-	{
+			final OutputStream outputStream) throws ResourceIOException {
 		getResourceKit().writeDefaultResourceContent(repository, resourceURI, resourceDescription, outputStream);
 	}
 
@@ -172,14 +152,12 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit
 	//TODO fix	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final PermissionType permissionType) throws ResourceIOException;
 
 	@Override
-	public Class<? extends ResourceAspect> getAspectType()
-	{
+	public Class<? extends ResourceAspect> getAspectType() {
 		return getResourceKit().getAspectType();
 	}
 
 	@Override
-	public boolean isAspectAllowed(final ResourceAspect aspect, final PermissionType permissionType)
-	{
+	public boolean isAspectAllowed(final ResourceAspect aspect, final PermissionType permissionType) {
 		return getResourceKit().isAspectAllowed(aspect, permissionType);
 	}
 
@@ -195,8 +173,7 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit
 	*/
 
 	@Override
-	public ResourceContentFilter[] getAspectFilters(final ResourceAspect aspect)
-	{
+	public ResourceContentFilter[] getAspectFilters(final ResourceAspect aspect) {
 		return getResourceKit().getAspectFilters(aspect);
 	}
 

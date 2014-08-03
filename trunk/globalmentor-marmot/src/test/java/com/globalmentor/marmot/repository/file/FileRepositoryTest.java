@@ -24,16 +24,14 @@ import com.globalmentor.marmot.repository.Repository;
  * @author Garret Wilson
  * @see FileRepository
  */
-public class FileRepositoryTest extends AbstractFileRepositoryTest
-{
+public class FileRepositoryTest extends AbstractFileRepositoryTest {
 
 	/**
 	 * {@inheritDoc}
 	 * @see #getTempDirectory()
 	 */
 	@Override
-	protected Repository createRepository()
-	{
+	protected Repository createRepository() {
 		return new FileRepository(getTempDirectory());
 	}
 

@@ -28,15 +28,13 @@ import com.globalmentor.marmot.repository.AbstractRepositoryTest;
  * 
  * @author Garret Wilson
  */
-public abstract class AbstractFileRepositoryTest extends AbstractRepositoryTest
-{
+public abstract class AbstractFileRepositoryTest extends AbstractRepositoryTest {
 
 	@Rule
 	public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	/** @return A temporary directory valid for the current test. */
-	protected File getTempDirectory()
-	{
+	protected File getTempDirectory() {
 		return temporaryFolder.getRoot();
 	}
 

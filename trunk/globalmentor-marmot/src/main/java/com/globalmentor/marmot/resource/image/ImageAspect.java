@@ -22,8 +22,7 @@ import com.globalmentor.marmot.resource.ResourceAspect;
  * Available images aspects.
  * @author Garret Wilson
  */
-public enum ImageAspect implements ResourceAspect
-{
+public enum ImageAspect implements ResourceAspect {
 	/** Dimensions appropriate for presenting as a figure. */
 	FIGURE,
 

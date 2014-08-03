@@ -45,80 +45,66 @@ import com.globalmentor.net.URIPath;
  * Abstract implementation of a resource kit.
  * @author Garret Wilson
  */
-public abstract class AbstractResourceKit implements ResourceKit
-{
+public abstract class AbstractResourceKit implements ResourceKit {
 
 	private MarmotSession<?> marmotSession = null;
 
 	@Override
-	public MarmotSession<?> getMarmotSession()
-	{
+	public MarmotSession<?> getMarmotSession() {
 		return marmotSession;
 	}
 
 	@Override
-	public void setMarmotSession(final MarmotSession<?> marmotSession)
-	{
+	public void setMarmotSession(final MarmotSession<?> marmotSession) {
 		final MarmotSession<?> oldMarmotSession = this.marmotSession; //get the current Marmot session
-		if(marmotSession != null) //if this resource kit is being installed
-		{
-			if(oldMarmotSession != null && oldMarmotSession != this) //if we're already installed in another session
-			{
+		if(marmotSession != null) { //if this resource kit is being installed
+			if(oldMarmotSession != null && oldMarmotSession != this) { //if we're already installed in another session
 				throw new IllegalStateException("Resource kit already installed in session " + oldMarmotSession);
 			}
 		}
-		if(oldMarmotSession != marmotSession) //if the value is really changing (compare identity, because for sessions the instance matters)
-		{
+		if(oldMarmotSession != marmotSession) { //if the value is really changing (compare identity, because for sessions the instance matters)
 			this.marmotSession = marmotSession; //change the value
 		}
 	}
 
 	/** {@inheritDoc} This version returns any of the supported content types, if there are any. */
 	@Override
-	public ContentType getDefaultContentType()
-	{
+	public ContentType getDefaultContentType() {
 		return !supportedContentTypes.isEmpty() ? supportedContentTypes.iterator().next() : null;
 	}
 
 	private final Set<ContentType> supportedContentTypes;
 
 	@Override
-	public Set<ContentType> getSupportedContentTypes()
-	{
+	public Set<ContentType> getSupportedContentTypes() {
 		return supportedContentTypes;
 	}
 
 	private final Set<URI> supportedResourceTypes;
 
 	@Override
-	public Set<URI> getSupportedResourceTypes()
-	{
+	public Set<URI> getSupportedResourceTypes() {
 		return supportedResourceTypes;
 	}
 
 	private final String defaultNameExtension;
 
 	@Override
-	public String getDefaultNameExtension()
-	{
+	public String getDefaultNameExtension() {
 		return defaultNameExtension;
 	}
 
 	private final Set<Capability> capabilities;
 
 	@Override
-	public Set<Capability> getCapabilities()
-	{
+	public Set<Capability> getCapabilities() {
 		return capabilities;
 	}
 
 	@Override
-	public boolean hasCapabilities(final Capability... capabilities)
-	{
-		for(final Capability capability : capabilities) //for each given capability
-		{
-			if(!this.capabilities.contains(capability)) ///if this capability isn't present
-			{
+	public boolean hasCapabilities(final Capability... capabilities) {
+		for(final Capability capability : capabilities) { //for each given capability
+			if(!this.capabilities.contains(capability)) { ///if this capability isn't present
 				return false; //there is a capability not had
 			}
 		}
@@ -130,8 +116,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	 * @param capabilities The capabilities provided by this resource kit.
 	 * @throws NullPointerException if the capabilities is <code>null</code>.
 	 */
-	public AbstractResourceKit(final Capability... capabilities)
-	{
+	public AbstractResourceKit(final Capability... capabilities) {
 		this((String)null, capabilities); //construct the class with no default extension
 	}
 
@@ -141,8 +126,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	 * @param capabilities The capabilities provided by this resource kit.
 	 * @throws NullPointerException if the supported content type and/or capabilities is <code>null</code>.
 	 */
-	public AbstractResourceKit(final ContentType supportedContentType, final Capability... capabilities)
-	{
+	public AbstractResourceKit(final ContentType supportedContentType, final Capability... capabilities) {
 		this(supportedContentType, null, capabilities); //construct the class with no default extension
 	}
 
@@ -152,8 +136,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	 * @param capabilities The capabilities provided by this resource kit.
 	 * @throws NullPointerException if the supported content types array and/or capabilities is <code>null</code>.
 	 */
-	public AbstractResourceKit(final ContentType[] supportedContentTypes, final Capability... capabilities)
-	{
+	public AbstractResourceKit(final ContentType[] supportedContentTypes, final Capability... capabilities) {
 		this(supportedContentTypes, (String)null, capabilities); //construct the class with no default extension
 	}
 
@@ -163,8 +146,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	 * @param capabilities The capabilities provided by this resource kit.
 	 * @throws NullPointerException if the supported resource types and/or capabilities is <code>null</code>.
 	 */
-	public AbstractResourceKit(final URI supportedResourceType, final Capability... capabilities)
-	{
+	public AbstractResourceKit(final URI supportedResourceType, final Capability... capabilities) {
 		this(supportedResourceType, null, capabilities); //construct the class with no default extension
 	}
 
@@ -174,8 +156,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	 * @param capabilities The capabilities provided by this resource kit.
 	 * @throws NullPointerException if the supported resource types array and/or capabilities is <code>null</code>.
 	 */
-	public AbstractResourceKit(final URI[] supportedResourceTypes, final Capability... capabilities)
-	{
+	public AbstractResourceKit(final URI[] supportedResourceTypes, final Capability... capabilities) {
 		this(supportedResourceTypes, null, capabilities); //construct the class with no default extension
 	}
 
@@ -187,8 +168,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	 * @param capabilities The capabilities provided by this resource kit.
 	 * @throws NullPointerException if the supported content types array and/or the supported resource types array is <code>null</code>.
 	 */
-	public AbstractResourceKit(final ContentType[] supportedContentTypes, final URI[] supportedResourceTypes, final Capability... capabilities)
-	{
+	public AbstractResourceKit(final ContentType[] supportedContentTypes, final URI[] supportedResourceTypes, final Capability... capabilities) {
 		this(supportedContentTypes, supportedResourceTypes, null, capabilities); //construct the class with no default extension
 	}
 
@@ -199,8 +179,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	 * @param capabilities The capabilities provided by this resource kit.
 	 * @throws NullPointerException if the capabilities is <code>null</code>.
 	 */
-	public AbstractResourceKit(final String defaultNameExtension, final Capability... capabilities)
-	{
+	public AbstractResourceKit(final String defaultNameExtension, final Capability... capabilities) {
 		this(new ContentType[0], defaultNameExtension, capabilities);
 	}
 
@@ -212,8 +191,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	 * @param capabilities The capabilities provided by this resource kit.
 	 * @throws NullPointerException if the supported content type and/or capabilities is <code>null</code>.
 	 */
-	public AbstractResourceKit(final ContentType supportedContentType, final String defaultNameExtension, final Capability... capabilities)
-	{
+	public AbstractResourceKit(final ContentType supportedContentType, final String defaultNameExtension, final Capability... capabilities) {
 		this(new ContentType[] { checkInstance(supportedContentType, "Supported content type cannot be null.") }, defaultNameExtension, capabilities);
 	}
 
@@ -225,8 +203,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	 * @param capabilities The capabilities provided by this resource kit.
 	 * @throws NullPointerException if the supported content types array and/or capabilities is <code>null</code>.
 	 */
-	public AbstractResourceKit(final ContentType[] supportedContentTypes, final String defaultNameExtension, final Capability... capabilities)
-	{
+	public AbstractResourceKit(final ContentType[] supportedContentTypes, final String defaultNameExtension, final Capability... capabilities) {
 		this(supportedContentTypes, new URI[] {}, defaultNameExtension, capabilities); //construct the class with no supported resource types
 	}
 
@@ -238,8 +215,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	 * @param capabilities The capabilities provided by this resource kit.
 	 * @throws NullPointerException if the supported resource types and/or capabilities is <code>null</code>.
 	 */
-	public AbstractResourceKit(final URI supportedResourceType, final String defaultNameExtension, final Capability... capabilities)
-	{
+	public AbstractResourceKit(final URI supportedResourceType, final String defaultNameExtension, final Capability... capabilities) {
 		this(new URI[] { checkInstance(supportedResourceType, "Supported resource type cannot be null.") }, defaultNameExtension, capabilities);
 	}
 
@@ -251,8 +227,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	 * @param capabilities The capabilities provided by this resource kit.
 	 * @throws NullPointerException if the supported resource types array and/or capabilities is <code>null</code>.
 	 */
-	public AbstractResourceKit(final URI[] supportedResourceTypes, final String defaultNameExtension, final Capability... capabilities)
-	{
+	public AbstractResourceKit(final URI[] supportedResourceTypes, final String defaultNameExtension, final Capability... capabilities) {
 		this(new ContentType[] {}, supportedResourceTypes, defaultNameExtension, capabilities); //construct the class with no supported content types
 	}
 
@@ -267,8 +242,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	 * @throws NullPointerException if the supported content types array and/or the supported resource types array is <code>null</code>.
 	 */
 	public AbstractResourceKit(final ContentType[] supportedContentTypes, final URI[] supportedResourceTypes, final String defaultNameExtension,
-			final Capability... capabilities)
-	{
+			final Capability... capabilities) {
 		this.supportedContentTypes = unmodifiableSet(new HashSet<ContentType>(asList(checkInstance(supportedContentTypes,
 				"Supported content types array cannot be null."))));
 		this.supportedResourceTypes = unmodifiableSet(new HashSet<URI>(asList(checkInstance(supportedResourceTypes,
@@ -289,12 +263,10 @@ public abstract class AbstractResourceKit implements ResourceKit
 	 * @see DCMI#DATE_PROPERTY_URI
 	 */
 	@Override
-	public URFResource getDefaultResourceDescription(final Repository repository, final URI resourceURI) throws ResourceIOException
-	{
+	public URFResource getDefaultResourceDescription(final Repository repository, final URI resourceURI) throws ResourceIOException {
 		final URFResource resource = new DefaultURFResource(resourceURI); //create a new resource description
 		final ContentType contentType = getDefaultContentType(); //get the default content type, if any
-		if(contentType != null) //if there is a default content type
-		{
+		if(contentType != null) { //if there is a default content type
 			setContentType(resource, contentType); //set the content type
 		}
 		setDate(resource, new ISODateTime()); //set the date to the current date and time with no particular time zone
@@ -303,14 +275,12 @@ public abstract class AbstractResourceKit implements ResourceKit
 
 	/** {@inheritDoc} This version does nothing. */
 	@Override
-	public void initializeResourceDescription(final Repository repository, final URFResource resource) throws ResourceIOException
-	{
+	public void initializeResourceDescription(final Repository repository, final URFResource resource) throws ResourceIOException {
 	}
 
 	/** {@inheritDoc} This default version returns the collection of the parent resource. */
 	@Override
-	public URI getChildResourceCollectionURI(final Repository repository, final URI parentResourceURI) throws ResourceIOException
-	{
+	public URI getChildResourceCollectionURI(final Repository repository, final URI parentResourceURI) throws ResourceIOException {
 		return repository.getCollectionURI(parentResourceURI); //return the collection URI of the parent resource
 	}
 
@@ -319,13 +289,11 @@ public abstract class AbstractResourceKit implements ResourceKit
 	 * @see #getDefaultNameExtension()
 	 */
 	@Override
-	public URI getChildResourceURI(final Repository repository, final URI parentResourceURI, final String resourceName) throws ResourceIOException
-	{
+	public URI getChildResourceURI(final Repository repository, final URI parentResourceURI, final String resourceName) throws ResourceIOException {
 		//TODO fix IllegalArgumentException by checking to ensure that the parent resource is within the repository
 		final StringBuilder stringBuilder = new StringBuilder(URIPath.encodeSegment(resourceName)); //create a new string builder, starting with the encoded simple resource name
 		final String defaultExtension = getDefaultNameExtension(); //get the default extension, if any
-		if(defaultExtension != null) //if we have a default extension
-		{
+		if(defaultExtension != null) { //if we have a default extension
 			stringBuilder.append(NAME_EXTENSION_SEPARATOR).append(defaultExtension); //append the default extension
 		}
 		return resolve(parentResourceURI, URIPath.createURIPathURI(stringBuilder.toString())); //resolve the encoded name against the parent resource URI; use the special URIPath method in case the name contains a colon character
@@ -333,8 +301,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 
 	/** {@inheritDoc} This implementation delegates to {@link #createResource(Repository, URI, URFResource)} with a default description. */
 	@Override
-	public final URFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException
-	{
+	public final URFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException {
 		return createResource(repository, resourceURI, new DefaultURFResource(resourceURI)); //create the resource with a default description
 	}
 
@@ -343,34 +310,22 @@ public abstract class AbstractResourceKit implements ResourceKit
 	 * {@link #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)}.
 	 */
 	@Override
-	public URFResource createResource(final Repository repository, final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
-	{
-		if(hasDefaultResourceContent(repository, resourceURI)) //if there is default content for the resource
-		{
+	public URFResource createResource(final Repository repository, final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException {
+		if(hasDefaultResourceContent(repository, resourceURI)) { //if there is default content for the resource
 			final OutputStream outputStream = new BufferedOutputStream(repository.createResource(resourceURI, resourceDescription)); //create a new resource
-			try
-			{
-				try
-				{
-					if(hasDefaultResourceContent(repository, resourceURI)) //if there is default content for the resource
-					{
+			try {
+				try {
+					if(hasDefaultResourceContent(repository, resourceURI)) { //if there is default content for the resource
 						writeDefaultResourceContent(repository, resourceURI, resourceDescription, outputStream); //write default content to the output stream
 					}
-				}
-				finally
-				{
+				} finally {
 					outputStream.close(); //always close the output stream
 				}
 				return repository.getResourceDescription(resourceURI); //return the resource description
-			}
-			catch(final IOException ioException) //if an I/O exception occurs
-			{
+			} catch(final IOException ioException) { //if an I/O exception occurs
 				throw ResourceIOException.toResourceIOException(ioException, resourceURI); //send a resource version of the exception
 			}
-		}
-		else
-		//if there is no default content for the resource
-		{
+		} else { //if there is no default content for the resource
 			return repository.createResource(resourceURI, resourceDescription, NO_BYTES); //create a new resource with no content
 		}
 	}
@@ -378,58 +333,46 @@ public abstract class AbstractResourceKit implements ResourceKit
 	/** {@inheritDoc} This implementation delegates to {@link #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)}. */
 	@Override
 	public URFResource writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription)
-			throws ResourceIOException
-	{
+			throws ResourceIOException {
 		final OutputStream outputStream = new BufferedOutputStream(repository.getResourceOutputStream(resourceURI)); //create a new resource
-		try
-		{
-			try
-			{
+		try {
+			try {
 				writeDefaultResourceContent(repository, resourceURI, resourceDescription, outputStream); //write default content to the output stream
-			}
-			finally
-			{
+			} finally {
 				outputStream.close(); //always close the output stream
 			}
-		}
-		catch(final IOException ioException) //if an I/O exception occurs
-		{
+		} catch(final IOException ioException) { //if an I/O exception occurs
 			throw ResourceIOException.toResourceIOException(ioException, resourceURI); //send a resource version of the exception
 		}
 		return repository.getResourceDescription(resourceURI); //return the resource description
 	}
 
 	/** {@inheritDoc} This version returns <code>false</code>. */
-	public boolean hasDefaultResourceContent(final Repository repository, final URI resourceURI) throws ResourceIOException
-	{
+	public boolean hasDefaultResourceContent(final Repository repository, final URI resourceURI) throws ResourceIOException {
 		return false;
 	}
 
 	/** {@inheritDoc} This version writes no content. */
 	@Override
 	public void writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription,
-			final OutputStream outputStream) throws ResourceIOException
-	{
+			final OutputStream outputStream) throws ResourceIOException {
 	}
 
 	/** {@inheritDoc} This version returns <code>null</code>. */
 	@Override
-	public Class<? extends ResourceAspect> getAspectType()
-	{
+	public Class<? extends ResourceAspect> getAspectType() {
 		return null;
 	}
 
 	/** {@inheritDoc} This version recognizes no aspects. */
 	@Override
-	public boolean isAspectAllowed(final ResourceAspect aspect, final PermissionType permissionType)
-	{
+	public boolean isAspectAllowed(final ResourceAspect aspect, final PermissionType permissionType) {
 		return false;
 	}
 
 	/** {@inheritDoc} This version recognizes no aspects. */
 	@Override
-	public ResourceContentFilter[] getAspectFilters(final ResourceAspect aspect)
-	{
+	public ResourceContentFilter[] getAspectFilters(final ResourceAspect aspect) {
 		return new ResourceContentFilter[0];
 	}
 
@@ -448,8 +391,7 @@ public abstract class AbstractResourceKit implements ResourceKit
 	 * @throws ResourceIOException if there is an error accessing the repository.
 	 */
 	public static URI getRelatedResourceURI(final Repository repository, final URI resourceURI, final URI relatedResourcePathURIPropertyURI,
-			final String defaultRelatedResourceName, final boolean checkAncestors) throws ResourceIOException
-	{
+			final String defaultRelatedResourceName, final boolean checkAncestors) throws ResourceIOException {
 		return getRelatedResourceURI(repository, repository.getResourceDescription(resourceURI), relatedResourcePathURIPropertyURI, defaultRelatedResourceName,
 				checkAncestors); //get the description of the resource and look for a related resource
 	}
@@ -469,36 +411,28 @@ public abstract class AbstractResourceKit implements ResourceKit
 	 * @throws ResourceIOException if there is an error accessing the repository.
 	 */
 	public static URI getRelatedResourceURI(final Repository repository, final URFResource resource, final URI relatedResourcePathURIPropertyURI,
-			final String defaultRelatedResourceName, final boolean checkAncestors) throws ResourceIOException
-	{
+			final String defaultRelatedResourceName, final boolean checkAncestors) throws ResourceIOException {
 		final URI resourceURI = resource.getURI(); //get the URI of the resource
-		if(relatedResourcePathURIPropertyURI != null) //if we should check a property for an explicit related resource
-		{
+		if(relatedResourcePathURIPropertyURI != null) { //if we should check a property for an explicit related resource
 			final URI explicitRelatedResourceURI = URF.asURI(resource.getPropertyValue(relatedResourcePathURIPropertyURI)); //get the related resource URI property value, if any
-			if(explicitRelatedResourceURI != null) //if there is a related resource URI specified
-			{
+			if(explicitRelatedResourceURI != null) { //if there is a related resource URI specified
 				final URIPath relatedResourcePath = URIPath.asPathURIPath(explicitRelatedResourceURI); //see if this is a path: URI
-				if(relatedResourcePath == null || !relatedResourcePath.isRelative()) //if this is not a relative path TODO determine how to handle absolute paths and general URIs appropriately; this will probably include making subrepositories be able to access root repositories
-				{
+				if(relatedResourcePath == null || !relatedResourcePath.isRelative()) { //if this is not a relative path TODO determine how to handle absolute paths and general URIs appropriately; this will probably include making subrepositories be able to access root repositories
 					throw new ResourceIOException(resourceURI, "Specified related resource URI " + explicitRelatedResourceURI + " for resource " + resourceURI
 							+ " currently must be a relative <path:...> URI.");
 				}
 				return resolve(resourceURI, relatedResourcePath.toURI()); //resolve the related resource path to the resource URI
 			}
 		}
-		if(defaultRelatedResourceName != null) //if a default related resource name was given
-		{
+		if(defaultRelatedResourceName != null) { //if a default related resource name was given
 			URI collectionURI = getCurrentLevel(resourceURI); //start at the current collection level
-			do
-			{
+			do {
 				final URI relatedResourceURI = resolve(collectionURI, defaultRelatedResourceName); //get the URI of the related resource if it were to reside at this level
-				if(repository.resourceExists(relatedResourceURI)) //if the related resource exists here
-				{
+				if(repository.resourceExists(relatedResourceURI)) { //if the related resource exists here
 					return relatedResourceURI; //return the URI of the template
 				}
 				collectionURI = repository.getParentResourceURI(collectionURI); //go up a level
-			}
-			while(checkAncestors && collectionURI != null); //keep going up the hierarchy until we run out of parent collections
+			} while(checkAncestors && collectionURI != null); //keep going up the hierarchy until we run out of parent collections
 		}
 		return null; //indicate that we could find no template URI
 	}

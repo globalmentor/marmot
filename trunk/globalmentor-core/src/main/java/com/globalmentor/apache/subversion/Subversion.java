@@ -25,8 +25,7 @@ import java.util.regex.Pattern;
  * 
  * @see <a href="http://subversion.apache.org/">Apache Subversion</a>
  */
-public class Subversion
-{
+public class Subversion {
 
 	/** The character used for separating the namespace ID from the rest of a Subversion property name. */
 	public final static char PROPERTY_NAMESPACE_SEPARATOR = ':';
@@ -43,8 +42,7 @@ public class Subversion
 	 * @return The namespace of the Subversion property, or <code>null</code> if no namespace is present.
 	 * @throws NullPointerException if the given property name is <code>null</code>.
 	 */
-	public static String getPropertyNamespace(final String propertyName)
-	{
+	public static String getPropertyNamespace(final String propertyName) {
 		final int namespaceSeparatorIndex = propertyName.indexOf(PROPERTY_NAMESPACE_SEPARATOR);
 		return namespaceSeparatorIndex >= 0 ? propertyName.substring(0, namespaceSeparatorIndex) : null;
 	}
@@ -56,8 +54,7 @@ public class Subversion
 	 * @return The local name of the Subversion property.
 	 * @throws NullPointerException if the given property name is <code>null</code>.
 	 */
-	public static String getPropertyLocalName(final String propertyName)
-	{
+	public static String getPropertyLocalName(final String propertyName) {
 		final int namespaceSeparatorIndex = propertyName.indexOf(PROPERTY_NAMESPACE_SEPARATOR);
 		return namespaceSeparatorIndex >= 0 ? propertyName.substring(namespaceSeparatorIndex + 1) : propertyName;
 	}

@@ -24,14 +24,12 @@ import java.net.URI;
 
 import org.urframework.*;
 
-
 /**
  * Constants and utilities for working with repositories.
  * 
  * @author Garret Wilson
  */
-public class Repositories
-{
+public class Repositories {
 
 	/**
 	 * Prints the given resource to the given appendable.
@@ -41,8 +39,7 @@ public class Repositories
 	 * @throws NullPointerException if the given resource and/or appendable is <code>null</code>.
 	 * @throws IOException if there was an error writing to the appendable.
 	 */
-	public static <A extends Appendable> A print(final URFResource resource, final A appendable) throws IOException
-	{
+	public static <A extends Appendable> A print(final URFResource resource, final A appendable) throws IOException {
 		URFTURFGenerator.forPrint(false).generateResources(appendable, false, resource).append('\n');
 		return appendable;
 	}
@@ -56,8 +53,7 @@ public class Repositories
 	 * @throws IOException if there was an error writing to the appendable.
 	 * @throws IOException if there was an error accessing a repository or writing to the appendable.
 	 */
-	public static <A extends Appendable> A print(final Repository repository, final A appendable) throws IOException
-	{
+	public static <A extends Appendable> A print(final Repository repository, final A appendable) throws IOException {
 		return print(repository, repository.getRootURI(), appendable);
 	}
 
@@ -70,8 +66,7 @@ public class Repositories
 	 * @throws NullPointerException if the given repository, resource URI, and/or appendable is <code>null</code>.
 	 * @throws IOException if there was an error accessing a repository or writing to the appendable.
 	 */
-	public static <A extends Appendable> A print(final Repository repository, final URI resourceURI, final A appendable) throws IOException
-	{
+	public static <A extends Appendable> A print(final Repository repository, final URI resourceURI, final A appendable) throws IOException {
 		return print(repository, repository.getResourceDescription(resourceURI), appendable);
 	}
 
@@ -84,8 +79,7 @@ public class Repositories
 	 * @throws NullPointerException if the given repository, resource, and/or appendable is <code>null</code>.
 	 * @throws IOException if there was an error accessing a repository or writing to the appendable.
 	 */
-	public static <A extends Appendable> A print(final Repository repository, final URFResource resource, final A appendable) throws IOException
-	{
+	public static <A extends Appendable> A print(final Repository repository, final URFResource resource, final A appendable) throws IOException {
 		return print(repository, resource, 0, appendable, URFTURFGenerator.forPrint(repository.getRootURI(), false));
 	}
 
@@ -100,19 +94,14 @@ public class Repositories
 	 * @throws IOException if there was an error accessing a repository or writing to the appendable.
 	 */
 	public static <A extends Appendable> A print(final Repository repository, final URFResource resource, final int level, final A appendable,
-			final URFTURFGenerator urfTURFGenerator) throws IOException
-	{
-		try
-		{
+			final URFTURFGenerator urfTURFGenerator) throws IOException {
+		try {
 			append(appendable, '\t', level); //indent
 			urfTURFGenerator.generateResources(appendable, false, resource).append('\n');
-		}
-		catch(final IOException ioException)
-		{
+		} catch(final IOException ioException) {
 			throw unexpected(ioException);
 		}
-		for(final URFResource childResourceDescription : repository.getChildResourceDescriptions(resource.getURI()))
-		{
+		for(final URFResource childResourceDescription : repository.getChildResourceDescriptions(resource.getURI())) {
 			print(repository, childResourceDescription, level + 1, appendable, urfTURFGenerator);
 		}
 		return appendable;

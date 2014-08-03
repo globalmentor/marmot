@@ -18,13 +18,13 @@ package com.globalmentor.marmot;
 
 import com.globalmentor.config.Configuration;
 
-/**Configuration for Marmot.
-@author Garret Wilson
-*/
-public interface MarmotConfiguration extends Configuration
-{
+/**
+ * Configuration for Marmot.
+ * @author Garret Wilson
+ */
+public interface MarmotConfiguration extends Configuration {
 
-	/**@return The cache configured for use by Marmot.*/
+	/** @return The cache configured for use by Marmot. */
 	public MarmotResourceCache<?> getResourceCache();
-	
+
 }

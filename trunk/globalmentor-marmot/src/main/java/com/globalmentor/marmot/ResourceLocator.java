@@ -39,18 +39,16 @@ import static com.globalmentor.net.URIs.*;
  * </p>
  * @author Garret Wilson
  */
-public class ResourceLocator
-{
+public class ResourceLocator {
 
 	/** Shared dummy content type indicating that no content type could be determined. */
-//TODO del if not needed	private final static ContentType NO_CONTENT_TYPE = ContentType.getInstance("null", "null");
+	//TODO del if not needed	private final static ContentType NO_CONTENT_TYPE = ContentType.getInstance("null", "null");
 
 	/** The repository in which the resource exists. */
 	private final Repository repository;
 
 	/** @return The repository in which the resource exists. */
-	public Repository getRepository()
-	{
+	public Repository getRepository() {
 		return repository;
 	}
 
@@ -58,8 +56,7 @@ public class ResourceLocator
 	private final URI resourceURI;
 
 	/** @return The full URI to the resource within the repository. */
-	public URI getResourceURI()
-	{
+	public URI getResourceURI() {
 		return resourceURI;
 	}
 
@@ -67,8 +64,7 @@ public class ResourceLocator
 	private URIPath resourcePath;
 
 	/** @return The path to the resource, relative to the repository. */
-	public URIPath getResourcePath()
-	{
+	public URIPath getResourcePath() {
 		return resourcePath;
 	}
 
@@ -76,44 +72,43 @@ public class ResourceLocator
 	 * The cached content type, which may reference {@link #NO_CONTENT_TYPE} if no content type could be determined, or <code>null</code> if the content type has
 	 * not yet been retrieved.
 	 */
-//TODO del if not needed	private ContentType cachedContentType = null;
+	//TODO del if not needed	private ContentType cachedContentType = null;
 
 	/**
 	 * Retrieves the content type for the resource. Any errors are logged but not returned or thrown.
 	 * @return The resource content type, or <code>null</code> if the content type could not be determined.
 	 */
-/*TODO del if not needed
-	protected ContentType retrieveContentType()
-	{
-		final URFResource resource;
-		try
+	/*TODO del if not needed
+		protected ContentType retrieveContentType()
 		{
-			resource = getRepository().getResourceDescription(getResourceURI()); //get a description of the resource
-			return Content.getContentType(resource); //get the content type if possible
+			final URFResource resource;
+			try
+			{
+				resource = getRepository().getResourceDescription(getResourceURI()); //get a description of the resource
+				return Content.getContentType(resource); //get the content type if possible
+			}
+			catch(final IOException ioException)
+			{
+				Log.warn(ioException);
+				return null;
+			}
 		}
-		catch(final IOException ioException)
-		{
-			Log.warn(ioException);
-			return null;
-		}
-	}
-*/
+	*/
 
 	/**
 	 * Retrieves the determined content type of the resource, which may have been cached.
 	 * @return The resource content type, or <code>null</code> if the content type could not be determined.
 	 */
-/*TODO del if not needed
-	public ContentType getContentType()
-	{
-		if(cachedContentType == null) //if the content type hasn't been cached (the race condition here is benign)
+	/*TODO del if not needed
+		public ContentType getContentType()
 		{
-			final ContentType contentType = retrieveContentType(); //retrieve the content type
-			cachedContentType = contentType != null ? contentType : NO_CONTENT_TYPE; //cache the content type
+			if(cachedContentType == null) {	//if the content type hasn't been cached (the race condition here is benign)
+				final ContentType contentType = retrieveContentType(); //retrieve the content type
+				cachedContentType = contentType != null ? contentType : NO_CONTENT_TYPE; //cache the content type
+			}
+			return cachedContentType != NO_CONTENT_TYPE ? cachedContentType : null; //return the cached content type
 		}
-		return cachedContentType != NO_CONTENT_TYPE ? cachedContentType : null; //return the cached content type
-	}
-*/
+	*/
 
 	/**
 	 * Repository and resource path constructor.
@@ -122,8 +117,7 @@ public class ResourceLocator
 	 * @throws NullPointerException if the given repository and/or path is <code>null</code>.
 	 * @throws IllegalArgumentException if the given path is not a relative path.
 	 */
-	public ResourceLocator(final Repository repository, final URIPath resourcePath)
-	{
+	public ResourceLocator(final Repository repository, final URIPath resourcePath) {
 		this.repository = checkInstance(repository, "Repository cannot be null.");
 		this.resourcePath = resourcePath.checkRelative();
 		this.resourceURI = resolve(repository.getRootURI(), resourcePath.toURI()); //resolve the resource path to the repository

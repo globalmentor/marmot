@@ -32,15 +32,13 @@ import com.globalmentor.net.ResourceIOException;
  * Support for working with a resource in a repository.
  * @author Garret Wilson
  */
-public interface ResourceKit
-{
+public interface ResourceKit {
 
 	/**
 	 * Capabilities a resource kit has in relation to resources.
 	 * @author Garret Wilson
 	 */
-	public enum Capability
-	{
+	public enum Capability {
 		/** The ability to create a resource. */
 		CREATE,
 

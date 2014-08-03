@@ -22,57 +22,57 @@ import java.net.URI;
 import com.globalmentor.cache.Cache;
 import com.globalmentor.marmot.repository.Repository;
 
-/**A manager of cached Marmot resources.
-@param <Q> The type of query used to request data from the cache.
-@author Garret Wilson
-*/
-public interface MarmotResourceCache<Q> extends Cache<Q, File>
-{
+/**
+ * A manager of cached Marmot resources.
+ * @param <Q> The type of query used to request data from the cache.
+ * @author Garret Wilson
+ */
+public interface MarmotResourceCache<Q> extends Cache<Q, File> {
 
-	/**Retrieves a value from the cache.
-	Values are fetched from the backing store if needed, and this method blocks until the data is fetched.
-	@param repository The repository in which the resource is stored.
-	@param resourceURI The URI of the resource.
-	@return The cached value.
-	@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	@throws IOException if there was an error fetching the value from the backing store.
-	@see #get(Object)
-	*/
+	/**
+	 * Retrieves a value from the cache. Values are fetched from the backing store if needed, and this method blocks until the data is fetched.
+	 * @param repository The repository in which the resource is stored.
+	 * @param resourceURI The URI of the resource.
+	 * @return The cached value.
+	 * @throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	 * @throws IOException if there was an error fetching the value from the backing store.
+	 * @see #get(Object)
+	 */
 	public File get(final Repository repository, final URI resourceURI) throws IOException;
-	
-	/**Retrieves a value from the cache.
-	Values are fetched from the backing store if needed, with fetching optionally deferred until later.
-	@param repository The repository in which the resource is stored.
-	@param resourceURI The URI of the resource.
-	@param deferFetch Whether fetching, if needed, should be deffered and performed in an asynchronous thread.
-	@return The cached value, or <code>null</code> if fetching was deferred.
-	@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	@throws IOException if there was an error fetching the value from the backing store.
-	@see #get(Object, boolean)
-	*/
+
+	/**
+	 * Retrieves a value from the cache. Values are fetched from the backing store if needed, with fetching optionally deferred until later.
+	 * @param repository The repository in which the resource is stored.
+	 * @param resourceURI The URI of the resource.
+	 * @param deferFetch Whether fetching, if needed, should be deffered and performed in an asynchronous thread.
+	 * @return The cached value, or <code>null</code> if fetching was deferred.
+	 * @throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	 * @throws IOException if there was an error fetching the value from the backing store.
+	 * @see #get(Object, boolean)
+	 */
 	public File get(final Repository repository, final URI resourceURI, final boolean deferFetch) throws IOException;
 
-	/**Retrieves data from the cache.
-	Data is fetched from the backing store if needed, and this method blocks until the data is fetched.
-	@param repository The repository in which the resource is stored.
-	@param resourceURI The URI of the resource.
-	@return The cached data.
-	@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	@throws IOException if there was an error fetching the data from the backing store.
-	@see #getData(Object)
-	*/
+	/**
+	 * Retrieves data from the cache. Data is fetched from the backing store if needed, and this method blocks until the data is fetched.
+	 * @param repository The repository in which the resource is stored.
+	 * @param resourceURI The URI of the resource.
+	 * @return The cached data.
+	 * @throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	 * @throws IOException if there was an error fetching the data from the backing store.
+	 * @see #getData(Object)
+	 */
 	public Data<File> getData(final Repository repository, final URI resourceURI) throws IOException;
-	
-	/**Retrieves data from the cache.
-	Data is fetched from the backing store if needed, with fetching optionally deferred until later.
-	@param repository The repository in which the resource is stored.
-	@param resourceURI The URI of the resource.
-	@param deferFetch Whether fetching, if needed, should be deffered and performed in an asynchronous thread.
-	@return The cached data, or <code>null</code> if fetching was deferred.
-	@throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	@throws IOException if there was an error fetching the data from the backing store.
-	@see #getData(Object, boolean)
-	*/
+
+	/**
+	 * Retrieves data from the cache. Data is fetched from the backing store if needed, with fetching optionally deferred until later.
+	 * @param repository The repository in which the resource is stored.
+	 * @param resourceURI The URI of the resource.
+	 * @param deferFetch Whether fetching, if needed, should be deffered and performed in an asynchronous thread.
+	 * @return The cached data, or <code>null</code> if fetching was deferred.
+	 * @throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
+	 * @throws IOException if there was an error fetching the data from the backing store.
+	 * @see #getData(Object, boolean)
+	 */
 	public Data<File> getData(final Repository repository, final URI resourceURI, final boolean deferFetch) throws IOException;
 
 }

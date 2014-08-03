@@ -34,12 +34,10 @@ import com.globalmentor.net.ContentType;
  * </ul>
  * @author Garret Wilson
  */
-public class ImageResourceKit extends AbstractResourceKit
-{
+public class ImageResourceKit extends AbstractResourceKit {
 
 	/** Default constructor. */
-	public ImageResourceKit()
-	{
+	public ImageResourceKit() {
 		super(new ContentType[] { ContentType.create(ContentType.IMAGE_PRIMARY_TYPE, GIF_SUBTYPE),
 				ContentType.create(ContentType.IMAGE_PRIMARY_TYPE, JPEG_SUBTYPE), ContentType.create(ContentType.IMAGE_PRIMARY_TYPE, PNG_SUBTYPE) });
 	}
@@ -54,24 +52,20 @@ public class ImageResourceKit extends AbstractResourceKit
 		public void initializeResourceDescription(final Repository repository, final RDFResource resource) throws IOException
 		{
 			super.initializeResourceDescription(repository, resource);	//do the default initialization
-			if(getIcon(resource)==null)	//if this resource has no icon defined
-			{
+			if(getIcon(resource)==null) {	//if this resource has no icon defined
 	//TODO fix			setIcon(resource, iconURI);
 			}
 		}
 	*/
 
 	@Override
-	public Class<? extends ResourceAspect> getAspectType()
-	{
+	public Class<? extends ResourceAspect> getAspectType() {
 		return ImageAspect.class;
 	};
 
 	@Override
-	public boolean isAspectAllowed(final ResourceAspect aspect, final PermissionType permissionType)
-	{
-		switch((ImageAspect)aspect)
-		{
+	public boolean isAspectAllowed(final ResourceAspect aspect, final PermissionType permissionType) {
+		switch((ImageAspect)aspect) {
 			case PREVIEW:
 				return permissionType == PermissionType.PREVIEW || permissionType == PermissionType.READ;
 			case FIGURE:
@@ -84,8 +78,7 @@ public class ImageResourceKit extends AbstractResourceKit
 	}
 
 	@Override
-	public ResourceContentFilter[] getAspectFilters(final ResourceAspect aspect)
-	{
+	public ResourceContentFilter[] getAspectFilters(final ResourceAspect aspect) {
 		return new ResourceContentFilter[] { new ImageScaleFilter((ImageAspect)aspect) }; //return the correct image aspect filter
 	}
 }

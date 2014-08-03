@@ -28,11 +28,9 @@ import static org.urframework.URF.*;
  * Constant values and utilities used by Marmot.
  * @author Garret Wilson
  */
-public class Marmot
-{
+public class Marmot {
 
-	static
-	{
+	static {
 		setDefaultConfiguration(new DefaultMarmotConfiguration()); //configure the default Marmot configuration to return a default Marmot resource cache
 	}
 
@@ -44,8 +42,7 @@ public class Marmot
 	 * @return The default Marmot configuration.
 	 * @see Configurator#getDefaultConfiguration(Class)
 	 */
-	public static MarmotConfiguration getDefaultConfiguration()
-	{
+	public static MarmotConfiguration getDefaultConfiguration() {
 		return Configurator.getDefaultConfiguration(MarmotConfiguration.class);
 	}
 
@@ -56,8 +53,7 @@ public class Marmot
 	 * @throws NullPointerException if the given configuration is <code>null</code>.
 	 * @see Configurator#setDefaultConfiguration(Class)
 	 */
-	public static MarmotConfiguration setDefaultConfiguration(final MarmotConfiguration marmotConfiguration)
-	{
+	public static MarmotConfiguration setDefaultConfiguration(final MarmotConfiguration marmotConfiguration) {
 		return Configurator.setDefaultConfiguration(MarmotConfiguration.class, marmotConfiguration);
 	}
 
@@ -69,14 +65,12 @@ public class Marmot
 	 * @return The configured Marmot configuration for the current context.
 	 * @see Configurator#getConfiguration(Class)
 	 */
-	public static MarmotConfiguration getConfiguration()
-	{
+	public static MarmotConfiguration getConfiguration() {
 		return Configurator.getConfiguration(MarmotConfiguration.class);
 	}
 
 	/** @return The cache configured for use by Marmot for the appropriate configuration. */
-	public static MarmotResourceCache<?> getResourceCache()
-	{
+	public static MarmotResourceCache<?> getResourceCache() {
 		return getConfiguration().getResourceCache();
 	}
 
@@ -106,8 +100,7 @@ public class Marmot
 	 * @return The annotation values of the property.
 	 * @see #ANNOTATION_PROPERTY_URI
 	 */
-	public static Iterable<Annotation> getAnnotations(final URFResource resource)
-	{
+	public static Iterable<Annotation> getAnnotations(final URFResource resource) {
 		return getAnnotations(resource, Annotation.class);
 	}
 
@@ -118,8 +111,7 @@ public class Marmot
 	 * @return The annotation values of the property.
 	 * @see #ANNOTATION_PROPERTY_URI
 	 */
-	public static <A extends Annotation> Iterable<A> getAnnotations(final URFResource resource, final Class<A> annotationClass)
-	{
+	public static <A extends Annotation> Iterable<A> getAnnotations(final URFResource resource, final Class<A> annotationClass) {
 		return resource.getPropertyValues(ANNOTATION_PROPERTY_URI, annotationClass);
 	}
 
@@ -129,8 +121,7 @@ public class Marmot
 	 * @param value The property value to set.
 	 * @see #ANNOTATION_PROPERTY_URI
 	 */
-	public static void addAnnotation(final URFResource resource, final Annotation value)
-	{
+	public static void addAnnotation(final URFResource resource, final Annotation value) {
 		resource.addPropertyValue(ANNOTATION_PROPERTY_URI, value);
 	}
 

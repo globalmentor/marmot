@@ -51,21 +51,18 @@ import com.globalmentor.time.Time;
  * 
  * @author Garret Wilson
  */
-public abstract class AbstractRepositoryTest extends AbstractTest
-{
+public abstract class AbstractRepositoryTest extends AbstractTest {
 
 	/** The repository on which tests are being run. */
 	private Repository repository = null;
 
 	/** @return The repository on which tests are being run. */
-	protected Repository getRepository()
-	{
+	protected Repository getRepository() {
 		return repository;
 	}
 
 	@Before
-	public void before() throws IOException
-	{
+	public void before() throws IOException {
 		repository = createRepository();
 	}
 
@@ -84,8 +81,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * </ul>
 	 */
 	@Test
-	public void testCreateResourceBytes() throws IOException
-	{
+	public void testCreateResourceBytes() throws IOException {
 		final int initialContentLength = (1 << 10) + 1;
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		testResourceContentBytes(resourceURI, false, Bytes.createRandom(initialContentLength));
@@ -101,8 +97,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * </ul>
 	 */
 	@Test
-	public void testCreateEmptyResource() throws IOException
-	{
+	public void testCreateEmptyResource() throws IOException {
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		testResourceContentBytes(resourceURI, false, NO_BYTES);
 		repository.deleteResource(resourceURI); //delete the resource we created
@@ -118,8 +113,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * </ul>
 	 */
 	@Test
-	public void testCreateCollectionBytes() throws IOException
-	{
+	public void testCreateCollectionBytes() throws IOException {
 
 		final int initialContentLength = (1 << 10) + 1;
 		final URI resourceURI = repository.getRootURI().resolve("test/"); //determine a test collection resource URI
@@ -138,8 +132,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * </ul>
 	 */
 	@Test
-	public void testResourceCollectionDifferentiation() throws IOException
-	{
+	public void testResourceCollectionDifferentiation() throws IOException {
 		//test a resource
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		repository.createResource(resourceURI, NO_BYTES); //create a resource with random contents		
@@ -162,8 +155,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * </ul>
 	 */
 	@Test
-	public void testI18n() throws IOException
-	{
+	public void testI18n() throws IOException {
 		final int initialContentLength = (1 << 10) + 1;
 		final URI collectionResourceURI = repository.getRootURI().resolve(URIPath.encode("voc\u00ea-forr\u00f3-arrasta-p\u00e9-cora\u00e7\u00e3o-\u4eba/")); //collection: você-forró-arrasta-pé-coração-人
 		repository.createCollectionResource(collectionResourceURI);
@@ -188,8 +180,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * </ul>
 	 */
 	@Test
-	public void testChangeResourceBinary() throws IOException
-	{
+	public void testChangeResourceBinary() throws IOException {
 		final int initialContentLength = (1 << 10) + 1;
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		testResourceContentBytes(resourceURI, false, new byte[0], Bytes.createRandom(initialContentLength), Bytes.createRandom(initialContentLength * 2),
@@ -208,8 +199,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * </ul>
 	 */
 	@Test
-	public void testChangeCollectionBinary() throws IOException
-	{
+	public void testChangeCollectionBinary() throws IOException {
 		final int initialContentLength = (1 << 10) + 1;
 		final URI resourceURI = repository.getRootURI().resolve("test/"); //determine a test collection resource URI
 		testResourceContentBytes(resourceURI, false, new byte[0], Bytes.createRandom(initialContentLength), Bytes.createRandom(initialContentLength * 2),
@@ -228,8 +218,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * </ul>
 	 */
 	@Test
-	public void testChangeResourceText() throws IOException
-	{
+	public void testChangeResourceText() throws IOException {
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		testResourceContentBytes(resourceURI, false, "This is a test.".getBytes(UTF_8_CHARSET), "This is a test.\nThis is a second line.".getBytes(UTF_8_CHARSET),
 				"This really is a test.\nThis is a second line.".getBytes(UTF_8_CHARSET), "This is just a test.".getBytes(UTF_8_CHARSET)); //try three different sizes of text content
@@ -246,8 +235,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * </ul>
 	 */
 	@Test
-	public void testCreateSmallResourceOutputStream() throws IOException
-	{
+	public void testCreateSmallResourceOutputStream() throws IOException {
 		final int contentLength = (1 << 3) + 1; //>8
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		testResourceContentBytes(resourceURI, true, Bytes.createRandom(contentLength));
@@ -264,8 +252,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * </ul>
 	 */
 	@Test
-	public void testCreateLargeResourceOutputStream() throws IOException
-	{
+	public void testCreateLargeResourceOutputStream() throws IOException {
 		final int contentLength = (1 << 20) + 1; //>1MB
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		testResourceContentBytes(resourceURI, true, Bytes.createRandom(contentLength));
@@ -286,27 +273,20 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * @throws NullPointerException if the given resource URI and/or content array is <code>null</code>.
 	 * @throws IllegalArgumentException if the array of contents is empty.
 	 */
-	protected void testResourceContentBytes(final URI resourceURI, final boolean streamCreate, final byte[]... contents) throws IOException
-	{
+	protected void testResourceContentBytes(final URI resourceURI, final boolean streamCreate, final byte[]... contents) throws IOException {
 		checkArgumentPositive(contents.length);
 		Time before = new Time().floor(Time.Resolution.SECONDS);
 		final Repository repository = getRepository();
 		URFResource newResourceDescription;
-		if(streamCreate) //if we should create the resource using a stream
-		{
+		if(streamCreate) { //if we should create the resource using a stream
 			final OutputStream outputStream = repository.createResource(resourceURI); //create a resource and get an output stream to the contents
-			try
-			{
+			try {
 				outputStream.write(contents[0]); //write the contents
-			}
-			finally
-			{
+			} finally {
 				outputStream.close(); //close the output stream
 			}
 			newResourceDescription = repository.getResourceDescription(resourceURI); //get an updated description of the resource
-		}
-		else
-		{
+		} else {
 			newResourceDescription = repository.createResource(resourceURI, contents[0]); //create an initial resource with contents
 		}
 		Time after = new Time().floor(Time.Resolution.SECONDS);
@@ -315,17 +295,13 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		checkCreatedResourceDateTimes(newResourceDescription, before, after);
 		byte[] newResourceContents = repository.getResourceContents(resourceURI); //read the contents we wrote
 		assertThat("Retrieved contents of created resource not what expected.", newResourceContents, equalTo(contents[0]));
-		for(int i = 1; i < contents.length; ++i) //look at all the alternate contents, if any
-		{
+		for(int i = 1; i < contents.length; ++i) { //look at all the alternate contents, if any
 			final byte[] changedContent = contents[i];
 			before = after; //shift the dates back
 			final OutputStream outputStream = repository.getResourceOutputStream(resourceURI); //get an output stream to the existing resource
-			try
-			{
+			try {
 				outputStream.write(changedContent); //write the changed contents
-			}
-			finally
-			{
+			} finally {
 				outputStream.close(); //close the output stream
 			}
 			after = new Time().floor(Time.Resolution.SECONDS);
@@ -347,8 +323,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * </ul>
 	 */
 	@Test
-	public void testCreateCollectionResourceBytes() throws ResourceIOException
-	{
+	public void testCreateCollectionResourceBytes() throws ResourceIOException {
 		final int contentLength = (1 << 10) + 1;
 		final Repository repository = getRepository();
 		final byte[] resourceContents = Bytes.createRandom(contentLength); //create random contents
@@ -380,8 +355,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * </ul>
 	 */
 	@Test
-	public void testResourceProperties() throws ResourceIOException
-	{
+	public void testResourceProperties() throws ResourceIOException {
 		final Repository repository = getRepository();
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		repository.createResource(resourceURI, Bytes.createRandom((1 << 10) + 1)); //create a resource with random contents
@@ -398,8 +372,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * </ul>
 	 */
 	@Test
-	public void testCollectionResourceProperties() throws ResourceIOException
-	{
+	public void testCollectionResourceProperties() throws ResourceIOException {
 		final Repository repository = getRepository();
 		final URI collectionURI = repository.getRootURI().resolve("test/"); //determine a test collection URI
 		repository.createCollectionResource(collectionURI);
@@ -421,8 +394,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * </ul>
 	 */
 	@Test
-	public void testCopyMoveDeepResource() throws ResourceIOException
-	{
+	public void testCopyMoveDeepResource() throws ResourceIOException {
 		final int contentLength = (1 << 10) + 1;
 		final Repository repository = getRepository();
 		final byte[] resourceContents = Bytes.createRandom(contentLength); //create random contents
@@ -557,8 +529,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * </ul>
 	 */
 	@Test(expected = ResourceNotFoundException.class)
-	public void testMissingResourceDescription() throws ResourceIOException
-	{
+	public void testMissingResourceDescription() throws ResourceIOException {
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
 		repository.getResourceDescription(resourceURI); //get a description of a resource that does not exist, which should throw an exception
 	}
@@ -569,22 +540,18 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * @param before Some time before the creation of the file
 	 * @param after Some time after the creation of the file
 	 */
-	protected void checkCreatedResourceDateTimes(final URFResource resourceDescription, final Time before, final Time after)
-	{
+	protected void checkCreatedResourceDateTimes(final URFResource resourceDescription, final Time before, final Time after) {
 		Time modified = getModified(resourceDescription);
-		if(!isCollectionURI(resourceDescription.getURI())) //modified datetime is optional for collections
-		{
+		if(!isCollectionURI(resourceDescription.getURI())) { //modified datetime is optional for collections
 			assertNotNull("Missing modified datetime.", modified);
 		}
-		if(modified != null)
-		{
+		if(modified != null) {
 			modified = modified.floor(Time.Resolution.SECONDS);
 			assertTrue("Modified datetime not in expected range (" + before + ", " + modified + ", " + after + ")",
 					(modified.equals(before) || modified.after(before)) && (modified.equals(after) || modified.before(after)));
 		}
 		Time created = getCreated(resourceDescription);
-		if(created != null)
-		{
+		if(created != null) {
 			created = created.floor(Time.Resolution.SECONDS);
 			assertTrue("Modified datetime not equal to created datetime.", !created.after(modified)); //in all the repositories, the created time should never be past the modified time
 			//TODO bring back when all repositories support retrieving saved modified date			assertThat("Modified datetime not equal to created datetime.", created, equalTo(modified));
@@ -600,8 +567,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * </ul>
 	 * @param resourceURI The URI of the resource on which to test setting properties.
 	 */
-	protected void testResourceProperties(final URI resourceURI) throws ResourceIOException
-	{
+	protected void testResourceProperties(final URI resourceURI) throws ResourceIOException {
 		final Repository repository = getRepository();
 		final URFResource newResourceDescription = repository.getResourceDescription(resourceURI); //get the initial description
 		final long contentLength = getContentLength(newResourceDescription);
@@ -616,13 +582,11 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 		assertThat(updatedResourceDescription.getPropertyCount(), equalTo(propertyCount + propertiesResource.getPropertyCount())); //see if the new property count is correct 
 		checkResourceProperties(updatedResourceDescription, propertiesResource.getProperties()); //see if the resource now has the given properties
 		assertThat("Content length changed.", getContentLength(updatedResourceDescription), equalTo(contentLength));
-		if(created != null && !repository.isLivePropertyURI(CREATED_PROPERTY_URI)) //if the content.created property is live, we can't expect any particular values
-		{
+		if(created != null && !repository.isLivePropertyURI(CREATED_PROPERTY_URI)) { //if the content.created property is live, we can't expect any particular values
 			created = created.floor(Time.Resolution.SECONDS);
 			assertThat("Created date changed.", getCreated(updatedResourceDescription).floor(Time.Resolution.SECONDS), equalTo(created));
 		}
-		if(modified != null && !repository.isLivePropertyURI(MODIFIED_PROPERTY_URI)) //if the content.modified property is live, we can't expect any particular values
-		{
+		if(modified != null && !repository.isLivePropertyURI(MODIFIED_PROPERTY_URI)) { //if the content.modified property is live, we can't expect any particular values
 			modified = modified.floor(Time.Resolution.SECONDS);
 			assertThat("Modified date changed.", getModified(updatedResourceDescription).floor(Time.Resolution.SECONDS), equalTo(modified));
 		}
@@ -649,8 +613,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * @return A description of test properties.
 	 * @throws NullPointerException if the given resource URI is <code>null</code>.
 	 */
-	protected URFResource createTestProperties(final URI resourceURI)
-	{
+	protected URFResource createTestProperties(final URI resourceURI) {
 		return createTestProperties(resourceURI, "Test Title", "This is a test description.");
 	}
 
@@ -668,8 +631,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * @return A description of test properties.
 	 * @throws NullPointerException if the given resource URI, title, and/or description is <code>null</code>.
 	 */
-	protected URFResource createTestProperties(final URI resourceURI, final String title, final String description)
-	{
+	protected URFResource createTestProperties(final URI resourceURI, final String title, final String description) {
 		final URFResource resource = new DefaultURFResource(resourceURI);
 		setTitle(resource, checkInstance(title));
 		setDescription(resource, checkInstance(description));
@@ -683,18 +645,15 @@ public abstract class AbstractRepositoryTest extends AbstractTest
 	 * @param resourceDescription The description of the created resource.
 	 * @param properties The properties to check.
 	 */
-	protected void checkResourceProperties(final URFResource resourceDescription, final Iterable<URFProperty> properties)
-	{
-		for(final URFProperty property : properties)
-		{
+	protected void checkResourceProperties(final URFResource resourceDescription, final Iterable<URFProperty> properties) {
+		for(final URFProperty property : properties) {
 			assertThat("Resource " + resourceDescription + " doesn't have expected property value for " + property.getPropertyURI(),
 					resourceDescription.getPropertyValue(property.getPropertyURI()), equalTo(property.getValue()));
 		}
 	}
 
 	@After
-	public void after() throws IOException
-	{
+	public void after() throws IOException {
 		repository = null;
 	}
 

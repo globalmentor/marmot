@@ -35,8 +35,7 @@ import com.globalmentor.net.ResourceIOException;
  * @param <RK> The type of resource kits supported by this session.
  * @author Garret Wilson
  */
-public interface MarmotSession<RK extends ResourceKit>
-{
+public interface MarmotSession<RK extends ResourceKit> {
 
 	/** @return The installed Marmot security manager. */
 	public MarmotSecurityManager getSecurityManager();

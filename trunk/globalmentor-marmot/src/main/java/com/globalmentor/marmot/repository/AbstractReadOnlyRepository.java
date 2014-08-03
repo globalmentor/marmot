@@ -38,8 +38,7 @@ import com.globalmentor.net.*;
  * </p>
  * @author Garret Wilson
  */
-public abstract class AbstractReadOnlyRepository extends AbstractRepository
-{
+public abstract class AbstractReadOnlyRepository extends AbstractRepository {
 
 	/** The map of manually specified resource descriptions keyed to resource URIs. */
 	private final Map<URI, URFResource> resourceMap = new HashMap<URI, URFResource>();
@@ -51,8 +50,7 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 	 * @throws NullPointerException if the given resource is <code>null</code>.
 	 * @throws IllegalArgumentException if the given resource does not reside inside this repository.
 	 */
-	public URFResource storeResource(final URFResource resource)
-	{
+	public URFResource storeResource(final URFResource resource) {
 		final URI resourceURI = checkResourceURI(resource.getURI()); //makes sure the resource URI is valid and normalize the URI
 		return resourceMap.put(resourceURI, resource); //store the resource description, mapped to the resource URI
 	}
@@ -64,8 +62,7 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 	 * @throws NullPointerException if the given URI is <code>null</code>.
 	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	 */
-	protected URFResource retrieveResource(URI resourceURI)
-	{
+	protected URFResource retrieveResource(URI resourceURI) {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		return resourceMap.get(resourceURI);
 	}
@@ -77,15 +74,13 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 	 * @throws NullPointerException if the given URI is <code>null</code>.
 	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	 */
-	protected URFResource removeResource(URI resourceURI)
-	{
+	protected URFResource removeResource(URI resourceURI) {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		return resourceMap.remove(resourceURI);
 	}
 
 	/** @return The read-only configured resource descriptions. */
-	protected Iterable<URFResource> getResources()
-	{
+	protected Iterable<URFResource> getResources() {
 		return unmodifiableCollection(resourceMap.values()); //return an unmodifiable version of the resources
 	}
 
@@ -96,11 +91,9 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 	 * @throws IllegalArgumentException if a given resource does not reside inside this repository.
 	 * @see #storeResource(URFResource)
 	 */
-	public void setResources(final Set<URFResource> resources)
-	{
+	public void setResources(final Set<URFResource> resources) {
 		resourceMap.clear(); //clear the current resources
-		for(final URFResource resource : resources) //look at each resource
-		{
+		for(final URFResource resource : resources) { //look at each resource
 			storeResource(resource); //add this resource
 		}
 	}
@@ -108,8 +101,7 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 	/**
 	 * Default constructor with no root URI defined. The root URI must be defined before the repository is opened.
 	 */
-	public AbstractReadOnlyRepository()
-	{
+	public AbstractReadOnlyRepository() {
 		this(null);
 	}
 
@@ -117,8 +109,7 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 	 * URI constructor with no separate private URI namespace. A {@link URFResourceTURFIO} description I/O is created and initialized.
 	 * @param rootURI The URI identifying the location of this repository.
 	 */
-	public AbstractReadOnlyRepository(final URI rootURI)
-	{
+	public AbstractReadOnlyRepository(final URI rootURI) {
 		this(rootURI, createDefaultURFResourceDescriptionIO()); //create a default resource description I/O using TURF
 	}
 
@@ -128,17 +119,14 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 	 * @param descriptionIO The I/O implementation that writes and reads a resource with the same reference URI as its base URI.
 	 * @throws NullPointerException if the description I/O is <code>null</code>.
 	 */
-	public AbstractReadOnlyRepository(final URI rootURI, final URFIO<URFResource> descriptionIO)
-	{
+	public AbstractReadOnlyRepository(final URI rootURI, final URFIO<URFResource> descriptionIO) {
 		super(rootURI, descriptionIO);
 	}
 
 	/** {@inheritDoc} This implementation throws a {@link ResourceForbiddenException} if the resource URI exists. */
 	@Override
-	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, final ISODateTime newContentModified) throws ResourceIOException
-	{
-		if(!resourceExists(resourceURI)) //if the resource doesn't exist
-		{
+	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, final ISODateTime newContentModified) throws ResourceIOException {
+		if(!resourceExists(resourceURI)) { //if the resource doesn't exist
 			throw new ResourceNotFoundException(resourceURI, "Cannot open output stream to non-existent resource " + resourceURI + " in repository.");
 		}
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
@@ -146,38 +134,33 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository
 
 	/** {@inheritDoc} This implementation throws a {@link ResourceForbiddenException}. */
 	@Override
-	protected OutputStream createResourceImpl(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
-	{
+	protected OutputStream createResourceImpl(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException {
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
 	}
 
 	/** {@inheritDoc} This implementation throws a {@link ResourceForbiddenException}. */
 	@Override
-	protected URFResource alterResourcePropertiesImpl(final URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException
-	{
+	protected URFResource alterResourcePropertiesImpl(final URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException {
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
 	}
 
 	/** {@inheritDoc} This implementation throws a {@link ResourceForbiddenException}. */
 	@Override
 	protected void copyResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
-			throws ResourceIOException
-	{
+			throws ResourceIOException {
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
 	}
 
 	/** {@inheritDoc} This implementation throws a {@link ResourceForbiddenException}. */
 	@Override
-	protected void deleteResourceImpl(final URI resourceURI) throws ResourceIOException
-	{
+	protected void deleteResourceImpl(final URI resourceURI) throws ResourceIOException {
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
 	}
 
 	/** {@inheritDoc} This implementation throws a {@link ResourceForbiddenException}. */
 	@Override
 	protected void moveResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
-			throws ResourceIOException
-	{
+			throws ResourceIOException {
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
 	}
 

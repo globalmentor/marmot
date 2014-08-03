@@ -19,19 +19,20 @@ package com.globalmentor.marmot.resource.jnlp;
 import com.globalmentor.jnlp.JNLP;
 import com.globalmentor.marmot.resource.*;
 
-/**Resource kit for handling Java applications.
-<p>Supported media types:</p>
-<ul>
-	<li><code>application/x-java-jnlp-file</code></li>
-</ul>
-@author Garret Wilson
-*/
-public class JNLPResourceKit extends AbstractResourceKit
-{
+/**
+ * Resource kit for handling Java applications.
+ * <p>
+ * Supported media types:
+ * </p>
+ * <ul>
+ * <li><code>application/x-java-jnlp-file</code></li>
+ * </ul>
+ * @author Garret Wilson
+ */
+public class JNLPResourceKit extends AbstractResourceKit {
 
-	/**Default constructor.*/
-	public JNLPResourceKit()
-	{
+	/** Default constructor. */
+	public JNLPResourceKit() {
 		super(JNLP.CONTENT_TYPE);
 	}
 

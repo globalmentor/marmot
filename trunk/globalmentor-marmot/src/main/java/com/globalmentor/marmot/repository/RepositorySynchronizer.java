@@ -54,15 +54,13 @@ import static org.urframework.content.Content.*;
  * </p>
  * @author Garret Wilson
  */
-public class RepositorySynchronizer
-{
+public class RepositorySynchronizer {
 
 	/**
 	 * How to resolve a discrepancy between a source and a destination resource content or metadata. For orphan resources, {@link Resolution#SYNCHRONIZE} is
 	 * treated the same as {@link Resolution#BACKUP}.
 	 */
-	public enum Resolution implements Identifier
-	{
+	public enum Resolution implements Identifier {
 		/** The source will overwrite the destination; the destination is intended to be a mirror of the source. */
 		BACKUP,
 		/** The destination will overwrite the source; the source is intended to be a mirror of the destination. */
@@ -84,8 +82,7 @@ public class RepositorySynchronizer
 	private final ProgressListener progressListener = new LogProgressListener();
 
 	/** @return The progress listener for logging progress. */
-	protected ProgressListener getProgressListener()
-	{
+	protected ProgressListener getProgressListener() {
 		return progressListener;
 	}
 
@@ -93,8 +90,7 @@ public class RepositorySynchronizer
 	private boolean test = false;
 
 	/** @return Whether this is a test run; if <code>true</code>, no modifications will be made. */
-	public boolean isTest()
-	{
+	public boolean isTest() {
 		return test;
 	}
 
@@ -102,8 +98,7 @@ public class RepositorySynchronizer
 	 * Sets whether this is a test run.
 	 * @param test Whether this is a test run; if <code>true</code>, no modifications will be made.
 	 */
-	public void setTest(final boolean test)
-	{
+	public void setTest(final boolean test) {
 		this.test = test;
 	}
 
@@ -111,8 +106,7 @@ public class RepositorySynchronizer
 	private Resolution resourceResolution;
 
 	/** @return How an orphan resource will be resolved. */
-	public Resolution getResourceResolution()
-	{
+	public Resolution getResourceResolution() {
 		return resourceResolution;
 	}
 
@@ -121,8 +115,7 @@ public class RepositorySynchronizer
 	 * @param resourceResolution How an orphan resource will be resolved.
 	 * @throws NullPointerException if the given resolution is <code>null</code>.
 	 */
-	public void setResourceResolution(final Resolution resourceResolution)
-	{
+	public void setResourceResolution(final Resolution resourceResolution) {
 		this.resourceResolution = checkInstance(resourceResolution, "Resource resolution cannot be null.");
 	}
 
@@ -130,8 +123,7 @@ public class RepositorySynchronizer
 	private Resolution contentResolution;
 
 	/** @return How a content incompatibility between resources will be resolved. */
-	public Resolution getContentResolution()
-	{
+	public Resolution getContentResolution() {
 		return contentResolution;
 	}
 
@@ -140,8 +132,7 @@ public class RepositorySynchronizer
 	 * @param contentResolution How a content incompatibility between resources will be resolved.
 	 * @throws NullPointerException if the given resolution is <code>null</code>.
 	 */
-	public void setContentResolution(final Resolution contentResolution)
-	{
+	public void setContentResolution(final Resolution contentResolution) {
 		this.contentResolution = checkInstance(contentResolution, "Content resolution cannot be null.");
 	}
 
@@ -149,8 +140,7 @@ public class RepositorySynchronizer
 	private Resolution metadataResolution;
 
 	/** @return How a metadata incompatibility between resources will be resolved. */
-	public Resolution getMetadataResolution()
-	{
+	public Resolution getMetadataResolution() {
 		return metadataResolution;
 	}
 
@@ -159,8 +149,7 @@ public class RepositorySynchronizer
 	 * @param metadataResolution How a metadata incompatibility between resources will be resolved.
 	 * @throws NullPointerException if the given resolution is <code>null</code>.
 	 */
-	public void setMetadataResolution(final Resolution metadataResolution)
-	{
+	public void setMetadataResolution(final Resolution metadataResolution) {
 		this.metadataResolution = checkInstance(metadataResolution, "Metadata resolution cannot be null.");
 	}
 
@@ -168,8 +157,7 @@ public class RepositorySynchronizer
 	private boolean forceContentModifiedProperty = false;
 
 	/** Whether the {@value Content#MODIFIED_PROPERTY_URI} property should be updated if requested even if content is not updated. */
-	public boolean isForceContentModifiedProperty()
-	{
+	public boolean isForceContentModifiedProperty() {
 		return forceContentModifiedProperty;
 	}
 
@@ -177,8 +165,7 @@ public class RepositorySynchronizer
 	 * Sets whether the {@value Content#MODIFIED_PROPERTY_URI} property should be updated if requested even if content is not updated.
 	 * @param forceContentModified Whether the {@value Content#MODIFIED_PROPERTY_URI} property should be updated if requested even if content is not updated.
 	 */
-	public void setForceContentModifiedProperty(final boolean forceContentModified)
-	{
+	public void setForceContentModifiedProperty(final boolean forceContentModified) {
 		this.forceContentModifiedProperty = forceContentModified;
 	}
 
@@ -189,8 +176,7 @@ public class RepositorySynchronizer
 	 * @return <code>true</code> if the output metadata should unconditionally be written.
 	 * @see #getMetadataResolution()
 	 */
-	public boolean isForceWriteMetadata()
-	{
+	public boolean isForceWriteMetadata() {
 		return forceWriteMetadata;
 	}
 
@@ -200,8 +186,7 @@ public class RepositorySynchronizer
 	 * metadata modifications.
 	 * @param forceWriteMetadata Whether metadata should unconditionally be rewritten.
 	 */
-	public void setForceWriteMetadata(final boolean forceWriteMetadata)
-	{
+	public void setForceWriteMetadata(final boolean forceWriteMetadata) {
 		this.forceWriteMetadata = forceWriteMetadata;
 	}
 
@@ -212,8 +197,7 @@ public class RepositorySynchronizer
 	 * Adds a source resource to be ignored when resolving discrepancies.
 	 * @param resourceURI The URI of the source resource to ignore.
 	 */
-	public void addIgnoreSourceResourceURI(final URI resourceURI)
-	{
+	public void addIgnoreSourceResourceURI(final URI resourceURI) {
 		ignoreSourceResourceURIs.add(resourceURI);
 	}
 
@@ -224,8 +208,7 @@ public class RepositorySynchronizer
 	 * Adds a destination resource to be ignored when resolving discrepancies.
 	 * @param resourceURI The URI of the destination resource to ignore.
 	 */
-	public void addIgnoreDestinationResourceURI(final URI resourceURI)
-	{
+	public void addIgnoreDestinationResourceURI(final URI resourceURI) {
 		ignoreDestinationResourceURIs.add(resourceURI);
 	}
 
@@ -236,8 +219,7 @@ public class RepositorySynchronizer
 	 * Adds a metadata property to be ignored when resolving discrepancies.
 	 * @param propertyURI The URI of the metadata property to ignore.
 	 */
-	public void addIgnorePropertyURI(final URI propertyURI)
-	{
+	public void addIgnorePropertyURI(final URI propertyURI) {
 		ignorePropertyURIs.add(propertyURI);
 	}
 
@@ -249,16 +231,14 @@ public class RepositorySynchronizer
 	 * @see #setContentResolution(Resolution)
 	 * @see #setMetadataResolution(Resolution)
 	 */
-	public void setResolution(final Resolution resolution)
-	{
+	public void setResolution(final Resolution resolution) {
 		setResourceResolution(resolution);
 		setContentResolution(resolution);
 		setMetadataResolution(resolution);
 	}
 
 	/** Default constructor with backup settings. */
-	public RepositorySynchronizer()
-	{
+	public RepositorySynchronizer() {
 		resourceResolution = Resolution.BACKUP;
 		contentResolution = Resolution.BACKUP;
 		metadataResolution = Resolution.BACKUP;
@@ -273,8 +253,7 @@ public class RepositorySynchronizer
 	 * @throws IOException if there is an I/O error while synchronizing the resources.
 	 */
 	public void synchronize(final Repository sourceRepository, final URI sourceResourceURI, final Repository destinationRepository,
-			final URI destinationResourceURI) throws IOException
-	{
+			final URI destinationResourceURI) throws IOException {
 		Log.info(getTestStatus(), "Synchronization starting, source:", sourceResourceURI, "destination:", destinationResourceURI, "resource-resolution:",
 				getResourceResolution(), "content-resolution:", getContentResolution(), "metadata-resolution:", getMetadataResolution());
 		final URFResource sourceResourceDescription = sourceRepository.resourceExists(sourceResourceURI) ? sourceRepository
@@ -302,36 +281,28 @@ public class RepositorySynchronizer
 	 */
 	protected void synchronize(final Repository sourceRepository, final URI sourceBaseURI, final URI sourceResourceURI, URFResource sourceResourceDescription,
 			final Repository destinationRepository, final URI destinationBaseURI, final URI destinationResourceURI, URFResource destinationResourceDescription)
-			throws IOException
-	{
+			throws IOException {
 		Log.debug(getTestStatus(), "Synchronizing", sourceResourceURI);
-		if(ignoreSourceResourceURIs.contains(sourceResourceURI) || ignoreDestinationResourceURIs.contains(destinationResourceURI)) //if this is a resource to ignore
-		{
+		if(ignoreSourceResourceURIs.contains(sourceResourceURI) || ignoreDestinationResourceURIs.contains(destinationResourceURI)) { //if this is a resource to ignore
 			return; //don't do anything further
 		}
 		final boolean isSourceCollection = isCollectionURI(sourceResourceURI); //see if the source is a collection
 		final boolean isDestinationCollection = isCollectionURI(destinationResourceURI); //see if the destination is a collection
 		//resource/collection
-		if(isSourceCollection != isDestinationCollection) //if we have a resource/collection discrepancy
-		{
+		if(isSourceCollection != isDestinationCollection) { //if we have a resource/collection discrepancy
 			throw new IllegalArgumentException("The resources are of different types: " + sourceResourceURI + ", " + destinationResourceURI); //one resource is a collection; the other is a normal resource
 		}
 		boolean sourceExists = sourceResourceDescription != null; //see if the source exists
 		boolean destinationExists = destinationResourceDescription != null; //see if the destination exists
-		if(sourceExists != destinationExists) //if one resource exists and the other doesn't
-		{
+		if(sourceExists != destinationExists) { //if one resource exists and the other doesn't
 			final Resolution orphanResolution = getResourceResolution();
-			if(sourceExists) //if the source resource exists but not the destination
-			{
-				switch(orphanResolution)
-				//update the descriptions based upon the resolution
-				{
+			if(sourceExists) { //if the source resource exists but not the destination
+				switch(orphanResolution) { //update the descriptions based upon the resolution
 					case BACKUP:
 					case PRODUCE:
 					case SYNCHRONIZE:
 						Log.info(getTestStatus(), "Resolve source orphan:", orphanResolution, "copy", sourceResourceURI, destinationResourceURI);
-						if(!isTest()) //if this is not just a test
-						{
+						if(!isTest()) { //if this is not just a test
 							sourceRepository.copyResource(sourceResourceURI, destinationRepository, destinationResourceURI, getProgressListener()); //copy the source to the destination
 							destinationExists = true;
 							destinationResourceDescription = destinationRepository.getResourceDescription(destinationResourceURI);
@@ -339,8 +310,7 @@ public class RepositorySynchronizer
 						break;
 					case RESTORE:
 						Log.info(getTestStatus(), "Resolve source orphan:", orphanResolution, "delete", sourceResourceURI);
-						if(!isTest()) //if this is not just a test
-						{
+						if(!isTest()) { //if this is not just a test
 							sourceRepository.deleteResource(sourceResourceURI); //delete the source
 							sourceExists = false;
 							sourceResourceDescription = null;
@@ -353,19 +323,13 @@ public class RepositorySynchronizer
 					default:
 						throw new AssertionError("Unrecognized resolution " + orphanResolution);
 				}
-			}
-			else
-			//if the source resource does not exist but the destination does
-			{
-				switch(orphanResolution)
-				//update the descriptions based upon the resolution
-				{
+			} else { //if the source resource does not exist but the destination does
+				switch(orphanResolution) { //update the descriptions based upon the resolution
 					case BACKUP:
 					case CONSUME:
 					case SYNCHRONIZE:
 						Log.info(getTestStatus(), "Resolve destination orphan:", orphanResolution, "delete", destinationResourceURI);
-						if(!isTest()) //if this is not just a test
-						{
+						if(!isTest()) { //if this is not just a test
 							destinationRepository.deleteResource(destinationResourceURI); //delete the destination
 							destinationExists = false;
 							destinationResourceDescription = null;
@@ -373,8 +337,7 @@ public class RepositorySynchronizer
 						break;
 					case RESTORE:
 						Log.info(getTestStatus(), "Resolve destination orphan:", orphanResolution, "copy", destinationResourceURI, sourceResourceURI);
-						if(!isTest()) //if this is not just a test
-						{
+						if(!isTest()) { //if this is not just a test
 							destinationRepository.copyResource(destinationResourceURI, sourceRepository, sourceResourceURI, getProgressListener()); //copy the destination to the source
 							sourceExists = true;
 							sourceResourceDescription = sourceRepository.getResourceDescription(sourceResourceURI);
@@ -388,15 +351,12 @@ public class RepositorySynchronizer
 						throw new AssertionError("Unrecognized resolution " + orphanResolution);
 				}
 			}
-		}
-		else if(sourceExists) //if both resources exist (we know at this point that either both exist or both don't exist)
-		{
+		} else if(sourceExists) { //if both resources exist (we know at this point that either both exist or both don't exist)
 			final Date sourceContentModified = getModified(sourceResourceDescription); //get the date of the source
 			final Date destinationContentModified = getModified(destinationResourceDescription); //get the date of the destination
 			final boolean isContentSynchronized = isContentSynchronized(sourceRepository, sourceResourceDescription, sourceContentModified, destinationRepository,
 					destinationResourceDescription, destinationContentModified); //see if the content of the two resources are synchronized
-			if(!isContentSynchronized)//if the source and destination are not synchronized
-			{
+			if(!isContentSynchronized) { //if the source and destination are not synchronized
 				final Resolution resolution = getContentResolution();
 				resolveContent(resolution, sourceRepository, sourceResourceDescription, sourceContentModified, destinationRepository, destinationResourceDescription,
 						destinationContentModified); //resolve the discrepancy between source and destination
@@ -405,28 +365,23 @@ public class RepositorySynchronizer
 			resolveMetadata(metadataResolution, sourceRepository, sourceResourceDescription, sourceContentModified, destinationRepository,
 					destinationResourceDescription, destinationContentModified);
 		}
-		if(isSourceCollection && sourceExists && destinationExists) //if now have two collections that both exist, synchronize the children
-		{
+		if(isSourceCollection && sourceExists && destinationExists) { //if now have two collections that both exist, synchronize the children
 			final Map<URI, URFResource> destinationChildResourceDescriptions = new LinkedHashMap<URI, URFResource>(); //create a map for the destination resources, preserving their iteration order only as a courtesy
-			for(final URFResource destinationChildResourceDescription : destinationRepository.getChildResourceDescriptions(destinationResourceURI)) //prepopulate the destination child resource map to allow quick lookup when we iterate the source child resources
-			{
+			for(final URFResource destinationChildResourceDescription : destinationRepository.getChildResourceDescriptions(destinationResourceURI)) { //prepopulate the destination child resource map to allow quick lookup when we iterate the source child resources
 				destinationChildResourceDescriptions.put(destinationChildResourceDescription.getURI(), destinationChildResourceDescription);
 			}
 			final Map<URI, URFResource> sourceChildResourceDescriptions = new LinkedHashMap<URI, URFResource>(); //create a map for the source resources, preserving their iteration order only as a courtesy
-			for(final URFResource sourceChildResourceDescription : sourceRepository.getChildResourceDescriptions(sourceResourceURI)) //iterate the source child resources
-			{
+			for(final URFResource sourceChildResourceDescription : sourceRepository.getChildResourceDescriptions(sourceResourceURI)) { //iterate the source child resources
 				sourceChildResourceDescriptions.put(sourceChildResourceDescription.getURI(), sourceChildResourceDescription); //store this source child resource in the map
 				final URI destinationChildResourceURI = resolve(destinationBaseURI, sourceBaseURI.relativize(sourceChildResourceDescription.getURI())); //resolve the relative child URI against the base destination URI to determine what the destnation child resource URI should be
 				final URFResource destinationChildResourceDescription = destinationChildResourceDescriptions.get(destinationChildResourceURI); //get the description of the destination child resource (although there may not be one)
 				synchronize(sourceRepository, sourceBaseURI, sourceChildResourceDescription.getURI(), sourceChildResourceDescription, destinationRepository,
 						destinationBaseURI, destinationChildResourceURI, destinationChildResourceDescription); //synchronize this source child and the corresponding destination child, the latter of which may not exist
 			}
-			for(final URFResource destinationChildResourceDescription : destinationChildResourceDescriptions.values()) //iterate the destination child resources to synchronize any destination resources that may not be in the source
-			{
+			for(final URFResource destinationChildResourceDescription : destinationChildResourceDescriptions.values()) { //iterate the destination child resources to synchronize any destination resources that may not be in the source
 				final URI sourceChildResourceURI = resolve(sourceBaseURI, destinationBaseURI.relativize(destinationChildResourceDescription.getURI())); //resolve the relative child URI against the base source URI to determine what the source child resource URI should be
 				final URFResource sourceChildResourceDescription = sourceChildResourceDescriptions.get(sourceChildResourceURI); //get the description of the source child resource (although there may not be one)
-				if(sourceChildResourceDescription == null) //only synchronize destination resources for which there is no corresponding source child resource, because we already synchronized all the corresponding ones
-				{
+				if(sourceChildResourceDescription == null) { //only synchronize destination resources for which there is no corresponding source child resource, because we already synchronized all the corresponding ones
 					synchronize(sourceRepository, sourceBaseURI, sourceChildResourceURI, sourceChildResourceDescription, destinationRepository, destinationBaseURI,
 							destinationChildResourceDescription.getURI(), destinationChildResourceDescription); //synchronize this source child and the destination child, the former of which does not exist
 				}
@@ -449,34 +404,28 @@ public class RepositorySynchronizer
 	 * @throws IllegalArgumentException if one of the resources is a collection and the other is not.
 	 */
 	public boolean isContentSynchronized(final Repository sourceRepository, final URFResource sourceResourceDescription, final Date sourceContentModified,
-			final Repository destinationRepository, final URFResource destinationResourceDescription, final Date destinationContentModified) throws IOException
-	{
+			final Repository destinationRepository, final URFResource destinationResourceDescription, final Date destinationContentModified) throws IOException {
 		final boolean isSourceCollection = isCollectionURI(sourceResourceDescription.getURI()); //see if the source is a collection
 		final boolean isDestinationCollection = isCollectionURI(destinationResourceDescription.getURI()); //see if the destination is a collection
 		//resource/collection
-		if(isSourceCollection != isDestinationCollection) //if we have a resource/collection discrepancy
-		{
+		if(isSourceCollection != isDestinationCollection) { //if we have a resource/collection discrepancy
 			throw new IllegalArgumentException("The resources are of different types: " + sourceResourceDescription.getURI() + ", "
 					+ destinationResourceDescription.getURI()); //one resource is a collection; the other is a normal resource
 		}
 		final long sourceContentLength = getContentLength(sourceResourceDescription); //get the size of the source
 		final long destinationContentLength = getContentLength(destinationResourceDescription); //get the size of the destination
 		//size
-		if(!isSourceCollection && (sourceContentLength < 0 || destinationContentLength < 0)) //if we don't know one of the sizes of non-collections
-		{
+		if(!isSourceCollection && (sourceContentLength < 0 || destinationContentLength < 0)) { //if we don't know one of the sizes of non-collections
 			return false; //there is a size discrepancy
 		}
-		if(sourceContentLength != destinationContentLength) //if the sizes don't match
-		{
+		if(sourceContentLength != destinationContentLength) { //if the sizes don't match
 			return false; //there is a size discrepancy
 		}
 		//date
-		if(!isSourceCollection || sourceContentLength > 0) //ignore date discrepancies of collections with no content
-		{
+		if(!isSourceCollection || sourceContentLength > 0) { //ignore date discrepancies of collections with no content
 			final Date sourceDate = getModified(sourceResourceDescription); //get the date of the source
 			final Date destinationDate = getModified(destinationResourceDescription); //get the date of the destination
-			if(sourceDate == null || !sourceDate.equals(destinationDate)) //if the dates don't match or if there is no date
-			{
+			if(sourceDate == null || !sourceDate.equals(destinationDate)) { //if the dates don't match or if there is no date
 				return false; //there is a date discrepancy
 			}
 		}
@@ -500,58 +449,35 @@ public class RepositorySynchronizer
 	 */
 	protected void resolveContent(Resolution resolution, final Repository sourceRepository, final URFResource sourceResourceDescription,
 			final Date sourceContentModified, final Repository destinationRepository, final URFResource destinationResourceDescription,
-			final Date destinationContentModified) throws IOException
-	{
-		if(resolution == Resolution.IGNORE) //if this situation should be ignored
-		{
+			final Date destinationContentModified) throws IOException {
+		if(resolution == Resolution.IGNORE) { //if this situation should be ignored
 			return; //don't do anything
 		}
-		if(resolution == Resolution.SYNCHRONIZE) //if we should synchronize the resource content
-		{
-			if(sourceContentModified != null) //if there is a source date
-			{
-				if(destinationContentModified != null) //if we have dates for both resources
-				{
+		if(resolution == Resolution.SYNCHRONIZE) { //if we should synchronize the resource content
+			if(sourceContentModified != null) { //if there is a source date
+				if(destinationContentModified != null) { //if we have dates for both resources
 					final int dateComparison = sourceContentModified.compareTo(destinationContentModified); //compare the dates
-					if(dateComparison > 0) //if the destination is older than the source
-					{
+					if(dateComparison > 0) { //if the destination is older than the source
 						resolution = Resolution.BACKUP; //copy the source to the destination
-					}
-					else if(dateComparison < 0) //if the source is older than the destination
-					{
+					} else if(dateComparison < 0) { //if the source is older than the destination
 						resolution = Resolution.RESTORE; //copy the destination to the source
-					}
-					else
-					//if the two resources have the same date
-					{
+					} else { //if the two resources have the same date
 						return; //don't do anything
 					}
-				}
-				else
-				//if we only have a source date
-				{
+				} else { //if we only have a source date
 					resolution = Resolution.BACKUP; //assume the source is newer; back it up
 				}
-			}
-			else
-			//if there is no source date
-			{
-				if(destinationContentModified != null) //if there is only a destination date
-				{
+			} else { //if there is no source date
+				if(destinationContentModified != null) { //if there is only a destination date
 					resolution = Resolution.RESTORE; //assume the destination is newer; restore it
-				}
-				else
-				//if neither resource has a date
-				{
+				} else { //if neither resource has a date
 					resolution = Resolution.BACKUP; //bias toward backup
 				}
 			}
 		}
 		final Repository inputRepository, outputRepository;
 		final URFResource inputResourceDescription, outputResourceDescription;
-		switch(resolution)
-		//see how to resolve the discrepancy; at the point the only options we haven't covered are backup and restore
-		{
+		switch(resolution) { //see how to resolve the discrepancy; at the point the only options we haven't covered are backup and restore
 			case BACKUP:
 			case PRODUCE:
 				inputRepository = sourceRepository;
@@ -574,25 +500,18 @@ public class RepositorySynchronizer
 		Log.info(getTestStatus(), "Resolve content:", resolution, "copy", inputResourceURI, outputResourceURI);
 		Log.debug(getTestStatus(), URF.toString(sourceResourceDescription));
 		Log.debug(getTestStatus(), URF.toString(destinationResourceDescription));
-		if(!isTest()) //if this is not just a test
-		{
+		if(!isTest()) { //if this is not just a test
 			final long inputContentLength = getContentLength(inputResourceDescription); //get the size of the input resource, if we know it
 			final ISODateTime inputContentModified = getModified(inputResourceDescription); //get the date of the input resource, if any
 			final InputStream inputStream = inputRepository.getResourceInputStream(inputResourceURI); //get an input stream to the input resource
-			try
-			{
+			try {
 				final OutputStream outputStream = outputRepository.getResourceOutputStream(outputResourceURI, inputContentModified); //get an output stream to the output resource, keeping the content modified datetime as the input resource, if any
-				try
-				{
+				try {
 					Streams.copy(inputStream, outputStream, inputContentLength, getProgressListener()); //copy the resource
-				}
-				finally
-				{
+				} finally {
 					outputStream.close(); //always close the output stream
 				}
-			}
-			finally
-			{
+			} finally {
 				inputStream.close(); //always close the input stream
 			}
 		}
@@ -618,72 +537,46 @@ public class RepositorySynchronizer
 	 */
 	protected void resolveMetadata(Resolution resolution, final Repository sourceRepository, final URFResource sourceResourceDescription,
 			Date sourceContentModified, final Repository destinationRepository, final URFResource destinationResourceDescription, Date destinationContentModified)
-			throws IOException
-	{
-		if(resolution == Resolution.IGNORE) //if this situation should be ignored
-		{
+			throws IOException {
+		if(resolution == Resolution.IGNORE) { //if this situation should be ignored
 			return; //don't do anything
 		}
 		final boolean isCollection = isCollectionURI(sourceResourceDescription.getURI());
 		final long sourceContentLength = getContentLength(sourceResourceDescription);
 		final long destinationContentLength = getContentLength(destinationResourceDescription);
-		if(isCollection) //ignore content created and content modified for zero-length or unknown-length collections
-		{
-			if(sourceContentLength <= 0)
-			{
+		if(isCollection) { //ignore content created and content modified for zero-length or unknown-length collections
+			if(sourceContentLength <= 0) {
 				sourceContentModified = null;
 			}
-			if(destinationContentLength <= 0)
-			{
+			if(destinationContentLength <= 0) {
 				destinationContentModified = null;
 			}
 		}
-		if(resolution == Resolution.SYNCHRONIZE) //if we should synchronize the metadata
-		{
-			if(sourceContentModified != null) //if there is a source date
-			{
-				if(destinationContentModified != null) //if we have dates for both resources
-				{
+		if(resolution == Resolution.SYNCHRONIZE) { //if we should synchronize the metadata
+			if(sourceContentModified != null) { //if there is a source date
+				if(destinationContentModified != null) { //if we have dates for both resources
 					final int dateComparison = sourceContentModified.compareTo(destinationContentModified); //compare the dates
-					if(dateComparison > 0) //if the destination is older than the source
-					{
+					if(dateComparison > 0) { //if the destination is older than the source
 						resolution = Resolution.BACKUP; //copy the source to the destination
-					}
-					else if(dateComparison < 0) //if the source is older than the destination
-					{
+					} else if(dateComparison < 0) { //if the source is older than the destination
 						resolution = Resolution.RESTORE; //copy the destination to the source
-					}
-					else
-					//if the two resources have the same date
-					{
+					} else { //if the two resources have the same date
 						resolution = Resolution.BACKUP; //copy the source to the destination
 					}
-				}
-				else
-				//if we only have a source date
-				{
+				} else { //if we only have a source date
 					resolution = Resolution.BACKUP; //assume the source is newer; back it up
 				}
-			}
-			else
-			//if there is no source date
-			{
-				if(destinationContentModified != null) //if there is only a destination date
-				{
+			} else { //if there is no source date
+				if(destinationContentModified != null) { //if there is only a destination date
 					resolution = Resolution.RESTORE; //assume the destination is newer; restore it
-				}
-				else
-				//if neither resource has a date
-				{
+				} else { //if neither resource has a date
 					resolution = Resolution.BACKUP; //bias toward backup
 				}
 			}
 		}
 		final Repository inputRepository, outputRepository;
 		final URFResource inputResourceDescription, outputResourceDescription;
-		switch(resolution)
-		//see how to resolve the discrepancy; at the point the only options we haven't covered are backup and restore
-		{
+		switch(resolution) { //see how to resolve the discrepancy; at the point the only options we haven't covered are backup and restore
 			case BACKUP:
 			case PRODUCE:
 				inputRepository = sourceRepository;
@@ -703,26 +596,19 @@ public class RepositorySynchronizer
 		}
 		final Set<URI> outputPropertyURIRemovals = new HashSet<URI>();
 		final Set<URFProperty> outputPropertyAdditions = new HashSet<URFProperty>();
-		for(final URFProperty inputProperty : inputResourceDescription.getProperties()) //copy input properties not present in the output
-		{
-			if(!outputResourceDescription.hasProperty(inputProperty)) //if this input property is not in the output
-			{
+		for(final URFProperty inputProperty : inputResourceDescription.getProperties()) { //copy input properties not present in the output
+			if(!outputResourceDescription.hasProperty(inputProperty)) { //if this input property is not in the output
 				final URI inputPropertyURI = inputProperty.getPropertyURI();
-				if(!ignorePropertyURIs.contains(inputPropertyURI) && !inputRepository.isLivePropertyURI(inputPropertyURI)) //ignore specified properties and live properties
-				{
-					if(Content.MODIFIED_PROPERTY_URI.equals(inputPropertyURI) && !isForceContentModifiedProperty()) //content modified only gets updated when we update content, unless we are forcing this property
-					{
+				if(!ignorePropertyURIs.contains(inputPropertyURI) && !inputRepository.isLivePropertyURI(inputPropertyURI)) { //ignore specified properties and live properties
+					if(Content.MODIFIED_PROPERTY_URI.equals(inputPropertyURI) && !isForceContentModifiedProperty()) { //content modified only gets updated when we update content, unless we are forcing this property
 						continue;
 					}
-					if(isCollection && (sourceContentLength <= 0 || destinationContentLength <= 0)) //ignore content created for zero-length or unknown-length collections
-					{
-						if(Content.CREATED_PROPERTY_URI.equals(inputPropertyURI))
-						{
+					if(isCollection && (sourceContentLength <= 0 || destinationContentLength <= 0)) { //ignore content created for zero-length or unknown-length collections
+						if(Content.CREATED_PROPERTY_URI.equals(inputPropertyURI)) {
 							continue;
 						}
 					}
-					if(resolution != Resolution.IGNORE)
-					{
+					if(resolution != Resolution.IGNORE) {
 						Log.info(getTestStatus(), "Resolve metadata:", resolution, "set property", outputResourceDescription.getURI(), inputProperty);
 						outputPropertyURIRemovals.add(inputPropertyURI); //we'll replace all of these properties in the output
 						outputPropertyAdditions.add(inputProperty); //we'll add this new property and value to the output
@@ -730,28 +616,20 @@ public class RepositorySynchronizer
 				}
 			}
 		}
-		if(resolution != Resolution.PRODUCE && resolution != Resolution.CONSUME) //produce and consume do not result in removal of information
-		{
-			for(final URFProperty outputProperty : outputResourceDescription.getProperties()) //remove output properties not present in the input
-			{
+		if(resolution != Resolution.PRODUCE && resolution != Resolution.CONSUME) { //produce and consume do not result in removal of information
+			for(final URFProperty outputProperty : outputResourceDescription.getProperties()) { //remove output properties not present in the input
 				final URI outputPropertyURI = outputProperty.getPropertyURI();
-				if(!inputResourceDescription.hasProperty(outputPropertyURI)) //if this output property URI is not in the input with any value (if it has some value at all, we've already made to make them the same)
-				{
-					if(!ignorePropertyURIs.contains(outputPropertyURI) && !outputRepository.isLivePropertyURI(outputPropertyURI)) //ignore specified properties and live properties
-					{
-						if(Content.MODIFIED_PROPERTY_URI.equals(outputPropertyURI) && !isForceContentModifiedProperty()) //content modified only gets updated when we update content, unless we are forcing this property
-						{
+				if(!inputResourceDescription.hasProperty(outputPropertyURI)) { //if this output property URI is not in the input with any value (if it has some value at all, we've already made to make them the same)
+					if(!ignorePropertyURIs.contains(outputPropertyURI) && !outputRepository.isLivePropertyURI(outputPropertyURI)) { //ignore specified properties and live properties
+						if(Content.MODIFIED_PROPERTY_URI.equals(outputPropertyURI) && !isForceContentModifiedProperty()) { //content modified only gets updated when we update content, unless we are forcing this property
 							continue;
 						}
-						if(isCollection && (sourceContentLength <= 0 || destinationContentLength <= 0)) //ignore content created for zero-length or unknown-length collections
-						{
-							if(Content.CREATED_PROPERTY_URI.equals(outputPropertyURI))
-							{
+						if(isCollection && (sourceContentLength <= 0 || destinationContentLength <= 0)) { //ignore content created for zero-length or unknown-length collections
+							if(Content.CREATED_PROPERTY_URI.equals(outputPropertyURI)) {
 								continue;
 							}
 						}
-						if(resolution != Resolution.IGNORE)
-						{
+						if(resolution != Resolution.IGNORE) {
 							Log.info(getTestStatus(), "Resolve metadata:", resolution, "remove property", outputResourceDescription.getURI(), outputProperty.getPropertyURI());
 							outputPropertyURIRemovals.add(outputPropertyURI); //we'll remove all of these properties in the output; if there were any replacements they will have already been added 
 						}
@@ -759,21 +637,18 @@ public class RepositorySynchronizer
 				}
 			}
 		}
-		if(!outputPropertyURIRemovals.isEmpty() || !outputPropertyAdditions.isEmpty() || isForceWriteMetadata()) //if we have something to change, or if we should unconditionally write metadata
-		{
+		if(!outputPropertyURIRemovals.isEmpty() || !outputPropertyAdditions.isEmpty() || isForceWriteMetadata()) { //if we have something to change, or if we should unconditionally write metadata
 			Log.debug(getTestStatus(), URF.toString(sourceResourceDescription));
 			Log.debug(getTestStatus(), URF.toString(destinationResourceDescription));
 			final URFResourceAlteration outputResourceAlteration = new DefaultURFResourceAlteration(outputPropertyURIRemovals, outputPropertyAdditions);
-			if(!isTest()) //if this is not just a test
-			{
+			if(!isTest()) { //if this is not just a test
 				outputRepository.alterResourceProperties(outputResourceDescription.getURI(), outputResourceAlteration); //alter the output resource properties
 			}
 		}
 	}
 
 	/** @return A status string indicating whether synchronization is in test mode. */
-	protected String getTestStatus()
-	{
+	protected String getTestStatus() {
 		return isTest() ? "(test)" : "*";
 	}
 

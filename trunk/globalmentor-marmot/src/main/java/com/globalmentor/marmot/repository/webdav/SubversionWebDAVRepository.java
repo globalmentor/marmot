@@ -45,8 +45,7 @@ import static com.globalmentor.net.http.webdav.SubversionWebDAV.*;
  * @author Garret Wilson
  * @see Repositories
  */
-public class SubversionWebDAVRepository extends WebDAVRepository
-{
+public class SubversionWebDAVRepository extends WebDAVRepository {
 
 	/** The Subversion custom property namespace converted to a string for quick string comparisons. */
 	protected final static String SUBVERSION_CUSTOM_NAMESPACE = SUBVERSION_CUSTOM_NAMESPACE_URI.toString();
@@ -54,8 +53,7 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 	/**
 	 * Default constructor with no root URI defined. The root URI must be defined before the repository is opened.
 	 */
-	public SubversionWebDAVRepository()
-	{
+	public SubversionWebDAVRepository() {
 		this(null);
 	}
 
@@ -63,8 +61,7 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 	 * Repository URI constructor using the default HTTP client. The given repository URI should end in a slash.
 	 * @param repositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
 	 */
-	public SubversionWebDAVRepository(final URI repositoryURI)
-	{
+	public SubversionWebDAVRepository(final URI repositoryURI) {
 		this(repositoryURI, HTTPClient.getInstance()); //construct the class using the default HTTP client		
 	}
 
@@ -73,8 +70,7 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 	 * @param repositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
 	 * @param httpClient The HTTP client used to create a connection to this resource.
 	 */
-	public SubversionWebDAVRepository(final URI repositoryURI, final HTTPClient httpClient)
-	{
+	public SubversionWebDAVRepository(final URI repositoryURI, final HTTPClient httpClient) {
 		this(repositoryURI, repositoryURI, httpClient); //use the same repository URI as the public and private namespaces
 	}
 
@@ -83,8 +79,7 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 	 * @param publicRepositoryURI The URI identifying the location of this repository.
 	 * @param privateRepositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
 	 */
-	public SubversionWebDAVRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
-	{
+	public SubversionWebDAVRepository(final URI publicRepositoryURI, final URI privateRepositoryURI) {
 		this(publicRepositoryURI, privateRepositoryURI, HTTPClient.getInstance()); //construct the class using the default HTTP client				
 	}
 
@@ -94,8 +89,7 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 	 * @param privateRepositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
 	 * @param httpClient The HTTP client used to create a connection to this resource.
 	 */
-	public SubversionWebDAVRepository(final URI publicRepositoryURI, final URI privateRepositoryURI, final HTTPClient httpClient)
-	{
+	public SubversionWebDAVRepository(final URI publicRepositoryURI, final URI privateRepositoryURI, final HTTPClient httpClient) {
 		super(publicRepositoryURI, privateRepositoryURI, httpClient); //construct the parent class
 		final Set<String> ignoredWebDAVNamespaces = getIgnoredWebDAVNamespaces(); //get the map of ignored WebDAV namespaces
 		ignoredWebDAVNamespaces.add(SUBVERSION_DAV_NAMESPACE_URI.toString()); //by default ignore the Subversion DAV namespace
@@ -108,8 +102,7 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 	 * @param privateRepositoryURI The URI identifying the private namespace managed by this repository.
 	 * @throws NullPointerException if the given public repository URI and/or private repository URI is <code>null</code>.
 	 */
-	protected Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
-	{
+	protected Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI) {
 		final SubversionWebDAVRepository repository = new SubversionWebDAVRepository(publicRepositoryURI, privateRepositoryURI, getHTTPClient()); //create a new repository
 		repository.setUsername(getUsername()); //transfer authentication info
 		repository.setPassword(getPassword()); //transfer authentication info
@@ -126,8 +119,7 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 	 * @see AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR
 	 * @see AbstractRepository#encodePropertyURILocalName(URI)
 	 */
-	protected WebDAVPropertyName createWebDAVPropertyName(final URI urfPropertyURI)
-	{
+	protected WebDAVPropertyName createWebDAVPropertyName(final URI urfPropertyURI) {
 		return new WebDAVPropertyName(SUBVERSION_CUSTOM_NAMESPACE, MarmotSubversion.encodePropertyURIPropertyName(urfPropertyURI)); //create and return a new WebDAV property name in the Subversion custom property namespace
 	}
 
@@ -143,13 +135,10 @@ public class SubversionWebDAVRepository extends WebDAVRepository
 	 * @see AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR
 	 * @see AbstractRepository#decodePropertyURILocalName(String)
 	 */
-	protected URI getURFPropertyURI(final WebDAVPropertyName webdavPropertyName)
-	{
-		if(SUBVERSION_CUSTOM_NAMESPACE.equals(webdavPropertyName.getNamespace())) //if this is the Subversion custom property namespace
-		{
+	protected URI getURFPropertyURI(final WebDAVPropertyName webdavPropertyName) {
+		if(SUBVERSION_CUSTOM_NAMESPACE.equals(webdavPropertyName.getNamespace())) { //if this is the Subversion custom property namespace
 			final String propertyName = webdavPropertyName.getLocalName(); //get the property name
-			if(propertyName.startsWith(PROPERTY_PREFIX) || Marmot.ID.equals(getPropertyNamespace(propertyName))) //TODO once legacy properties are changed, remove namespace check
-			{
+			if(propertyName.startsWith(PROPERTY_PREFIX) || Marmot.ID.equals(getPropertyNamespace(propertyName))) { //TODO once legacy properties are changed, remove namespace check
 				return decodePropertyURIPropertyName(webdavPropertyName.getLocalName()); //the URF property URI may be encoded as the local name of the Subversion custom property
 			}
 		}

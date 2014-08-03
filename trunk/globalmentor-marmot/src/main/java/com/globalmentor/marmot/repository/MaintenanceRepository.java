@@ -24,8 +24,7 @@ package com.globalmentor.marmot.repository;
  * </p>
  * @author Garret Wilson
  */
-public interface MaintenanceRepository extends Repository
-{
+public interface MaintenanceRepository extends Repository {
 
 	/**
 	 * Whether this repository will rewrite every resource description it reads, based upon the underlying repository implementation.

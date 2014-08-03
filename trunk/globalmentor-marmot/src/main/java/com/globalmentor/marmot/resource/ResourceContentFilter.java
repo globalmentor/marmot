@@ -22,18 +22,19 @@ import org.urframework.URFResource;
 
 import com.globalmentor.net.ResourceIOException;
 
-/**An object that can filter resource descriptions and content.
-@author Garret Wilson
-*/
-public interface ResourceContentFilter
-{
+/**
+ * An object that can filter resource descriptions and content.
+ * @author Garret Wilson
+ */
+public interface ResourceContentFilter {
 
-	/**Performs a filtering operation on a resource.
-	@param resource The description of the resource.
-	@param inputStream The source of the resource content to filter.
-	@param outputStream The destination of the filtered resource content.
-	@return The new description of the filtered resource content.
-	@throws ResourceIOException if there is an error filtering the resource.
-	*/
+	/**
+	 * Performs a filtering operation on a resource.
+	 * @param resource The description of the resource.
+	 * @param inputStream The source of the resource content to filter.
+	 * @param outputStream The destination of the filtered resource content.
+	 * @return The new description of the filtered resource content.
+	 * @throws ResourceIOException if there is an error filtering the resource.
+	 */
 	public URFResource filter(final URFResource resource, final InputStream inputStream, final OutputStream outputStream) throws ResourceIOException;
 }

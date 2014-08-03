@@ -23,7 +23,6 @@ import com.globalmentor.lex.Identifier;
  * 
  * @author Garret Wilson
  */
-public interface ResourceAspect extends Identifier
-{
+public interface ResourceAspect extends Identifier {
 
 }

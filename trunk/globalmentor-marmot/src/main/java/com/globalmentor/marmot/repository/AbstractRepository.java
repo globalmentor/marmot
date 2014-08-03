@@ -84,8 +84,7 @@ import static com.globalmentor.net.URIs.*;
  * </p>
  * @author Garret Wilson
  */
-public abstract class AbstractRepository implements Repository
-{
+public abstract class AbstractRepository implements Repository {
 
 	/** The resource factory for resources in the Marmot namespace. */
 	protected final static URFResourceFactory MARMOT_RESOURCE_FACTORY = new JavaURFResourceFactory(Marmot.class.getPackage());
@@ -109,8 +108,7 @@ public abstract class AbstractRepository implements Repository
 	 * Adds a property considered live.
 	 * @param livePropertyURI The additional property to consider live.
 	 */
-	protected void addLivePropertyURI(final URI livePropertyURI)
-	{
+	protected void addLivePropertyURI(final URI livePropertyURI) {
 		livePropertyURIs = immutableSetOf(livePropertyURIs, livePropertyURI); //add this live property to our existing live properties
 	}
 
@@ -118,8 +116,7 @@ public abstract class AbstractRepository implements Repository
 	 * Retrieves the live properties, which dynamically determined attributes of the resource such as content size.
 	 * @return The thread-safe set of URIs of live properties.
 	 */
-	public Set<URI> getLivePropertyURIs()
-	{
+	public Set<URI> getLivePropertyURIs() {
 		return livePropertyURIs;
 	}
 
@@ -129,8 +126,7 @@ public abstract class AbstractRepository implements Repository
 	 * @return <code>true</code> if the property is a live property.
 	 * @throws NullPointerException if the given property URI is <code>null</code>.
 	 */
-	public boolean isLivePropertyURI(final URI propertyURI)
-	{
+	public boolean isLivePropertyURI(final URI propertyURI) {
 		return getLivePropertyURIs().contains(checkInstance(propertyURI, "Property URI cannot be null."));
 	}
 
@@ -138,8 +134,7 @@ public abstract class AbstractRepository implements Repository
 	private final URFIO<URFResource> descriptionIO;
 
 	/** @return The I/O implementation that writes and reads a resource with the same reference URI as its base URI. */
-	protected URFIO<URFResource> getDescriptionIO()
-	{
+	protected URFIO<URFResource> getDescriptionIO() {
 		return descriptionIO;
 	}
 
@@ -155,8 +150,7 @@ public abstract class AbstractRepository implements Repository
 		{
 				//TODO check for the URI being set to null
 	//TODO bring back		super.setURI(uri);	//set the URI normally
-			if(getPrivateRepositoryURI()==null)	//if there is no private repository URI
-			{
+			if(getPrivateRepositoryURI()==null) {	//if there is no private repository URI
 				setPrivateRepositoryURI(uri);	//update the private repository URI to match
 			}
 		}
@@ -166,8 +160,7 @@ public abstract class AbstractRepository implements Repository
 	private Repository parent = null;
 
 	/** @return The parent repository, or <code>null</code> if this repository has not been registered as a subrepository of another repository. */
-	public Repository getParentRepository()
-	{
+	public Repository getParentRepository() {
 		return parent;
 	}
 
@@ -177,10 +170,8 @@ public abstract class AbstractRepository implements Repository
 	 * @throws IllegalStateException if the new parent is non-<code>null</code> and the repository already has a parent.
 	 * @see #registerPathRepository(URIPath, Repository)
 	 */
-	public void setParentRepository(final Repository newParent)
-	{
-		if(parent != null && newParent != null && newParent != parent) //if the parent is being changed without first removing the old parent
-		{
+	public void setParentRepository(final Repository newParent) {
+		if(parent != null && newParent != null && newParent != parent) { //if the parent is being changed without first removing the old parent
 			throw new IllegalStateException("Repository parent cannot be changed without first unregistering.");
 		}
 		parent = newParent;
@@ -190,12 +181,10 @@ public abstract class AbstractRepository implements Repository
 	 * Determines the root of a hierarchy of subrepositories. If this repository has no parent, this method will return this repository.
 	 * @return The root parent of all the repositories.
 	 */
-	public Repository getRootRepository()
-	{
+	public Repository getRootRepository() {
 		Repository rootRepository = this;
 		Repository parentRepository;
-		while((parentRepository = rootRepository.getParentRepository()) != null) //walk up the chain until we run out of parent repositories
-		{
+		while((parentRepository = rootRepository.getParentRepository()) != null) { //walk up the chain until we run out of parent repositories
 			rootRepository = parentRepository; //move the root up a level
 		}
 		return rootRepository; //return whatever root repository we determined
@@ -208,8 +197,7 @@ public abstract class AbstractRepository implements Repository
 	private URI rootURI = null;
 
 	/** @return The base URI of the public URI namespace being managed. */
-	public URI getRootURI()
-	{
+	public URI getRootURI() {
 		return rootURI;
 	}
 
@@ -220,11 +208,9 @@ public abstract class AbstractRepository implements Repository
 	 * @throws NullPointerException if the given URI is <code>null</code>.
 	 * @see #getPathRepositories()
 	 */
-	public void setRootURI(final URI rootURI)
-	{
+	public void setRootURI(final URI rootURI) {
 		this.rootURI = normalize(checkInstance(rootURI, "Root URI must not be null."));
-		for(final Map.Entry<URIPath, Repository> pathRepositoryEntry : pathRepositoryMap.entrySet()) //look at each path to repository mapping
-		{
+		for(final Map.Entry<URIPath, Repository> pathRepositoryEntry : pathRepositoryMap.entrySet()) { //look at each path to repository mapping
 			pathRepositoryEntry.getValue().setRootURI(resolve(getRootURI(), pathRepositoryEntry.getKey())); //update the public URI of the repository to match its location in the repository
 		}
 	}
@@ -233,8 +219,7 @@ public abstract class AbstractRepository implements Repository
 	private boolean autoOpen = true;
 
 	/** @return Whether the repository should automatically be opened when needed. */
-	public boolean isAutoOpen()
-	{
+	public boolean isAutoOpen() {
 		return autoOpen;
 	}
 
@@ -242,8 +227,7 @@ public abstract class AbstractRepository implements Repository
 	 * Sets whether the repository should automatically be opened when needed.
 	 * @param autoOpen Whether the repository should automatically be opened when needed.
 	 */
-	public void setAutoOpen(final boolean autoOpen)
-	{
+	public void setAutoOpen(final boolean autoOpen) {
 		this.autoOpen = autoOpen;
 	}
 
@@ -253,17 +237,11 @@ public abstract class AbstractRepository implements Repository
 	 * @throws ResourceIOException if there is an error opening the repository.
 	 * @see #isAutoOpen()
 	 */
-	protected void checkOpen() throws ResourceIOException
-	{
-		if(!isOpen()) //if the repository is not open
-		{
-			if(isAutoOpen()) //if we should open the repository automatically
-			{
+	protected void checkOpen() throws ResourceIOException {
+		if(!isOpen()) { //if the repository is not open
+			if(isAutoOpen()) { //if we should open the repository automatically
 				open(); //open the repository; the race condition here is benign, as the open() method will check again to make sure the repository isn't open
-			}
-			else
-			//if we shouldn't open the repository automatically
-			{
+			} else { //if we shouldn't open the repository automatically
 				throw new IllegalStateException("Repository is not open.");
 			}
 		}
@@ -280,8 +258,7 @@ public abstract class AbstractRepository implements Repository
 	 * @return The content type previously registered with the given extension, or <code>null</code> if no content type was previously registered.
 	 * @throws NullPointerException if the given content type is <code>null</code>.
 	 */
-	public ContentType registerExtensionContentType(final String extension, final ContentType contentType)
-	{
+	public ContentType registerExtensionContentType(final String extension, final ContentType contentType) {
 		return extensionContentTypeMap.put(extension != null ? extension.toLowerCase() : null, checkInstance(contentType, "Content type cannot be null."));
 	}
 
@@ -291,8 +268,7 @@ public abstract class AbstractRepository implements Repository
 	 *          that have no extension.
 	 * @return The content type associated with the given extension, or <code>null</code> if there is no content type associated with the given extension.
 	 */
-	public ContentType getExtensionContentType(final String extension)
-	{
+	public ContentType getExtensionContentType(final String extension) {
 		return extensionContentTypeMap.get(extension != null ? extension.toLowerCase() : null); //return the content type, if any, associated with the given extension
 	}
 
@@ -307,8 +283,7 @@ public abstract class AbstractRepository implements Repository
 	 * @return The charset previously registered with the given content type, or <code>null</code> if no charset was previously registered.
 	 * @throws NullPointerException if the given content type and/or charset is <code>null</code>.
 	 */
-	public Charset registerContentTypeCharset(final ContentType contentType, final Charset charset)
-	{
+	public Charset registerContentTypeCharset(final ContentType contentType, final Charset charset) {
 		return baseContentTypeCharsetMap.put(contentType.getBaseType(), checkInstance(charset, "Charset cannot be null."));
 	}
 
@@ -318,17 +293,14 @@ public abstract class AbstractRepository implements Repository
 	 * @return The charset associated with the given content type, or <code>null</code> if there is no charset associated with the given content type.
 	 * @throws NullPointerException if the given content type is <code>null</code>.
 	 */
-	public Charset getContentTypeCharset(final ContentType contentType)
-	{
+	public Charset getContentTypeCharset(final ContentType contentType) {
 		return baseContentTypeCharsetMap.get(contentType.getBaseType()); //return the charset, if any, associated with the given base content type
 	}
 
 	/** @return The read-only mapping of charsets associated with base content types. */
-	public Map<ContentType, Charset> getContentTypeCharsets()
-	{
+	public Map<ContentType, Charset> getContentTypeCharsets() {
 		final Map<ContentType, Charset> contentTypeCharsetMap = new HashMap<ContentType, Charset>(baseContentTypeCharsetMap.size()); //create a new map to hold actual content type objects
-		for(final Map.Entry<String, Charset> baseContentTypeCharsetEntry : baseContentTypeCharsetMap.entrySet()) //look at each mapping
-		{
+		for(final Map.Entry<String, Charset> baseContentTypeCharsetEntry : baseContentTypeCharsetMap.entrySet()) { //look at each mapping
 			contentTypeCharsetMap.put(ContentType.create(baseContentTypeCharsetEntry.getKey()), baseContentTypeCharsetEntry.getValue()); //add this mapping to the map
 		}
 		return unmodifiableMap(contentTypeCharsetMap); //return a read-only version of the map we created
@@ -340,11 +312,9 @@ public abstract class AbstractRepository implements Repository
 	 * @param contentTypeCharsets The associations of charsets to base content types.
 	 * @throws NullPointerException if a given content type and/or charset is <code>null</code>.
 	 */
-	public void setContentTypeCharsets(final Map<ContentType, Charset> contentTypeCharsets)
-	{
+	public void setContentTypeCharsets(final Map<ContentType, Charset> contentTypeCharsets) {
 		baseContentTypeCharsetMap.clear(); //clear the current mappings
-		for(final Map.Entry<ContentType, Charset> contentTypeCharsetEntry : contentTypeCharsets.entrySet()) //look at each mapping
-		{
+		for(final Map.Entry<ContentType, Charset> contentTypeCharsetEntry : contentTypeCharsets.entrySet()) { //look at each mapping
 			registerContentTypeCharset(contentTypeCharsetEntry.getKey(), contentTypeCharsetEntry.getValue()); //register this association
 		}
 	}
@@ -365,14 +335,11 @@ public abstract class AbstractRepository implements Repository
 	 * @throws IllegalArgumentException if the given path is not relative.
 	 * @throws IllegalArgumentException if the given path does not represent a collection (i.e. it does not end with a path separator).
 	 */
-	public Repository registerPathRepository(final URIPath path, final Repository repository)
-	{
-		if(getRootURI() != null) //if the root URI has been initialized
-		{
+	public Repository registerPathRepository(final URIPath path, final Repository repository) {
+		if(getRootURI() != null) { //if the root URI has been initialized
 			repository.setRootURI(resolve(getRootURI(), path)); //update the public URI of the repository to match its location in the repository
 		}
-		if(!URIPath.ROOT_URI_PATH.equals(path)) //if this is not the root path (it's not normal to map the root path to another repository, but check for it anyway)
-		{
+		if(!URIPath.ROOT_URI_PATH.equals(path)) { //if this is not the root path (it's not normal to map the root path to another repository, but check for it anyway)
 			final URIPath parentPath = path.getParentPath(); //get the parent path
 			parentPathRepositoryMap.addItem(parentPath, repository); //associate this repository with the parent path
 		}
@@ -391,14 +358,12 @@ public abstract class AbstractRepository implements Repository
 	 * @throws IllegalArgumentException if the given path is not relative.
 	 * @throws IllegalArgumentException if the given path does not represent a collection (i.e. it does not end with a path separator).
 	 */
-	public Repository getPathRepository(final URIPath path)
-	{
+	public Repository getPathRepository(final URIPath path) {
 		return pathRepositoryMap.get(path.checkRelative().checkCollection()); //return the repository, if any, associated with the given path
 	}
 
 	/** @return The read-only mapping of relative paths associated with repositories. */
-	public Map<URIPath, Repository> getPathRepositories()
-	{
+	public Map<URIPath, Repository> getPathRepositories() {
 		return unmodifiableMap(pathRepositoryMap); //return an unmodifiable version of the map
 	}
 
@@ -410,12 +375,10 @@ public abstract class AbstractRepository implements Repository
 	 * @throws IllegalArgumentException if a given path is not relative.
 	 * @throws IllegalArgumentException if a given path does not represent a collection (i.e. it does not end with a path separator).
 	 */
-	public void setPathRepositories(final Map<URIPath, Repository> pathRepositories)
-	{
+	public void setPathRepositories(final Map<URIPath, Repository> pathRepositories) {
 		pathRepositoryMap.clear(); //clear the current mappings
 		parentPathRepositoryMap.clear();
-		for(final Map.Entry<URIPath, Repository> pathRepositoryEntry : pathRepositories.entrySet()) //look at each mapping
-		{
+		for(final Map.Entry<URIPath, Repository> pathRepositoryEntry : pathRepositories.entrySet()) { //look at each mapping
 			registerPathRepository(pathRepositoryEntry.getKey(), pathRepositoryEntry.getValue()); //register this association
 		}
 	}
@@ -424,11 +387,9 @@ public abstract class AbstractRepository implements Repository
 	 * {@inheritDoc} This version makes sure the given URI is a child of the repository root URI.
 	 * @see #getRootURI()
 	 */
-	public URI checkResourceURI(URI resourceURI) throws IllegalArgumentException
-	{
+	public URI checkResourceURI(URI resourceURI) throws IllegalArgumentException {
 		resourceURI = canonicalize(normalize(checkInstance(resourceURI, "Resource URI cannot be null."))); //normalize and canonicalize the URI
-		if(!isChild(getRootURI(), resourceURI)) //if the given resource URI does not designate a resource within this repository's URI namespace (this will normalize the URI, but as we need to return a normalized form it's better to normalize first so that actual normalization changes won't have to be done twice)
-		{
+		if(!isChild(getRootURI(), resourceURI)) { //if the given resource URI does not designate a resource within this repository's URI namespace (this will normalize the URI, but as we need to return a normalized form it's better to normalize first so that actual normalization changes won't have to be done twice)
 			throw new IllegalArgumentException(resourceURI + " does not designate a resource within the repository " + getRootURI());
 		}
 		return resourceURI; //return the normalized form of the resource URI
@@ -442,16 +403,13 @@ public abstract class AbstractRepository implements Repository
 	 * @see #checkResourceURI(URI)
 	 * @see #getPathRepositories()
 	 */
-	protected Repository getSubrepository(final URI resourceURI)
-	{
+	protected Repository getSubrepository(final URI resourceURI) {
 		final URI repositoryURI = getRootURI(); //get the URI of the repository
 		final URIPath resourcePath = new URIPath(repositoryURI.relativize(resourceURI)); //get the path of the resource relative to the resource
 		URIPath levelPath = resourcePath.getCurrentLevel(); //walk up the levels, starting at the current level
-		while(!levelPath.isEmpty()) //while the resource path isn't empty
-		{
+		while(!levelPath.isEmpty()) { //while the resource path isn't empty
 			final Repository repository = pathRepositoryMap.get(levelPath); //see if there is a repository mapped to this level
-			if(repository != null) //if we found a repository mapped to this level
-			{
+			if(repository != null) { //if we found a repository mapped to this level
 				return repository; //return the sub-repository
 			}
 			levelPath = levelPath.getParentLevel(); //look at the next higher level
@@ -467,8 +425,7 @@ public abstract class AbstractRepository implements Repository
 	 * @return A set of repositories mapped to paths which are direct children of the given resource URI.
 	 * @throws NullPointerException if the given resource URI is <code>null</code>.
 	 */
-	protected Set<Repository> getChildSubrepositories(final URI parentResourceURI)
-	{
+	protected Set<Repository> getChildSubrepositories(final URI parentResourceURI) {
 		final URI repositoryURI = getRootURI(); //get the URI of the repository
 		final URIPath resourcePath = new URIPath(repositoryURI.relativize(parentResourceURI)); //get the path of the resource relative to the resource
 		final Set<Repository> childSubrepositories = parentPathRepositoryMap.get(resourcePath); //see if there are any subrepositories mapped under the given parent resource URI
@@ -484,8 +441,7 @@ public abstract class AbstractRepository implements Repository
 	 * @param typeNamespaceURI The namespace of the resource type for which this factory should be used to create objects.
 	 * @param factory The resource factory that will be used to create resources of types from this namespace.
 	 */
-	public void registerResourceFactory(final URI typeNamespaceURI, final URFResourceFactory factory)
-	{
+	public void registerResourceFactory(final URI typeNamespaceURI, final URFResourceFactory factory) {
 		namespaceURIResourceFactoryMap.put(typeNamespaceURI, factory);
 	}
 
@@ -494,8 +450,7 @@ public abstract class AbstractRepository implements Repository
 	 * namespace, no action will be taken.
 	 * @param typeNamespaceURI The namespace of the resource type for which this factory should be used to create objects.
 	 */
-	public void unregisterResourceFactory(final URI typeNamespaceURI)
-	{
+	public void unregisterResourceFactory(final URI typeNamespaceURI) {
 		namespaceURIResourceFactoryMap.remove(typeNamespaceURI);
 	}
 
@@ -503,8 +458,7 @@ public abstract class AbstractRepository implements Repository
 	 * Creates and initializes default I/O for URF resource descriptions.
 	 * @return Default URF resource description I/O.
 	 */
-	protected static URFIO<URFResource> createDefaultURFResourceDescriptionIO()
-	{
+	protected static URFIO<URFResource> createDefaultURFResourceDescriptionIO() {
 		final URFResourceTURFIO<URFResource> urfResourceDescriptionIO = new URFResourceTURFIO<URFResource>(URFResource.class, URI.create("")); //create a default resource description I/O using TURF
 		urfResourceDescriptionIO.addNamespaceURI(MarmotSecurity.MARMOT_SECURITY_NAMESPACE_URI); //tell the I/O about the security namespace
 		//TODO del		urfResourceDescriptionIO.setFormatted(false);	//turn off formatting
@@ -514,8 +468,7 @@ public abstract class AbstractRepository implements Repository
 	/**
 	 * Default constructor with no root URI defined. The root URI must be defined before the repository is opened.
 	 */
-	public AbstractRepository()
-	{
+	public AbstractRepository() {
 		this(null);
 	}
 
@@ -523,8 +476,7 @@ public abstract class AbstractRepository implements Repository
 	 * URI constructor with no separate private URI namespace. A {@link URFResourceTURFIO} description I/O is created and initialized.
 	 * @param rootURI The URI identifying the location of this repository.
 	 */
-	public AbstractRepository(final URI rootURI)
-	{
+	public AbstractRepository(final URI rootURI) {
 		this(rootURI, createDefaultURFResourceDescriptionIO()); //create a default resource description I/O using TURF
 	}
 
@@ -534,8 +486,7 @@ public abstract class AbstractRepository implements Repository
 	 * @param descriptionIO The I/O implementation that writes and reads a resource with the same reference URI as its base URI.
 	 * @throws NullPointerException if the description I/O is <code>null</code>.
 	 */
-	public AbstractRepository(final URI rootURI, final URFIO<URFResource> descriptionIO)
-	{
+	public AbstractRepository(final URI rootURI, final URFIO<URFResource> descriptionIO) {
 		this.rootURI = rootURI != null ? normalize(rootURI) : null;
 		this.descriptionIO = checkInstance(descriptionIO, "Description I/O cannot be null."); //save the description I/O
 		registerResourceFactory(Marmot.NAMESPACE_URI, MARMOT_RESOURCE_FACTORY); //register the Marmot factory
@@ -546,39 +497,30 @@ public abstract class AbstractRepository implements Repository
 	 * Creates a default empty URF data model. The correct resource factories will be installed to create appropriate classes in the Marmot namespace.
 	 * @return A new default URF data model.
 	 */
-	protected URF createURF()
-	{
+	protected URF createURF() {
 		final URF urf = new URF(); //create a new URF data model
-		for(final Map.Entry<URI, URFResourceFactory> namespaceURIResourceFactoryMapEntry : namespaceURIResourceFactoryMap.entrySet()) //for each resource factory and corresponding URI
-		{
+		for(final Map.Entry<URI, URFResourceFactory> namespaceURIResourceFactoryMapEntry : namespaceURIResourceFactoryMap.entrySet()) { //for each resource factory and corresponding URI
 			urf.registerResourceFactory(namespaceURIResourceFactoryMapEntry.getKey(), namespaceURIResourceFactoryMapEntry.getValue()); //register the resource factories with the URF data model
 		}
 		return urf; //return the new data model
 	}
 
 	/** @return Whether the repository has been opened for access. */
-	public boolean isOpen()
-	{
+	public boolean isOpen() {
 		return open.getObject().booleanValue();
 	}
 
 	/** {@inheritDoc} Child classes should override {@link #openImpl()}. */
 	@Override
-	public final synchronized void open() throws ResourceIOException
-	{
-		if(!isOpen()) //if the repository isn't yet open
-		{
+	public final synchronized void open() throws ResourceIOException {
+		if(!isOpen()) { //if the repository isn't yet open
 			open.writeLock().lock(); //do actual opening under a write lock to prevent multiple attempts at opening at the same time
-			try
-			{
-				if(!isOpen()) //now that we're under a write lock, check again to see if the repository is open; if not
-				{
+			try {
+				if(!isOpen()) { //now that we're under a write lock, check again to see if the repository is open; if not
 					openImpl(); //perform the actual opening
 					open.setObject(Boolean.TRUE); //show that the repository is now open
 				}
-			}
-			finally
-			{
+			} finally {
 				open.writeLock().unlock();
 			}
 		}
@@ -593,28 +535,21 @@ public abstract class AbstractRepository implements Repository
 	 * @throws ResourceIOException if there is an error opening the repository.
 	 * @see #getRootURI()
 	 */
-	protected void openImpl() throws ResourceIOException
-	{
+	protected void openImpl() throws ResourceIOException {
 		checkState(getRootURI() != null, "Cannot open repository without root URI specified.");
 	}
 
 	/** {@inheritDoc} Child classes should override {@link #closeImpl()}. */
 	@Override
-	public final synchronized void close() throws ResourceIOException
-	{
-		if(!isOpen()) //if the repository isn't yet open
-		{
+	public final synchronized void close() throws ResourceIOException {
+		if(!isOpen()) { //if the repository isn't yet open
 			open.writeLock().lock(); //do actual opening under a write lock to prevent multiple attempts at opening at the same time
-			try
-			{
-				if(!isOpen()) //now that we're under a write lock, check again to see if the repository is open; if not
-				{
+			try {
+				if(!isOpen()) { //now that we're under a write lock, check again to see if the repository is open; if not
 					closeImpl(); //perform the actual closing
 					open.setObject(Boolean.FALSE); //show that the repository is now closed
 				}
-			}
-			finally
-			{
+			} finally {
 				open.writeLock().unlock();
 			}
 		}
@@ -627,8 +562,7 @@ public abstract class AbstractRepository implements Repository
 	 * </p>
 	 * @throws ResourceIOException if there is an error closing the repository.
 	 */
-	protected void closeImpl() throws ResourceIOException
-	{
+	protected void closeImpl() throws ResourceIOException {
 	}
 
 	/**
@@ -636,12 +570,10 @@ public abstract class AbstractRepository implements Repository
 	 * override {@link #resourceExistsImpl(URI)}.
 	 */
 	@Override
-	public final boolean resourceExists(URI resourceURI) throws ResourceIOException
-	{
+	public final boolean resourceExists(URI resourceURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.resourceExists(resourceURI); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -662,12 +594,10 @@ public abstract class AbstractRepository implements Repository
 	 * override {@link #getResourceDescriptionImpl(URI)}.
 	 */
 	@Override
-	public final URFResource getResourceDescription(URI resourceURI) throws ResourceIOException
-	{
+	public final URFResource getResourceDescription(URI resourceURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.getResourceDescription(resourceURI); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -686,12 +616,10 @@ public abstract class AbstractRepository implements Repository
 
 	/** {@inheritDoc} Child classes should override {@link #getResourceContentsImpl(URI)}. */
 	@Override
-	public final byte[] getResourceContents(URI resourceURI) throws ResourceIOException
-	{
+	public final byte[] getResourceContents(URI resourceURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.getResourceContents(resourceURI); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -713,31 +641,23 @@ public abstract class AbstractRepository implements Repository
 	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if there is an error accessing the resource, such as a missing file or a resource that has no contents.
 	 */
-	protected byte[] getResourceContentsImpl(final URI resourceURI) throws ResourceIOException
-	{
+	protected byte[] getResourceContentsImpl(final URI resourceURI) throws ResourceIOException {
 		final URFResource resourceDescription = getResourceDescription(resourceURI); //get a description of the resource
 		final long contentLength = getContentLength(resourceDescription); //get the content length
-		if(contentLength > Integer.MAX_VALUE) //if the resource is too large to be placed in a byte array
-		{
+		if(contentLength > Integer.MAX_VALUE) { //if the resource is too large to be placed in a byte array
 			throw new IllegalArgumentException("Resource " + resourceURI + " is too large to return as a byte array: " + contentLength);
 		}
-		try
-		{
+		try {
 			//use the content length in creating the byte array out put stream if we can; otherwise, use a default value to start with
 			final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(contentLength >= 0 ? (int)contentLength : 1 << 10);
 			final InputStream inputStream = getResourceInputStream(resourceURI); //get an input stream to the resource
-			try
-			{
+			try {
 				Streams.copy(inputStream, byteArrayOutputStream); //copy the stream to our output stream
-			}
-			finally
-			{
+			} finally {
 				inputStream.close();
 			}
 			return byteArrayOutputStream.toByteArray(); //return the bytes we read
-		}
-		catch(final IOException ioException) //if an I/O exception occurs
-		{
+		} catch(final IOException ioException) { //if an I/O exception occurs
 			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
 		}
 	}
@@ -747,12 +667,10 @@ public abstract class AbstractRepository implements Repository
 	 * override {@link #getResourceInputStreamImpl(URI)}.
 	 */
 	@Override
-	public final InputStream getResourceInputStream(URI resourceURI) throws ResourceIOException
-	{
+	public final InputStream getResourceInputStream(URI resourceURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.getResourceInputStream(resourceURI); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -774,12 +692,10 @@ public abstract class AbstractRepository implements Repository
 	 * override {@link #getResourceOutputStreamImpl(URI, ISODateTime)}.
 	 */
 	@Override
-	public final OutputStream getResourceOutputStream(URI resourceURI) throws ResourceIOException
-	{
+	public final OutputStream getResourceOutputStream(URI resourceURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.getResourceOutputStream(resourceURI); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -791,12 +707,10 @@ public abstract class AbstractRepository implements Repository
 	 * override {@link #getResourceOutputStreamImpl(URI, ISODateTime)}.
 	 */
 	@Override
-	public OutputStream getResourceOutputStream(URI resourceURI, final ISODateTime newContentModified) throws ResourceIOException
-	{
+	public OutputStream getResourceOutputStream(URI resourceURI, final ISODateTime newContentModified) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.getResourceOutputStream(resourceURI, newContentModified); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -821,12 +735,10 @@ public abstract class AbstractRepository implements Repository
 	 * override {@link #hasChildrenImpl(URI)}.
 	 */
 	@Override
-	public final boolean hasChildren(URI resourceURI) throws ResourceIOException
-	{
+	public final boolean hasChildren(URI resourceURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.hasChildren(resourceURI); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -848,12 +760,10 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #getChildResourceDescriptionsImpl(URI, ResourceFilter, int)}.
 	 */
 	@Override
-	public final List<URFResource> getChildResourceDescriptions(URI resourceURI) throws ResourceIOException
-	{
+	public final List<URFResource> getChildResourceDescriptions(URI resourceURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.getChildResourceDescriptions(resourceURI); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -865,12 +775,10 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #getChildResourceDescriptionsImpl(URI, ResourceFilter, int)}.
 	 */
 	@Override
-	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final ResourceFilter resourceFilter) throws ResourceIOException
-	{
+	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final ResourceFilter resourceFilter) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.getChildResourceDescriptions(resourceURI, resourceFilter); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -882,13 +790,11 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #getChildResourceDescriptionsImpl(URI, ResourceFilter, int)}.
 	 */
 	@Override
-	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final int depth) throws ResourceIOException
-	{
+	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final int depth) throws ResourceIOException {
 		checkArgumentNotNegative(depth);
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.getChildResourceDescriptions(resourceURI, depth); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -897,13 +803,11 @@ public abstract class AbstractRepository implements Repository
 
 	/** {@inheritDoc} This implementation delegates to {@link #getChildResourceDescriptionsImpl(URI, ResourceFilter, int)}. */
 	@Override
-	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final ResourceFilter resourceFilter, final int depth) throws ResourceIOException
-	{
+	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final ResourceFilter resourceFilter, final int depth) throws ResourceIOException {
 		checkArgumentNotNegative(depth);
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.getChildResourceDescriptions(resourceURI, resourceFilter, depth); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -937,23 +841,19 @@ public abstract class AbstractRepository implements Repository
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	 * @throws ResourceIOException if a parent resource could not be created.
 	 */
-	public URFResource createParentResources(URI resourceURI) throws ResourceIOException
-	{
+	public URFResource createParentResources(URI resourceURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.createParentResources(resourceURI); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
-		if(resourceURI.equals(getRootURI())) //if this is the resource URI
-		{
+		if(resourceURI.equals(getRootURI())) { //if this is the resource URI
 			return null; //we didn't have to create anything
 		}
 		final URI parentResourceURI = getParentResourceURI(resourceURI); //get the parent resource URI
 		URFResource lastCreatedParentResource = createParentResources(parentResourceURI); //create any necessary parents of the parent
-		if(!resourceExists(parentResourceURI)) //if the parent does not exist
-		{
+		if(!resourceExists(parentResourceURI)) { //if the parent does not exist
 			lastCreatedParentResource = createCollectionResource(parentResourceURI); //create the parent collection
 		}
 		return lastCreatedParentResource; //return the last parent created, if any
@@ -964,12 +864,10 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #createResourceImpl(URI, URFResource)}.
 	 */
 	@Override
-	public final OutputStream createResource(URI resourceURI) throws ResourceIOException
-	{
+	public final OutputStream createResource(URI resourceURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.createResource(resourceURI); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -982,12 +880,10 @@ public abstract class AbstractRepository implements Repository
 
 	/** {@inheritDoc} Child classes should override {@link #createResourceImpl(URI, URFResource)}. */
 	@Override
-	public final OutputStream createResource(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
-	{
+	public final OutputStream createResource(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.createResource(resourceURI, resourceDescription); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -996,8 +892,7 @@ public abstract class AbstractRepository implements Repository
 
 	/** {@inheritDoc} */
 	@Override
-	public URFResource createCollectionResource(final URI resourceURI) throws ResourceIOException
-	{
+	public URFResource createCollectionResource(final URI resourceURI) throws ResourceIOException {
 		return createResource(checkCollectionURI(resourceURI), NO_BYTES);
 	}
 
@@ -1016,12 +911,10 @@ public abstract class AbstractRepository implements Repository
 
 	/** {@inheritDoc} This implementation delegates to {@link #createResourceImpl(URI, URFResource, byte[])} with a default description. */
 	@Override
-	public final URFResource createResource(URI resourceURI, final byte[] resourceContents) throws ResourceIOException
-	{
+	public final URFResource createResource(URI resourceURI, final byte[] resourceContents) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.createResource(resourceURI, resourceContents); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -1034,12 +927,10 @@ public abstract class AbstractRepository implements Repository
 
 	/** {@inheritDoc} Child classes should override {@link #createResourceImpl(URI, URFResource, byte[])}. */
 	@Override
-	public final URFResource createResource(URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException
-	{
+	public final URFResource createResource(URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.createResource(resourceURI, resourceDescription, resourceContents); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -1061,35 +952,28 @@ public abstract class AbstractRepository implements Repository
 	 * @throws ResourceIOException if the resource could not be created.
 	 */
 	protected URFResource createResourceImpl(final URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents)
-			throws ResourceIOException
-	{
-		try
-		{
+			throws ResourceIOException {
+		try {
 			final OutputStream outputStream = createResourceImpl(resourceURI, resourceDescription); //open an output stream to the resource
 			outputStream.write(resourceContents); //write the contents
 			outputStream.close(); //close the output stream
 			return getResourceDescription(resourceURI); //return an updated description of the resource
-		}
-		catch(final IOException ioException) //if an I/O exception occurs
-		{
+		} catch(final IOException ioException) { //if an I/O exception occurs
 			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
 		}
 	}
 
 	/** {@inheritDoc} Child classes should override {@link #deleteResourceImpl(URI)}. */
 	@Override
-	public final void deleteResource(URI resourceURI) throws ResourceIOException
-	{
+	public final void deleteResource(URI resourceURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			subrepository.deleteResource(resourceURI); //delegate to the subrepository
 			return;
 		}
 		checkOpen(); //make sure the repository is open
-		if(resourceURI.equals(getRootURI())) //if they try to delete the root URI
-		{
+		if(resourceURI.equals(getRootURI())) { //if they try to delete the root URI
 			throw new IllegalArgumentException("Cannot delete repository root URI " + resourceURI);
 		}
 		deleteResourceImpl(resourceURI);
@@ -1108,8 +992,7 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
 	 */
 	@Override
-	public final URFResource addResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException
-	{
+	public final URFResource addResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException {
 		return addResourceProperties(resourceURI, asList(properties));
 	}
 
@@ -1118,12 +1001,10 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
 	 */
 	@Override
-	public final URFResource addResourceProperties(URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException
-	{
+	public final URFResource addResourceProperties(URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.addResourceProperties(resourceURI, properties); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -1140,8 +1021,7 @@ public abstract class AbstractRepository implements Repository
 	 * @throws NullPointerException if the given resource URI and/or properties is <code>null</code>.
 	 * @throws ResourceIOException if the resource properties could not be updated.
 	 */
-	protected URFResource addResourcePropertiesImpl(final URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException
-	{
+	protected URFResource addResourcePropertiesImpl(final URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException {
 		return alterResourcePropertiesImpl(resourceURI, DefaultURFResourceAlteration.createAddPropertiesAlteration(properties)); //create an alteration for adding properties and alter the resource
 	}
 
@@ -1150,8 +1030,7 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
 	 */
 	@Override
-	public final URFResource setResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException
-	{
+	public final URFResource setResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException {
 		return setResourceProperties(resourceURI, asList(properties));
 	}
 
@@ -1160,12 +1039,10 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
 	 */
 	@Override
-	public final URFResource setResourceProperties(URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException
-	{
+	public final URFResource setResourceProperties(URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.setResourceProperties(resourceURI, properties); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -1183,8 +1060,7 @@ public abstract class AbstractRepository implements Repository
 	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if the resource properties could not be updated.
 	 */
-	public URFResource setResourcePropertiesImpl(URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException
-	{
+	public URFResource setResourcePropertiesImpl(URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException {
 		return alterResourcePropertiesImpl(resourceURI, DefaultURFResourceAlteration.createSetPropertiesAlteration(properties)); //create an alteration for setting properties and alter the resource
 	}
 
@@ -1193,8 +1069,7 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
 	 */
 	@Override
-	public final URFResource removeResourceProperties(URI resourceURI, final URI... propertyURIs) throws ResourceIOException
-	{
+	public final URFResource removeResourceProperties(URI resourceURI, final URI... propertyURIs) throws ResourceIOException {
 		return removeResourceProperties(resourceURI, asList(propertyURIs));
 	}
 
@@ -1203,12 +1078,10 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
 	 */
 	@Override
-	public final URFResource removeResourceProperties(URI resourceURI, final Iterable<URI> propertyURIs) throws ResourceIOException
-	{
+	public final URFResource removeResourceProperties(URI resourceURI, final Iterable<URI> propertyURIs) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.removeResourceProperties(resourceURI, propertyURIs); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -1226,19 +1099,16 @@ public abstract class AbstractRepository implements Repository
 	 * @throws ResourceNotFoundException if the identified resource does not exist.
 	 * @throws ResourceIOException if the resource properties could not be updated.
 	 */
-	public URFResource removeResourcePropertiesImpl(URI resourceURI, final Iterable<URI> propertyURIs) throws ResourceIOException
-	{
+	public URFResource removeResourcePropertiesImpl(URI resourceURI, final Iterable<URI> propertyURIs) throws ResourceIOException {
 		return alterResourcePropertiesImpl(resourceURI, DefaultURFResourceAlteration.createRemovePropertiesAlteration(propertyURIs)); //create an alteration for removing properties and alter the resource
 	}
 
 	/** {@inheritDoc} Child classes should override {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}. */
 	@Override
-	public final URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException
-	{
+	public final URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.alterResourceProperties(resourceURI, resourceAlteration); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -1268,12 +1138,10 @@ public abstract class AbstractRepository implements Repository
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	 * @throws ResourceIOException if there is an error accessing the repository.
 	 */
-	public URI getCollectionURI(URI resourceURI) throws ResourceIOException
-	{
+	public URI getCollectionURI(URI resourceURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			return subrepository.getCollectionURI(resourceURI); //delegate to the subrepository
 		}
 		checkOpen(); //make sure the repository is open
@@ -1291,20 +1159,16 @@ public abstract class AbstractRepository implements Repository
 	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
 	 * @throws ResourceIOException if there is an error accessing the repository.
 	 */
-	public URI getParentResourceURI(URI resourceURI) throws ResourceIOException
-	{
+	public URI getParentResourceURI(URI resourceURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
-			if(!subrepository.getRootURI().equals(resourceURI)) //don't ask the subrepository's root URI for a parent resource URI, as the repository has no parent URI in terms of that repository
-			{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
+			if(!subrepository.getRootURI().equals(resourceURI)) { //don't ask the subrepository's root URI for a parent resource URI, as the repository has no parent URI in terms of that repository
 				return subrepository.getParentResourceURI(resourceURI); //delegate to the subrepository
 			}
 		}
 		checkOpen(); //make sure the repository is open
-		if(resourceURI.equals(getRootURI())) //if the resource is the repository URI
-		{
+		if(resourceURI.equals(getRootURI())) { //if the resource is the repository URI
 			return null; //the repository level has no parent
 		}
 		final URI parentResourceURI = isCollectionURI(resourceURI) ? getParentLevel(resourceURI) : getCurrentLevel(resourceURI); //if resource is a collection URI, get the parent level; otherwise, get the current level
@@ -1320,24 +1184,20 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
 	 */
 	@Override
-	public final void copyResource(URI resourceURI, URI destinationURI) throws ResourceIOException
-	{
+	public final void copyResource(URI resourceURI, URI destinationURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		destinationURI = checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			subrepository.copyResource(resourceURI, destinationURI); //delegate to the subrepository
 			return;
 		}
-		if(isChild(resourceURI, destinationURI))
-		{
+		if(isChild(resourceURI, destinationURI)) {
 			throw new IllegalArgumentException("Cannot perform circular copy from " + resourceURI + " to " + destinationURI);
 		}
 		checkOpen(); //make sure the repository is open
 		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
-		if(destinationSubrepository != this) //if the destination URI lies within a subrepository
-		{
+		if(destinationSubrepository != this) { //if the destination URI lies within a subrepository
 			copyResourceImpl(resourceURI, destinationSubrepository, destinationURI, true, null); //copy to the subrepository
 			return;
 		}
@@ -1350,24 +1210,20 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
 	 */
 	@Override
-	public final void copyResource(URI resourceURI, URI destinationURI, final ProgressListener progressListener) throws ResourceIOException
-	{
+	public final void copyResource(URI resourceURI, URI destinationURI, final ProgressListener progressListener) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		destinationURI = checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			subrepository.copyResource(resourceURI, destinationURI, progressListener); //delegate to the subrepository
 			return;
 		}
-		if(isChild(resourceURI, destinationURI))
-		{
+		if(isChild(resourceURI, destinationURI)) {
 			throw new IllegalArgumentException("Cannot perform circular copy from " + resourceURI + " to " + destinationURI);
 		}
 		checkOpen(); //make sure the repository is open
 		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
-		if(destinationSubrepository != this) //if the destination URI lies within a subrepository
-		{
+		if(destinationSubrepository != this) { //if the destination URI lies within a subrepository
 			copyResourceImpl(resourceURI, destinationSubrepository, destinationURI, true, progressListener); //copy to the subrepository
 			return;
 		}
@@ -1380,24 +1236,20 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
 	 */
 	@Override
-	public final void copyResource(URI resourceURI, URI destinationURI, final boolean overwrite) throws ResourceIOException
-	{
+	public final void copyResource(URI resourceURI, URI destinationURI, final boolean overwrite) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		destinationURI = checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			subrepository.copyResource(resourceURI, destinationURI, overwrite); //delegate to the subrepository
 			return;
 		}
-		if(isChild(resourceURI, destinationURI))
-		{
+		if(isChild(resourceURI, destinationURI)) {
 			throw new IllegalArgumentException("Cannot perform circular copy from " + resourceURI + " to " + destinationURI);
 		}
 		checkOpen(); //make sure the repository is open
 		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
-		if(destinationSubrepository != this) //if the destination URI lies within a subrepository
-		{
+		if(destinationSubrepository != this) { //if the destination URI lies within a subrepository
 			copyResourceImpl(resourceURI, destinationSubrepository, destinationURI, overwrite, null); //copy to the subrepository
 			return;
 		}
@@ -1411,24 +1263,20 @@ public abstract class AbstractRepository implements Repository
 	 */
 	@Override
 	public final void copyResource(URI resourceURI, URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
-			throws ResourceIOException
-	{
+			throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		destinationURI = checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			subrepository.copyResource(resourceURI, destinationURI, overwrite, progressListener); //delegate to the subrepository
 			return;
 		}
-		if(isChild(resourceURI, destinationURI))
-		{
+		if(isChild(resourceURI, destinationURI)) {
 			throw new IllegalArgumentException("Cannot perform circular copy from " + resourceURI + " to " + destinationURI);
 		}
 		checkOpen(); //make sure the repository is open
 		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
-		if(destinationSubrepository != this) //if the destination URI lies within a subrepository
-		{
+		if(destinationSubrepository != this) { //if the destination URI lies within a subrepository
 			copyResourceImpl(resourceURI, destinationSubrepository, destinationURI, overwrite, progressListener); //copy to the subrepository
 			return;
 		}
@@ -1458,24 +1306,20 @@ public abstract class AbstractRepository implements Repository
 	 * Otherwise, this version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
 	 */
 	@Override
-	public final void copyResource(URI resourceURI, final Repository destinationRepository, URI destinationURI) throws ResourceIOException
-	{
+	public final void copyResource(URI resourceURI, final Repository destinationRepository, URI destinationURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		destinationURI = destinationRepository.checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			subrepository.copyResource(resourceURI, destinationRepository, destinationURI); //delegate to the subrepository
 			return;
 		}
 		checkOpen(); //make sure the repository is open
-		if(destinationRepository == this) //if the resource is being copied to this repository
-		{
+		if(destinationRepository == this) { //if the resource is being copied to this repository
 			copyResourceImpl(resourceURI, destinationURI, true, null); //delegate to the internal copy method
 			return;
 		}
-		if(isChild(resourceURI, destinationURI))
-		{
+		if(isChild(resourceURI, destinationURI)) {
 			throw new IllegalArgumentException("Cannot perform circular copy from " + resourceURI + " to " + destinationURI + " even between repositories.");
 		}
 		copyResourceImpl(resourceURI, destinationRepository, destinationURI, true, null);
@@ -1487,24 +1331,20 @@ public abstract class AbstractRepository implements Repository
 	 */
 	@Override
 	public final void copyResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final ProgressListener progressListener)
-			throws ResourceIOException
-	{
+			throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		destinationURI = destinationRepository.checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			subrepository.copyResource(resourceURI, destinationRepository, destinationURI, progressListener); //delegate to the subrepository
 			return;
 		}
 		checkOpen(); //make sure the repository is open
-		if(destinationRepository == this) //if the resource is being copied to this repository
-		{
+		if(destinationRepository == this) { //if the resource is being copied to this repository
 			copyResourceImpl(resourceURI, destinationURI, true, progressListener); //delegate to the internal copy method
 			return;
 		}
-		if(isChild(resourceURI, destinationURI))
-		{
+		if(isChild(resourceURI, destinationURI)) {
 			throw new IllegalArgumentException("Cannot perform circular copy from " + resourceURI + " to " + destinationURI + " even between repositories.");
 		}
 		copyResourceImpl(resourceURI, destinationRepository, destinationURI, true, progressListener);
@@ -1516,24 +1356,20 @@ public abstract class AbstractRepository implements Repository
 	 */
 	@Override
 	public final void copyResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final boolean overwrite)
-			throws ResourceIOException
-	{
+			throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		destinationURI = destinationRepository.checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			subrepository.copyResource(resourceURI, destinationRepository, destinationURI, overwrite); //delegate to the subrepository
 			return;
 		}
 		checkOpen(); //make sure the repository is open
-		if(destinationRepository == this) //if the resource is being copied to this repository
-		{
+		if(destinationRepository == this) { //if the resource is being copied to this repository
 			copyResourceImpl(resourceURI, destinationURI, overwrite, null); //delegate to the internal copy method
 			return;
 		}
-		if(isChild(resourceURI, destinationURI))
-		{
+		if(isChild(resourceURI, destinationURI)) {
 			throw new IllegalArgumentException("Cannot perform circular copy from " + resourceURI + " to " + destinationURI + " even between repositories.");
 		}
 		copyResourceImpl(resourceURI, destinationRepository, destinationURI, overwrite, null);
@@ -1545,24 +1381,20 @@ public abstract class AbstractRepository implements Repository
 	 */
 	@Override
 	public final void copyResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final boolean overwrite,
-			final ProgressListener progressListener) throws ResourceIOException
-	{
+			final ProgressListener progressListener) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		destinationURI = destinationRepository.checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			subrepository.copyResource(resourceURI, destinationRepository, destinationURI, overwrite, progressListener); //delegate to the subrepository
 			return;
 		}
 		checkOpen(); //make sure the repository is open
-		if(destinationRepository == this) //if the resource is being copied to this repository
-		{
+		if(destinationRepository == this) { //if the resource is being copied to this repository
 			copyResourceImpl(resourceURI, destinationURI, overwrite, progressListener); //delegate to the internal copy method
 			return;
 		}
-		if(isChild(resourceURI, destinationURI))
-		{
+		if(isChild(resourceURI, destinationURI)) {
 			throw new IllegalArgumentException("Cannot perform circular copy from " + resourceURI + " to " + destinationURI + " even between repositories.");
 		}
 		copyResourceImpl(resourceURI, destinationRepository, destinationURI, overwrite, progressListener);
@@ -1587,52 +1419,36 @@ public abstract class AbstractRepository implements Repository
 	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
 	 */
 	protected void copyResourceImpl(final URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite,
-			final ProgressListener progressListener) throws ResourceIOException
-	{
-		try
-		{
+			final ProgressListener progressListener) throws ResourceIOException {
+		try {
 			//TODO del Log.trace("ready to create resource", destinationURI, "in destination repository", destinationRepository.getReferenceURI());
 			final boolean isCollection = isCollectionURI(resourceURI); //see if the resource is a collection
 			final URFResource resourceDescription = getResourceDescription(resourceURI); //get a description of the resource; this will throw an exception if the source resource doesn't exist
-			if(!overwrite) //if we're not allowed to overwrite files
-			{
-				if(destinationRepository.resourceExists(destinationURI)) //if the destination resource exists TODO create an overwrite-aware createResource() method to make this more efficient
-				{
+			if(!overwrite) { //if we're not allowed to overwrite files
+				if(destinationRepository.resourceExists(destinationURI)) { //if the destination resource exists TODO create an overwrite-aware createResource() method to make this more efficient
 					throw new ResourceStateException(destinationURI, "Destination resource already exists.");
 				}
 			}
 			final long contentLength = getContentLength(resourceDescription); //get the size of the resource content
-			if(contentLength == 0) //if this is a resource with no content, don't needlessly create content (especially important for collections)
-			{
+			if(contentLength == 0) { //if this is a resource with no content, don't needlessly create content (especially important for collections)
 				destinationRepository.createResource(destinationURI, resourceDescription, NO_BYTES); //create a zero-byte resource with the given description
-			}
-			else
-			//if there is content
-			{
+			} else { //if there is content
 				//TODO check for non-existent source resource
 				final InputStream inputStream = getResourceInputStream(resourceURI); //get an input stream to the source resource
-				try
-				{
+				try {
 					//TODO create an overwrite-aware createResource() method
 					final OutputStream outputStream = destinationRepository.createResource(destinationURI, resourceDescription); //create the destination resource with the same description as the source resource, getting an output stream for storing the contents
-					try
-					{
+					try {
 						Streams.copy(inputStream, outputStream, contentLength, progressListener); //copy the resource
-					}
-					finally
-					{
+					} finally {
 						outputStream.close(); //always close the output stream
 					}
-				}
-				finally
-				{
+				} finally {
 					inputStream.close(); //always close the input stream
 				}
 			}
 			//TODO copy the child resources
-		}
-		catch(final IOException ioException) //if an I/O exception occurs
-		{
+		} catch(final IOException ioException) { //if an I/O exception occurs
 			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
 		}
 	}
@@ -1645,28 +1461,23 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
 	 */
 	@Override
-	public final void moveResource(URI resourceURI, URI destinationURI) throws ResourceIOException
-	{
+	public final void moveResource(URI resourceURI, URI destinationURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		destinationURI = checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			subrepository.moveResource(resourceURI, destinationURI); //delegate to the subrepository
 			return;
 		}
-		if(resourceURI.equals(getRootURI())) //if they try to move the root URI
-		{
+		if(resourceURI.equals(getRootURI())) { //if they try to move the root URI
 			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
 		}
-		if(isChild(resourceURI, destinationURI))
-		{
+		if(isChild(resourceURI, destinationURI)) {
 			throw new IllegalArgumentException("Cannot perform circular move from " + resourceURI + " to " + destinationURI);
 		}
 		checkOpen(); //make sure the repository is open
 		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
-		if(destinationSubrepository != this) //if the destination URI lies within a subrepository
-		{
+		if(destinationSubrepository != this) { //if the destination URI lies within a subrepository
 			moveResourceImpl(resourceURI, destinationSubrepository, destinationURI, true, null); //move to the subrepository
 			return;
 		}
@@ -1679,28 +1490,23 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
 	 */
 	@Override
-	public final void moveResource(URI resourceURI, URI destinationURI, final ProgressListener progressListener) throws ResourceIOException
-	{
+	public final void moveResource(URI resourceURI, URI destinationURI, final ProgressListener progressListener) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		destinationURI = checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			subrepository.moveResource(resourceURI, destinationURI, progressListener); //delegate to the subrepository
 			return;
 		}
-		if(resourceURI.equals(getRootURI())) //if they try to move the root URI
-		{
+		if(resourceURI.equals(getRootURI())) { //if they try to move the root URI
 			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
 		}
-		if(isChild(resourceURI, destinationURI))
-		{
+		if(isChild(resourceURI, destinationURI)) {
 			throw new IllegalArgumentException("Cannot perform circular move from " + resourceURI + " to " + destinationURI);
 		}
 		checkOpen(); //make sure the repository is open
 		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
-		if(destinationSubrepository != this) //if the destination URI lies within a subrepository
-		{
+		if(destinationSubrepository != this) { //if the destination URI lies within a subrepository
 			moveResourceImpl(resourceURI, destinationSubrepository, destinationURI, true, progressListener); //move to the subrepository
 			return;
 		}
@@ -1713,28 +1519,23 @@ public abstract class AbstractRepository implements Repository
 	 * {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
 	 */
 	@Override
-	public final void moveResource(URI resourceURI, URI destinationURI, final boolean overwrite) throws ResourceIOException
-	{
+	public final void moveResource(URI resourceURI, URI destinationURI, final boolean overwrite) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		destinationURI = checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			subrepository.moveResource(resourceURI, destinationURI, overwrite); //delegate to the subrepository
 			return;
 		}
-		if(resourceURI.equals(getRootURI())) //if they try to move the root URI
-		{
+		if(resourceURI.equals(getRootURI())) { //if they try to move the root URI
 			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
 		}
-		if(isChild(resourceURI, destinationURI))
-		{
+		if(isChild(resourceURI, destinationURI)) {
 			throw new IllegalArgumentException("Cannot perform circular move from " + resourceURI + " to " + destinationURI);
 		}
 		checkOpen(); //make sure the repository is open
 		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
-		if(destinationSubrepository != this) //if the destination URI lies within a subrepository
-		{
+		if(destinationSubrepository != this) { //if the destination URI lies within a subrepository
 			moveResourceImpl(resourceURI, destinationSubrepository, destinationURI, overwrite, null); //move to the subrepository
 			return;
 		}
@@ -1748,28 +1549,23 @@ public abstract class AbstractRepository implements Repository
 	 */
 	@Override
 	public final void moveResource(URI resourceURI, URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
-			throws ResourceIOException
-	{
+			throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		destinationURI = checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			subrepository.moveResource(resourceURI, destinationURI, overwrite, progressListener); //delegate to the subrepository
 			return;
 		}
-		if(resourceURI.equals(getRootURI())) //if they try to move the root URI
-		{
+		if(resourceURI.equals(getRootURI())) { //if they try to move the root URI
 			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
 		}
-		if(isChild(resourceURI, destinationURI))
-		{
+		if(isChild(resourceURI, destinationURI)) {
 			throw new IllegalArgumentException("Cannot perform circular move from " + resourceURI + " to " + destinationURI);
 		}
 		checkOpen(); //make sure the repository is open
 		final Repository destinationSubrepository = getSubrepository(destinationURI); //see if the destination URI lies within a subrepository
-		if(destinationSubrepository != this) //if the destination URI lies within a subrepository
-		{
+		if(destinationSubrepository != this) { //if the destination URI lies within a subrepository
 			moveResourceImpl(resourceURI, destinationSubrepository, destinationURI, overwrite, progressListener); //move to the subrepository
 			return;
 		}
@@ -1795,8 +1591,7 @@ public abstract class AbstractRepository implements Repository
 	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
 	 */
 	protected void moveResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
-			throws ResourceIOException //TODO here and in all the move methods, make sure we're not moving from collection to non-collection and vice-versa
-	{
+			throws ResourceIOException { //TODO here and in all the move methods, make sure we're not moving from collection to non-collection and vice-versa
 		copyResourceImpl(resourceURI, destinationURI, overwrite, progressListener); //copy the resource
 		deleteResourceImpl(resourceURI); //delete the resource
 	}
@@ -1808,28 +1603,23 @@ public abstract class AbstractRepository implements Repository
 	 * Otherwise, this version delegates to {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
 	 */
 	@Override
-	public final void moveResource(URI resourceURI, final Repository destinationRepository, URI destinationURI) throws ResourceIOException
-	{
+	public final void moveResource(URI resourceURI, final Repository destinationRepository, URI destinationURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		destinationURI = destinationRepository.checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			subrepository.moveResource(resourceURI, destinationRepository, destinationURI); //delegate to the subrepository
 			return;
 		}
 		checkOpen(); //make sure the repository is open
-		if(destinationRepository == this) //if the resource is being copied to this repository
-		{
+		if(destinationRepository == this) { //if the resource is being copied to this repository
 			moveResourceImpl(resourceURI, destinationURI, true, null); //delegate to the internal move method
 			return;
 		}
-		if(resourceURI.equals(getRootURI())) //if they try to move the root URI
-		{
+		if(resourceURI.equals(getRootURI())) { //if they try to move the root URI
 			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
 		}
-		if(isChild(resourceURI, destinationURI))
-		{
+		if(isChild(resourceURI, destinationURI)) {
 			throw new IllegalArgumentException("Cannot perform circular move from " + resourceURI + " to " + destinationURI + " even between repositories.");
 		}
 		moveResourceImpl(resourceURI, destinationRepository, destinationURI, true, null);
@@ -1841,28 +1631,23 @@ public abstract class AbstractRepository implements Repository
 	 */
 	@Override
 	public final void moveResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final ProgressListener progressListener)
-			throws ResourceIOException
-	{
+			throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		destinationURI = destinationRepository.checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			subrepository.moveResource(resourceURI, destinationRepository, destinationURI, progressListener); //delegate to the subrepository
 			return;
 		}
 		checkOpen(); //make sure the repository is open
-		if(destinationRepository == this) //if the resource is being copied to this repository
-		{
+		if(destinationRepository == this) { //if the resource is being copied to this repository
 			moveResourceImpl(resourceURI, destinationURI, true, progressListener); //delegate to the internal move method
 			return;
 		}
-		if(resourceURI.equals(getRootURI())) //if they try to move the root URI
-		{
+		if(resourceURI.equals(getRootURI())) { //if they try to move the root URI
 			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
 		}
-		if(isChild(resourceURI, destinationURI))
-		{
+		if(isChild(resourceURI, destinationURI)) {
 			throw new IllegalArgumentException("Cannot perform circular move from " + resourceURI + " to " + destinationURI + " even between repositories.");
 		}
 		moveResourceImpl(resourceURI, destinationRepository, destinationURI, true, progressListener);
@@ -1874,28 +1659,23 @@ public abstract class AbstractRepository implements Repository
 	 */
 	@Override
 	public final void moveResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final boolean overwrite)
-			throws ResourceIOException
-	{
+			throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		destinationURI = destinationRepository.checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			subrepository.moveResource(resourceURI, destinationRepository, destinationURI, overwrite); //delegate to the subrepository
 			return;
 		}
 		checkOpen(); //make sure the repository is open
-		if(destinationRepository == this) //if the resource is being copied to this repository
-		{
+		if(destinationRepository == this) { //if the resource is being copied to this repository
 			moveResourceImpl(resourceURI, destinationURI, overwrite, null); //delegate to the internal move method
 			return;
 		}
-		if(resourceURI.equals(getRootURI())) //if they try to move the root URI
-		{
+		if(resourceURI.equals(getRootURI())) { //if they try to move the root URI
 			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
 		}
-		if(isChild(resourceURI, destinationURI))
-		{
+		if(isChild(resourceURI, destinationURI)) {
 			throw new IllegalArgumentException("Cannot perform circular move from " + resourceURI + " to " + destinationURI + " even between repositories.");
 		}
 		moveResourceImpl(resourceURI, destinationRepository, destinationURI, overwrite, null);
@@ -1907,28 +1687,23 @@ public abstract class AbstractRepository implements Repository
 	 */
 	@Override
 	public final void moveResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final boolean overwrite,
-			final ProgressListener progressListener) throws ResourceIOException
-	{
+			final ProgressListener progressListener) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		destinationURI = destinationRepository.checkResourceURI(destinationURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
-		if(subrepository != this) //if the resource URI lies within a subrepository
-		{
+		if(subrepository != this) { //if the resource URI lies within a subrepository
 			subrepository.moveResource(resourceURI, destinationRepository, destinationURI, overwrite, progressListener); //delegate to the subrepository
 			return;
 		}
 		checkOpen(); //make sure the repository is open
-		if(destinationRepository == this) //if the resource is being copied to this repository
-		{
+		if(destinationRepository == this) { //if the resource is being copied to this repository
 			moveResourceImpl(resourceURI, destinationURI, overwrite, progressListener); //delegate to the internal move method
 			return;
 		}
-		if(resourceURI.equals(getRootURI())) //if they try to move the root URI
-		{
+		if(resourceURI.equals(getRootURI())) { //if they try to move the root URI
 			throw new IllegalArgumentException("Cannot move repository base URI " + resourceURI);
 		}
-		if(isChild(resourceURI, destinationURI))
-		{
+		if(isChild(resourceURI, destinationURI)) {
 			throw new IllegalArgumentException("Cannot perform circular move from " + resourceURI + " to " + destinationURI + " even between repositories.");
 		}
 		moveResourceImpl(resourceURI, destinationRepository, destinationURI, overwrite, progressListener);
@@ -1952,8 +1727,7 @@ public abstract class AbstractRepository implements Repository
 	 * @throws ResourceStateException if overwrite is specified not to occur and a resource exists at the given destination.
 	 */
 	protected void moveResourceImpl(final URI resourceURI, final Repository destinationRepository, final URI destinationURI, final boolean overwrite,
-			final ProgressListener progressListener) throws ResourceIOException
-	{
+			final ProgressListener progressListener) throws ResourceIOException {
 		copyResource(resourceURI, destinationRepository, destinationURI, overwrite, progressListener); //copy the resource to the other repository
 		deleteResource(resourceURI); //delete the moved resource in this repository
 	}
@@ -1972,18 +1746,12 @@ public abstract class AbstractRepository implements Repository
 	 * @param throwable The error which should be translated to a resource I/O exception.
 	 * @return A resource I/O exception based upon the given throwable.
 	 */
-	protected ResourceIOException toResourceIOException(final URI resourceURI, final Throwable throwable)
-	{
-		if(throwable instanceof ResourceIOException)
-		{
+	protected ResourceIOException toResourceIOException(final URI resourceURI, final Throwable throwable) {
+		if(throwable instanceof ResourceIOException) {
 			return (ResourceIOException)throwable;
-		}
-		else if(throwable instanceof IllegalStateException)
-		{
+		} else if(throwable instanceof IllegalStateException) {
 			return new ResourceStateException(resourceURI, throwable);
-		}
-		else
-		{
+		} else {
 			return new ResourceIOException(resourceURI, throwable); //default to simple exception chaining with a new resource I/O exception
 		}
 	}
@@ -2001,28 +1769,20 @@ public abstract class AbstractRepository implements Repository
 
 	/** {@inheritDoc} This version calls {@link #close()}. */
 	@Override
-	public synchronized void dispose()
-	{
-		try
-		{
+	public synchronized void dispose() {
+		try {
 			close();
-		}
-		catch(final ResourceIOException resourceIOException)
-		{
+		} catch(final ResourceIOException resourceIOException) {
 			Log.error(resourceIOException);
 		}
 	}
 
 	/** {@inheritDoc} This version closes the repository. */
 	@Override
-	protected void finalize() throws Throwable
-	{
-		try
-		{
+	protected void finalize() throws Throwable {
+		try {
 			close(); //close the repository if it isn't already
-		}
-		finally
-		{
+		} finally {
 			super.finalize(); //always call the parent version
 		}
 	}
@@ -2045,26 +1805,21 @@ public abstract class AbstractRepository implements Repository
 	 * @throws NullPointerException if the given map is <code>null</code>.
 	 * @see URF#convertLegacyNamespacedURI(URI)
 	 */
-	protected static <V, M extends Map<URI, V>> void updateLegacyNamespacedProperties(final M propertyURIValueMap)
-	{
+	protected static <V, M extends Map<URI, V>> void updateLegacyNamespacedProperties(final M propertyURIValueMap) {
 		//start by iterating through the keys of the map; most of the time, we probably won't have to change anything
 		Iterator<URI> propertyURIIterator = propertyURIValueMap.keySet().iterator();
 		Set<URI> keySet = null; //if something needs to be changed, we'll have to make a copy of the keys so we can modify the map
-		while(propertyURIIterator.hasNext())
-		{
+		while(propertyURIIterator.hasNext()) {
 			final URI legacyPropertyURI = propertyURIIterator.next(); //get the next property URI---which *may* or may not be a legacy URI
 			final URI canonicalPropertyURI = convertLegacyNamespacedURI(legacyPropertyURI); //convert it from a legacy form
-			if(!canonicalPropertyURI.equals(legacyPropertyURI)) //if the property URI changed (signaling that this was legacy property URI form)
-			{
-				if(keySet == null) //if we don't have a set of keys yet, we were in read-only mode; now make a copy of the keys and start over
-				{
+			if(!canonicalPropertyURI.equals(legacyPropertyURI)) { //if the property URI changed (signaling that this was legacy property URI form)
+				if(keySet == null) { //if we don't have a set of keys yet, we were in read-only mode; now make a copy of the keys and start over
 					keySet = new HashSet<URI>(propertyURIValueMap.keySet()); //make a copy of the keys
 					propertyURIIterator = keySet.iterator(); //we'll switch to a new iterator that essentially starts over iterating through the propertyURIs---but in a separate copy this time
 					continue; //bail from this iteration
 				}
 				//now we know we're in write mode---we can change the map
-				if(!propertyURIValueMap.containsKey(canonicalPropertyURI)) //if the map doesn't already have a canonical form of this legacy URI (the canonical form always wins)
-				{
+				if(!propertyURIValueMap.containsKey(canonicalPropertyURI)) { //if the map doesn't already have a canonical form of this legacy URI (the canonical form always wins)
 					final V value = propertyURIValueMap.get(legacyPropertyURI); //get the value for the legacy form
 					propertyURIValueMap.put(canonicalPropertyURI, value); //put the value in the map, this time keyed to the canonical form
 				}
@@ -2091,36 +1846,28 @@ public abstract class AbstractRepository implements Repository
 	 * @see #decodePropertiesTextValue(URFResource, URI, String)
 	 * @see #getDescriptionIO()
 	 */
-	protected NameValuePair<URI, String> encodePropertiesTextValue(final URI resourceURI, final Iterable<URFProperty> properties) throws IOException
-	{
+	protected NameValuePair<URI, String> encodePropertiesTextValue(final URI resourceURI, final Iterable<URFProperty> properties) throws IOException {
 		final Iterator<URFProperty> propertyIterator = properties.iterator();
-		if(!propertyIterator.hasNext()) //if no properties are given
-		{
+		if(!propertyIterator.hasNext()) { //if no properties are given
 			throw new IllegalArgumentException("At least one URF property must be provided to create an encoded property.");
 		}
 		URFProperty property = propertyIterator.next(); //get the first property
 		final URI propertyURI = property.getPropertyURI(); //get the URI of the URF property
 		URFResource propertyValue; //keep track of the last property value
 		final URFResource propertyDescription = new DefaultURFResource(resourceURI); //create a new resource description just for this property
-		do //for each URF property
-		{
-			if(!propertyURI.equals(property.getPropertyURI())) //if this URF property has a different URI
-			{
+		do { //for each URF property
+			if(!propertyURI.equals(property.getPropertyURI())) { //if this URF property has a different URI
 				throw new IllegalArgumentException("All URF properties expected to have property URI " + propertyURI + "; found " + property.getPropertyURI() + ".");
 			}
 			propertyValue = property.getValue(); //note the property value
 			propertyDescription.addProperty(property); //add this property to the resource
-			if(propertyIterator.hasNext()) //get the next property
-			{
+			if(propertyIterator.hasNext()) { //get the next property
 				property = propertyIterator.next();
 			}
-		}
-		while(propertyIterator.hasNext());
-		if(propertyDescription.getPropertyCount() == 1) //if we only wound up with a single property
-		{
+		} while(propertyIterator.hasNext());
+		if(propertyDescription.getPropertyCount() == 1) { //if we only wound up with a single property
 			final String textValue = asString(propertyValue); //see if we value is a simple string
-			if(textValue != null && !textValue.startsWith(TURF.SIGNATURE)) //if we have a single string variable that doesn't start with the TURF signature
-			{
+			if(textValue != null && !textValue.startsWith(TURF.SIGNATURE)) { //if we have a single string variable that doesn't start with the TURF signature
 				return new NameValuePair<URI, String>(propertyURI, textValue); //abandon use of the description---just return the string value itself 
 			}
 		}
@@ -2147,35 +1894,25 @@ public abstract class AbstractRepository implements Repository
 	 * @see #createURF()
 	 * @see #getDescriptionIO()
 	 */
-	protected void decodePropertiesTextValue(final URFResource resource, final URI propertyURI, final String propertyTextValue)
-	{
-		if(propertyTextValue.startsWith(TURF.SIGNATURE)) //if this property value is stored in TURF
-		{
-			try
-			{
+	protected void decodePropertiesTextValue(final URFResource resource, final URI propertyURI, final String propertyTextValue) {
+		if(propertyTextValue.startsWith(TURF.SIGNATURE)) { //if this property value is stored in TURF
+			try {
 				//read a description of the resource from the property, recognizing the resource serialized with URI "" as indicating the given resource
 				final URFResource propertyDescription = getDescriptionIO().read(createURF(), new ByteArrayInputStream(propertyTextValue.getBytes(UTF_8_CHARSET)),
 						resource.getURI());
 				resource.removePropertyValues(propertyURI); //if we were successful (that is, the property text value had no errors), remove any values already present for this value
 				long addedPropertyCount = 0;
-				for(final URFProperty property : propertyDescription.getProperties(propertyURI)) //for each read property that we expect in the description
-				{
+				for(final URFProperty property : propertyDescription.getProperties(propertyURI)) { //for each read property that we expect in the description
 					++addedPropertyCount;
 					resource.addProperty(property); //add this property to the given description
 				}
-				if(addedPropertyCount == 0) //if no properties were added, something wasn't quite right---we should have always some properties; maybe they weren't stored with the correct URI 
-				{
+				if(addedPropertyCount == 0) { //if no properties were added, something wasn't quite right---we should have always some properties; maybe they weren't stored with the correct URI 
 					Log.warn("No properties found for URI " + propertyURI + " in description: " + propertyTextValue);
 				}
-			}
-			catch(final IOException ioException) //if we had any problem interpreting the text value as TURF
-			{
+			} catch(final IOException ioException) { //if we had any problem interpreting the text value as TURF
 				throw new IllegalArgumentException("Invalid URF property value.", ioException);
 			}
-		}
-		else
-		//if this is a normal string property
-		{
+		} else { //if this is a normal string property
 			resource.addPropertyValue(propertyURI, propertyTextValue); //add the string value to the resource
 		}
 	}

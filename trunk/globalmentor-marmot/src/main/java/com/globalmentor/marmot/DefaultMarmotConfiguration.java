@@ -20,30 +20,31 @@ import static com.globalmentor.java.Objects.*;
 
 import com.globalmentor.config.AbstractConfiguration;
 
-/**Default configuration for Marmot.
-@author Garret Wilson
-*/
-public class DefaultMarmotConfiguration extends AbstractConfiguration implements MarmotConfiguration
-{
+/**
+ * Default configuration for Marmot.
+ * @author Garret Wilson
+ */
+public class DefaultMarmotConfiguration extends AbstractConfiguration implements MarmotConfiguration {
 
-	/**The cache configured for use by Marmot.*/
+	/** The cache configured for use by Marmot. */
 	private final MarmotResourceCache<?> resourceCache;
-	
-		/**@return The cache configured for use by Marmot.*/
-		public MarmotResourceCache<?> getResourceCache() {return resourceCache;}
 
-	/**Default constructor configured to use a {@link DefaultMarmotResourceCache}.*/
-	public DefaultMarmotConfiguration()
-	{
+	/** @return The cache configured for use by Marmot. */
+	public MarmotResourceCache<?> getResourceCache() {
+		return resourceCache;
+	}
+
+	/** Default constructor configured to use a {@link DefaultMarmotResourceCache}. */
+	public DefaultMarmotConfiguration() {
 		this(new DefaultMarmotResourceCache());
 	}
 
-	/**Resource cache constructor.
-	@param resourceCache The cache configured for use by Marmot.
-	@throws NullPointerException if the given resource cache is <code>null</code>.
-	*/
-	public DefaultMarmotConfiguration(final MarmotResourceCache<?> resourceCache)
-	{
-		this.resourceCache=checkInstance(resourceCache, "Resource cache cannot be null.");
+	/**
+	 * Resource cache constructor.
+	 * @param resourceCache The cache configured for use by Marmot.
+	 * @throws NullPointerException if the given resource cache is <code>null</code>.
+	 */
+	public DefaultMarmotConfiguration(final MarmotResourceCache<?> resourceCache) {
+		this.resourceCache = checkInstance(resourceCache, "Resource cache cannot be null.");
 	}
 }

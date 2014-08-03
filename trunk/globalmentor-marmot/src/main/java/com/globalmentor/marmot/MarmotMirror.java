@@ -41,8 +41,7 @@ import com.globalmentor.net.http.*;
  * Command-line Marmot synchronization utility.
  * @author Garret Wilson
  */
-public class MarmotMirror extends AbstractApplication
-{
+public class MarmotMirror extends AbstractApplication {
 
 	/** The application URI. */
 	public final static URI MARMOT_MIRROR_URI = URI.create("http://globalmentor.com/software/marmotmirror");
@@ -57,8 +56,7 @@ public class MarmotMirror extends AbstractApplication
 	public final static String VERSION = "1.6"; //TODO find a way to have Maven indicate the Subversion revision when building
 
 	/** Application command-line parameters. */
-	public enum Parameter implements Identifier
-	{
+	public enum Parameter implements Identifier {
 		/** The source repository. */
 		SOURCE_REPOSITORY,
 		/** The source repository type. */
@@ -112,8 +110,7 @@ public class MarmotMirror extends AbstractApplication
 	}
 
 	/** The types of repository available. */
-	public enum RepositoryType implements Identifier
-	{
+	public enum RepositoryType implements Identifier {
 		/** A file system repository; {@link FileRepository}. */
 		FILE,
 		/** A file system repository using NTFS streams for metadata.; {@link NTFSFileRepository}. */
@@ -128,8 +125,7 @@ public class MarmotMirror extends AbstractApplication
 	 * Argument constructor.
 	 * @param args The command line arguments.
 	 */
-	public MarmotMirror(final String[] args)
-	{
+	public MarmotMirror(final String[] args) {
 		super(MARMOT_MIRROR_URI, TITLE, args); //construct the parent class
 		//TODO set version somehow
 		//TODO set the copyright DCMI.setRights(this, COPYRIGHT); //set the application copyright
@@ -139,13 +135,11 @@ public class MarmotMirror extends AbstractApplication
 	 * The main application method.
 	 * @return The application status.
 	 */
-	public int main()
-	{
+	public int main() {
 		final String[] args = getArgs(); //get the arguments
 		final String sourceRepositoryString = getOption(args, Parameter.SOURCE_REPOSITORY); //get the source repository parameter
 		final String destinationRepositoryString = getOption(args, Parameter.DESTINATION_REPOSITORY); //get the destination repository parameter
-		if(sourceRepositoryString == null || destinationRepositoryString == null) //if the source and/or destination repository parameter is missing
-		{
+		if(sourceRepositoryString == null || destinationRepositoryString == null) { //if the source and/or destination repository parameter is missing
 			//@formatter:off
 			System.out.println(TITLE);
 			System.out.println(VERSION);
@@ -214,53 +208,42 @@ public class MarmotMirror extends AbstractApplication
 		final Repository destinationRepository = createRepository(
 				destinationRepositoryTypeString != null ? getSerializedEnum(RepositoryType.class, destinationRepositoryTypeString) : null, destinationRepositoryURI,
 				getOption(args, Parameter.DESTINATION_USERNAME), getOption(args, Parameter.DESTINATION_PASSWORD)); //create the correct type of repository for the destination
-		try
-		{
+		try {
 			final RepositorySynchronizer repositorySynchronizer = new RepositorySynchronizer(); //create a new synchronizer
 			final String resolutionString = getOption(args, Parameter.RESOLUTION); //set the resolutions if provided
-			if(resolutionString != null)
-			{
+			if(resolutionString != null) {
 				repositorySynchronizer.setResolution(getSerializedEnum(Resolution.class, resolutionString.toUpperCase()));
 			}
 			final String resourceResolutionString = getOption(args, Parameter.RESOURCE_RESOLUTION);
-			if(resourceResolutionString != null)
-			{
+			if(resourceResolutionString != null) {
 				repositorySynchronizer.setResourceResolution(getSerializedEnum(Resolution.class, resourceResolutionString.toUpperCase()));
 			}
 			final String contentResolutionString = getOption(args, Parameter.CONTENT_RESOLUTION);
-			if(contentResolutionString != null)
-			{
+			if(contentResolutionString != null) {
 				repositorySynchronizer.setContentResolution(getSerializedEnum(Resolution.class, contentResolutionString.toUpperCase()));
 			}
 			final String metadataResolutionString = getOption(args, Parameter.METADATA_RESOLUTION);
-			if(metadataResolutionString != null)
-			{
+			if(metadataResolutionString != null) {
 				repositorySynchronizer.setMetadataResolution(getSerializedEnum(Resolution.class, metadataResolutionString.toUpperCase()));
 			}
-			for(final String ignoreSourceResourceURIString : getOptions(args, Parameter.IGNORE_SOURCE_RESOURCE)) //look at all the source resources to ignore
-			{
+			for(final String ignoreSourceResourceURIString : getOptions(args, Parameter.IGNORE_SOURCE_RESOURCE)) { //look at all the source resources to ignore
 				repositorySynchronizer.addIgnoreSourceResourceURI(guessAbsoluteURI(ignoreSourceResourceURIString)); //create a URI from the parameter and add this to the source resources to ignore
 			}
-			for(final String ignoreDestinationResourceURIString : getOptions(args, Parameter.IGNORE_DESTINATION_RESOURCE)) //look at all the destination resources to ignore
-			{
+			for(final String ignoreDestinationResourceURIString : getOptions(args, Parameter.IGNORE_DESTINATION_RESOURCE)) { //look at all the destination resources to ignore
 				repositorySynchronizer.addIgnoreDestinationResourceURI(guessAbsoluteURI(ignoreDestinationResourceURIString)); //create a URI from the parameter and add this to the destination resources to ignore
 			}
-			for(final String ignorePropertyURIString : getOptions(args, Parameter.IGNORE_PROPERTY)) //look at all the properties to ignore
-			{
+			for(final String ignorePropertyURIString : getOptions(args, Parameter.IGNORE_PROPERTY)) { //look at all the properties to ignore
 				repositorySynchronizer.addIgnorePropertyURI(URI.create(ignorePropertyURIString)); //create a URI from the parameter and add this to the properties to ignore
 			}
 			repositorySynchronizer.setForceContentModifiedProperty(hasFlag(args, Parameter.FORCE_CONTENT_MODIFIED_PROPERTY)); //specify whether the content modified property should be forced
 			repositorySynchronizer.setForceWriteMetadata(hasFlag(args, Parameter.FORCE_WRITE_METADATA)); //specify whether metadata should always be written for the output resource
-			if(!hasFlag(args, Parameter.TEST))
-			{
-				if(hasFlag(args, Parameter.REWRITE_SOURCE_METADATA))
-				{
+			if(!hasFlag(args, Parameter.TEST)) {
+				if(hasFlag(args, Parameter.REWRITE_SOURCE_METADATA)) {
 					checkArgument(sourceRepository instanceof MaintenanceRepository, "Source repository doesn't not support maintenance operations for {0}.",
 							Parameter.REWRITE_SOURCE_METADATA);
 					((MaintenanceRepository)sourceRepository).setRewriteResourceDescriptions(true);
 				}
-				if(hasFlag(args, Parameter.REWRITE_DESTINATION_METADATA))
-				{
+				if(hasFlag(args, Parameter.REWRITE_DESTINATION_METADATA)) {
 					checkArgument(sourceRepository instanceof MaintenanceRepository, "Destination repository doesn't not support maintenance operations for {0}.",
 							Parameter.REWRITE_DESTINATION_METADATA);
 					((MaintenanceRepository)destinationRepository).setRewriteResourceDescriptions(true);
@@ -268,9 +251,7 @@ public class MarmotMirror extends AbstractApplication
 			}
 			repositorySynchronizer.setTest(hasFlag(args, Parameter.TEST)); //specify whether this is a test run
 			repositorySynchronizer.synchronize(sourceRepository, sourceResourceURI, destinationRepository, destinationResourceURI); //synchronize the resources
-		}
-		catch(final IOException ioException) //if there is an error
-		{
+		} catch(final IOException ioException) { //if there is an error
 			displayError(ioException);
 			return 1;
 		}
@@ -281,8 +262,7 @@ public class MarmotMirror extends AbstractApplication
 	 * The main routine that starts the application.
 	 * @param args The command line arguments.
 	 */
-	public static void main(final String[] args)
-	{
+	public static void main(final String[] args) {
 		run(new MarmotMirror(args), args); //start a new application
 	}
 
@@ -306,51 +286,37 @@ public class MarmotMirror extends AbstractApplication
 	 * @return A repository for the given URI.
 	 * @throws IllegalArgumentException if the type of the given repository URI cannot be determined.
 	 */
-	protected static Repository createRepository(RepositoryType repositoryType, final URI repositoryURI, final String username, final String password)
-	{
-		if(repositoryType == null) //if no repository type was designated
-		{
-			if(HTTP.isHTTPURI(repositoryURI)) //if this is an HTTP repository URI
-			{
+	protected static Repository createRepository(RepositoryType repositoryType, final URI repositoryURI, final String username, final String password) {
+		if(repositoryType == null) { //if no repository type was designated
+			if(HTTP.isHTTPURI(repositoryURI)) { //if this is an HTTP repository URI
 				repositoryType = RepositoryType.WEBDAV; //assume a WebDAV repository
-			}
-			else if(FILE_SCHEME.equals(repositoryURI.getScheme())) //if this is a file repository URI
-			{
+			} else if(FILE_SCHEME.equals(repositoryURI.getScheme())) { //if this is a file repository URI
 				repositoryType = RepositoryType.FILE; //assume a file repository
-			}
-			else
-			//if we don't recognize the repository type
-			{
+			} else { //if we don't recognize the repository type
 				throw new IllegalArgumentException("Unrecognized repository type: " + repositoryURI);
 			}
 		}
-		switch(repositoryType)
-		//create the correct type of repository
-		{
+		switch(repositoryType) { //create the correct type of repository
 			case FILE:
 				return new FileRepository(repositoryURI); //create a file-based repository
 			case NTFS:
 				return new NTFSFileRepository(repositoryURI); //create a file-based repository
 			case WEBDAV: {
 				final WebDAVRepository webDavRepository = new WebDAVRepository(repositoryURI); //create a WebDAV-based repository
-				if(username != null) //set the username if there is one
-				{
+				if(username != null) { //set the username if there is one
 					webDavRepository.setUsername(username);
 				}
-				if(password != null) //set the password if there is one
-				{
+				if(password != null) { //set the password if there is one
 					webDavRepository.setPassword(password.toCharArray());
 				}
 				return webDavRepository;
 			}
 			case SVN: {
 				final SubversionWebDAVRepository webDavRepository = new SubversionWebDAVRepository(repositoryURI); //create a Subversion-based repository
-				if(username != null) //set the username if there is one
-				{
+				if(username != null) { //set the username if there is one
 					webDavRepository.setUsername(username);
 				}
-				if(password != null) //set the password if there is one
-				{
+				if(password != null) { //set the password if there is one
 					webDavRepository.setPassword(password.toCharArray());
 				}
 				return webDavRepository;

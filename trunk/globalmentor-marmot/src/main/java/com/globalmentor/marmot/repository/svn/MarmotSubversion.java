@@ -31,8 +31,7 @@ import com.globalmentor.net.URIs;
  * @author Garret Wilson
  * 
  */
-public class MarmotSubversion
-{
+public class MarmotSubversion {
 
 	/** The obsolete prefix for Marmot properties: <code>marmot:</code>. */
 	@Deprecated
@@ -50,8 +49,7 @@ public class MarmotSubversion
 	 * @see #decodePropertyURIPropertyName(String)
 	 * @see URIs#plainEncode(URI)
 	 */
-	public static String encodePropertyURIPropertyName(final URI propertyURI)
-	{
+	public static String encodePropertyURIPropertyName(final URI propertyURI) {
 		return PROPERTY_PREFIX + plainEncode(propertyURI);
 	}
 
@@ -69,14 +67,11 @@ public class MarmotSubversion
 	 * @see #encodePropertyURIPropertyName(URI)
 	 * @see URIs#plainDecode(String)
 	 */
-	public static URI decodePropertyURIPropertyName(final String propertyName)
-	{
-		if(Marmot.ID.equals(getPropertyNamespace(propertyName))) //if this property is in the Marmot namespace TODO delete when legacy properties converted
-		{
+	public static URI decodePropertyURIPropertyName(final String propertyName) {
+		if(Marmot.ID.equals(getPropertyNamespace(propertyName))) { //if this property is in the Marmot namespace TODO delete when legacy properties converted
 			return plainDecode(getPropertyLocalName(propertyName)); //perform legacy decoding
 		}
-		if(propertyName.startsWith(PROPERTY_PREFIX)) //if the property starts with "marmot-"
-		{
+		if(propertyName.startsWith(PROPERTY_PREFIX)) { //if the property starts with "marmot-"
 			return plainDecode(propertyName.substring(PROPERTY_PREFIX.length()));
 		}
 		throw new IllegalArgumentException("The property name " + propertyName + " does not represent a Marmot Subversion property.");

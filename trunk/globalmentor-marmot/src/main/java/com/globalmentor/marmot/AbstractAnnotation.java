@@ -20,22 +20,20 @@ import java.net.URI;
 
 import org.urframework.content.AbstractContentResource;
 
+/**
+ * The abstract base class of a resource annotation.
+ * @author Garret Wilson
+ */
+public abstract class AbstractAnnotation extends AbstractContentResource implements Annotation {
 
-/**The abstract base class of a resource annotation.
-@author Garret Wilson
-*/
-public abstract class AbstractAnnotation extends AbstractContentResource implements Annotation
-{
-
-	/**URI and type namespace URI constructor.
-	@param uri The URI for the resource, or <code>null</code> if the resource should have no URI.
-	@param typeNamespaceURI The namespace URI of the URI of the type to be added.
-	@throws NullPointerException if the given type type namespace URI is <code>null</code>.
-	*/
-	public AbstractAnnotation(final URI uri, final URI typeNamespaceURI)
-	{
-		super(uri, typeNamespaceURI);	//construct the parent class
+	/**
+	 * URI and type namespace URI constructor.
+	 * @param uri The URI for the resource, or <code>null</code> if the resource should have no URI.
+	 * @param typeNamespaceURI The namespace URI of the URI of the type to be added.
+	 * @throws NullPointerException if the given type type namespace URI is <code>null</code>.
+	 */
+	public AbstractAnnotation(final URI uri, final URI typeNamespaceURI) {
+		super(uri, typeNamespaceURI); //construct the parent class
 	}
-	
-	
+
 }

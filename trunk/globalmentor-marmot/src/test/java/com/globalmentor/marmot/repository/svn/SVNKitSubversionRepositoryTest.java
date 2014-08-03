@@ -33,23 +33,18 @@ import com.globalmentor.marmot.repository.svn.svnkit.SVNKitSubversionRepository;
  * @author Garret Wilson
  * @see SVNKitSubversionRepository
  */
-public class SVNKitSubversionRepositoryTest extends AbstractFileRepositoryTest
-{
+public class SVNKitSubversionRepositoryTest extends AbstractFileRepositoryTest {
 
 	/**
 	 * {@inheritDoc}
 	 * @see #getTempDirectory()
 	 */
 	@Override
-	protected Repository createRepository()
-	{
+	protected Repository createRepository() {
 		final File tempDirectory = getTempDirectory();
-		try
-		{
+		try {
 			SVNRepositoryFactory.createLocalRepository(tempDirectory, true, false); //create the physical repository
-		}
-		catch(final SVNException svnException)
-		{
+		} catch(final SVNException svnException) {
 			throw unexpected(svnException);
 		}
 		return new SVNKitSubversionRepository(tempDirectory); //return a repository object

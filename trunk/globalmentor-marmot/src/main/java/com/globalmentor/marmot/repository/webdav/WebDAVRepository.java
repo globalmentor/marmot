@@ -82,8 +82,7 @@ import org.w3c.dom.*;
  * </p>
  * @author Garret Wilson
  */
-public class WebDAVRepository extends AbstractHierarchicalSourceRepository
-{
+public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 
 	/** The URI to the Marmot WebDAV repository namespace. */
 	public final static URI MARMOT_WEBDAV_REPOSITORY_NAMESPACE_URI = Marmot.NAMESPACE_URI.resolve("repository/webdav/");
@@ -115,8 +114,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * thread-safe; it can be used for reading, but should not be modified after repository construction.
 	 * @return The WebDAV namespaces that are not automatically added as URF properties.
 	 */
-	protected Set<String> getIgnoredWebDAVNamespaces()
-	{
+	protected Set<String> getIgnoredWebDAVNamespaces() {
 		return ignoredWebDAVNamespaces;
 	}
 
@@ -133,8 +131,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	/**
 	 * Default constructor with no root URI defined. The root URI must be defined before the repository is opened.
 	 */
-	public WebDAVRepository()
-	{
+	public WebDAVRepository() {
 		this(null);
 	}
 
@@ -142,8 +139,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * Repository URI constructor using the default HTTP client. The given repository URI should end in a slash.
 	 * @param repositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
 	 */
-	public WebDAVRepository(final URI repositoryURI)
-	{
+	public WebDAVRepository(final URI repositoryURI) {
 		this(repositoryURI, HTTPClient.getInstance()); //construct the class using the default HTTP client		
 	}
 
@@ -152,8 +148,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * @param repositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
 	 * @param httpClient The HTTP client used to create a connection to this resource.
 	 */
-	public WebDAVRepository(final URI repositoryURI, final HTTPClient httpClient)
-	{
+	public WebDAVRepository(final URI repositoryURI, final HTTPClient httpClient) {
 		this(repositoryURI, repositoryURI, httpClient); //use the same repository URI as the public and private namespaces
 	}
 
@@ -162,8 +157,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * @param publicRepositoryURI The URI identifying the location of this repository.
 	 * @param privateRepositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
 	 */
-	public WebDAVRepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
-	{
+	public WebDAVRepository(final URI publicRepositoryURI, final URI privateRepositoryURI) {
 		this(publicRepositoryURI, privateRepositoryURI, HTTPClient.getInstance()); //construct the class using the default HTTP client				
 	}
 
@@ -173,8 +167,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * @param privateRepositoryURI The WebDAV URI identifying the base URI of the WebDAV repository.
 	 * @param httpClient The HTTP client used to create a connection to this resource.
 	 */
-	public WebDAVRepository(final URI publicRepositoryURI, final URI privateRepositoryURI, final HTTPClient httpClient)
-	{
+	public WebDAVRepository(final URI publicRepositoryURI, final URI privateRepositoryURI, final HTTPClient httpClient) {
 		super(publicRepositoryURI, privateRepositoryURI); //construct the parent class
 		this.httpClient = httpClient; //save the HTTP client
 		addLivePropertyURI(Content.CREATED_PROPERTY_URI); //this repository considers content created a live property
@@ -195,8 +188,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * @param privateRepositoryURI The URI identifying the private namespace managed by this repository.
 	 * @throws NullPointerException if the given public repository URI and/or private repository URI is <code>null</code>.
 	 */
-	protected Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI)
-	{
+	protected Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI) {
 		final WebDAVRepository repository = new WebDAVRepository(publicRepositoryURI, privateRepositoryURI, getHTTPClient()); //create a new repository
 		repository.setUsername(getUsername()); //transfer authentication info
 		repository.setPassword(getPassword()); //transfer authentication info
@@ -216,30 +208,21 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * @return A WebDAV property name to use in representing an URF property with the given URF property URI.
 	 * @see #URF_TOKEN_LOCAL_NAME
 	 */
-	protected WebDAVPropertyName createWebDAVPropertyName(final URI urfPropertyURI)
-	{
+	protected WebDAVPropertyName createWebDAVPropertyName(final URI urfPropertyURI) {
 		final String webDAVPropertyNamespace;
 		final String webDAVPropertyLocalName;
 		final String rawFragment = urfPropertyURI.getRawFragment(); //get the raw fragment of the URF property URI
-		if(rawFragment != null) //if the URI has a fragment
-		{
+		if(rawFragment != null) { //if the URI has a fragment
 			final String urfPropertyURIString = urfPropertyURI.toString(); //get the string representation of the URF property URI
 			assert urfPropertyURIString.endsWith(rawFragment);
 			webDAVPropertyNamespace = urfPropertyURIString.substring(0, urfPropertyURIString.length() - rawFragment.length()); //remove the raw fragment, but leave the fragment identifier on the namespaces
 			webDAVPropertyLocalName = rawFragment; //the raw fragment itself is the WebDAV local name
-		}
-		else
-		//check for a path-based namespace
-		{
+		} else { //check for a path-based namespace
 			final URI urfPropertyNamespaceURI = getNamespaceURI(urfPropertyURI); //get the normal URF namespace for path-based namespaces
-			if(urfPropertyNamespaceURI != null) //if there is an URF namespace
-			{
+			if(urfPropertyNamespaceURI != null) { //if there is an URF namespace
 				webDAVPropertyNamespace = urfPropertyNamespaceURI.toString(); //the WebDAV namespace is the string form of the URF namespace URI
 				webDAVPropertyLocalName = getRawName(urfPropertyURI); //the raw name of the URF property URI is the WebDAV property local name
-			}
-			else
-			//if there is no URF namespace
-			{
+			} else { //if there is no URF namespace
 				webDAVPropertyNamespace = urfPropertyURI.toString(); //use the string form of the property URI as the namespace
 				webDAVPropertyLocalName = URF_TOKEN_LOCAL_NAME; //create a fake local name; we have to have some WebDAV property to correspond to the URF property, and there are no other options at this point				
 			}
@@ -258,8 +241,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * @throws IOException if there is an error creating the WebDAV property and value.
 	 * @see #createWebDAVPropertyName(URI)
 	 */
-	protected WebDAVProperty createWebDAVProperty(final URI resourceURI, final Iterable<URFProperty> properties) throws IOException
-	{
+	protected WebDAVProperty createWebDAVProperty(final URI resourceURI, final Iterable<URFProperty> properties) throws IOException {
 		final NameValuePair<URI, String> webdavPropertyStringValue = encodePropertiesTextValue(resourceURI, properties); //encode the properties into a single value
 		final WebDAVPropertyName webdavPropertyName = createWebDAVPropertyName(webdavPropertyStringValue.getName()); //create a WebDAV property name from the URF property URI
 		final WebDAVPropertyValue webdavPropertyValue = new WebDAVLiteralPropertyValue(webdavPropertyStringValue.getValue()); //create a WebDAV literal property value from the determined string
@@ -279,22 +261,17 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * @throws IllegalArgumentException if the given property is not encoded properly.
 	 * @see #URF_TOKEN_LOCAL_NAME
 	 */
-	protected URI getURFPropertyURI(final WebDAVPropertyName webdavPropertyName)
-	{
+	protected URI getURFPropertyURI(final WebDAVPropertyName webdavPropertyName) {
 		final String webdavPropertyNamespace = webdavPropertyName.getNamespace(); //get the property namespace
-		if(WEBDAV_NAMESPACE.equals(webdavPropertyNamespace)) //ignore the WebDAV namespace
-		{
+		if(WEBDAV_NAMESPACE.equals(webdavPropertyNamespace)) { //ignore the WebDAV namespace
 			return null; //the WebDAV namespace isn't a valid URI, anyway
 		}
-		try
-		{
+		try {
 			final URI webdavPropertyNamespaceURI = new URI(webdavPropertyNamespace); //get the property namespace URI
 			final String webdavPropertyLocalName = webdavPropertyName.getLocalName(); //get the property local name
 			//if the local name is just a token local name, the namespace is the real URF property URI
 			return URF_TOKEN_LOCAL_NAME.equals(webdavPropertyLocalName) ? webdavPropertyNamespaceURI : webdavPropertyName.getURI();
-		}
-		catch(final URISyntaxException uriSyntaxException) //if the namespace is not a valid URI, this is not a valid URF property
-		{
+		} catch(final URISyntaxException uriSyntaxException) { //if the namespace is not a valid URI, this is not a valid URF property
 			return null; //there is no way to represent this property in URF
 		}
 	}
@@ -303,8 +280,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	private final HTTPClient httpClient;
 
 	/** @return The HTTP client used to create a connection to this resource. */
-	protected HTTPClient getHTTPClient()
-	{
+	protected HTTPClient getHTTPClient() {
 		return httpClient;
 	}
 
@@ -312,8 +288,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	private String username = null;
 
 	/** @return The username to use in accessing the repository, or <code>null</code> if no username is specified. */
-	public String getUsername()
-	{
+	public String getUsername() {
 		return username;
 	}
 
@@ -321,8 +296,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * Sets the username to use in accessing the repository.
 	 * @param username The username to use in accessing the repository, or <code>null</code> if no username is specified.
 	 */
-	public void setUsername(final String username)
-	{
+	public void setUsername(final String username) {
 		this.username = username;
 	}
 
@@ -330,8 +304,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	private char[] password = null;
 
 	/** @return The username to use in accessing the repository, or <code>null</code> if no password is specified. */
-	public char[] getPassword()
-	{
+	public char[] getPassword() {
 		return password;
 	}
 
@@ -339,8 +312,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * Sets the password to use in accessing the repository.
 	 * @param password The password to use in accessing the repository, or <code>null</code> if no password is specified.
 	 */
-	public void setPassword(final char[] password)
-	{
+	public void setPassword(final char[] password) {
 		this.password = password;
 	}
 
@@ -350,8 +322,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * @see #getUsername()
 	 * @see #getPassword()
 	 */
-	protected PasswordAuthentication getPasswordAuthentication()
-	{
+	protected PasswordAuthentication getPasswordAuthentication() {
 		final String username = getUsername(); //get the username
 		final char[] password = getPassword(); //get the password
 		return username != null && password != null ? new PasswordAuthentication(username, password) : null; //return new password authentication if this information is available
@@ -359,31 +330,21 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 
 	/** {@inheritDoc} This implementation returns <code>false</code> for all resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
 	@Override
-	protected boolean resourceExistsImpl(final URI resourceURI) throws ResourceIOException
-	{
+	protected boolean resourceExistsImpl(final URI resourceURI) throws ResourceIOException {
 		final URI privateResourceURI = getSourceResourceURI(resourceURI); //get the resource URI in the private space
-		if(!isSourceResourceVisible(privateResourceURI)) //if this resource should not be public
-		{
+		if(!isSourceResourceVisible(privateResourceURI)) { //if this resource should not be public
 			return false; //ignore this resource
 		}
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
-		try
-		{
+		try {
 			final WebDAVResource webdavResource = new WebDAVResource(privateResourceURI, getHTTPClient(), passwordAuthentication); //create a WebDAV resource
 			return webdavResource.exists(); //see if the WebDAV resource exists		
-		}
-		catch(final HTTPRedirectException httpRedirectException) //if the WebDAV resource tries to redirect us somewhere else
-		{
+		} catch(final HTTPRedirectException httpRedirectException) { //if the WebDAV resource tries to redirect us somewhere else
 			return false; //consider this to indicate that the resource, as identified by the resource URI, does not exist
-		}
-		catch(final IOException ioException) //if an I/O exception occurs
-		{
+		} catch(final IOException ioException) { //if an I/O exception occurs
 			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
-		}
-		finally
-		{
-			if(passwordAuthentication != null) //if we used password authentication
-			{
+		} finally {
+			if(passwordAuthentication != null) { //if we used password authentication
 				fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
 			}
 		}
@@ -391,28 +352,19 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 
 	/** {@inheritDoc} */
 	@Override
-	protected URFResource getResourceDescriptionImpl(final URI resourceURI) throws ResourceIOException
-	{
+	protected URFResource getResourceDescriptionImpl(final URI resourceURI) throws ResourceIOException {
 		final URF urf = createURF(); //create a new URF data model
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
-		try
-		{
+		try {
 			final WebDAVResource webdavResource = new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource
 			final Map<WebDAVPropertyName, WebDAVProperty> properties = webdavResource.propFind(); //get the properties of this resource
 			return createResourceDescription(urf, resourceURI, properties); //create a resource from this URI and property list
-		}
-		catch(final IOException ioException) //if an I/O exception occurs
-		{
+		} catch(final IOException ioException) { //if an I/O exception occurs
 			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
-		}
-		catch(final DataException dataException) //if the data wasn't correct
-		{
+		} catch(final DataException dataException) { //if the data wasn't correct
 			throw toResourceIOException(resourceURI, dataException); //translate the exception to a resource I/O exception and throw that
-		}
-		finally
-		{
-			if(passwordAuthentication != null) //if we used password authentication
-			{
+		} finally {
+			if(passwordAuthentication != null) { //if we used password authentication
 				fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
 			}
 		}
@@ -420,44 +372,28 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 
 	/** {@inheritDoc} For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any. */
 	@Override
-	protected InputStream getResourceInputStreamImpl(final URI resourceURI) throws ResourceIOException
-	{
+	protected InputStream getResourceInputStreamImpl(final URI resourceURI) throws ResourceIOException {
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
-		try
-		{
+		try {
 			final WebDAVResource webdavResource = new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource
-			if(isCollectionURI(resourceURI)) //if the resource is a collection
-			{
+			if(isCollectionURI(resourceURI)) { //if the resource is a collection
 				final URI contentURI = resolve(resourceURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content
 				final WebDAVResource contentWebDAVResource = new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource for special collection content resource TODO cache these resources, maybe
-				if(contentWebDAVResource.exists()) //if there is a special collection content resource
-				{
+				if(contentWebDAVResource.exists()) { //if there is a special collection content resource
 					return contentWebDAVResource.getInputStream(); //return an input stream to the collection content resource
-				}
-				else
-				//if there is no collection content resource
-				{
-					if(!webdavResource.exists()) //if the content resource doesn't exist because the collection itself doesn't exist
-					{
+				} else { //if there is no collection content resource
+					if(!webdavResource.exists()) { //if the content resource doesn't exist because the collection itself doesn't exist
 						throw new HTTPNotFoundException("Collection resource " + webdavResource.getURI() + " does not exist.");
 					}
 					return new ByteArrayInputStream(NO_BYTES); //return an input stream to an empty byte array
 				}
-			}
-			else
-			//if the resource is not a collection
-			{
+			} else { //if the resource is not a collection
 				return webdavResource.getInputStream(); //return an input stream to the resource
 			}
-		}
-		catch(final IOException ioException) //if an I/O exception occurs
-		{
+		} catch(final IOException ioException) { //if an I/O exception occurs
 			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
-		}
-		finally
-		{
-			if(passwordAuthentication != null) //if we used password authentication
-			{
+		} finally {
+			if(passwordAuthentication != null) { //if we used password authentication
 				fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
 			}
 		}
@@ -465,44 +401,31 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 
 	/** {@inheritDoc} For collections, this implementation stores the content in the {@value #COLLECTION_CONTENT_NAME} file. */
 	@Override
-	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, final ISODateTime newContentModified) throws ResourceIOException
-	{
+	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, final ISODateTime newContentModified) throws ResourceIOException {
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
-		try
-		{
+		try {
 			final WebDAVResource webdavResource = new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource TODO cache these resources, maybe
-			if(!webdavResource.exists()) //if the resource doesn't already exist
-			{
+			if(!webdavResource.exists()) { //if the resource doesn't already exist
 				throw new ResourceNotFoundException(resourceURI, "Cannot open output stream to non-existent resource " + resourceURI);
 			}
 			final WebDAVResource contentWebDAVResource; //determine the WebDAV resource for accessing the content file
-			if(isCollectionURI(resourceURI)) //if the resource is a collection
-			{
+			if(isCollectionURI(resourceURI)) { //if the resource is a collection
 				final URI contentURI = resolve(resourceURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content
 				contentWebDAVResource = new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource for special collection content resource
-			}
-			else
-			//if the resource is not a collection
-			{
+			} else { //if the resource is not a collection
 				contentWebDAVResource = webdavResource; //use the normal WebDAV resource
 			}
 			OutputStream outputStream = contentWebDAVResource.getOutputStream(); //get an output stream to the content WebDAV resource
-			if(newContentModified != null) //if we should update the content modified datetime
-			{
+			if(newContentModified != null) { //if we should update the content modified datetime
 				final URFResourceAlteration resourceAlteration = DefaultURFResourceAlteration.createSetPropertiesAlteration(new DefaultURFProperty(
 						Content.MODIFIED_PROPERTY_URI, newContentModified)); //create a resource alteration for setting the content modified property
 				outputStream = new DescriptionWriterOutputStreamDecorator(outputStream, resourceURI, resourceAlteration, webdavResource, passwordAuthentication); //wrap the output stream in a decorator that will update the WebDAV properties after the contents are stored; this method will erase the provided password, if any, after it completes the resource property updates
 			}
 			return outputStream; //return the output stream we created
-		}
-		catch(final IOException ioException) //if an I/O exception occurs
-		{
+		} catch(final IOException ioException) { //if an I/O exception occurs
 			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
-		}
-		finally
-		{
-			if(newContentModified == null && passwordAuthentication != null) //if we didn't do a delayed write we used password authentication
-			{
+		} finally {
+			if(newContentModified == null && passwordAuthentication != null) { //if we didn't do a delayed write we used password authentication
 				fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
 			}
 		}
@@ -510,32 +433,23 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 
 	/** {@inheritDoc} This implementation ignores child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
 	@Override
-	protected boolean hasChildrenImpl(final URI resourceURI) throws ResourceIOException
-	{
+	protected boolean hasChildrenImpl(final URI resourceURI) throws ResourceIOException {
 		final URI privateResourceURI = getSourceResourceURI(resourceURI); //get the URI of the resource in the private namespace
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
-		try
-		{
+		try {
 			final WebDAVResource webdavResource = new WebDAVResource(privateResourceURI, getHTTPClient(), passwordAuthentication); //create a WebDAV resource
 			final List<NameValuePair<URI, Map<WebDAVPropertyName, WebDAVProperty>>> propertyMaps = webdavResource.propFind(Depth.ONE); //get the properties of the resources one level down
-			for(final NameValuePair<URI, Map<WebDAVPropertyName, WebDAVProperty>> propertyMap : propertyMaps) //look at each property map
-			{
+			for(final NameValuePair<URI, Map<WebDAVPropertyName, WebDAVProperty>> propertyMap : propertyMaps) { //look at each property map
 				final URI childResourcePrivateURI = propertyMap.getName(); //get the private URI of the child resource this property list represents
-				if(isSourceResourceVisible(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI)) //if the associated child resource is public and the property list is *not* for this resource
-				{
+				if(isSourceResourceVisible(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI)) { //if the associated child resource is public and the property list is *not* for this resource
 					return true; //this resource has children
 				}
 			}
 			return false; //no properties could be found for any children
-		}
-		catch(final IOException ioException) //if an I/O exception occurs
-		{
+		} catch(final IOException ioException) { //if an I/O exception occurs
 			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
-		}
-		finally
-		{
-			if(passwordAuthentication != null) //if we used password authentication
-			{
+		} finally {
+			if(passwordAuthentication != null) { //if we used password authentication
 				fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
 			}
 		}
@@ -544,40 +458,29 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	/** {@inheritDoc} This implementation does not include child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
 	@Override
 	public List<URFResource> getChildResourceDescriptionsImpl(final URI resourceURI, final ResourceFilter resourceFilter, final int depth)
-			throws ResourceIOException
-	{
-		if(depth != 0) //a depth of zero means don't get child resources
-		{
+			throws ResourceIOException {
+		if(depth != 0) { //a depth of zero means don't get child resources
 			final URI privateResourceURI = getSourceResourceURI(resourceURI); //get the URI of the resource in the private namespace
 			final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
-			try
-			{
+			try {
 				final WebDAVResource webdavResource = new WebDAVResource(privateResourceURI, getHTTPClient(), passwordAuthentication); //create a WebDAV resource
 				final Depth webdavDepth; //we'll get the depth based upon the value passed
-				try
-				{
+				try {
 					webdavDepth = depth == INFINITE_DEPTH ? Depth.INFINITY : Depth.values()[depth]; //get the depth based upon the value passed
-				}
-				catch(final IndexOutOfBoundsException indexOutOfBoundsException) //if an illegal depth was passed
-				{
+				} catch(final IndexOutOfBoundsException indexOutOfBoundsException) { //if an illegal depth was passed
 					throw new IllegalArgumentException(Integer.toString(depth)); //TODO later convert the depth by using infinity and checking the result
 				}
 				final URF urf = createURF(); //create a new URF data model
 				final List<NameValuePair<URI, Map<WebDAVPropertyName, WebDAVProperty>>> propertyMaps = webdavResource.propFind(webdavDepth); //get the properties of the resources
 				final List<URFResource> childResourceList = new ArrayList<URFResource>(propertyMaps.size()); //create a list of child resources no larger than the number of WebDAV resource property maps
-				for(final NameValuePair<URI, Map<WebDAVPropertyName, WebDAVProperty>> propertyMap : propertyMaps) //look at each property map
-				{
+				for(final NameValuePair<URI, Map<WebDAVPropertyName, WebDAVProperty>> propertyMap : propertyMaps) { //look at each property map
 					final URI childResourcePrivateURI = propertyMap.getName(); //get the private URI of the child resource this property list represents
-					if(isSourceResourceVisible(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI)) //if the associated child resource is visible and the property list is *not* for this resource
-					{
+					if(isSourceResourceVisible(childResourcePrivateURI) && !privateResourceURI.equals(childResourcePrivateURI)) { //if the associated child resource is visible and the property list is *not* for this resource
 						final URI childResourcePublicURI = getRepositoryResourceURI(childResourcePrivateURI); //get the public URI of this child resource
-						if(getSubrepository(childResourcePublicURI) == this) //if this child wouldn't be located in a subrepository (i.e. ignore resources obscured by subrepositories)
-						{
-							if(resourceFilter == null || resourceFilter.isPass(childResourcePublicURI)) //if we should include this resource based upon its URI
-							{
+						if(getSubrepository(childResourcePublicURI) == this) { //if this child wouldn't be located in a subrepository (i.e. ignore resources obscured by subrepositories)
+							if(resourceFilter == null || resourceFilter.isPass(childResourcePublicURI)) { //if we should include this resource based upon its URI
 								final URFResource childResourceDescription = createResourceDescription(urf, childResourcePublicURI, propertyMap.getValue()); //create a resource from this URI and property lists
-								if(resourceFilter == null || resourceFilter.isPass(childResourceDescription)) //if we should include this resource based upon its description
-								{
+								if(resourceFilter == null || resourceFilter.isPass(childResourceDescription)) { //if we should include this resource based upon its description
 									childResourceList.add(childResourceDescription); //add this child resource description to our list
 								}
 							}
@@ -585,12 +488,10 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 					}
 				}
 				//aggregate any mapped subrepositories
-				for(final Repository childSubrepository : getChildSubrepositories(resourceURI)) //see if any subrepositories are mapped as children of this repository
-				{
+				for(final Repository childSubrepository : getChildSubrepositories(resourceURI)) { //see if any subrepositories are mapped as children of this repository
 					final URI childSubrepositoryURI = childSubrepository.getRootURI(); //get the URI of the subrepository
 					childResourceList.add(childSubrepository.getResourceDescription(childSubrepositoryURI)); //get a description of the subrepository root resource
-					if(depth == INFINITE_DEPTH || depth > 0) //if we should get child resources lower in the hierarchy
-					{
+					if(depth == INFINITE_DEPTH || depth > 0) { //if we should get child resources lower in the hierarchy
 						childResourceList.addAll(childSubrepository.getChildResourceDescriptions(childSubrepositoryURI, resourceFilter, depth == INFINITE_DEPTH ? depth
 								: depth - 1)); //get descriptions of subrepository children
 					}
@@ -600,56 +501,38 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 
 				//TODO fix				Collections.sort(resourceList);	//sort the resource by URI
 				return childResourceList; //return the list of resources we constructed
-			}
-			catch(final IOException ioException) //if an I/O exception occurs
-			{
+			} catch(final IOException ioException) { //if an I/O exception occurs
 				throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
-			}
-			catch(final DataException dataException) //if the data wasn't correct
-			{
+			} catch(final DataException dataException) { //if the data wasn't correct
 				throw toResourceIOException(resourceURI, dataException); //translate the exception to a resource I/O exception and throw that
-			}
-			finally
-			{
-				if(passwordAuthentication != null) //if we used password authentication
-				{
+			} finally {
+				if(passwordAuthentication != null) { //if we used password authentication
 					fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
 				}
 			}
-		}
-		else
-		//if a depth of zero was requested
-		{
+		} else { //if a depth of zero was requested
 			return emptyList(); //return an empty list
 		}
 	}
 
 	/** {@inheritDoc} This implementation updates the resource description after its contents are stored.. */
 	@Override
-	protected OutputStream createResourceImpl(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException
-	{
+	protected OutputStream createResourceImpl(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException {
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
-		try
-		{
+		try {
 			final WebDAVResource webdavResource = new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource
 			final WebDAVResource contentWebDAVResource; //determine the WebDAV resource for accessing the content file
-			if(isCollectionURI(resourceURI)) //if this is a collection
-			{
+			if(isCollectionURI(resourceURI)) { //if this is a collection
 				webdavResource.mkCol(); //create the collection
 				final URI contentURI = resolve(resourceURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content
 				contentWebDAVResource = new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource for special collection content resource
-			}
-			else
-			//if this is not a collection
-			{
+			} else { //if this is not a collection
 				contentWebDAVResource = webdavResource; //use the normal WebDAV resource
 			}
 			final OutputStream outputStream = contentWebDAVResource.getOutputStream(); //get an output stream to the content WebDAV resource
 			return new DescriptionWriterOutputStreamDecorator(outputStream, resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription),
 					webdavResource, passwordAuthentication); //wrap the output stream in a decorator that will update the WebDAV properties after the contents are stored; this method will erase the provided password, if any, after it completes the resource property updates
-		}
-		catch(final IOException ioException) //if an I/O exception occurs
-		{
+		} catch(final IOException ioException) { //if an I/O exception occurs
 			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
 		}
 	}
@@ -657,42 +540,28 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	/** {@inheritDoc} */
 	@Override
 	protected URFResource createResourceImpl(final URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents)
-			throws ResourceIOException
-	{
+			throws ResourceIOException {
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
-		try
-		{
+		try {
 			final WebDAVResource webdavResource = new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource
 			final WebDAVResource contentWebDAVResource; //determine the WebDAV resource for accessing the content file
-			if(isCollectionURI(resourceURI)) //if this is a collection
-			{
+			if(isCollectionURI(resourceURI)) { //if this is a collection
 				webdavResource.mkCol(); //create the collection
 				final URI contentURI = resolve(resourceURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content
 				contentWebDAVResource = new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource for special collection content resource
-			}
-			else
-			//if this is not a collection
-			{
+			} else { //if this is not a collection
 				contentWebDAVResource = webdavResource; //use the normal WebDAV resource
 			}
-			if(resourceContents.length > 0 || !isCollectionURI(resourceURI)) //don't write empty content for a new collection
-			{
+			if(resourceContents.length > 0 || !isCollectionURI(resourceURI)) { //don't write empty content for a new collection
 				contentWebDAVResource.put(resourceContents); //create the content WebDAV resource with the given contents
 			}
 			return alterResourceProperties(resourceURI, DefaultURFResourceAlteration.createResourceAlteration(resourceDescription), webdavResource); //set the properties using the WebDAV resource object
-		}
-		catch(final IOException ioException) //if an I/O exception occurs
-		{
+		} catch(final IOException ioException) { //if an I/O exception occurs
 			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
-		}
-		catch(final DataException dataException) //if the data wasn't correct
-		{
+		} catch(final DataException dataException) { //if the data wasn't correct
 			throw toResourceIOException(resourceURI, dataException); //translate the exception to a resource I/O exception and throw that
-		}
-		finally
-		{
-			if(passwordAuthentication != null) //if we used password authentication
-			{
+		} finally {
+			if(passwordAuthentication != null) { //if we used password authentication
 				fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
 			}
 		}
@@ -700,26 +569,18 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 
 	/** {@inheritDoc} This implementation ignores requests to delete all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
 	@Override
-	protected void deleteResourceImpl(final URI resourceURI) throws ResourceIOException
-	{
+	protected void deleteResourceImpl(final URI resourceURI) throws ResourceIOException {
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
-		try
-		{
+		try {
 			final URI sourceResourceURI = getSourceResourceURI(resourceURI);
-			if(isSourceResourceVisible(sourceResourceURI)) //if this is a visible resource
-			{
+			if(isSourceResourceVisible(sourceResourceURI)) { //if this is a visible resource
 				final WebDAVResource webdavResource = new WebDAVResource(sourceResourceURI, getHTTPClient(), passwordAuthentication); //create a WebDAV resource
 				webdavResource.delete(); //delete the resource		
 			}
-		}
-		catch(final IOException ioException) //if an I/O exception occurs
-		{
+		} catch(final IOException ioException) { //if an I/O exception occurs
 			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
-		}
-		finally
-		{
-			if(passwordAuthentication != null) //if we used password authentication
-			{
+		} finally {
+			if(passwordAuthentication != null) { //if we used password authentication
 				fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
 			}
 		}
@@ -736,12 +597,10 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		protected Set<WebDAVPropertyName> getWebDAVPropertyNames(final List<WebDAVProperty> webdavProperties, final Set<URI> urfPropertyURIs)
 		{
 			final Set<WebDAVPropertyName> webdavPropertyNames = new HashSet<WebDAVPropertyName>(); //create a set to find out how many matching WebDAV properties there are
-			for(final WebDAVProperty webdavProperty : webdavProperties) //look at each of the WebDAV properties
-			{
+			for(final WebDAVProperty webdavProperty : webdavProperties) {	//look at each of the WebDAV properties
 				final WebDAVPropertyName webdavPropertyName = webdavProperty.getName(); //get the property namespace
 				final URI urfPropertyURI = getURFPropertyURI(webdavPropertyName); //get the URI of the corresponding URF property, if any
-				if(urfPropertyURI != null && urfPropertyURIs.contains(urfPropertyURI)) //if there is a valid URF property and the property is one of the URF properties in question
-				{
+				if(urfPropertyURI != null && urfPropertyURIs.contains(urfPropertyURI)) {	//if there is a valid URF property and the property is one of the URF properties in question
 					webdavPropertyNames.add(webdavPropertyName); //this WebDAV property matches
 				}
 			}
@@ -756,26 +615,17 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 *           of a property setting).
 	 */
 	@Override
-	protected URFResource alterResourcePropertiesImpl(final URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException
-	{
+	protected URFResource alterResourcePropertiesImpl(final URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException {
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
-		try
-		{
+		try {
 			final WebDAVResource webdavResource = new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource
 			return alterResourceProperties(resourceURI, resourceAlteration, webdavResource); //alter the properties of the resource
-		}
-		catch(final IOException ioException) //if an I/O exception occurs
-		{
+		} catch(final IOException ioException) { //if an I/O exception occurs
 			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
-		}
-		catch(final DataException dataException) //if the data wasn't correct
-		{
+		} catch(final DataException dataException) { //if the data wasn't correct
 			throw toResourceIOException(resourceURI, dataException); //translate the exception to a resource I/O exception and throw that
-		}
-		finally
-		{
-			if(passwordAuthentication != null) //if we used password authentication
-			{
+		} finally {
+			if(passwordAuthentication != null) { //if we used password authentication
 				fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
 			}
 		}
@@ -801,10 +651,8 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * @throws UnsupportedOperationException if a property is requested to be removed by value.
 	 */
 	protected URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration, final WebDAVResource webdavResource)
-			throws IOException, DataException
-	{
-		if(!resourceAlteration.getPropertyRemovals().isEmpty()) //if there are properties to be removed by value
-		{
+			throws IOException, DataException {
+		if(!resourceAlteration.getPropertyRemovals().isEmpty()) { //if there are properties to be removed by value
 			throw new UnsupportedOperationException("This implementation does not support removing properties by value.");
 		}
 		final Set<URI> livePropertyURIs = getLivePropertyURIs(); //get the set of live properties
@@ -816,57 +664,45 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		//		URFProperty collectionModifiedPropertyAddition = null; //we'll set this if we're updating the content modified time of a collection
 		//determine the URF properties that should be added for each URF property
 		final CollectionMap<URI, URFProperty, Set<URFProperty>> urfPropertyURIPropertyAdditions = new HashSetHashMap<URI, URFProperty>(); //create a map of sets of properties to add, keyed to their property URIs, so that we can find multiple property values for a single property if present
-		for(final URFProperty propertyAddition : resourceAlteration.getPropertyAdditions()) //look at all the property additions
-		{
+		for(final URFProperty propertyAddition : resourceAlteration.getPropertyAdditions()) { //look at all the property additions
 			final URI propertyURI = propertyAddition.getPropertyURI(); //get the URI of the URF property
-			if(livePropertyURIs.contains(propertyURI)) //don't add live properties
-			{
+			if(livePropertyURIs.contains(propertyURI)) { //don't add live properties
 				continue;
 			}
 			/*TODO del if not needed
-						if(isCollection && Content.MODIFIED_PROPERTY_URI.equals(propertyURI)) //if this is the content modified property for a collection, treat it separately later if we're using a separate collection content resource
-						{
+						if(isCollection && Content.MODIFIED_PROPERTY_URI.equals(propertyURI)) {	//if this is the content modified property for a collection, treat it separately later if we're using a separate collection content resource
 							contentURI = resolve(resourceURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content
 							final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
 							try
 							{
 								final WebDAVResource contentWebDAVResource = new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource for the special collection content resource
-								if(contentWebDAVResource.exists()) //if there is a special collection content resource
-								{
+								if(contentWebDAVResource.exists()) {	//if there is a special collection content resource
 									collectionModifiedPropertyAddition = propertyAddition; //we'll modify the content modified value on the separate content resource
 									continue; //don't update this property on this resource---use a separate resource later
 								}
 							}
 							finally
 							{
-								if(passwordAuthentication != null) //if we used password authentication
-								{
+								if(passwordAuthentication != null) {	//if we used password authentication
 									fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
 								}
 							}
 						}
 			*/
-			if(!resourceAlteration.getPropertyURIRemovals().contains(propertyURI)) //if a property addition was requested instead of a property setting (i.e. without first removing all the URI properties), we'll need to first gather the existing properties
-			{
-				if(resourceDescription == null) //if we don't yet have a description for the resource
-				{
+			if(!resourceAlteration.getPropertyURIRemovals().contains(propertyURI)) { //if a property addition was requested instead of a property setting (i.e. without first removing all the URI properties), we'll need to first gather the existing properties
+				if(resourceDescription == null) { //if we don't yet have a description for the resource
 					final URF urf = createURF(); //create a new URF data model
 					final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
-					try
-					{
+					try {
 						properties = webdavResource.propFind(); //get the properties of this resource
 						resourceDescription = createResourceDescription(urf, resourceURI, properties); //create a resource from this URI and property list
-					}
-					finally
-					{
-						if(passwordAuthentication != null) //if we used password authentication
-						{
+					} finally {
+						if(passwordAuthentication != null) { //if we used password authentication
 							fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
 						}
 					}
 				}
-				for(final URFProperty existingProperty : resourceDescription.getProperties(propertyURI)) //gather the existing properties; we'll have to combine them all into one WebDAV property
-				{
+				for(final URFProperty existingProperty : resourceDescription.getProperties(propertyURI)) { //gather the existing properties; we'll have to combine them all into one WebDAV property
 					urfPropertyURIPropertyAdditions.addItem(propertyURI, existingProperty); //indicate that this is another URF property to add for this property URI
 				}
 			}
@@ -877,29 +713,24 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		//at this point we have only properties to set and properties to remove
 		//convert the URF property additions to WebDAV properties
 		final Set<WebDAVProperty> setWebDAVProperties = new HashSet<WebDAVProperty>(); //keep track of which WebDAV properties to set based upon the URF properties to add
-		for(final Map.Entry<URI, Set<URFProperty>> urfPropertyURIPropertyAdditionEntries : urfPropertyURIPropertyAdditions.entrySet())
-		{
+		for(final Map.Entry<URI, Set<URFProperty>> urfPropertyURIPropertyAdditionEntries : urfPropertyURIPropertyAdditions.entrySet()) {
 			final Set<URFProperty> urfPropertyAdditions = urfPropertyURIPropertyAdditionEntries.getValue(); //get the URF properties to add
 			final WebDAVProperty webdavProperty = createWebDAVProperty(resourceURI, urfPropertyAdditions); //create a WebDAV property and value for these URF property
 			setWebDAVProperties.add(webdavProperty); //add this WebDAV property to the set of properties to set
 		}
 		//determine the WebDAV properties to remove
 		final Set<WebDAVPropertyName> removeWebDAVPropertyNames = new HashSet<WebDAVPropertyName>(); //keep track of which WebDAV property names to remove
-		for(final URI propertyURIRemoval : propertyURIRemovals) //look at all the property removals left after removing that which are irrelevant
-		{
+		for(final URI propertyURIRemoval : propertyURIRemovals) { //look at all the property removals left after removing that which are irrelevant
 			final WebDAVPropertyName webdavPropertyName = createWebDAVPropertyName(propertyURIRemoval); //create a WebDAV property name from the URF property URI
-			if(!livePropertyURIs.contains(propertyURIRemoval)) //if this is not a live property
-			{
+			if(!livePropertyURIs.contains(propertyURIRemoval)) { //if this is not a live property
 				removeWebDAVPropertyNames.add(webdavPropertyName); //add this WebDAV property name to the set of property names to remove
 			}
 		}
-		if(!removeWebDAVPropertyNames.isEmpty() || !setWebDAVProperties.isEmpty()) //if we have something to remove or set
-		{
+		if(!removeWebDAVPropertyNames.isEmpty() || !setWebDAVProperties.isEmpty()) { //if we have something to remove or set
 			webdavResource.propPatch(removeWebDAVPropertyNames, setWebDAVProperties); //remove and set WebDAV properties
 		}
 		/*TODO del if not needed
-				if(collectionModifiedPropertyAddition != null) //if we are setting the modified property of a collection with a separate content resource
-				{
+				if(collectionModifiedPropertyAddition != null) {	//if we are setting the modified property of a collection with a separate content resource
 					final WebDAVProperty modifiedWebdavProperty = createWebDAVProperty(resourceURI, urfPropertyAdditions); //create a WebDAV property and value for these URF property
 					
 					
@@ -913,8 +744,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 					}
 					finally
 					{
-						if(passwordAuthentication != null) //if we used password authentication
-						{
+						if(passwordAuthentication != null) {	//if we used password authentication
 							fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
 						}
 					}
@@ -930,26 +760,18 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 */
 	@Override
 	protected void copyResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
-			throws ResourceIOException
-	{
-		if(!isSourceResourceVisible(getSourceResourceURI(resourceURI))) //if this is not a visible resource
-		{
+			throws ResourceIOException {
+		if(!isSourceResourceVisible(getSourceResourceURI(resourceURI))) { //if this is not a visible resource
 			throw new ResourceNotFoundException(resourceURI);
 		}
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
-		try
-		{
+		try {
 			final WebDAVResource webdavResource = new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource
 			webdavResource.copy(getSourceResourceURI(destinationURI), overwrite); //copy the resource with an infinite depth, overwriting the destination resource only if requested
-		}
-		catch(final IOException ioException) //if an I/O exception occurs
-		{
+		} catch(final IOException ioException) { //if an I/O exception occurs
 			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
-		}
-		finally
-		{
-			if(passwordAuthentication != null) //if we used password authentication
-			{
+		} finally {
+			if(passwordAuthentication != null) { //if we used password authentication
 				fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
 			}
 		}
@@ -961,26 +783,18 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 */
 	@Override
 	protected void moveResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
-			throws ResourceIOException
-	{
-		if(!isSourceResourceVisible(getSourceResourceURI(resourceURI))) //if this is not a visible resource
-		{
+			throws ResourceIOException {
+		if(!isSourceResourceVisible(getSourceResourceURI(resourceURI))) { //if this is not a visible resource
 			throw new ResourceNotFoundException(resourceURI);
 		}
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
-		try
-		{
+		try {
 			final WebDAVResource webdavResource = new WebDAVResource(getSourceResourceURI(resourceURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource
 			webdavResource.move(getSourceResourceURI(destinationURI), overwrite); //move the resource with an infinite depth, overwriting the destination resource only if requested
-		}
-		catch(final IOException ioException) //if an I/O exception occurs
-		{
+		} catch(final IOException ioException) { //if an I/O exception occurs
 			throw toResourceIOException(resourceURI, ioException); //translate the exception to a resource I/O exception and throw that
-		}
-		finally
-		{
-			if(passwordAuthentication != null) //if we used password authentication
-			{
+		} finally {
+			if(passwordAuthentication != null) { //if we used password authentication
 				fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
 			}
 		}
@@ -997,66 +811,51 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * @throws DataException if the data was not what was expected.
 	 */
 	protected URFResource createResourceDescription(final URF urf, final URI resourceURI, final Map<WebDAVPropertyName, WebDAVProperty> properties)
-			throws IOException, DataException
-	{
+			throws IOException, DataException {
 		final URFResource resource = urf.locateResource(resourceURI); //create a resource to represent the WebDAV property list
 		final Set<String> ignoredWebDAVNamespaces = getIgnoredWebDAVNamespaces(); //get the map of ignored WebDAV namespaces
 		boolean isCollection = false; //we'll detect if this is a collection base upon the properties TODO update to check to make sure collections have collection URIs and vice-versa
 		final URFIO<URFResource> descriptionIO = getDescriptionIO(); //get I/O for the description
 
 		final WebDAVProperty webdavDisplayNameProperty = properties.get(DISPLAY_NAME_PROPERTY_NAME); //D:displayname
-		if(webdavDisplayNameProperty != null)
-		{
+		if(webdavDisplayNameProperty != null) {
 			final WebDAVPropertyValue propertyValue = webdavDisplayNameProperty.getValue(); //get the value of the property
-			if(propertyValue != null)
-			{
+			if(propertyValue != null) {
 				final String displayName = propertyValue.getText().trim(); //get the display name TODO just trim control characters (e.g. CR, LF), as we want users to be able to add whitespace
 				resource.setLabel(displayName); //set the label as the display name of the WebDAV resource; this will get overridden by any custom names later			
 			}
 		}
 		final WebDAVProperty webdavResourceTypeProperty = properties.get(RESOURCE_TYPE_PROPERTY_NAME); //D:resourcetype
-		if(webdavResourceTypeProperty != null)
-		{
+		if(webdavResourceTypeProperty != null) {
 			final WebDAVPropertyValue propertyValue = webdavResourceTypeProperty.getValue(); //get the value of the property
-			if(propertyValue instanceof WebDAVDocumentFragmentPropertyValue) //if the WebDAV property represents a document fragment
-			{
+			if(propertyValue instanceof WebDAVDocumentFragmentPropertyValue) { //if the WebDAV property represents a document fragment
 				final List<Element> valueElements = getChildElements(((WebDAVDocumentFragmentPropertyValue)propertyValue).getDocumentFragment()); //get the child elements of the document fragment
-				if(valueElements.size() == 1 && COLLECTION_TYPE.equals(createQualifiedName(valueElements.get(0)).getURI())) //if there is one child element with a reference URI of D:collection
-				{
+				if(valueElements.size() == 1 && COLLECTION_TYPE.equals(createQualifiedName(valueElements.get(0)).getURI())) { //if there is one child element with a reference URI of D:collection
 					isCollection = true; //show that this is a collection
 				}
 			}
 		}
 		final WebDAVProperty webdavContentLanguageProperty = properties.get(GET_CONTENT_LANGUAGE_PROPERTY_NAME); //D:getcontentlanguage
-		if(webdavContentLanguageProperty != null)
-		{
+		if(webdavContentLanguageProperty != null) {
 			final WebDAVPropertyValue propertyValue = webdavContentLanguageProperty.getValue(); //get the value of the property
-			if(propertyValue != null)
-			{
+			if(propertyValue != null) {
 				final Locale contentLanguage = createLocale(propertyValue.getText().trim()); //get the content language string and create a locale from it
 				setLanguage(resource, contentLanguage); //set the dc:language to the language of the WebDAV resource			
 			}
 		}
 
 		Map<WebDAVPropertyName, WebDAVProperty> contentProperties = properties; //if we have a special collection content resource, we'll use the properties from that
-		if(isCollection) //if this is a collection
-		{
-			if(isCollectionURI(resourceURI))
-			{
+		if(isCollection) { //if this is a collection
+			if(isCollectionURI(resourceURI)) {
 				final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
-				try
-				{
+				try {
 					final URI contentURI = resolve(resourceURI, COLLECTION_CONTENT_NAME); //determine the URI to use for content
 					final WebDAVResource contentWebDAVResource = new WebDAVResource(getSourceResourceURI(contentURI), getHTTPClient(), passwordAuthentication); //create a WebDAV resource for special collection content resource TODO cache these resources, maybe
-					if(contentWebDAVResource.exists()) //if there is a special collection content resource
-					{
+					if(contentWebDAVResource.exists()) { //if there is a special collection content resource
 						contentProperties = contentWebDAVResource.propFind(); //get the properties of the content file TODO only ask for the appropriate property if we can
 					}
-				}
-				finally
-				{
-					if(passwordAuthentication != null) //if we used password authentication
-					{
+				} finally {
+					if(passwordAuthentication != null) { //if we used password authentication
 						fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
 					}
 				}
@@ -1064,53 +863,39 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		}
 		final WebDAVProperty webdavContentLengthProperty = contentProperties.get(GET_CONTENT_LENGTH_PROPERTY_NAME); //get the D:getcontentlength from the content properties
 		long contentLength = isCollection ? 0 : -1; //determine the content length; default to a content length of zero for collections
-		if(webdavContentLengthProperty != null) //if we know a content length property
-		{
+		if(webdavContentLengthProperty != null) { //if we know a content length property
 			final WebDAVPropertyValue propertyValue = webdavContentLengthProperty.getValue(); //get the value of the property
-			if(propertyValue != null)
-			{
+			if(propertyValue != null) {
 				final String contentLengthString = propertyValue.getText().trim(); //get the content length string
-				try
-				{
+				try {
 					contentLength = Long.parseLong(contentLengthString); //parse the content length
-				}
-				catch(final NumberFormatException numberFormatException) //if the content length is not a valid value
-				{
+				} catch(final NumberFormatException numberFormatException) { //if the content length is not a valid value
 					throw new DataException("Illegal WebDAV " + GET_CONTENT_LENGTH_PROPERTY_NAME.getLocalName() + " value: " + contentLengthString, numberFormatException);
 				}
 			}
 		}
-		if(contentLength >= 0) //if we know a valid content length
-		{
+		if(contentLength >= 0) { //if we know a valid content length
 			setContentLength(resource, contentLength); //set the content length to whatever we determined
 		}
-		if(isCollection) //if this is a collection
-		{
+		if(isCollection) { //if this is a collection
 			resource.removePropertyValues(Content.TYPE_PROPERTY_URI); //remove any content type properties (Apache mod_dav adds a "httpd/unix-directory" pseudo MIME type for collections, for example)
 		}
 		final Map<URI, String> propertyURITextValues = new HashMap<URI, String>(); //create a map to store the text values to set---after we update any legacy forms
-		for(final WebDAVProperty webdavProperty : properties.values()) //now process the  set URF properties so that they will override the other properties
-		{
+		for(final WebDAVProperty webdavProperty : properties.values()) { //now process the  set URF properties so that they will override the other properties
 			final WebDAVPropertyName propertyName = webdavProperty.getName(); //get the property name
 			final String propertyNamespace = propertyName.getNamespace(); //get the string version of the property namespace
 			final WebDAVPropertyValue propertyValue = webdavProperty.getValue(); //get the value of the property
-			if(!ignoredWebDAVNamespaces.contains(propertyNamespace)) //if this is not a namespace to ignore
-			{
+			if(!ignoredWebDAVNamespaces.contains(propertyNamespace)) { //if this is not a namespace to ignore
 				//Log.trace("looking at non-WebDAV property", propertyName);
 				final URI urfPropertyURI;
-				try
-				{
+				try {
 					urfPropertyURI = getURFPropertyURI(propertyName); //get the URI of the corresponding URF property, if any
-				}
-				catch(final IllegalArgumentException illegalArgumentException) //if the property name wasn't encoded properly
-				{
+				} catch(final IllegalArgumentException illegalArgumentException) { //if the property name wasn't encoded properly
 					throw new DataException(illegalArgumentException);
 				}
 				//Log.trace("URF property URI", urfPropertyURI);
-				if(urfPropertyURI != null && propertyValue != null) //if there is a corresponding URF property and there is an actual value specified (URF does not define a null value) TODO fix null
-				{
-					if(propertyValue instanceof WebDAVLiteralPropertyValue) //if the value is a literal (we don't yet support complex WebDAV properties)
-					{
+				if(urfPropertyURI != null && propertyValue != null) { //if there is a corresponding URF property and there is an actual value specified (URF does not define a null value) TODO fix null
+					if(propertyValue instanceof WebDAVLiteralPropertyValue) { //if the value is a literal (we don't yet support complex WebDAV properties)
 						final String propertyTextValue = ((WebDAVLiteralPropertyValue)propertyValue).getText(); //get the text value of the property
 						propertyURITextValues.put(urfPropertyURI, propertyTextValue); //store the text value temporarily; we'll come back and update them later
 					}
@@ -1118,53 +903,38 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 			}
 		}
 		updateLegacyNamespacedProperties(propertyURITextValues); //update any legacy properties
-		for(final Map.Entry<URI, String> propertyURITextValueEntries : propertyURITextValues.entrySet()) //actually go through and set the values for the properties we retrieved
-		{
-			try
-			{
+		for(final Map.Entry<URI, String> propertyURITextValueEntries : propertyURITextValues.entrySet()) { //actually go through and set the values for the properties we retrieved
+			try {
 				decodePropertiesTextValue(resource, propertyURITextValueEntries.getKey(), propertyURITextValueEntries.getValue()); //decode the text value into the resource
-			}
-			catch(final IllegalArgumentException illegalArgumentException) //if the property text value wasn't encoded properly
-			{
+			} catch(final IllegalArgumentException illegalArgumentException) { //if the property text value wasn't encoded properly
 				throw new DataException(illegalArgumentException);
 			}
 		}
 		final WebDAVProperty webdavCreationDateProperty = properties.get(CREATION_DATE_PROPERTY_NAME); //D:creationdate (live property)
-		if(webdavCreationDateProperty != null)
-		{
+		if(webdavCreationDateProperty != null) {
 			final WebDAVPropertyValue propertyValue = webdavCreationDateProperty.getValue(); //get the value of the property
-			if(propertyValue != null)
-			{
+			if(propertyValue != null) {
 				final String creationDateString = propertyValue.getText();
-				try
-				{
+				try {
 					ISODateTime created = ISODateTime.valueOfTimestamp(creationDateString); //parse the creation date; the WebDAV D:creationdate property uses the RFC 3339 Internet timestamp ISO 8601 profile
 					setCreated(resource, created); //set the created date time
-				}
-				catch(final IllegalArgumentException illegalArgumentException) //if the creation date does not have the correct syntax
-				{
+				} catch(final IllegalArgumentException illegalArgumentException) { //if the creation date does not have the correct syntax
 					throw new DataException("Illegal WebDAV " + CREATION_DATE_PROPERTY_NAME.getLocalName() + " value: " + creationDateString, illegalArgumentException);
 				}
 			}
 		}
 		ISODateTime modified = getModified(resource); //try to determine the modified date and time; the stored modified time will always trump everything else
-		if(modified == null) //if no modified time is specified
-		{
+		if(modified == null) { //if no modified time is specified
 			final WebDAVProperty webdavLastModifiedProperty = contentProperties.get(GET_LAST_MODIFIED_PROPERTY_NAME); //D:getlastmodified
-			if(webdavLastModifiedProperty != null)
-			{
+			if(webdavLastModifiedProperty != null) {
 				final WebDAVPropertyValue propertyValue = webdavLastModifiedProperty.getValue(); //get the value of the property
-				if(propertyValue != null)
-				{
+				if(propertyValue != null) {
 					final String lastModifiedDateString = propertyValue.getText().trim(); //get the last modified date string
-					try
-					{
+					try {
 						final DateFormat httpDateFormat = new HTTPDateFormat(HTTPDateFormat.Style.RFC1123); //create an HTTP date formatter; the WebDAV D:getlastmodified property prefers the RFC 1123 style, as does HTTP
 						modified = new ISODateTime(httpDateFormat.parse(lastModifiedDateString)); //parse the last modified date
 						setModified(resource, modified); //set the modified date time
-					}
-					catch(final java.text.ParseException parseException) //if the last modified time is not the correct type
-					{
+					} catch(final java.text.ParseException parseException) { //if the last modified time is not the correct type
 						throw new DataException("Illegal WebDAV " + GET_LAST_MODIFIED_PROPERTY_NAME.getLocalName() + " value: " + lastModifiedDateString, parseException);
 					}
 				}
@@ -1191,43 +961,27 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * </dl>
 	 */
 	@Override
-	protected ResourceIOException toResourceIOException(final URI resourceURI, final Throwable throwable)
-	{
-		if(throwable instanceof HTTPForbiddenException)
-		{
+	protected ResourceIOException toResourceIOException(final URI resourceURI, final Throwable throwable) {
+		if(throwable instanceof HTTPForbiddenException) {
 			return new ResourceForbiddenException(resourceURI, throwable);
-		}
-		else if(throwable instanceof HTTPNotFoundException)
-		{
+		} else if(throwable instanceof HTTPNotFoundException) {
 			return new ResourceNotFoundException(resourceURI, throwable);
-		}
-		else if(throwable instanceof HTTPRedirectException)
-		{
+		} else if(throwable instanceof HTTPRedirectException) {
 			return new ResourceNotFoundException(resourceURI, throwable);
-		}
-		else if(throwable instanceof HTTPPreconditionFailedException)
-		{
+		} else if(throwable instanceof HTTPPreconditionFailedException) {
 			return new ResourceStateException(resourceURI, throwable);
-		}
-		else
-		//if this is not one of our specially-handled exceptions
-		{
+		} else { //if this is not one of our specially-handled exceptions
 			return super.toResourceIOException(resourceURI, throwable); //convert the exception normally
 		}
 	}
 
 	/** {@inheritDoc} This version calls clears and releases the password, if any. */
 	@Override
-	public synchronized void dispose()
-	{
-		try
-		{
+	public synchronized void dispose() {
+		try {
 			super.dispose();
-		}
-		finally
-		{
-			if(password != null) //if we have a password
-			{
+		} finally {
+			if(password != null) { //if we have a password
 				fill(password, (char)0); //erase the password from memory as a security measure
 				password = null; //release the password
 			}
@@ -1239,14 +993,13 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 	 * object, if any, will be erased after updating the properties of the WebDAV resource.
 	 * @author Garret Wilson
 	 */
-	protected class DescriptionWriterOutputStreamDecorator extends OutputStreamDecorator<OutputStream>
-	{
+	protected class DescriptionWriterOutputStreamDecorator extends OutputStreamDecorator<OutputStream> {
+
 		/** The URI of the resource. */
 		private final URI resourceURI;
 
 		/** @protected The URI of the resource. */
-		public URI getResourceURI()
-		{
+		public URI getResourceURI() {
 			return resourceURI;
 		}
 
@@ -1254,8 +1007,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		private final URFResourceAlteration resourceAlteration;
 
 		/** @return The specification of the alterations to be performed on the resource. */
-		protected URFResourceAlteration getResourceAlteration()
-		{
+		protected URFResourceAlteration getResourceAlteration() {
 			return resourceAlteration;
 		}
 
@@ -1263,8 +1015,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		private final WebDAVResource webdavResource;
 
 		/** @return The WebDAV resource for updating the WebDAV properties. */
-		protected WebDAVResource getWebDAVResource()
-		{
+		protected WebDAVResource getWebDAVResource() {
 			return webdavResource;
 		}
 
@@ -1272,8 +1023,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		private final PasswordAuthentication passwordAuthentication;
 
 		/** @return The password authentication being used, or <code>null</code> if no password authentication is given. */
-		protected PasswordAuthentication getPasswordAuthentication()
-		{
+		protected PasswordAuthentication getPasswordAuthentication() {
 			return passwordAuthentication;
 		}
 
@@ -1287,8 +1037,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		 * @throws NullPointerException if the given output stream, resourceURI, resource alteration, and/or WebDAV resource is <code>null</code>.
 		 */
 		public DescriptionWriterOutputStreamDecorator(final OutputStream outputStream, final URI resourceURI, final URFResourceAlteration resourceAlteration,
-				final WebDAVResource webdavResource, final PasswordAuthentication passwordAuthentication)
-		{
+				final WebDAVResource webdavResource, final PasswordAuthentication passwordAuthentication) {
 			super(outputStream); //construct the parent class
 			this.resourceURI = checkInstance(resourceURI, "Resource URI cannot be null.");
 			this.resourceAlteration = checkInstance(resourceAlteration, "Resource alteration cannot be null.");
@@ -1300,25 +1049,16 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository
 		 * Called after the stream is successfully closed. This version updates the WebDAV properties to reflect the given resource description.
 		 * @throws ResourceIOException if an I/O error occurs.
 		 */
-		protected void afterClose() throws ResourceIOException
-		{
-			try
-			{
+		protected void afterClose() throws ResourceIOException {
+			try {
 				alterResourceProperties(getResourceURI(), getResourceAlteration(), getWebDAVResource()); //alter the properties using the WebDAV resource object
-			}
-			catch(final IOException ioException) //if an I/O exception occurs
-			{
+			} catch(final IOException ioException) { //if an I/O exception occurs
 				throw toResourceIOException(getResourceURI(), ioException); //translate the exception to a resource I/O exception and throw that
-			}
-			catch(final DataException dataException) //if the data wasn't correct
-			{
+			} catch(final DataException dataException) { //if the data wasn't correct
 				throw toResourceIOException(getResourceURI(), dataException); //translate the exception to a resource I/O exception and throw that
-			}
-			finally
-			{
+			} finally {
 				final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //see if we were given password authentication information
-				if(passwordAuthentication != null) //if we used password authentication
-				{
+				if(passwordAuthentication != null) { //if we used password authentication
 					fill(passwordAuthentication.getPassword(), (char)0); //always erase the password from memory as a security measure when we're done with the authentication object
 				}
 			}
