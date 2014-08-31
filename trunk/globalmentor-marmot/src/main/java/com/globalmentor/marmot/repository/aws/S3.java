@@ -21,14 +21,15 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 import static com.globalmentor.java.Objects.*;
-import static com.globalmentor.io.Charsets.*;
 
 import com.globalmentor.model.NameValuePair;
 import com.globalmentor.net.URIPath;
 import com.globalmentor.net.http.HTTPRequest;
+
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.net.http.HTTP.*;
 import static com.globalmentor.security.MessageDigests.*;
+import static java.nio.charset.StandardCharsets.*;
 
 /**
  * Constants and utilities for Amazon Simple Storage Service (S3).
@@ -81,7 +82,7 @@ public class S3 {
 		stringBuilder.append(ROOT_PATH).append(checkInstance(bucket, "Bucket cannot be null.")).append(PATH_SEPARATOR).append(path.checkRelative());
 		final String signature;
 		try {
-			signature = new String(digest(MessageDigest.getInstance(SHA_ALGORITHM), UTF_8_CHARSET, stringBuilder.toString()), UTF_8_CHARSET);
+			signature = new String(digest(MessageDigest.getInstance(SHA_ALGORITHM), UTF_8, stringBuilder.toString()), UTF_8);
 		} catch(final NoSuchAlgorithmException noSuchAlgorithmException) {
 			throw new AssertionError("SHA should always be supported.");
 		}

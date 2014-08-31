@@ -16,11 +16,11 @@
 
 package com.globalmentor.marmot.repository;
 
-import static com.globalmentor.io.Charsets.*;
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.Conditions.*;
 import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
+import static java.nio.charset.StandardCharsets.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.urframework.content.Content.*;
@@ -220,8 +220,8 @@ public abstract class AbstractRepositoryTest extends AbstractTest {
 	@Test
 	public void testChangeResourceText() throws IOException {
 		final URI resourceURI = repository.getRootURI().resolve("test.bin"); //determine a test resource URI
-		testResourceContentBytes(resourceURI, false, "This is a test.".getBytes(UTF_8_CHARSET), "This is a test.\nThis is a second line.".getBytes(UTF_8_CHARSET),
-				"This really is a test.\nThis is a second line.".getBytes(UTF_8_CHARSET), "This is just a test.".getBytes(UTF_8_CHARSET)); //try three different sizes of text content
+		testResourceContentBytes(resourceURI, false, "This is a test.".getBytes(UTF_8), "This is a test.\nThis is a second line.".getBytes(UTF_8),
+				"This really is a test.\nThis is a second line.".getBytes(UTF_8), "This is just a test.".getBytes(UTF_8)); //try three different sizes of text content
 		repository.deleteResource(resourceURI); //delete the resource we created
 		assertFalse("Deleted resource still exists.", repository.resourceExists(resourceURI));
 	}

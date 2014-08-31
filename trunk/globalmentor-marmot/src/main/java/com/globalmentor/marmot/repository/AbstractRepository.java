@@ -27,6 +27,7 @@ import org.urframework.content.Content;
 import org.urframework.io.URFIO;
 import org.urframework.io.URFResourceTURFIO;
 
+import static java.nio.charset.StandardCharsets.*;
 import static java.util.Arrays.*;
 import static java.util.Collections.*;
 import static org.urframework.URF.*;
@@ -44,7 +45,6 @@ import com.globalmentor.model.*;
 import com.globalmentor.net.*;
 
 import static com.globalmentor.collections.Sets.*;
-import static com.globalmentor.io.Charsets.*;
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.Characters.*;
@@ -1871,7 +1871,7 @@ public abstract class AbstractRepository implements Repository {
 				return new NameValuePair<URI, String>(propertyURI, textValue); //abandon use of the description---just return the string value itself 
 			}
 		}
-		return new NameValuePair<URI, String>(propertyURI, Strings.write(resourceURI, propertyDescription, getDescriptionIO(), UTF_8_CHARSET)); //write the description to a string, using the resource URI as the base URI
+		return new NameValuePair<URI, String>(propertyURI, Strings.write(resourceURI, propertyDescription, getDescriptionIO(), UTF_8)); //write the description to a string, using the resource URI as the base URI
 	}
 
 	/**
@@ -1898,7 +1898,7 @@ public abstract class AbstractRepository implements Repository {
 		if(propertyTextValue.startsWith(TURF.SIGNATURE)) { //if this property value is stored in TURF
 			try {
 				//read a description of the resource from the property, recognizing the resource serialized with URI "" as indicating the given resource
-				final URFResource propertyDescription = getDescriptionIO().read(createURF(), new ByteArrayInputStream(propertyTextValue.getBytes(UTF_8_CHARSET)),
+				final URFResource propertyDescription = getDescriptionIO().read(createURF(), new ByteArrayInputStream(propertyTextValue.getBytes(UTF_8)),
 						resource.getURI());
 				resource.removePropertyValues(propertyURI); //if we were successful (that is, the property text value had no errors), remove any values already present for this value
 				long addedPropertyCount = 0;
