@@ -65,13 +65,13 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 
 	/** The URI representing the XPackage file:folder type. */
 	//TODO check; use static imports 
-	//TODO move if needed	protected final static URI FILE_FOLDER_TYPE_URI=RDFUtilities.createReferenceURI(FileOntologyConstants.FILE_ONTOLOGY_NAMESPACE_URI, FileOntologyConstants.FOLDER_TYPE_NAME);	//TODO promote to parent file-based class		
+	//TODO move if needed	protected static final URI FILE_FOLDER_TYPE_URI=RDFUtilities.createReferenceURI(FileOntologyConstants.FILE_ONTOLOGY_NAMESPACE_URI, FileOntologyConstants.FOLDER_TYPE_NAME);	//TODO promote to parent file-based class		
 
 	/** The extension used for directories to hold resource children. */
-	//TODO move if needed	protected final static String DIRECTORY_EXTENSION="@";	//TODO promote to parent file-based class
+	//TODO move if needed	protected static final String DIRECTORY_EXTENSION="@";	//TODO promote to parent file-based class
 
 	/** The name component of the Marmot description of a file resource. */
-	public final static String MARMOT_DESCRIPTION_NAME = "marmot-description";
+	public static final String MARMOT_DESCRIPTION_NAME = "marmot-description";
 
 	/**
 	 * The file filter for listing files in a directory. The file filter returns those resources for which {@link #isSourceResourceVisible(URI)} returns

@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 public class Subversion {
 
 	/** The character used for separating the namespace ID from the rest of a Subversion property name. */
-	public final static char PROPERTY_NAMESPACE_SEPARATOR = ':';
+	public static final char PROPERTY_NAMESPACE_SEPARATOR = ':';
 
 	/**
 	 * The pattern describing a valid Subversion property name as per <code>svn_prop_name_is_valid()</code>: (alpha/colon/underscore) character followed by any

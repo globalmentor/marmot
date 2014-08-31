@@ -40,7 +40,7 @@ import org.w3c.dom.*;
 public class AbstractXHTMLResourceKit extends AbstractResourceKit {
 
 	/** The I/O implementation that reads and writes XHTML resources. */
-	private final static XMLIO xhtmlIO;
+	private static final XMLIO xhtmlIO;
 
 	/** @return The I/O implementation that reads and writes XHTML resources. */
 	public static XMLIO getXHTMLIO() {

@@ -42,7 +42,7 @@ import static com.globalmentor.net.URIs.*;
 public class ResourceLocator {
 
 	/** Shared dummy content type indicating that no content type could be determined. */
-	//TODO del if not needed	private final static ContentType NO_CONTENT_TYPE = ContentType.getInstance("null", "null");
+	//TODO del if not needed	private static final ContentType NO_CONTENT_TYPE = ContentType.getInstance("null", "null");
 
 	/** The repository in which the resource exists. */
 	private final Repository repository;

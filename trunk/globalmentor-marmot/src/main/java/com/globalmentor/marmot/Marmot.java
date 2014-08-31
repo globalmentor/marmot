@@ -76,23 +76,23 @@ public class Marmot {
 
 	//predefined users
 	/** The principal wildcard character, '*'. */
-	//TODO del	public final static char WILDCARD_PRINCIPAL_CHAR='*';
+	//TODO del	public static final char WILDCARD_PRINCIPAL_CHAR='*';
 	/** The predefined "all principals at localhost" <code>mailto</code> URI. */
-	//TODO del	public final static URI ALL_LOCALHOST_PRINCIPALS_URI=createMailtoURI(String.valueOf(WILDCARD_PRINCIPAL_CHAR), LOCALHOST_DOMAIN);
+	//TODO del	public static final URI ALL_LOCALHOST_PRINCIPALS_URI=createMailtoURI(String.valueOf(WILDCARD_PRINCIPAL_CHAR), LOCALHOST_DOMAIN);
 	/** The predefined "all principals" <code>mailto</code> URI. */
-	//TODO del	public final static URI ALL_PRINCIPALS_URI=createMailtoURI(String.valueOf(WILDCARD_PRINCIPAL_CHAR), String.valueOf(WILDCARD_PRINCIPAL_CHAR));
+	//TODO del	public static final URI ALL_PRINCIPALS_URI=createMailtoURI(String.valueOf(WILDCARD_PRINCIPAL_CHAR), String.valueOf(WILDCARD_PRINCIPAL_CHAR));
 
 	/** An ID token to use for identifying the Marmot framework. */
-	public final static String ID = "marmot";
+	public static final String ID = "marmot";
 
 	/**
 	 * The URI to the Marmot namespace.
 	 */
-	public final static URI NAMESPACE_URI = URI.create("http://globalmentor.com/marmot/");
+	public static final URI NAMESPACE_URI = URI.create("http://globalmentor.com/marmot/");
 
 	//Marmot properties
 	/** Provides an annotation of the resource. */
-	public final static URI ANNOTATION_PROPERTY_URI = createResourceURI(NAMESPACE_URI, "annotation");
+	public static final URI ANNOTATION_PROPERTY_URI = createResourceURI(NAMESPACE_URI, "annotation");
 
 	/**
 	 * Returns the annotations of the resource.

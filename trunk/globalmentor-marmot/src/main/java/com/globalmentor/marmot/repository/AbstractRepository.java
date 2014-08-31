@@ -87,19 +87,19 @@ import static com.globalmentor.net.URIs.*;
 public abstract class AbstractRepository implements Repository {
 
 	/** The resource factory for resources in the Marmot namespace. */
-	protected final static URFResourceFactory MARMOT_RESOURCE_FACTORY = new JavaURFResourceFactory(Marmot.class.getPackage());
+	protected static final URFResourceFactory MARMOT_RESOURCE_FACTORY = new JavaURFResourceFactory(Marmot.class.getPackage());
 	/** The resource factory for resources in the Marmot security namespace. */
-	protected final static URFResourceFactory MARMOT_SECURITY_RESOURCE_FACTORY = new JavaURFResourceFactory(MarmotSecurity.class.getPackage());
+	protected static final URFResourceFactory MARMOT_SECURITY_RESOURCE_FACTORY = new JavaURFResourceFactory(MarmotSecurity.class.getPackage());
 
 	/** The set of URIs that are considered live by default. */
-	public final static Set<URI> DEFAULT_LIVE_PROPERTY_URIS = immutableSetOf(Content.ACCESSED_PROPERTY_URI, Content.LENGTH_PROPERTY_URI);
+	public static final Set<URI> DEFAULT_LIVE_PROPERTY_URIS = immutableSetOf(Content.ACCESSED_PROPERTY_URI, Content.LENGTH_PROPERTY_URI);
 
 	/**
 	 * The name of a resource used to store the content of a collection. Normally the only properties stored with this special resource are the
 	 * {@link Content#LENGTH_PROPERTY_URI} and {@link Content#MODIFIED_PROPERTY_URI} properties; all other properties are stored with the logical collection
 	 * resource the contents of which this hidden resource contains.
 	 */
-	public final static String COLLECTION_CONTENT_NAME = "@"; //TODO add checks to prevent this resource from being accessed directly
+	public static final String COLLECTION_CONTENT_NAME = "@"; //TODO add checks to prevent this resource from being accessed directly
 
 	/** The set of URIs that are considered live. */
 	private Set<URI> livePropertyURIs = DEFAULT_LIVE_PROPERTY_URIS;

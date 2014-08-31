@@ -58,7 +58,7 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 	//TODO the current technique of erasing the password after each call may become obsolete when the HTTP client supports persistent connections
 
 	/** The extension used for directories to hold resource children. */
-	//TODO move if needed	protected final static String DIRECTORY_EXTENSION="@";	//TODO promote to parent file-based class
+	//TODO move if needed	protected static final String DIRECTORY_EXTENSION="@";	//TODO promote to parent file-based class
 
 	/**
 	 * Repository URI constructor using the default HTTP client. The given repository URI should end in a slash.

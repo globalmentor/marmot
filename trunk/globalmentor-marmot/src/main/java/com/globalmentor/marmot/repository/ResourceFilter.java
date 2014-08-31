@@ -36,13 +36,13 @@ public interface ResourceFilter extends Filter<URFResource> {
 	 * The resource filter that only passes collection resource URIs.
 	 * @see URIs#isCollectionURI(URI)
 	 */
-	public final static ResourceFilter COLLECTION_RESOURCE_URI_FILTER = new DefaultResourceURIFilter(true, false);
+	public static final ResourceFilter COLLECTION_RESOURCE_URI_FILTER = new DefaultResourceURIFilter(true, false);
 
 	/**
 	 * The resource filter that only passes non-collection resource URIs.
 	 * @see URIs#isCollectionURI(URI)
 	 */
-	public final static ResourceFilter NON_COLLECTION_RESOURCE_URI_FILTER = new DefaultResourceURIFilter(false, true);
+	public static final ResourceFilter NON_COLLECTION_RESOURCE_URI_FILTER = new DefaultResourceURIFilter(false, true);
 
 	/**
 	 * Determines whether a given resource should pass through the filter or be filtered out based upon its URI.

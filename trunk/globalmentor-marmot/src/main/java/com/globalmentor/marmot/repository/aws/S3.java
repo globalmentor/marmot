@@ -37,10 +37,10 @@ import static com.globalmentor.security.MessageDigests.*;
 public class S3 {
 
 	/** The prefix for Amazon-specific HTTP headers. */
-	public final static String AMAZON_HTTP_HEADER_PREFIX = "X-Amz-";
+	public static final String AMAZON_HTTP_HEADER_PREFIX = "X-Amz-";
 
 	/** The identifier for AWS authorization. */
-	public final static String AWS_AUTHORIZATION = "AWS";
+	public static final String AWS_AUTHORIZATION = "AWS";
 
 	/**
 	 * Signs a request to be used with Amazon Web Services.

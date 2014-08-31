@@ -44,16 +44,16 @@ import com.globalmentor.net.http.*;
 public class MarmotMirror extends AbstractApplication {
 
 	/** The application URI. */
-	public final static URI MARMOT_MIRROR_URI = URI.create("http://globalmentor.com/software/marmotmirror");
+	public static final URI MARMOT_MIRROR_URI = URI.create("http://globalmentor.com/software/marmotmirror");
 
 	/** The application title. */
-	public final static String TITLE = "Marmot Mirror" + TRADE_MARK_SIGN_CHAR;
+	public static final String TITLE = "Marmot Mirror" + TRADE_MARK_SIGN_CHAR;
 
 	/** The application copyright. */
-	public final static String COPYRIGHT = "Copyright " + COPYRIGHT_SIGN + " 2006-2013 GlobalMentor, Inc. All Rights Reserved."; //TODO i18n
+	public static final String COPYRIGHT = "Copyright " + COPYRIGHT_SIGN + " 2006-2013 GlobalMentor, Inc. All Rights Reserved."; //TODO i18n
 
 	/** The version of the application. */
-	public final static String VERSION = "1.6"; //TODO find a way to have Maven indicate the Subversion revision when building
+	public static final String VERSION = "1.6"; //TODO find a way to have Maven indicate the Subversion revision when building
 
 	/** Application command-line parameters. */
 	public enum Parameter implements Identifier {

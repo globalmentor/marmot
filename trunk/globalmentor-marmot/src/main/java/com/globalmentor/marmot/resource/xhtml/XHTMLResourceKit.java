@@ -49,17 +49,17 @@ import org.w3c.dom.*;
 public class XHTMLResourceKit extends AbstractXHTMLResourceKit {
 
 	/** The default simple name (i.e. the name without an extension) of an XHTML template. */
-	public final static String DEFAULT_TEMPLATE_SIMPLE_NAME = "_";
+	public static final String DEFAULT_TEMPLATE_SIMPLE_NAME = "_";
 	/** The extension for XHTML template resource names. */
-	public final static String XHTML_TEMPLATE_NAME_EXTENSION = "_xhtml"; //TODO create content type for _xhtml file
+	public static final String XHTML_TEMPLATE_NAME_EXTENSION = "_xhtml"; //TODO create content type for _xhtml file
 	/** The default name an XHTML template. */
-	public final static String DEFAULT_TEMPLATE_NAME = addExtension(DEFAULT_TEMPLATE_SIMPLE_NAME, XHTML_TEMPLATE_NAME_EXTENSION);
+	public static final String DEFAULT_TEMPLATE_NAME = addExtension(DEFAULT_TEMPLATE_SIMPLE_NAME, XHTML_TEMPLATE_NAME_EXTENSION);
 
 	/** The URI of the Marmot XHTML namespace. */
-	public final static URI MARMOT_XHTML_NAMESPACE_URI = URI.create("http://globalmentor.com/marmot/resource/xhtml/");
+	public static final URI MARMOT_XHTML_NAMESPACE_URI = URI.create("http://globalmentor.com/marmot/resource/xhtml/");
 	//properties
 	/** Specifies a template of resource by its URI, which may be a path URI relative to the repository. */
-	public final static URI TEMPLATE_URI_PROPERTY_URI = createResourceURI(MARMOT_XHTML_NAMESPACE_URI, "templateURI");
+	public static final URI TEMPLATE_URI_PROPERTY_URI = createResourceURI(MARMOT_XHTML_NAMESPACE_URI, "templateURI");
 
 	/** Default constructor. */
 	public XHTMLResourceKit() {

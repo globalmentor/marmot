@@ -35,10 +35,10 @@ public class MarmotSubversion {
 
 	/** The obsolete prefix for Marmot properties: <code>marmot:</code>. */
 	@Deprecated
-	public final static String OBSOLETE_PROPERTY_PREFIX = Marmot.ID + PROPERTY_NAMESPACE_SEPARATOR;
+	public static final String OBSOLETE_PROPERTY_PREFIX = Marmot.ID + PROPERTY_NAMESPACE_SEPARATOR;
 
 	/** The prefix for Marmot properties: <code>marmot-</code>. */
-	public final static String PROPERTY_PREFIX = Marmot.ID + HYPHEN_MINUS_CHAR;
+	public static final String PROPERTY_PREFIX = Marmot.ID + HYPHEN_MINUS_CHAR;
 
 	/**
 	 * Determines the a property name to represent an URF property by encoded the URF property URI to be a simple local name. The name is created by

@@ -48,7 +48,7 @@ import static com.globalmentor.net.http.webdav.SubversionWebDAV.*;
 public class SubversionWebDAVRepository extends WebDAVRepository {
 
 	/** The Subversion custom property namespace converted to a string for quick string comparisons. */
-	protected final static String SUBVERSION_CUSTOM_NAMESPACE = SUBVERSION_CUSTOM_NAMESPACE_URI.toString();
+	protected static final String SUBVERSION_CUSTOM_NAMESPACE = SUBVERSION_CUSTOM_NAMESPACE_URI.toString();
 
 	/**
 	 * Default constructor with no root URI defined. The root URI must be defined before the repository is opened.

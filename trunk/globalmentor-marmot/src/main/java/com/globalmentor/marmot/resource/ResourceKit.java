@@ -47,13 +47,13 @@ public interface ResourceKit {
 	}
 
 	/** An empty array of extensions. */
-	//TODO del if not needed	public final static String[] NO_EXTENSIONS=new String[] {};
+	//TODO del if not needed	public static final String[] NO_EXTENSIONS=new String[] {};
 
 	/** An empty array of content types. */
-	public final static ContentType[] NO_CONTENT_TYPES = new ContentType[] {};
+	public static final ContentType[] NO_CONTENT_TYPES = new ContentType[] {};
 
 	/** An empty array of resource type URIs. */
-	public final static URI[] NO_RESOURCE_TYPES = new URI[] {};
+	public static final URI[] NO_RESOURCE_TYPES = new URI[] {};
 
 	/**
 	 * Returns the default name extension used by the resource kit.

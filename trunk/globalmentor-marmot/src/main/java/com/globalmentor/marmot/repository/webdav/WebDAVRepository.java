@@ -85,15 +85,15 @@ import org.w3c.dom.*;
 public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 
 	/** The URI to the Marmot WebDAV repository namespace. */
-	public final static URI MARMOT_WEBDAV_REPOSITORY_NAMESPACE_URI = Marmot.NAMESPACE_URI.resolve("repository/webdav/");
+	public static final URI MARMOT_WEBDAV_REPOSITORY_NAMESPACE_URI = Marmot.NAMESPACE_URI.resolve("repository/webdav/");
 
 	//TODO the current technique of erasing the password after each call may become obsolete when the HTTP client supports persistent connections
 
 	/** The extension used for directories to hold resource children. */
-	//TODO move if needed	protected final static String DIRECTORY_EXTENSION="@";	//TODO promote to parent file-based class
+	//TODO move if needed	protected static final String DIRECTORY_EXTENSION="@";	//TODO promote to parent file-based class
 
 	/** The name of the WebDAV property that holds the description of a resource. */
-	//TODO del if not needed	private final static WebDAVPropertyName RESOURCE_DESCRIPTION_PROPERTY_NAME=new WebDAVPropertyName(MARMOT_NAMESPACE_URI.toString(), "description");
+	//TODO del if not needed	private static final WebDAVPropertyName RESOURCE_DESCRIPTION_PROPERTY_NAME=new WebDAVPropertyName(MARMOT_NAMESPACE_URI.toString(), "description");
 
 	/**
 	 * Determines the WebDAV property that holds the description of a resource. This version returns {@value #RESOURCE_DESCRIPTION_PROPERTY_NAME}.
@@ -196,7 +196,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 	}
 
 	/** A token local name for WebDAV for use with URF properties that have no local name. */
-	private final static String URF_TOKEN_LOCAL_NAME = "urfTokenLocalName";
+	private static final String URF_TOKEN_LOCAL_NAME = "urfTokenLocalName";
 
 	/**
 	 * Determines the WebDAV property name to represent an URF property.
