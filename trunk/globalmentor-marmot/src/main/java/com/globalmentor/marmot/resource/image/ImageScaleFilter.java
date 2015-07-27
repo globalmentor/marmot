@@ -36,6 +36,7 @@ import static com.globalmentor.io.Files.*;
 import com.globalmentor.awt.geom.*;
 import com.globalmentor.log.Log;
 import com.globalmentor.marmot.resource.ResourceFileContentFilter;
+import com.globalmentor.marmot.resource.AbstractResourceKit;
 import com.globalmentor.marmot.resource.ResourceContentFilter;
 import com.globalmentor.net.ResourceIOException;
 
@@ -208,7 +209,7 @@ public class ImageScaleFilter implements ResourceContentFilter //TODO remove dep
 					}
 			*/
 		} catch(final IOException ioException) {
-			throw ResourceIOException.toResourceIOException(ioException, resource.getURI());
+			throw AbstractResourceKit.toResourceIOException(ioException, resource.getURI());
 		}
 		return resource;
 	}

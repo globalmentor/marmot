@@ -216,7 +216,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit {
 		try {
 			getXHTMLIO().write(outputStream, resourceURI, document); //write the default document				
 		} catch(final IOException ioException) { //if an I/O exception occurs
-			throw ResourceIOException.toResourceIOException(ioException, resourceURI); //send a resource version of the exception
+			throw toResourceIOException(ioException, resourceURI); //send a resource version of the exception
 		}
 	}
 

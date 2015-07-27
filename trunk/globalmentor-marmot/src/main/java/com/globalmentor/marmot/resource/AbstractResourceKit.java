@@ -38,7 +38,13 @@ import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.PermissionType;
 import com.globalmentor.net.ContentType;
+import com.globalmentor.net.http.HTTPForbiddenException;
+import com.globalmentor.net.http.HTTPNotFoundException;
+import com.globalmentor.net.http.HTTPPreconditionFailedException;
+import com.globalmentor.net.ResourceForbiddenException;
 import com.globalmentor.net.ResourceIOException;
+import com.globalmentor.net.ResourceNotFoundException;
+import com.globalmentor.net.ResourceStateException;
 import com.globalmentor.net.URIPath;
 
 /**
@@ -323,7 +329,7 @@ public abstract class AbstractResourceKit implements ResourceKit {
 				}
 				return repository.getResourceDescription(resourceURI); //return the resource description
 			} catch(final IOException ioException) { //if an I/O exception occurs
-				throw ResourceIOException.toResourceIOException(ioException, resourceURI); //send a resource version of the exception
+				throw toResourceIOException(ioException, resourceURI); //send a resource version of the exception
 			}
 		} else { //if there is no default content for the resource
 			return repository.createResource(resourceURI, resourceDescription, NO_BYTES); //create a new resource with no content
@@ -342,7 +348,7 @@ public abstract class AbstractResourceKit implements ResourceKit {
 				outputStream.close(); //always close the output stream
 			}
 		} catch(final IOException ioException) { //if an I/O exception occurs
-			throw ResourceIOException.toResourceIOException(ioException, resourceURI); //send a resource version of the exception
+			throw toResourceIOException(ioException, resourceURI); //send a resource version of the exception
 		}
 		return repository.getResourceDescription(resourceURI); //return the resource description
 	}
@@ -435,5 +441,45 @@ public abstract class AbstractResourceKit implements ResourceKit {
 			} while(checkAncestors && collectionURI != null); //keep going up the hierarchy until we run out of parent collections
 		}
 		return null; //indicate that we could find no template URI
+	}
+
+	/**
+	 * Translates a given error into a resource I/O exception. If the exception is already a {@link ResourceIOException} it is returned unmodified. This version
+	 * makes the following translations:
+	 * <dl>
+	 * <dt>{@link FileNotFoundException}</dt>
+	 * <dd>{@link ResourceNotFoundException}</dd>
+	 * <dt>{@link HTTPForbiddenException}</dt>
+	 * <dd>{@link ResourceForbiddenException}</dd>
+	 * <dt>{@link HTTPNotFoundException}</dt>
+	 * <dd>{@link ResourceNotFoundException}</dd>
+	 * <dt>{@link HTTPPreconditionFailedException}</dt>
+	 * <dd>{@link ResourceStateException}</dd>
+	 * </dl>
+	 * @param throwable The error which should be translated to a resource I/O exception.
+	 * @param resourceURI The URI of the resource to which the exception is related.
+	 * @return A resource I/O exception based upon the given throwable.
+	 */
+	@Deprecated	//TODO probably move to a method that each type of resource kit can override as needed 
+	public static ResourceIOException toResourceIOException(final Throwable throwable, final URI resourceURI) {
+		if(throwable instanceof ResourceIOException) { //resource I/O exception
+			return (ResourceIOException)throwable; //cast the throwable to a resource I/O exception
+		}
+		//file exceptions
+		else if(throwable instanceof FileNotFoundException) {
+			return new ResourceNotFoundException(resourceURI, throwable);
+		}
+		//HTTP exceptions
+		else if(throwable instanceof HTTPForbiddenException) {
+			return new ResourceForbiddenException(resourceURI, throwable);
+		} else if(throwable instanceof HTTPNotFoundException) {
+			return new ResourceNotFoundException(resourceURI, throwable);
+		} else if(throwable instanceof HTTPPreconditionFailedException) {
+			return new ResourceStateException(resourceURI, throwable);
+		}
+		//default
+		else {
+			return new ResourceIOException(resourceURI, throwable); //create a default resource I/O exception
+		}
 	}
 }

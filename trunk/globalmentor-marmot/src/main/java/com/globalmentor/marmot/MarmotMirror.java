@@ -34,6 +34,7 @@ import com.globalmentor.marmot.repository.file.FileRepository;
 import com.globalmentor.marmot.repository.file.NTFSFileRepository;
 import com.globalmentor.marmot.repository.webdav.SubversionWebDAVRepository;
 import com.globalmentor.marmot.repository.webdav.WebDAVRepository;
+import com.globalmentor.net.HTTP;
 import com.globalmentor.net.URIs;
 import com.globalmentor.net.http.*;
 
