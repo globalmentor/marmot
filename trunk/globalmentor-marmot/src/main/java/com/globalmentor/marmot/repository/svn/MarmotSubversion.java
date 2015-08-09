@@ -16,8 +16,8 @@
 
 package com.globalmentor.marmot.repository.svn;
 
-import static com.globalmentor.apache.subversion.Subversion.*;
 import static com.globalmentor.java.Characters.*;
+import static com.globalmentor.marmot.repository.svn.Subversion.*;
 import static com.globalmentor.net.URIs.*;
 
 import java.net.URI;

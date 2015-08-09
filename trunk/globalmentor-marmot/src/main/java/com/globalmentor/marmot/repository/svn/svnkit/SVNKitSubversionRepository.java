@@ -37,12 +37,12 @@ import static java.util.Collections.*;
 import static org.tmatesoft.svn.core.SVNProperty.*;
 import static org.urframework.content.Content.*;
 
-import static com.globalmentor.apache.subversion.Subversion.*;
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.io.InputStreams.*;
 import static com.globalmentor.java.Characters.*;
 import static com.globalmentor.java.Conditions.*;
 import static com.globalmentor.marmot.repository.svn.MarmotSubversion.*;
+import static com.globalmentor.marmot.repository.svn.Subversion.*;
 import static com.globalmentor.net.URIs.*;
 
 import com.globalmentor.collections.*;

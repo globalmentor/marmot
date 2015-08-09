@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.globalmentor.apache.subversion;
+package com.globalmentor.marmot.repository.svn;
 
 import java.util.regex.Pattern;
 

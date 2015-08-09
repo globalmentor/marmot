@@ -26,9 +26,8 @@ import com.globalmentor.net.URIs;
 import com.globalmentor.net.http.*;
 import com.globalmentor.net.http.webdav.*;
 
-import static com.globalmentor.apache.subversion.Subversion.getPropertyNamespace;
-import static com.globalmentor.marmot.repository.svn.MarmotSubversion.PROPERTY_PREFIX;
-import static com.globalmentor.marmot.repository.svn.MarmotSubversion.decodePropertyURIPropertyName;
+import static com.globalmentor.marmot.repository.svn.MarmotSubversion.*;
+import static com.globalmentor.marmot.repository.svn.Subversion.*;
 import static com.globalmentor.net.http.webdav.SubversionWebDAV.*;
 
 /**
