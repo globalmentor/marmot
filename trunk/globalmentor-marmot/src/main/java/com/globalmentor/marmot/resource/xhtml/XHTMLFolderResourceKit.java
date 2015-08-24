@@ -23,7 +23,7 @@ import com.globalmentor.marmot.resource.xhtml.AbstractXHTMLResourceKit;
 import com.globalmentor.net.*;
 
 import static com.globalmentor.net.URIs.*;
-import static com.globalmentor.text.xml.xhtml.XHTML.*;
+import static com.globalmentor.w3c.spec.HTML.*;
 
 /**
  * Resource kit for handling folders with XHTML content

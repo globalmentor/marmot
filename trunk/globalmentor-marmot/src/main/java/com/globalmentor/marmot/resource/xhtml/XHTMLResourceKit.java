@@ -24,7 +24,8 @@ import com.globalmentor.net.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.text.xml.XML.*;
 import com.globalmentor.text.xml.xhtml.XHTML;
-import static com.globalmentor.text.xml.xhtml.XHTML.*;
+
+import static com.globalmentor.w3c.spec.HTML.*;
 import static org.urframework.URF.*;
 
 import org.urframework.URFResource;

@@ -26,8 +26,10 @@ import com.globalmentor.marmot.resource.*;
 import com.globalmentor.net.ContentType;
 import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.text.xml.XMLIO;
+
 import static com.globalmentor.text.xml.XML.*;
 import static com.globalmentor.text.xml.xhtml.XHTML.*;
+import static com.globalmentor.w3c.spec.HTML.*;
 import static org.urframework.dcmi.DCMI.*;
 
 import org.urframework.*;
