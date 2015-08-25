@@ -25,11 +25,11 @@ import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.*;
 import com.globalmentor.net.ContentType;
 import com.globalmentor.net.ResourceIOException;
-import com.globalmentor.text.xml.XMLIO;
+import com.globalmentor.xml.XMLIO;
 
-import static com.globalmentor.text.xml.XML.*;
-import static com.globalmentor.text.xml.xhtml.XHTML.*;
 import static com.globalmentor.w3c.spec.HTML.*;
+import static com.globalmentor.xml.XML.*;
+import static com.globalmentor.xml.xhtml.XHTML.*;
 import static org.urframework.dcmi.DCMI.*;
 
 import org.urframework.*;

@@ -28,12 +28,11 @@ import static org.urframework.content.Content.*;
 import static org.urframework.dcmi.DCMI.*;
 
 import static com.globalmentor.java.Objects.*;
-import static com.globalmentor.text.xml.XML.*;
-
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.model.Locales.*;
 import static com.globalmentor.net.URIs.*;
 import static com.globalmentor.net.http.webdav.WebDAV.*;
+import static com.globalmentor.xml.XML.*;
 
 import com.globalmentor.collections.CollectionMap;
 import com.globalmentor.collections.HashSetHashMap;
