@@ -20,7 +20,7 @@ import java.net.URI;
 
 import org.urframework.URFResource;
 
-import com.globalmentor.config.Configurator;
+import com.globalmentor.config.Concerns;
 
 import static org.urframework.URF.*;
 
@@ -40,10 +40,10 @@ public class Marmot {
 	 * This method is the preferred approach for determining the default Marmot configuration, as it ensures a default configuration has been installed.
 	 * </p>
 	 * @return The default Marmot configuration.
-	 * @see Configurator#getDefaultConfiguration(Class)
+	 * @see Concerns#getDefaultConcern(Class)
 	 */
 	public static MarmotConfiguration getDefaultConfiguration() {
-		return Configurator.getDefaultConfiguration(MarmotConfiguration.class);
+		return Concerns.getDefaultConcern(MarmotConfiguration.class);
 	}
 
 	/**
@@ -51,10 +51,10 @@ public class Marmot {
 	 * @param configuration The configuration to set.
 	 * @return The previous configuration, or <code>null</code> if there was no previous configuration.
 	 * @throws NullPointerException if the given configuration is <code>null</code>.
-	 * @see Configurator#setDefaultConfiguration(Class)
+	 * @see Concerns#registerDefaultConcern(Class)
 	 */
 	public static MarmotConfiguration setDefaultConfiguration(final MarmotConfiguration marmotConfiguration) {
-		return Configurator.setDefaultConfiguration(MarmotConfiguration.class, marmotConfiguration);
+		return Concerns.registerDefaultConcern(MarmotConfiguration.class, marmotConfiguration);
 	}
 
 	/**
@@ -63,10 +63,10 @@ public class Marmot {
 	 * This method is the preferred approach for determining the Marmot configuration, as it ensures a default configuration has been installed.
 	 * </p>
 	 * @return The configured Marmot configuration for the current context.
-	 * @see Configurator#getConfiguration(Class)
+	 * @see Concerns#getConcern(Class)
 	 */
 	public static MarmotConfiguration getConfiguration() {
-		return Configurator.getConfiguration(MarmotConfiguration.class);
+		return Concerns.getConcern(MarmotConfiguration.class);
 	}
 
 	/** @return The cache configured for use by Marmot for the appropriate configuration. */

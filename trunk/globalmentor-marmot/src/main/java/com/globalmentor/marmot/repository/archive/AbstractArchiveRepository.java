@@ -26,10 +26,10 @@ import org.urframework.io.URFIO;
 import org.urframework.io.URFResourceTURFIO;
 
 import com.globalmentor.cache.Cache;
-import com.globalmentor.config.ConfigurationException;
 import com.globalmentor.marmot.Marmot;
 import com.globalmentor.marmot.MarmotResourceCache;
 import com.globalmentor.marmot.repository.*;
+import com.globalmentor.model.ConfigurationException;
 import com.globalmentor.net.URIPath;
 
 import static com.globalmentor.net.URIs.*;

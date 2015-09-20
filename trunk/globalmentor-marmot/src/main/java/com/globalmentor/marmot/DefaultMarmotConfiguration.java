@@ -18,13 +18,11 @@ package com.globalmentor.marmot;
 
 import static com.globalmentor.java.Objects.*;
 
-import com.globalmentor.config.AbstractConfiguration;
-
 /**
  * Default configuration for Marmot.
  * @author Garret Wilson
  */
-public class DefaultMarmotConfiguration extends AbstractConfiguration implements MarmotConfiguration {
+public class DefaultMarmotConfiguration implements MarmotConfiguration {
 
 	/** The cache configured for use by Marmot. */
 	private final MarmotResourceCache<?> resourceCache;

@@ -16,13 +16,13 @@
 
 package com.globalmentor.marmot;
 
-import com.globalmentor.config.Configuration;
+import com.globalmentor.config.Concern;
 
 /**
  * Configuration for Marmot.
  * @author Garret Wilson
  */
-public interface MarmotConfiguration extends Configuration {
+public interface MarmotConfiguration extends Concern {
 
 	/** @return The cache configured for use by Marmot. */
 	public MarmotResourceCache<?> getResourceCache();
