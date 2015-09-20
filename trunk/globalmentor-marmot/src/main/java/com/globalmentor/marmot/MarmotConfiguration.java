@@ -16,7 +16,7 @@
 
 package com.globalmentor.marmot;
 
-import com.globalmentor.config.Concern;
+import com.globalmentor.concern.Concern;
 
 /**
  * Configuration for Marmot.

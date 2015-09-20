@@ -20,7 +20,7 @@ import java.net.URI;
 
 import org.urframework.URFResource;
 
-import com.globalmentor.config.Concerns;
+import com.globalmentor.concern.Concerns;
 
 import static org.urframework.URF.*;
 
