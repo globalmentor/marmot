@@ -37,8 +37,8 @@ import org.urframework.dcmi.DCMI;
 import com.globalmentor.collections.Sets;
 import com.globalmentor.iso.datetime.ISODateTime;
 import com.globalmentor.java.Bytes;
+import com.globalmentor.log.AbstractLoggedTest;
 import com.globalmentor.net.*;
-import com.globalmentor.test.AbstractTest;
 import com.globalmentor.time.Time;
 
 /**
@@ -51,7 +51,7 @@ import com.globalmentor.time.Time;
  * 
  * @author Garret Wilson
  */
-public abstract class AbstractRepositoryTest extends AbstractTest {
+public abstract class AbstractRepositoryTest extends AbstractLoggedTest {
 
 	/** The repository on which tests are being run. */
 	private Repository repository = null;
