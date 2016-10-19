@@ -48,10 +48,10 @@ public class Marmot {
 
 	/**
 	 * Sets the default Marmot configuration.
-	 * @param configuration The configuration to set.
+	 * @param marmotConfiguration The configuration to set.
 	 * @return The previous configuration, or <code>null</code> if there was no previous configuration.
 	 * @throws NullPointerException if the given configuration is <code>null</code>.
-	 * @see Csar#registerDefaultConcern(Class)
+	 * @see Csar#registerDefaultConcern(io.csar.Concern)
 	 */
 	public static MarmotConfiguration setDefaultConfiguration(final MarmotConfiguration marmotConfiguration) {
 		return Csar.registerDefaultConcern(MarmotConfiguration.class, marmotConfiguration);
@@ -108,6 +108,7 @@ public class Marmot {
 	 * Returns the annotations of the resource.
 	 * @param <A> The type of annotation to be returned.
 	 * @param resource The resource the property of which should be located.
+	 * @param annotationClass The class of the annotation.
 	 * @return The annotation values of the property.
 	 * @see #ANNOTATION_PROPERTY_URI
 	 */

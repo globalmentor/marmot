@@ -25,9 +25,10 @@ import com.globalmentor.net.URIs;
 
 /**
  * A resource filter that allows two levels of filtering: one on the resource URI, and one on the resource description in general. An operation using the filter
- * will typically filter based upon the resource URI using {@link #isPass(URI)} before filtering on the resource description using {@link #isPass(URFResource)}.
- * Implementations of this interface may assume that {@link #isPass(URI)} is called before {@link #isPass(URFResource)} and need not provide URI-based filtering
- * inside {@link #isPass(URFResource)} if that has been done in {@link #isPass(URI)}.
+ * will typically filter based upon the resource URI using {@link #isPass(URI)} before filtering on the resource description using
+ * {@link DefaultResourceURIFilter#isPass(URFResource)}. Implementations of this interface may assume that {@link #isPass(URI)} is called before
+ * {@link DefaultResourceURIFilter#isPass(URFResource)} and need not provide URI-based filtering inside {@link DefaultResourceURIFilter#isPass(URFResource)} if
+ * that has been done in {@link #isPass(URI)}.
  * @author Garret Wilson
  */
 public interface ResourceFilter extends Filter<URFResource> {

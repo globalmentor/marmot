@@ -33,6 +33,7 @@ public class Repositories {
 
 	/**
 	 * Prints the given resource to the given appendable.
+	 * @param <A> The type of appendable.
 	 * @param resource The resource to print.
 	 * @param appendable The appendable to which the resource should be printed.
 	 * @return The given appendable.
@@ -46,6 +47,7 @@ public class Repositories {
 
 	/**
 	 * Prints all resources in the given repository to the given appendable.
+	 * @param <A> The type of appendable.
 	 * @param repository The repository to print.
 	 * @param appendable The appendable to which the repository should be printed.
 	 * @return The given appendable.
@@ -59,6 +61,7 @@ public class Repositories {
 
 	/**
 	 * Prints the identified resource and all ancestors in the repository to the given appendable.
+	 * @param <A> The type of appendable.
 	 * @param repository The repository in which the resource lies.
 	 * @param resourceURI The URI identifying the resource to print.
 	 * @param appendable The appendable to which the resource should be printed.
@@ -72,6 +75,7 @@ public class Repositories {
 
 	/**
 	 * Prints the provided resource and all ancestors in the repository to the given appendable.
+	 * @param <A> The type of appendable.
 	 * @param repository The repository in which the resource lies.
 	 * @param resource The resource to print.
 	 * @param appendable The appendable to which the resource should be printed.
@@ -85,10 +89,12 @@ public class Repositories {
 
 	/**
 	 * Prints the provided resource and all ancestors in the repository to the given appendable.
+	 * @param <A> The type of appendable.
 	 * @param repository The repository in which the resource lies.
 	 * @param resource The resource to print.
 	 * @param level The zero-based level of the resource to be printed.
 	 * @param appendable The appendable to which the resource should be printed.
+	 * @param urfTURFGenerator The TURF generator.
 	 * @return The given appendable.
 	 * @throws NullPointerException if the given repository, resource, and/or appendable is <code>null</code>.
 	 * @throws IOException if there was an error accessing a repository or writing to the appendable.

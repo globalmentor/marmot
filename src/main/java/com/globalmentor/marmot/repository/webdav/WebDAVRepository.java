@@ -66,7 +66,7 @@ import org.w3c.dom.*;
  * requires that each property have a separate namespace and local name.
  * </p>
  * <p>
- * This implementation stores the {@value Content#MODIFIED_PROPERTY_URI} property normally on all resources, including collections---notably, that property is
+ * This implementation stores the {@link Content#MODIFIED_PROPERTY_URI} property normally on all resources, including collections---notably, that property is
  * not stored with the {@link AbstractRepository#COLLECTION_CONTENT_NAME} resource. This implementation considers the {@link Content#CREATED_PROPERTY_URI}
  * property to be a live property.
  * </p>
@@ -997,7 +997,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 		/** The URI of the resource. */
 		private final URI resourceURI;
 
-		/** @protected The URI of the resource. */
+		/** @return The URI of the resource. */
 		public URI getResourceURI() {
 			return resourceURI;
 		}

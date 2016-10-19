@@ -42,7 +42,7 @@ public class ImageResourceKit extends AbstractResourceKit {
 				ContentType.create(ContentType.IMAGE_PRIMARY_TYPE, JPEG_SUBTYPE), ContentType.create(ContentType.IMAGE_PRIMARY_TYPE, PNG_SUBTYPE) });
 	}
 
-	/**
+	/*
 	 * Initializes a resource description, creating whatever properties are appropriate. This version adds appropriate XPackage icon properties.
 	 * @param repository The repository to use to access the resource content, if needed.
 	 * @param resource The resource description to initialize.

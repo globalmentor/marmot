@@ -36,10 +36,8 @@ import static com.globalmentor.net.http.webdav.SubversionWebDAV.*;
  * Autoversioning must be turned on in Apache using <code>SVNAutoversioning on</code>.
  * </p>
  * <p>
- * This version stores URF properties by using a URI that is the concatenation of {@value SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI} and the encoded
- * version of the URF property URI, using {@value AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR} as the escape character. The standard URI escape character,
- * {@value URIs#ESCAPE_CHAR}, is not a valid name character, so {@value AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR}, which conveniently is not a valid URI
- * character, is used instead.
+ * This version stores URF properties by using a URI that is the concatenation of {@link SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI} and the encoded
+ * version of the URF property URI. The standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name character.
  * </p>
  * @author Garret Wilson
  * @see Repositories
@@ -110,13 +108,12 @@ public class SubversionWebDAVRepository extends WebDAVRepository {
 
 	/**
 	 * Determines the WebDAV property name to represent an URF property. This version uses the encoded URF property URI as the local name of the
-	 * {@value SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI} namespace. The standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name
-	 * character, so {@value #PROPERTY_NAME_URI_ESCAPE_CHAR}, which conveniently is not a valid URI character, is used instead.
+	 * {@link SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI} namespace. The standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name
+	 * character.
 	 * @param urfPropertyURI The URI of the URF property to represent.
 	 * @return A WebDAV property name to use in representing an URF property with the given URF property URI.
 	 * @see SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI
-	 * @see AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR
-	 * @see AbstractRepository#encodePropertyURILocalName(URI)
+	 * @see MarmotSubversion#encodePropertyURIPropertyName(URI)
 	 */
 	protected WebDAVPropertyName createWebDAVPropertyName(final URI urfPropertyURI) {
 		return new WebDAVPropertyName(SUBVERSION_CUSTOM_NAMESPACE, MarmotSubversion.encodePropertyURIPropertyName(urfPropertyURI)); //create and return a new WebDAV property name in the Subversion custom property namespace
@@ -124,15 +121,13 @@ public class SubversionWebDAVRepository extends WebDAVRepository {
 
 	/**
 	 * Determines the URF property to represent the given WebDAV property if possible. If the WebDAV property has a local name of
-	 * {@value SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI}, the decoded form of its local name, if an absolute URI, will be used as the URF property URI.
-	 * The standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name character, so {@value AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR},
-	 * which conveniently is not a valid URI character, is used instead. Otherwise, this method delegates to the super version.
+	 * {@link SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI}, the decoded form of its local name, if an absolute URI, will be used as the URF property URI. The
+	 * standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name character.
 	 * @param webdavPropertyName The name of the WebDAV property.
 	 * @return The URI of the URF property to represent the given WebDAV property, or <code>null</code> if the given WebDAV property cannot be represented in URF.
 	 * @throws IllegalArgumentException if the given property is not encoded properly.
 	 * @see SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI
-	 * @see AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR
-	 * @see AbstractRepository#decodePropertyURILocalName(String)
+	 * @see MarmotSubversion#decodePropertyURIPropertyName(String)
 	 */
 	protected URI getURFPropertyURI(final WebDAVPropertyName webdavPropertyName) {
 		if(SUBVERSION_CUSTOM_NAMESPACE.equals(webdavPropertyName.getNamespace())) { //if this is the Subversion custom property namespace

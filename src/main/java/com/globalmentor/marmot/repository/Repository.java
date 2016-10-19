@@ -48,17 +48,17 @@ import com.globalmentor.net.*;
  * the unwanted properties explicitly removed.
  * </p>
  * <p>
- * The {@value Content#MODIFIED_PROPERTY_URI} property is <em>not</em> considered a live property; it is completely managed by Marmot. This is because the last
+ * The {@link Content#MODIFIED_PROPERTY_URI} property is <em>not</em> considered a live property; it is completely managed by Marmot. This is because the last
  * modification of the content, represented by this property, is distinct from the last modification of the underlying file store. However, this property does
  * have some peculiarities:
  * <ul>
- * <li>When reading a resource <em>description</em>, if no {@value Content#MODIFIED_PROPERTY_URI} property exists the repository implementation may use the
+ * <li>When reading a resource <em>description</em>, if no {@link Content#MODIFIED_PROPERTY_URI} property exists the repository implementation may use the
  * modified value of the underlying file store if present.</li>
- * <li>When writing resource <em>content</em>, if no {@value Content#MODIFIED_PROPERTY_URI} is given in the provided description, a new property will be
+ * <li>When writing resource <em>content</em>, if no {@link Content#MODIFIED_PROPERTY_URI} is given in the provided description, a new property will be
  * automatically added with the current date and time for the API methods that do not have a description parameter.</li>
  * </ul>
  * <p>
- * Collections should indicated a {@value Content#LENGTH_PROPERTY_URI} of zero unless the collection has content. A content length should never be missing.
+ * Collections should indicated a {@link Content#LENGTH_PROPERTY_URI} of zero unless the collection has content. A content length should never be missing.
  * </p>
  * <p>
  * Repositories that are read-only should throw {@link ResourceForbiddenException}s for accesses that attempt to modify resources.
@@ -102,6 +102,7 @@ public interface Repository extends Disposable {
 	 * Creates a repository of the same type as this repository with the same access privileges as this one. This factory method is commonly used to use a parent
 	 * repository as a factory for other repositories in its namespace. This method resolves the private repository path to the current public repository URI.
 	 * @param subrepositoryPath The private path relative to the private URI of this repository.
+	 * @return The repository of the same type as this repository with the same access privileges as this one created.
 	 * @throws NullPointerException if the given private repository path is <code>null</code>.
 	 * @throws IllegalArgumentException if the given subrepository path is absolute and/or is not a collection.
 	 */
@@ -112,6 +113,7 @@ public interface Repository extends Disposable {
 	 * repository as a factory for other repositories in its namespace.
 	 * @param publicRepositoryURI The public URI identifying the location of the new repository.
 	 * @param privateSubrepositoryPath The private path relative to the private URI of this repository.
+	 * @return The repository of the same type as this repository with the same access privileges as this one created.
 	 * @throws NullPointerException if the given public repository URI and/or private repository path is <code>null</code>.
 	 * @throws IllegalArgumentException if the given private repository path is absolute and/or is not a collection.
 	 */
@@ -138,7 +140,6 @@ public interface Repository extends Disposable {
 	/**
 	 * Opens the repository for access. If the repository is already open, no action occurs. At a minimum the repository must have a root URI specified, and
 	 * specific repository types may impose more constraints.
-	 * @return <code>false</code> if the repository was already open, else <code>true</code>.
 	 * @throws IllegalStateException if the settings of this repository are inadequate to open the repository.
 	 * @throws ResourceIOException if there is an error opening the repository.
 	 * @see #getRootURI()

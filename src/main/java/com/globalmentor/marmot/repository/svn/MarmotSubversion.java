@@ -65,7 +65,7 @@ public class MarmotSubversion {
 	 * @throws IllegalArgumentException if the given property name does not start with the {@value #PROPERTY_PREFIX} prefix or is not a valid plain-encoded URI.
 	 * @see #PROPERTY_PREFIX
 	 * @see #encodePropertyURIPropertyName(URI)
-	 * @see URIs#plainDecode(String)
+	 * @see URIs#plainDecode(CharSequence)
 	 */
 	public static URI decodePropertyURIPropertyName(final String propertyName) {
 		if(Marmot.ID.equals(getPropertyNamespace(propertyName))) { //if this property is in the Marmot namespace TODO delete when legacy properties converted

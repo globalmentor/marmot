@@ -113,6 +113,7 @@ public interface ResourceKit {
 	 * @param repository The repository within which the resource would reside.
 	 * @param resourceURI The URI of the resource for which a default resource description should be retrieved.
 	 * @throws ResourceIOException if there is an error accessing the repository.
+	 * @return The default resource description.
 	 */
 	public URFResource getDefaultResourceDescription(final Repository repository, final URI resourceURI) throws ResourceIOException;
 
@@ -204,6 +205,7 @@ public interface ResourceKit {
 	 * @throws NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
 	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
 	 * @throws ResourceIOException if the default resource content could not be written.
+	 * @return <code>true</code> if the resource had default resource content.
 	 * @see #writeDefaultResourceContent(Repository, URI, URFResource)
 	 * @see #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)
 	 */
@@ -270,6 +272,7 @@ public interface ResourceKit {
 	 * @throws NullPointerException if the given aspect is <code>null</code>.
 	 * @throws IllegalArgumentException if the given aspect ID does not represent a valid aspect.
 	 * @throws ClassCastException if the given aspect is not an instance of the type returned by {@link #getAspectType()}.
+	 * @return The appropriate filters for accessing an identified aspect of the resource.
 	 */
 	public ResourceContentFilter[] getAspectFilters(final ResourceAspect aspect);
 

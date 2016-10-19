@@ -48,8 +48,8 @@ import com.globalmentor.net.*;
  * file creation time.
  * </p>
  * <p>
- * This implementation uses the file last modified timestamp to store the {@value Content#MODIFIED_PROPERTY_URI} property. The content modified property is not
- * saved for collections with no content. The creation timestamp {@value Content#CREATED_PROPERTY_URI} is not stored in order to prevent needless creation of
+ * This implementation uses the file last modified timestamp to store the {@link Content#MODIFIED_PROPERTY_URI} property. The content modified property is not
+ * saved for collections with no content. The creation timestamp {@link Content#CREATED_PROPERTY_URI} is not stored in order to prevent needless creation of
  * description files.
  * </p>
  * <p>
@@ -672,8 +672,8 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 	}
 
 	/**
-	 * Saves a resource description for a single file. Live properties, including {@value Content#CREATED_PROPERTY_URI}, are ignored. If the
-	 * {@value Content#MODIFIED_PROPERTY_URI} property is present, it is not saved and the file modified time is updated to match that value. If the resource
+	 * Saves a resource description for a single file. Live properties, including {@link Content#CREATED_PROPERTY_URI}, are ignored. If the
+	 * {@link Content#MODIFIED_PROPERTY_URI} property is present, it is not saved and the file modified time is updated to match that value. If the resource
 	 * description file does not exist and there are no properties to save, no resource description file is created.
 	 * <p>
 	 * If the {@link Content#MODIFIED_PROPERTY_URI} property is being set/added, all previous values are ignored (i.e. the {@link Content#MODIFIED_PROPERTY_URI}

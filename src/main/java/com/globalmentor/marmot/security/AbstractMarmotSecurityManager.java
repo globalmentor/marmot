@@ -38,6 +38,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager {
 	/**
 	 * Determines whether a given permission is valid in the abstract in respect to a resource.
 	 * @param repository The repository that contains the resource.
+	 * @param resourceURI The URI of the resource to be verified.
 	 * @param permissionType The type of permission requested.
 	 * @return <code>true</code> if the given permission is valid in relation to the indicated resource, else <code>false</code>.
 	 * @throws NullPointerException if the given repository, resource URI, and/or permission type is <code>null</code>.
@@ -170,8 +171,9 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager {
 	/**
 	 * Determines all the permissions allowed a particular user in relation to a given resource.
 	 * @param repository The repository that contains the resource.
+	 * @param resourceURI The URI of the resource to be verified.
 	 * @param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
-	 * @return A set of all permission types allowed the user in relation to the given resoruce.
+	 * @return A set of all permission types allowed the user in relation to the given resource.
 	 * @throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
 	 * @throws ResourceIOException if there is an error accessing the repository.
 	 */

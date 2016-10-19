@@ -21,6 +21,7 @@ import java.net.URI;
 import static com.globalmentor.io.Files.*;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.net.*;
+import com.globalmentor.w3c.spec.HTML;
 import com.globalmentor.xml.xhtml.XHTML;
 
 import static com.globalmentor.net.URIs.*;
@@ -37,13 +38,13 @@ import org.w3c.dom.*;
  * Supported media types:
  * </p>
  * <ul>
- * <li>{@value XHTML#XHTML_CONTENT_TYPE}</li>
+ * <li>{@link HTML#XHTML_CONTENT_TYPE}</li>
  * </ul>
  * <p>
  * Default extension:
  * </p>
  * <ul>
- * <li>{@value XHTML#XHTML_NAME_EXTENSION}</li>
+ * <li>{@value HTML#XHTML_NAME_EXTENSION}</li>
  * </ul>
  * @author Garret Wilson
  */
@@ -69,8 +70,8 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit {
 
 	/**
 	 * Determines the URI of the template to use for the resource identified by the given URI. First a template is attempted to be identified from the
-	 * {@value XHTMLResourceKit#TEMPLATE_URI_PROPERTY_URI} property. Then, if there is no template explicitly identified, a template named
-	 * {@value #DEFAULT_TEMPLATE_NAME} is searched for up the hierarchy.
+	 * {@link XHTMLResourceKit#TEMPLATE_URI_PROPERTY_URI} property. Then, if there is no template explicitly identified, a template named
+	 * {@link #DEFAULT_TEMPLATE_NAME} is searched for up the hierarchy.
 	 * @param repository The repository in which the resource resides.
 	 * @param resourceURI The URI of the resource.
 	 * @return The URI of the template to use for the resource, or <code>null</code> if no template could be located.
@@ -82,8 +83,8 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit {
 
 	/**
 	 * Determines the URI of the template to use for the given resource. First a template is attempted to be identified from the
-	 * {@value XHTMLResourceKit#TEMPLATE_URI_PROPERTY_URI} property. Then, if there is no template explicitly identified, a template named
-	 * {@value #DEFAULT_TEMPLATE_NAME} is searched for up the hierarchy.
+	 * {@link XHTMLResourceKit#TEMPLATE_URI_PROPERTY_URI} property. Then, if there is no template explicitly identified, a template named
+	 * {@link #DEFAULT_TEMPLATE_NAME} is searched for up the hierarchy.
 	 * @param repository The repository in which the resource resides.
 	 * @param resource The resource for which a template URI should be retrieved.
 	 * @return The URI of the template to use for the resource, or <code>null</code> if no template could be located.

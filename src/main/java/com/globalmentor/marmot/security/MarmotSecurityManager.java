@@ -42,6 +42,7 @@ public interface MarmotSecurityManager {
 	 * superclass doesn't find a permission, a subclass may be able to add the permission.
 	 * @param owner The principal that owns the repository.
 	 * @param repository The repository that contains the resource.
+	 * @param resourceURI The URI of the resource to be verified.
 	 * @param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
 	 * @param permissionTypes The types of permission requested.
 	 * @return <code>true</code> if all of the given permissions are allowed for the user in relation to the indicated resource, else <code>false</code>.
@@ -57,6 +58,7 @@ public interface MarmotSecurityManager {
 	 * superclass doesn't find a permission, a subclass may be able to add the permission.
 	 * @param owner The principal that owns the repository.
 	 * @param repository The repository that contains the resource.
+	 * @param resourceURI The URI of the resource to be verified.
 	 * @param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
 	 * @param checkAncestors Whether all the resource's ancestors are required to have the indicated permissions as well.
 	 * @param permissionTypes The types of permission requested.
@@ -73,6 +75,7 @@ public interface MarmotSecurityManager {
 	 * if a superclass doesn't find a permission, a subclass may be able to add the permission.
 	 * @param owner The principal that owns the repository.
 	 * @param repository The repository that contains the resource.
+	 * @param resourceURI The URI of the resource to be verified.
 	 * @param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
 	 * @param permissionTypes The type of permission requested, one of which must be allowed.
 	 * @return <code>true</code> if one of the given permissions is allowed for the user in relation to the indicated resource, else <code>false</code>.
@@ -88,6 +91,7 @@ public interface MarmotSecurityManager {
 	 * superclass doesn't find a permission, a subclass may be able to add the permission.
 	 * @param owner The principal that owns the repository.
 	 * @param repository The repository that contains the resource.
+	 * @param resourceURI The URI of the resource to be verified.
 	 * @param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
 	 * @return <code>true</code> if the some permission is allowed for the user in relation to the indicated resource, else <code>false</code>.
 	 * @throws NullPointerException if the given owner, repository, and/or resource URI is <code>null</code>.

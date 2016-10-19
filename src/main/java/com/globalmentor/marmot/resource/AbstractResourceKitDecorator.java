@@ -139,7 +139,7 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit {
 		getResourceKit().writeDefaultResourceContent(repository, resourceURI, resourceDescription, outputStream);
 	}
 
-	/**
+	/*
 	 * Determines whether a given user has permission to access a particular aspect of a resource.
 	 * @param owner The principal that owns the repository.
 	 * @param repository The repository that contains the resource.

@@ -23,7 +23,7 @@ import org.urframework.AbstractClassTypedURFResource;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 
 /**
- * An abstract resource in the Marmot security namespace, {@value MarmotSecurity#MARMOT_SECURITY_NAMESPACE_URI}.
+ * An abstract resource in the Marmot security namespace, {@link MarmotSecurity#MARMOT_SECURITY_NAMESPACE_URI}.
  * @author Garret Wilson
  */
 public abstract class AbstractMarmotSecurityResource extends AbstractClassTypedURFResource {

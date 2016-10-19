@@ -147,6 +147,7 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	 * repository as a factory for other repositories in its namespace.
 	 * @param publicRepositoryURI The public URI identifying the location of the new repository.
 	 * @param privateRepositoryURI The URI identifying the private namespace managed by this repository.
+	 * @return The repository of the same type as this repository with the same access privileges as this one created.
 	 * @throws NullPointerException if the given public repository URI and/or private repository URI is <code>null</code>.
 	 */
 	protected abstract Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI);
