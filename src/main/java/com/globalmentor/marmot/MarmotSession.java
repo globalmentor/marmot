@@ -95,7 +95,7 @@ public interface MarmotSession<RK extends ResourceKit> {
 	 * @param resource The resource for which a resource kit should be returned.
 	 * @param capabilities The capabilities required for the resource kit.
 	 * @return <code>true</code> if there exists a resource kit to handle the given resource with the given capabilities, if any, in relation to the resource.
-	 * @see #getResourceKit(Repository, URFResource, Capability...)
+	 * @see #getResourceKit(Repository, URFResource, ResourceKit.Capability...)
 	 */
 	public boolean hasResourceKit(final Repository repository, final URFResource resource, final Capability... capabilities);
 
@@ -126,7 +126,7 @@ public interface MarmotSession<RK extends ResourceKit> {
 	 * <li>The given content type, if any.</li>
 	 * <li>The content determined if possible by {@link #getExtensionContentType(String)} from the resource URI extension.</li>
 	 * <li>The resource description is retrieved as a last resort and the resource kit is determined by delegating to
-	 * {@link #getResourceKit(Repository, URFResource, Capability...)}.</li>
+	 * {@link #getResourceKit(Repository, URFResource, ResourceKit.Capability...)}.</li>
 	 * </ol>
 	 * @param repository The repository in which the resource resides.
 	 * @param resourceURI The URI of the resource in the given repository.
@@ -135,7 +135,7 @@ public interface MarmotSession<RK extends ResourceKit> {
 	 * @return A resource kit to handle the given resource with the given capabilities, if any, in relation to the resource; or <code>null</code> if there is no
 	 *         registered resource kit with the given capabilities in relation to the resource.
 	 * @throws ResourceIOException if an error occurred retrieving a description of the resource kit.
-	 * @see #getResourceKit(Repository, URFResource, Capability...)
+	 * @see #getResourceKit(Repository, URFResource, ResourceKit.Capability...)
 	 */
 	public RK getResourceKit(final Repository repository, final URI resourceURI, final ContentType contentType, final Capability... capabilities)
 			throws ResourceIOException;
@@ -158,7 +158,7 @@ public interface MarmotSession<RK extends ResourceKit> {
 
 	/**
 	 * Retrieves a resource kit appropriate for a MIME content type. This method should only be used for special-purpose functionality; when accessing resources
-	 * {@link #getResourceKit(Repository, URFResource, Capability...)} should normally be used instead.
+	 * {@link #getResourceKit(Repository, URFResource, ResourceKit.Capability...)} should normally be used instead.
 	 * @param contentType The type of content the resource contains.
 	 * @param capabilities The capabilities required for the resource kit.
 	 * @return A resource kit with the requested capabilities to handle the given content type, or <code>null</code> if no appropriate resource kit is registered.
