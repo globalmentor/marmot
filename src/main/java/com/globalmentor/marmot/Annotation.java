@@ -88,6 +88,7 @@ public interface Annotation extends URFResource {
 
 	/**
 	 * Retrieves the collection of child resources of the resource.
+	 * @param <T> The type of element stored in the collection.
 	 * @return The contents of the resource, or <code>null</code> if no <code>content.contents</code> property exists or the value is not an instance of
 	 *         {@link URFCollectionResource}.
 	 * @see Content#CONTENTS_PROPERTY_URI

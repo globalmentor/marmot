@@ -153,17 +153,17 @@ public class RepositorySynchronizer {
 		this.metadataResolution = checkInstance(metadataResolution, "Metadata resolution cannot be null.");
 	}
 
-	/** Whether the {@value Content#MODIFIED_PROPERTY_URI} property should be updated if requested even if content is not updated. */
+	/** Whether the {@link Content#MODIFIED_PROPERTY_URI} property should be updated if requested even if content is not updated. */
 	private boolean forceContentModifiedProperty = false;
 
-	/** Whether the {@value Content#MODIFIED_PROPERTY_URI} property should be updated if requested even if content is not updated. */
+	/** @return Whether the {@link Content#MODIFIED_PROPERTY_URI} property should be updated if requested even if content is not updated. */
 	public boolean isForceContentModifiedProperty() {
 		return forceContentModifiedProperty;
 	}
 
 	/**
-	 * Sets whether the {@value Content#MODIFIED_PROPERTY_URI} property should be updated if requested even if content is not updated.
-	 * @param forceContentModified Whether the {@value Content#MODIFIED_PROPERTY_URI} property should be updated if requested even if content is not updated.
+	 * Sets whether the {@link Content#MODIFIED_PROPERTY_URI} property should be updated if requested even if content is not updated.
+	 * @param forceContentModified Whether the {@link Content#MODIFIED_PROPERTY_URI} property should be updated if requested even if content is not updated.
 	 */
 	public void setForceContentModifiedProperty(final boolean forceContentModified) {
 		this.forceContentModifiedProperty = forceContentModified;

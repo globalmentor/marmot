@@ -37,6 +37,7 @@ import com.globalmentor.iso.datetime.ISODateTime;
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.PermissionType;
+import com.globalmentor.metadata.DCMI;
 import com.globalmentor.net.ContentType;
 import com.globalmentor.net.http.HTTPForbiddenException;
 import com.globalmentor.net.http.HTTPNotFoundException;
@@ -168,7 +169,6 @@ public abstract class AbstractResourceKit implements ResourceKit {
 
 	/**
 	 * Content types, resource types, and capabilities constructor with no default extension.
-	 * @param presentation The presentation support for this resource kit.
 	 * @param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
 	 * @param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
 	 * @param capabilities The capabilities provided by this resource kit.
@@ -239,7 +239,6 @@ public abstract class AbstractResourceKit implements ResourceKit {
 
 	/**
 	 * Content types, resource types, default extension, and capabilities constructor.
-	 * @param presentation The presentation support for this resource kit.
 	 * @param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
 	 * @param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
 	 * @param defaultNameExtension The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an

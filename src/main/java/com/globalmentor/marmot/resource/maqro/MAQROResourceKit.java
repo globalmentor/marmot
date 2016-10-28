@@ -36,7 +36,7 @@ import static org.urframework.maqro.MAQRO.*;
  * Supported media types:
  * </p>
  * <ul>
- * <li>{@value MAQRO#MENTOR_ACTIVITY_CONTENT_TYPE}</li>
+ * <li>{@link MAQRO#MENTOR_ACTIVITY_CONTENT_TYPE}</li>
  * </ul>
  * @author Garret Wilson
  */

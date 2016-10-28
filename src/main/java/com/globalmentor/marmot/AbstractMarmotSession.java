@@ -140,8 +140,8 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 
 	/**
 	 * Sets the default collection resource kit.
-	 * @param defaultResourceKit The default resource kit if a specific resource kit cannot be found for a collection, or <code>null</code> if there is no default
-	 *          resource kit.
+	 * @param defaultCollectionResourceKit The default resource kit if a specific resource kit cannot be found for a collection, or <code>null</code> if there is
+	 *          no default resource kit.
 	 */
 	protected void setDefaultCollectionResourceKit(final RK defaultCollectionResourceKit) {
 		this.defaultCollectionResourceKit = defaultCollectionResourceKit;

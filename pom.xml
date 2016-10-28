@@ -190,10 +190,6 @@
 								<goals>
 									<goal>jar</goal>
 								</goals>
-								<configuration>
-									<!-- turn off Javadoc errors from warnings; requires JDK 8 -->
-									<additionalparam>-Xdoclint:none</additionalparam>
-								</configuration>
 							</execution>
 						</executions>
 					</plugin>

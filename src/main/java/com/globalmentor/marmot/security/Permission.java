@@ -24,7 +24,7 @@ import org.urframework.URFResource;
  */
 public interface Permission extends URFResource {
 
-	/** The permission type this permission represents. */
+	/** @return The permission type this permission represents. */
 	public PermissionType getPermissionType();
 
 }

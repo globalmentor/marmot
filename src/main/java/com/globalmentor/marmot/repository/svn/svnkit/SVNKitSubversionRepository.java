@@ -1189,8 +1189,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		 * Gets the new name and value of the indicated property.
 		 * @param repository The Marmot repository.
 		 * @param resourceURI The URI of the resource being visited.
-		 * @param propertyName The name of the property to possibly be renamed.
-		 * @param svnPropertyValue The value of the property.
+		 * @param property The name-value pair with the SVN property values.
 		 * @return The new name and value of the property (a different name indicates a property rename), or <code>null</code> if the property should be removed
 		 *         altogether.
 		 * @throws IllegalArgumentException if the property value is not valid.
@@ -1285,7 +1284,7 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	 * <dt><var>repository</var></dt>
 	 * <dd>The URI or directory name of the repository.</dd>
 	 * <dt>[<code>--test</code>]</dt>
-	 * <dd>Lists the property renames that will occur but no changes are made.</dt>
+	 * <dd>Lists the property renames that will occur but no changes are made.</dd>
 	 * </dl>
 	 * @param args The command-line arguments
 	 */

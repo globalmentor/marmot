@@ -70,17 +70,16 @@ import static com.globalmentor.net.URIs.*;
  * This implementation considers the following properties to be live properties:
  * </p>
  * <ul>
- * <li>{@value Content#ACCESSED_PROPERTY_URI}</li>
- * <li>{@value Content#LENGTH_PROPERTY_URI}</li>
+ * <li>{@link Content#ACCESSED_PROPERTY_URI}</li>
+ * <li>{@link Content#LENGTH_PROPERTY_URI}</li>
  * </ul>
  * <p>
  * This implementation initializes the map of extension contents to {@link Files#FILE_EXTENSION_CONTENT_TYPE_MAP}.
  * </p>
  * <p>
  * To assist in implementing repositories that don't support custom namespaces, this class allows encoding of URF properties by using some other namespace
- * namespace with a local name encoded version of the URF property URI, using {@value AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR} as the escape character.
- * The standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name character, so {@value AbstractRepository#PROPERTY_NAME_URI_ESCAPE_CHAR},
- * which conveniently is not a valid URI character, is used instead.
+ * namespace with a local name encoded version of the URF property URI. The standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name
+ * character.
  * </p>
  * @author Garret Wilson
  */
@@ -429,7 +428,7 @@ public abstract class AbstractRepository implements Repository {
 		final URI repositoryURI = getRootURI(); //get the URI of the repository
 		final URIPath resourcePath = new URIPath(repositoryURI.relativize(parentResourceURI)); //get the path of the resource relative to the resource
 		final Set<Repository> childSubrepositories = parentPathRepositoryMap.get(resourcePath); //see if there are any subrepositories mapped under the given parent resource URI
-		return childSubrepositories != null ? unmodifiableSet(childSubrepositories) : Collections.<Repository> emptySet(); //return an unmodifiable set of the subrepositories, if there are any
+		return childSubrepositories != null ? unmodifiableSet(childSubrepositories) : Collections.<Repository>emptySet(); //return an unmodifiable set of the subrepositories, if there are any
 	}
 
 	/** A map of resource factories, keyed to namespace URIs. */
@@ -803,7 +802,8 @@ public abstract class AbstractRepository implements Repository {
 
 	/** {@inheritDoc} This implementation delegates to {@link #getChildResourceDescriptionsImpl(URI, ResourceFilter, int)}. */
 	@Override
-	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final ResourceFilter resourceFilter, final int depth) throws ResourceIOException {
+	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final ResourceFilter resourceFilter, final int depth)
+			throws ResourceIOException {
 		checkArgumentNotNegative(depth);
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
@@ -1736,10 +1736,12 @@ public abstract class AbstractRepository implements Repository {
 	 * Translates the given error specific to the this repository type into a resource I/O exception.
 	 * <p>
 	 * This version returns the given throwable if it is already a {@link ResourceIOException}. It also makes the following translations:
+	 * </p>
 	 * <dl>
-	 * <dt>{@link IllegalSt}</dt>
+	 * <dt>{@link IllegalStateException}</dt>
 	 * <dd>{@link ResourceNotFoundException}</dd>
 	 * </dl>
+	 * <p>
 	 * Otherwise, it simply wraps the given throwable in a {@link ResourceIOException}.
 	 * </p>
 	 * @param resourceURI The URI of the resource to which the exception is related.
@@ -1801,7 +1803,6 @@ public abstract class AbstractRepository implements Repository {
 	 * @param <V> Some type of property representation in the map, keyed to property URIs.
 	 * @param <M> The type of map holding the property representations.
 	 * @param propertyURIValueMap The map of some sort of property representations, keyed to the property URI (some of which may be in legacy form).
-	 * @return A map with no legacy form property representations.
 	 * @throws NullPointerException if the given map is <code>null</code>.
 	 * @see URF#convertLegacyNamespacedURI(URI)
 	 */
@@ -1837,8 +1838,8 @@ public abstract class AbstractRepository implements Repository {
 	 * </p>
 	 * @param resourceURI The URI of the resource.
 	 * @param properties The URF properties to represent as values encoded in a single string
-	 * @param descriptionIO The I/O implementation for reading resources.
 	 * @return A property URI and a text value representing the given URF properties.
+	 * @throws IOException if there is an I/O error while performing the action.
 	 * @throws NullPointerException if the given properties and/or description I/O is <code>null</code>.
 	 * @throws IllegalArgumentException if no properties are given.
 	 * @throws IllegalArgumentException if all of the properties do not have the same property URI.

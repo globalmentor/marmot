@@ -25,6 +25,7 @@ import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.*;
 import com.globalmentor.net.ContentType;
 import com.globalmentor.net.ResourceIOException;
+import com.globalmentor.w3c.spec.HTML;
 import com.globalmentor.xml.XMLIO;
 
 import static com.globalmentor.w3c.spec.HTML.*;
@@ -104,7 +105,6 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit {
 
 	/**
 	 * Content types, resource types, and capabilities constructor with no default extension.
-	 * @param presentation The presentation support for this resource kit.
 	 * @param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
 	 * @param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
 	 * @param capabilities The capabilities provided by this resource kit.
@@ -175,7 +175,6 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit {
 
 	/**
 	 * Content types, resource types, default extension, and capabilities constructor.
-	 * @param presentation The presentation support for this resource kit.
 	 * @param supportedContentTypes A non-<code>null</code> array of the content types this resource kit supports.
 	 * @param supportedResourceTypes A non-<code>null</code> array of the URIs for the resource types this resource kit supports.
 	 * @param defaultNameExtension The default name extension this resource kit uses, or <code>null</code> if by default this resource kit does not use an
@@ -225,9 +224,9 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit {
 	/**
 	 * Retrieves an excerpt from the given document. The elements are not removed from the original document. This implementation uses the first non-empty
 	 * paragraph encountered depth-first.
-	 * @param element The element for which an excerpt should be returned.
+	 * @param document The element for which an excerpt should be returned.
 	 * @return A document fragment containing an excerpt of the given element, or <code>null</code> if no excerpt could be located.
-	 * @see XHTML#ELEMENT_P
+	 * @see HTML#ELEMENT_P
 	 */
 	public static DocumentFragment getExcerpt(final Document document) {
 		return getExcerpt(document.getDocumentElement()); //return an excerpt from the document element
@@ -238,7 +237,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit {
 	 * paragraph encountered depth-first.
 	 * @param element The element for which an excerpt should be returned.
 	 * @return A document fragment containing an excerpt of the given element, or <code>null</code> if no excerpt could be located.
-	 * @see XHTML#ELEMENT_P
+	 * @see HTML#ELEMENT_P
 	 */
 	public static DocumentFragment getExcerpt(final Element element) {
 		if(XHTML_NAMESPACE_URI.toString().equals(element.getNamespaceURI()) && ELEMENT_P.equals(element.getLocalName())) { //if this is <xhtml:p>

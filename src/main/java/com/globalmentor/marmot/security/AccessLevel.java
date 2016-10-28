@@ -26,7 +26,7 @@ import org.urframework.URFResource;
  */
 public interface AccessLevel extends URFResource {
 
-	/** The access level type this access level represents. */
+	/** @return The access level type this access level represents. */
 	public AccessLevelType getAccessLevelType();
 
 	/**

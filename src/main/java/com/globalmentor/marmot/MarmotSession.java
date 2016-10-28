@@ -95,7 +95,7 @@ public interface MarmotSession<RK extends ResourceKit> {
 	 * @param resource The resource for which a resource kit should be returned.
 	 * @param capabilities The capabilities required for the resource kit.
 	 * @return <code>true</code> if there exists a resource kit to handle the given resource with the given capabilities, if any, in relation to the resource.
-	 * @see #getResourceKit(Repository, URFResource, Capability...)
+	 * @see #getResourceKit(Repository, URFResource, ResourceKit.Capability...)
 	 */
 	public boolean hasResourceKit(final Repository repository, final URFResource resource, final Capability... capabilities);
 
@@ -119,14 +119,14 @@ public interface MarmotSession<RK extends ResourceKit> {
 	/**
 	 * Retrieves a resource kit appropriate for the given resource statically if possible, without further resource lookup. This method locates a resource kit in
 	 * the following priority:
-	 * <ol>
-	 * <li>The first resource kit supporting the resource content type determined by:
+	 * <p>
+	 * The first resource kit supporting the resource content type determined by:
+	 * </p>
 	 * <ol>
 	 * <li>The given content type, if any.</li>
 	 * <li>The content determined if possible by {@link #getExtensionContentType(String)} from the resource URI extension.</li>
-	 * <ol></li>
 	 * <li>The resource description is retrieved as a last resort and the resource kit is determined by delegating to
-	 * {@link #getResourceKit(Repository, URFResource, Capability...)}.</li>
+	 * {@link #getResourceKit(Repository, URFResource, ResourceKit.Capability...)}.</li>
 	 * </ol>
 	 * @param repository The repository in which the resource resides.
 	 * @param resourceURI The URI of the resource in the given repository.
@@ -135,7 +135,7 @@ public interface MarmotSession<RK extends ResourceKit> {
 	 * @return A resource kit to handle the given resource with the given capabilities, if any, in relation to the resource; or <code>null</code> if there is no
 	 *         registered resource kit with the given capabilities in relation to the resource.
 	 * @throws ResourceIOException if an error occurred retrieving a description of the resource kit.
-	 * @see #{@link #getResourceKit(Repository, URFResource, Capability...)}
+	 * @see #getResourceKit(Repository, URFResource, ResourceKit.Capability...)
 	 */
 	public RK getResourceKit(final Repository repository, final URI resourceURI, final ContentType contentType, final Capability... capabilities)
 			throws ResourceIOException;
@@ -146,8 +146,7 @@ public interface MarmotSession<RK extends ResourceKit> {
 	 * <ol>
 	 * <li>The given content type, if any.</li>
 	 * <li>The content determined if possible by {@link #getExtensionContentType(String)} from the resource name extension.</li>
-	 * <ol>
-	 * @param repository The repository in which the resource resides.
+	 * </ol>
 	 * @param resourceName The name part of the URI of the resource in the given repository.
 	 * @param contentType The type of content the resource contains, or <code>null</code> if unknown.
 	 * @param capabilities The capabilities required for the resource kit.
@@ -155,11 +154,11 @@ public interface MarmotSession<RK extends ResourceKit> {
 	 *         registered resource kit with the given capabilities in relation to the resource.
 	 * @throws ResourceIOException if an error occurred retrieving a description of the resource kit.
 	 */
-	public RK getResourceKit(final String resourceName, final ContentType contentType, final Capability... capabilities);
+	public RK getResourceKit(final String resourceName, final ContentType contentType, final Capability... capabilities) throws ResourceIOException;
 
 	/**
 	 * Retrieves a resource kit appropriate for a MIME content type. This method should only be used for special-purpose functionality; when accessing resources
-	 * {@link #getResourceKit(Repository, URFResource, Capability...)} should normally be used instead.
+	 * {@link #getResourceKit(Repository, URFResource, ResourceKit.Capability...)} should normally be used instead.
 	 * @param contentType The type of content the resource contains.
 	 * @param capabilities The capabilities required for the resource kit.
 	 * @return A resource kit with the requested capabilities to handle the given content type, or <code>null</code> if no appropriate resource kit is registered.
@@ -168,6 +167,7 @@ public interface MarmotSession<RK extends ResourceKit> {
 
 	/**
 	 * Retrieves a resource kit previously registered that is an instance of the given class.
+	 * @param <RK2> The type of the resource kit.
 	 * @param resourceKitClass The class representing the type of registered resource kit to return.
 	 * @return A resource kit previously registered that is an instance of the given class, or <code>null</code> if no resource class instance of the given class
 	 *         is registered.
@@ -213,7 +213,7 @@ public interface MarmotSession<RK extends ResourceKit> {
 	/**
 	 * Determines the content type of a resource. The content type is determined in this order:
 	 * <ol>
-	 * <li>The value of the {@value Content#TYPE_PROPERTY_URI} property, if any.</li>
+	 * <li>The value of the {@link Content#TYPE_PROPERTY_URI} property, if any.</li>
 	 * <li>The registered content type for the resource extension, if any, returned by {@link #getExtensionContentType(String)}.</li>
 	 * </ol>
 	 * @param resource The resource for which a content type should be determined.
@@ -240,7 +240,7 @@ public interface MarmotSession<RK extends ResourceKit> {
 	/**
 	 * Determines the charset of a resource. The charset is determined in this order:
 	 * <ol>
-	 * <li>The value of the {@value Content#CHARSET_PROPERTY_URI} property, if any.</li>
+	 * <li>The value of the {@link Content#CHARSET_PROPERTY_URI} property, if any.</li>
 	 * <li>The registered charset for the determined content type, if any, returned by {@link #getContentTypeCharset(ContentType)}.</li>
 	 * </ol>
 	 * @param resource The resource for which a charset should be determined.
