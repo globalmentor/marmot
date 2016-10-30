@@ -18,13 +18,14 @@ package com.globalmentor.marmot.repository;
 
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.Conditions.*;
-import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
-import static java.nio.charset.StandardCharsets.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.urframework.content.Content.*;
 import static org.urframework.dcmi.DCMI.*;
+
+import static java.nio.charset.StandardCharsets.*;
+import static java.util.Objects.*;
 
 import java.io.*;
 import java.net.URI;
@@ -633,8 +634,8 @@ public abstract class AbstractRepositoryTest extends AbstractLoggedTest {
 	 */
 	protected URFResource createTestProperties(final URI resourceURI, final String title, final String description) {
 		final URFResource resource = new DefaultURFResource(resourceURI);
-		setTitle(resource, checkInstance(title));
-		setDescription(resource, checkInstance(description));
+		setTitle(resource, requireNonNull(title));
+		setDescription(resource, requireNonNull(description));
 		setDate(resource, new ISODateTime());
 		setLanguage(resource, Locale.ENGLISH);
 		return resource;

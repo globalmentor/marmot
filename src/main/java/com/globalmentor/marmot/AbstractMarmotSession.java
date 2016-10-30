@@ -24,6 +24,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 
 import static java.util.Collections.*;
+import static java.util.Objects.*;
 
 import java.util.concurrent.*;
 
@@ -68,7 +69,7 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 
 	@Override
 	public ContentType registerExtensionContentType(final String extension, final ContentType contentType) {
-		return extensionContentTypeMap.put(extension != null ? extension.toLowerCase() : null, checkInstance(contentType, "Content type cannot be null."));
+		return extensionContentTypeMap.put(extension != null ? extension.toLowerCase() : null, requireNonNull(contentType, "Content type cannot be null."));
 	}
 
 	@Override
@@ -81,7 +82,7 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 
 	@Override
 	public Charset registerContentTypeCharset(final ContentType contentType, final Charset charset) {
-		return baseContentTypeCharsetMap.put(contentType.getBaseType(), checkInstance(charset, "Charset cannot be null."));
+		return baseContentTypeCharsetMap.put(contentType.getBaseType(), requireNonNull(charset, "Charset cannot be null."));
 	}
 
 	@Override

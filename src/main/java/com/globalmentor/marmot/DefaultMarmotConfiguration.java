@@ -16,7 +16,7 @@
 
 package com.globalmentor.marmot;
 
-import static com.globalmentor.java.Objects.*;
+import static java.util.Objects.*;
 
 /**
  * Default configuration for Marmot.
@@ -43,6 +43,6 @@ public class DefaultMarmotConfiguration implements MarmotConfiguration {
 	 * @throws NullPointerException if the given resource cache is <code>null</code>.
 	 */
 	public DefaultMarmotConfiguration(final MarmotResourceCache<?> resourceCache) {
-		this.resourceCache = checkInstance(resourceCache, "Resource cache cannot be null.");
+		this.resourceCache = requireNonNull(resourceCache, "Resource cache cannot be null.");
 	}
 }

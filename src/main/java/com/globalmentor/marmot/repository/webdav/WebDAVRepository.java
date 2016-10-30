@@ -23,11 +23,11 @@ import java.util.*;
 
 import static java.util.Arrays.*;
 import static java.util.Collections.*;
+import static java.util.Objects.*;
 import static org.urframework.URF.*;
 import static org.urframework.content.Content.*;
 import static org.urframework.dcmi.DCMI.*;
 
-import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.model.Locales.*;
 import static com.globalmentor.net.URIs.*;
@@ -1038,9 +1038,9 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 		public DescriptionWriterOutputStreamDecorator(final OutputStream outputStream, final URI resourceURI, final URFResourceAlteration resourceAlteration,
 				final WebDAVResource webdavResource, final PasswordAuthentication passwordAuthentication) {
 			super(outputStream); //construct the parent class
-			this.resourceURI = checkInstance(resourceURI, "Resource URI cannot be null.");
-			this.resourceAlteration = checkInstance(resourceAlteration, "Resource alteration cannot be null.");
-			this.webdavResource = checkInstance(webdavResource, "WebDAV resource cannot be null.");
+			this.resourceURI = requireNonNull(resourceURI, "Resource URI cannot be null.");
+			this.resourceAlteration = requireNonNull(resourceAlteration, "Resource alteration cannot be null.");
+			this.webdavResource = requireNonNull(webdavResource, "WebDAV resource cannot be null.");
 			this.passwordAuthentication = passwordAuthentication;
 		}
 

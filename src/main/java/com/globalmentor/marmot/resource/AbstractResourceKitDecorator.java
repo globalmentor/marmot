@@ -20,9 +20,10 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.Set;
 
+import static java.util.Objects.*;
+
 import org.urframework.URFResource;
 
-import static com.globalmentor.java.Objects.*;
 import com.globalmentor.marmot.MarmotSession;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.security.PermissionType;
@@ -49,7 +50,7 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit {
 	 * @throws NullPointerException if the given resource kit is <code>null</code>.
 	 */
 	public AbstractResourceKitDecorator(final ResourceKit resourceKit) {
-		this.resourceKit = checkInstance(resourceKit, "Resource kit cannot be null.");
+		this.resourceKit = requireNonNull(resourceKit, "Resource kit cannot be null.");
 	}
 
 	@Override

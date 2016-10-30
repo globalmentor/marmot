@@ -30,6 +30,7 @@ import org.urframework.io.URFResourceTURFIO;
 import static java.nio.charset.StandardCharsets.*;
 import static java.util.Arrays.*;
 import static java.util.Collections.*;
+import static java.util.Objects.*;
 import static org.urframework.URF.*;
 import static org.urframework.content.Content.*;
 
@@ -49,7 +50,6 @@ import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.Characters.*;
 import static com.globalmentor.java.Conditions.*;
-import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 import static com.globalmentor.net.URIs.*;
 
@@ -126,7 +126,7 @@ public abstract class AbstractRepository implements Repository {
 	 * @throws NullPointerException if the given property URI is <code>null</code>.
 	 */
 	public boolean isLivePropertyURI(final URI propertyURI) {
-		return getLivePropertyURIs().contains(checkInstance(propertyURI, "Property URI cannot be null."));
+		return getLivePropertyURIs().contains(requireNonNull(propertyURI, "Property URI cannot be null."));
 	}
 
 	/** The I/O implementation that writes and reads a resource with the same reference URI as its base URI. */
@@ -208,7 +208,7 @@ public abstract class AbstractRepository implements Repository {
 	 * @see #getPathRepositories()
 	 */
 	public void setRootURI(final URI rootURI) {
-		this.rootURI = normalize(checkInstance(rootURI, "Root URI must not be null."));
+		this.rootURI = normalize(requireNonNull(rootURI, "Root URI must not be null."));
 		for(final Map.Entry<URIPath, Repository> pathRepositoryEntry : pathRepositoryMap.entrySet()) { //look at each path to repository mapping
 			pathRepositoryEntry.getValue().setRootURI(resolve(getRootURI(), pathRepositoryEntry.getKey())); //update the public URI of the repository to match its location in the repository
 		}
@@ -258,7 +258,7 @@ public abstract class AbstractRepository implements Repository {
 	 * @throws NullPointerException if the given content type is <code>null</code>.
 	 */
 	public ContentType registerExtensionContentType(final String extension, final ContentType contentType) {
-		return extensionContentTypeMap.put(extension != null ? extension.toLowerCase() : null, checkInstance(contentType, "Content type cannot be null."));
+		return extensionContentTypeMap.put(extension != null ? extension.toLowerCase() : null, requireNonNull(contentType, "Content type cannot be null."));
 	}
 
 	/**
@@ -283,7 +283,7 @@ public abstract class AbstractRepository implements Repository {
 	 * @throws NullPointerException if the given content type and/or charset is <code>null</code>.
 	 */
 	public Charset registerContentTypeCharset(final ContentType contentType, final Charset charset) {
-		return baseContentTypeCharsetMap.put(contentType.getBaseType(), checkInstance(charset, "Charset cannot be null."));
+		return baseContentTypeCharsetMap.put(contentType.getBaseType(), requireNonNull(charset, "Charset cannot be null."));
 	}
 
 	/**
@@ -342,7 +342,7 @@ public abstract class AbstractRepository implements Repository {
 			final URIPath parentPath = path.getParentPath(); //get the parent path
 			parentPathRepositoryMap.addItem(parentPath, repository); //associate this repository with the parent path
 		}
-		final Repository oldRepository = pathRepositoryMap.put(path.checkRelative().checkCollection(), checkInstance(repository, "Repository cannot be null."));
+		final Repository oldRepository = pathRepositoryMap.put(path.checkRelative().checkCollection(), requireNonNull(repository, "Repository cannot be null."));
 		//TODO unregister the old repository
 		repository.setParentRepository(this); //indicate that this is now the parent of the registered subrepository
 		return oldRepository; //return the previous repository, if any, registered for the given path
@@ -387,7 +387,7 @@ public abstract class AbstractRepository implements Repository {
 	 * @see #getRootURI()
 	 */
 	public URI checkResourceURI(URI resourceURI) throws IllegalArgumentException {
-		resourceURI = canonicalize(normalize(checkInstance(resourceURI, "Resource URI cannot be null."))); //normalize and canonicalize the URI
+		resourceURI = canonicalize(normalize(requireNonNull(resourceURI, "Resource URI cannot be null."))); //normalize and canonicalize the URI
 		if(!isChild(getRootURI(), resourceURI)) { //if the given resource URI does not designate a resource within this repository's URI namespace (this will normalize the URI, but as we need to return a normalized form it's better to normalize first so that actual normalization changes won't have to be done twice)
 			throw new IllegalArgumentException(resourceURI + " does not designate a resource within the repository " + getRootURI());
 		}
@@ -487,7 +487,7 @@ public abstract class AbstractRepository implements Repository {
 	 */
 	public AbstractRepository(final URI rootURI, final URFIO<URFResource> descriptionIO) {
 		this.rootURI = rootURI != null ? normalize(rootURI) : null;
-		this.descriptionIO = checkInstance(descriptionIO, "Description I/O cannot be null."); //save the description I/O
+		this.descriptionIO = requireNonNull(descriptionIO, "Description I/O cannot be null."); //save the description I/O
 		registerResourceFactory(Marmot.NAMESPACE_URI, MARMOT_RESOURCE_FACTORY); //register the Marmot factory
 		registerResourceFactory(MARMOT_SECURITY_NAMESPACE_URI, MARMOT_SECURITY_RESOURCE_FACTORY); //register the Marmot resource factory
 	}

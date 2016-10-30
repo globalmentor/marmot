@@ -19,10 +19,10 @@ package com.globalmentor.marmot;
 import java.io.IOException;
 import java.net.URI;
 
+import static java.util.Objects.*;
+
 import org.urframework.URFResource;
 import org.urframework.content.Content;
-
-import static com.globalmentor.java.Objects.*;
 
 import com.globalmentor.log.Log;
 import com.globalmentor.marmot.repository.Repository;
@@ -118,7 +118,7 @@ public class ResourceLocator {
 	 * @throws IllegalArgumentException if the given path is not a relative path.
 	 */
 	public ResourceLocator(final Repository repository, final URIPath resourcePath) {
-		this.repository = checkInstance(repository, "Repository cannot be null.");
+		this.repository = requireNonNull(repository, "Repository cannot be null.");
 		this.resourcePath = resourcePath.checkRelative();
 		this.resourceURI = resolve(repository.getRootURI(), resourcePath.toURI()); //resolve the resource path to the repository
 	}

@@ -26,12 +26,12 @@ import org.urframework.io.URFFiles;
 import org.urframework.io.URFResourceTURFIO;
 
 import static java.util.Collections.*;
+import static java.util.Objects.*;
 import static org.urframework.TURF.*;
 import static org.urframework.content.Content.*;
 
 import static com.globalmentor.io.Files.*;
 import static com.globalmentor.java.Bytes.*;
-import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
 
 import com.globalmentor.event.ProgressListener;
@@ -768,8 +768,8 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 		 */
 		public DescriptionWriterOutputStreamDecorator(final OutputStream outputStream, final URFResource resourceDescription, final File resourceFile) {
 			super(outputStream); //construct the parent class
-			this.resourceDescription = checkInstance(resourceDescription, "Resource description cannot be null.");
-			this.resourceFile = checkInstance(resourceFile, "Resource file cannot be null.");
+			this.resourceDescription = requireNonNull(resourceDescription, "Resource description cannot be null.");
+			this.resourceFile = requireNonNull(resourceFile, "Resource file cannot be null.");
 		}
 
 		/**

@@ -23,6 +23,8 @@ import java.io.*;
 import java.net.URI;
 import java.util.Iterator;
 
+import static java.util.Objects.*;
+
 import javax.imageio.*;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.stream.*;
@@ -30,7 +32,6 @@ import javax.imageio.stream.*;
 import org.urframework.URFResource;
 //JAI import javax.media.jai.*;
 
-import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.io.Files.*;
 
 import com.globalmentor.awt.geom.*;
@@ -61,7 +62,7 @@ public class ImageScaleFilter implements ResourceContentFilter //TODO remove dep
 	 * @throws NullPointerException if the given image aspect is <code>null</code>.
 	 */
 	public ImageScaleFilter(final ImageAspect imageAspect) {
-		this.imageAspect = checkInstance(imageAspect, "Image aspect cannot be null.");
+		this.imageAspect = requireNonNull(imageAspect, "Image aspect cannot be null.");
 	}
 
 	/** The dimensions of the preview aspect. */
