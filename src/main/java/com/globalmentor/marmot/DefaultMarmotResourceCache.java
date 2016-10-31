@@ -19,8 +19,9 @@ package com.globalmentor.marmot;
 import java.io.*;
 import java.net.URI;
 
+import static java.util.Objects.*;
+
 import static com.globalmentor.io.Files.*;
-import static com.globalmentor.java.Objects.*;
 import com.globalmentor.java.OperatingSystem;
 import com.globalmentor.marmot.repository.Repository;
 
@@ -67,7 +68,7 @@ public class DefaultMarmotResourceCache extends
 	 */
 	public DefaultMarmotResourceCache(final File cacheDirectory, final boolean fetchSynchronous, final long expiration) {
 		super(fetchSynchronous, expiration);
-		this.cacheDirectory = checkInstance(cacheDirectory, "Cache directory cannot be null.");
+		this.cacheDirectory = requireNonNull(cacheDirectory, "Cache directory cannot be null.");
 	}
 
 	/**

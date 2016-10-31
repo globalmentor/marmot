@@ -20,10 +20,11 @@ import java.io.*;
 import java.net.URI;
 import java.util.Date;
 
+import static java.util.Objects.*;
+
 import org.urframework.*;
 
 import static com.globalmentor.io.Files.*;
-import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
 import static org.urframework.content.Content.*;
 
@@ -260,9 +261,9 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		 * @throws NullPointerException if the given repository, resource URI, and/or key is <code>null</code>.
 		 */
 		public AbstractMarmotResourceCacheQuery(final Repository repository, final URI resourceURI, final KK key) {
-			this.repository = checkInstance(repository, "Repository cannot be null.");
+			this.repository = requireNonNull(repository, "Repository cannot be null.");
 			this.resourceURI = resourceURI; //save the resource URI
-			this.key = checkInstance(key, "Key cannot be null.");
+			this.key = requireNonNull(key, "Key cannot be null.");
 		}
 	}
 
@@ -308,7 +309,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		protected MarmotResourceCacheKey(final Repository repository, final URI resourceURI, final Object... objects) {
 			super(objects);
 			this.repositoryURI = repository.getRootURI(); //TODO ensure not null
-			this.resourceURI = checkInstance(resourceURI, "Resource URI cannot be null."); //save the resource URI
+			this.resourceURI = requireNonNull(resourceURI, "Resource URI cannot be null."); //save the resource URI
 		}
 
 	}

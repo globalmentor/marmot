@@ -22,14 +22,14 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.*;
 
+import static java.util.Objects.*;
+
 import org.urframework.*;
 import org.urframework.content.Content;
 
 import com.globalmentor.event.*;
 import com.globalmentor.io.Streams;
 import com.globalmentor.iso.datetime.ISODateTime;
-
-import static com.globalmentor.java.Objects.*;
 
 import com.globalmentor.lex.Identifier;
 import com.globalmentor.log.*;
@@ -116,7 +116,7 @@ public class RepositorySynchronizer {
 	 * @throws NullPointerException if the given resolution is <code>null</code>.
 	 */
 	public void setResourceResolution(final Resolution resourceResolution) {
-		this.resourceResolution = checkInstance(resourceResolution, "Resource resolution cannot be null.");
+		this.resourceResolution = requireNonNull(resourceResolution, "Resource resolution cannot be null.");
 	}
 
 	/** How a content incompatibility between resources will be resolved. */
@@ -133,7 +133,7 @@ public class RepositorySynchronizer {
 	 * @throws NullPointerException if the given resolution is <code>null</code>.
 	 */
 	public void setContentResolution(final Resolution contentResolution) {
-		this.contentResolution = checkInstance(contentResolution, "Content resolution cannot be null.");
+		this.contentResolution = requireNonNull(contentResolution, "Content resolution cannot be null.");
 	}
 
 	/** How a metadata incompatibility between resources will be resolved. */
@@ -150,7 +150,7 @@ public class RepositorySynchronizer {
 	 * @throws NullPointerException if the given resolution is <code>null</code>.
 	 */
 	public void setMetadataResolution(final Resolution metadataResolution) {
-		this.metadataResolution = checkInstance(metadataResolution, "Metadata resolution cannot be null.");
+		this.metadataResolution = requireNonNull(metadataResolution, "Metadata resolution cannot be null.");
 	}
 
 	/** Whether the {@link Content#MODIFIED_PROPERTY_URI} property should be updated if requested even if content is not updated. */

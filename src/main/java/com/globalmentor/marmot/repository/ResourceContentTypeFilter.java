@@ -18,6 +18,8 @@ package com.globalmentor.marmot.repository;
 
 import java.net.URI;
 
+import static java.util.Objects.*;
+
 import org.urframework.URFResource;
 
 import static com.globalmentor.java.Arrays.*;
@@ -83,7 +85,7 @@ public class ResourceContentTypeFilter extends AbstractResourceFilter {
 	public ResourceContentTypeFilter(final MarmotSession<?> marmotSession, final boolean collectionPass, final boolean nonCollectionPass,
 			final ContentType... contentTypes) {
 		super(collectionPass, nonCollectionPass); //construct the parent class
-		this.marmotSession = checkInstance(marmotSession, "Marmot session cannot be null.");
+		this.marmotSession = requireNonNull(marmotSession, "Marmot session cannot be null.");
 		this.contentTypes = checkInstances(contentTypes).clone(); //create a copy of content types to pass
 	}
 

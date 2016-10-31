@@ -19,9 +19,10 @@ package com.globalmentor.marmot.security;
 import java.net.URI;
 import java.util.*;
 
+import static java.util.Objects.*;
+
 import com.globalmentor.lex.Identifier;
 
-import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 
 /**
@@ -67,7 +68,7 @@ public enum PermissionType implements Identifier {
 	 * @throws NullPointerException if the given type URI is <code>null</code>.
 	 */
 	private PermissionType(final URI typeURI) {
-		this.typeURI = checkInstance(typeURI, "Type URI cannot be null.");
+		this.typeURI = requireNonNull(typeURI, "Type URI cannot be null.");
 	}
 
 	/** The lazily-created map of permission types keyed to type URIs. */
@@ -88,7 +89,7 @@ public enum PermissionType implements Identifier {
 			}
 			typeURIPermissionTypeMap = newTypeURIPermissionTypeMap; //update the static map with the one we created and initialized
 		}
-		final PermissionType permissionType = typeURIPermissionTypeMap.get(checkInstance(permissionTypeURI, "Permission type URI cannot be null.")); //look up the permission type from the type URI
+		final PermissionType permissionType = typeURIPermissionTypeMap.get(requireNonNull(permissionTypeURI, "Permission type URI cannot be null.")); //look up the permission type from the type URI
 		if(permissionType == null) { //if we don't know the permission type from the type URI
 			throw new IllegalArgumentException("Unrecognized permission type URI: " + permissionTypeURI);
 		}

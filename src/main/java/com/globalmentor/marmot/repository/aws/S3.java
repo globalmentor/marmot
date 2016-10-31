@@ -20,7 +20,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-import static com.globalmentor.java.Objects.*;
+import static java.util.Objects.*;
 
 import com.globalmentor.model.NameValuePair;
 import com.globalmentor.net.URIPath;
@@ -79,7 +79,7 @@ public class S3 {
 		for(final Map.Entry<String, String> amazonHeaderEntry : amazonHeaderMap.entrySet()) { //look at the canonicalized Amazon headers in alphabetical order
 			stringBuilder.append(amazonHeaderEntry.getKey()).append(HEADER_SEPARATOR).append(amazonHeaderEntry.getValue()).append('\n');
 		}
-		stringBuilder.append(ROOT_PATH).append(checkInstance(bucket, "Bucket cannot be null.")).append(PATH_SEPARATOR).append(path.checkRelative());
+		stringBuilder.append(ROOT_PATH).append(requireNonNull(bucket, "Bucket cannot be null.")).append(PATH_SEPARATOR).append(path.checkRelative());
 		final String signature;
 		try {
 			signature = new String(digest(MessageDigest.getInstance(SHA_ALGORITHM), UTF_8, stringBuilder.toString()), UTF_8);

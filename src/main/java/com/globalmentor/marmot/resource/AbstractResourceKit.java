@@ -25,12 +25,12 @@ import org.urframework.content.Content;
 
 import static java.util.Arrays.*;
 import static java.util.Collections.*;
+import static java.util.Objects.*;
 import static org.urframework.content.Content.*;
 import static org.urframework.dcmi.DCMI.*;
 
 import static com.globalmentor.java.Bytes.*;
 import static com.globalmentor.java.Enums.*;
-import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
 
 import com.globalmentor.iso.datetime.ISODateTime;
@@ -198,7 +198,7 @@ public abstract class AbstractResourceKit implements ResourceKit {
 	 * @throws NullPointerException if the supported content type and/or capabilities is <code>null</code>.
 	 */
 	public AbstractResourceKit(final ContentType supportedContentType, final String defaultNameExtension, final Capability... capabilities) {
-		this(new ContentType[] { checkInstance(supportedContentType, "Supported content type cannot be null.") }, defaultNameExtension, capabilities);
+		this(new ContentType[] { requireNonNull(supportedContentType, "Supported content type cannot be null.") }, defaultNameExtension, capabilities);
 	}
 
 	/**
@@ -222,7 +222,7 @@ public abstract class AbstractResourceKit implements ResourceKit {
 	 * @throws NullPointerException if the supported resource types and/or capabilities is <code>null</code>.
 	 */
 	public AbstractResourceKit(final URI supportedResourceType, final String defaultNameExtension, final Capability... capabilities) {
-		this(new URI[] { checkInstance(supportedResourceType, "Supported resource type cannot be null.") }, defaultNameExtension, capabilities);
+		this(new URI[] { requireNonNull(supportedResourceType, "Supported resource type cannot be null.") }, defaultNameExtension, capabilities);
 	}
 
 	/**
@@ -248,9 +248,9 @@ public abstract class AbstractResourceKit implements ResourceKit {
 	 */
 	public AbstractResourceKit(final ContentType[] supportedContentTypes, final URI[] supportedResourceTypes, final String defaultNameExtension,
 			final Capability... capabilities) {
-		this.supportedContentTypes = unmodifiableSet(new HashSet<ContentType>(asList(checkInstance(supportedContentTypes,
+		this.supportedContentTypes = unmodifiableSet(new HashSet<ContentType>(asList(requireNonNull(supportedContentTypes,
 				"Supported content types array cannot be null."))));
-		this.supportedResourceTypes = unmodifiableSet(new HashSet<URI>(asList(checkInstance(supportedResourceTypes,
+		this.supportedResourceTypes = unmodifiableSet(new HashSet<URI>(asList(requireNonNull(supportedResourceTypes,
 				"Supported resource types array cannot be null."))));
 		this.defaultNameExtension = defaultNameExtension;
 		this.capabilities = unmodifiableSet(createEnumSet(Capability.class, capabilities));

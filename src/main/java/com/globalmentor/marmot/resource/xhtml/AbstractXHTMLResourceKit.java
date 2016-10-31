@@ -19,8 +19,9 @@ package com.globalmentor.marmot.resource.xhtml;
 import java.io.*;
 import java.net.URI;
 
+import static java.util.Objects.*;
+
 import static com.globalmentor.java.CharSequences.*;
-import static com.globalmentor.java.Objects.*;
 import com.globalmentor.marmot.repository.Repository;
 import com.globalmentor.marmot.resource.*;
 import com.globalmentor.net.ContentType;
@@ -134,7 +135,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit {
 	 * @throws NullPointerException if the supported content type and/or capabilities is <code>null</code>.
 	 */
 	public AbstractXHTMLResourceKit(final ContentType supportedContentType, final String defaultNameExtension, final Capability... capabilities) {
-		this(new ContentType[] { checkInstance(supportedContentType, "Supported content type cannot be null.") }, defaultNameExtension, capabilities);
+		this(new ContentType[] { requireNonNull(supportedContentType, "Supported content type cannot be null.") }, defaultNameExtension, capabilities);
 	}
 
 	/**
@@ -158,7 +159,7 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit {
 	 * @throws NullPointerException if the supported resource types and/or capabilities is <code>null</code>.
 	 */
 	public AbstractXHTMLResourceKit(final URI supportedResourceType, final String defaultNameExtension, final Capability... capabilities) {
-		this(new URI[] { checkInstance(supportedResourceType, "Supported resource type cannot be null.") }, defaultNameExtension, capabilities);
+		this(new URI[] { requireNonNull(supportedResourceType, "Supported resource type cannot be null.") }, defaultNameExtension, capabilities);
 	}
 
 	/**

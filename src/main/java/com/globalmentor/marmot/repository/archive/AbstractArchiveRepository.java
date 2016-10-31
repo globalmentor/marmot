@@ -16,10 +16,10 @@
 
 package com.globalmentor.marmot.repository.archive;
 
-import static com.globalmentor.java.Objects.checkInstance;
-
 import java.io.*;
 import java.net.URI;
+
+import static java.util.Objects.*;
 
 import org.urframework.*;
 import org.urframework.io.URFIO;
@@ -63,7 +63,7 @@ public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepos
 		if(sourceRepository == this) { //we can't be our own source
 			throw new IllegalArgumentException("Repository cannot be its own source.");
 		}
-		this.sourceRepository = checkInstance(sourceRepository, "Source repository cannot be null.");
+		this.sourceRepository = requireNonNull(sourceRepository, "Source repository cannot be null.");
 	}
 
 	/**
@@ -99,7 +99,7 @@ public abstract class AbstractArchiveRepository<A> extends AbstractReadOnlyRepos
 	 * @throws IllegalArgumentException if the given source resource URI is not absolute or is a collection URI.
 	 */
 	public void setSourceResourceURI(final URI sourceResourceURI) {
-		this.sourceResourceURI = checkNotCollectionURI(checkAbsolute(normalize(checkInstance(sourceResourceURI, "Source resource URI must not be null."))));
+		this.sourceResourceURI = checkNotCollectionURI(checkAbsolute(normalize(requireNonNull(sourceResourceURI, "Source resource URI must not be null."))));
 	}
 
 	/**

@@ -19,10 +19,11 @@ package com.globalmentor.marmot.security;
 import java.net.URI;
 import java.util.*;
 
+import static java.util.Objects.*;
+
 import com.globalmentor.lex.Identifier;
 
 import static com.globalmentor.java.Enums.*;
-import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.marmot.security.MarmotSecurity.*;
 
 /**
@@ -75,7 +76,7 @@ public enum AccessLevelType implements Identifier {
 	 * @throws NullPointerException if the given type URI is <code>null</code>.
 	 */
 	private AccessLevelType(final URI typeURI, final PermissionType... permissionTypes) {
-		this.typeURI = checkInstance(typeURI, "Type URI cannot be null.");
+		this.typeURI = requireNonNull(typeURI, "Type URI cannot be null.");
 		defaultAllowedPermissionTypes = createEnumSet(PermissionType.class, permissionTypes); //store the default permission types in our set
 	}
 
@@ -97,7 +98,7 @@ public enum AccessLevelType implements Identifier {
 			}
 			typeURIAccessTypeMap = newTypeURIAccessTypeMap; //update the static map with the one we created and initialized
 		}
-		final AccessLevelType accessLevelType = typeURIAccessTypeMap.get(checkInstance(accessLevelTypeURI, "Access level type URI cannot be null.")); //look up the access level type from the type URI
+		final AccessLevelType accessLevelType = typeURIAccessTypeMap.get(requireNonNull(accessLevelTypeURI, "Access level type URI cannot be null.")); //look up the access level type from the type URI
 		if(accessLevelType == null) { //if we don't know the access level type from the type URI
 			throw new IllegalArgumentException("Unrecognized access level type URI: " + accessLevelTypeURI);
 		}

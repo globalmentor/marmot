@@ -18,6 +18,8 @@ package com.globalmentor.marmot.repository;
 
 import java.net.*;
 
+import static java.util.Objects.*;
+
 import org.urframework.*;
 import org.urframework.io.URFIO;
 import org.urframework.io.URFResourceTURFIO;
@@ -26,7 +28,6 @@ import com.globalmentor.net.ResourceIOException;
 import com.globalmentor.net.URIPath;
 
 import static com.globalmentor.java.Conditions.*;
-import static com.globalmentor.java.Objects.*;
 import static com.globalmentor.net.URIs.*;
 
 /**
@@ -51,7 +52,7 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	 * @see #setRootURI(URI)
 	 */
 	public void setSourceURI(final URI sourceURI) {
-		this.sourceURI = checkCollectionURI(checkAbsolute(normalize(checkInstance(sourceURI, "Source URI must not be null."))));
+		this.sourceURI = checkCollectionURI(checkAbsolute(normalize(requireNonNull(sourceURI, "Source URI must not be null."))));
 		if(getRootURI() == null) { //if no root URI has been set
 			setRootURI(this.sourceURI); //update the root URI to match the source URI
 		}

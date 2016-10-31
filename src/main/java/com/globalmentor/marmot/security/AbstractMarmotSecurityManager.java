@@ -20,6 +20,8 @@ import java.net.URI;
 import java.security.Principal;
 import java.util.*;
 
+import static java.util.Objects.*;
+
 import org.urframework.*;
 import org.urframework.select.*;
 
@@ -70,7 +72,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager {
 		}
 		do {
 			for(int i = permissionTypes.length - 1; i >= 0; --i) { //check all permissions for validity
-				final PermissionType permissionType = checkInstance(permissionTypes[i]);
+				final PermissionType permissionType = requireNonNull(permissionTypes[i]);
 				if(!isPermissionValid(repository, resourceURI, permissionType)) { //if this permission isn't valid
 					return false;
 				}
@@ -98,7 +100,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager {
 		int permissionTypeCount = permissionTypes.length;
 		//weed out invalid requested permissions
 		for(int i = permissionTypes.length - 1; i >= 0; --i) { //remove permission types that don't apply
-			final PermissionType permissionType = checkInstance(permissionTypes[i]);
+			final PermissionType permissionType = requireNonNull(permissionTypes[i]);
 			if(!isPermissionValid(repository, resourceURI, permissionType)) { //if this permission isn't valid
 				permissionTypes[i] = null; //don't allow this permission
 				--permissionTypeCount; //note that we have one fewer permission to check
@@ -107,7 +109,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager {
 		if(permissionTypeCount == 0) { //if no valid permissions are requested, don't check further---at least one valid permission must be requested, even for the owner
 			return false;
 		}
-		if(checkInstance(owner, "Owner cannot be null.").equals(user)) { //if the user is the owner
+		if(requireNonNull(owner, "Owner cannot be null.").equals(user)) { //if the user is the owner
 			return true; //allow the owner to do anything that is valid
 		}
 		final Set<PermissionType> allowedPermissionTypes = getAllowedPermissionTypes(repository, resourceURI, user); //get the allowed permission types
@@ -121,7 +123,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager {
 
 	/** {@inheritDoc} */
 	public boolean isSomethingAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user) throws ResourceIOException {
-		if(checkInstance(owner, "Owner cannot be null.").equals(user)) { //if the user is the owner
+		if(requireNonNull(owner, "Owner cannot be null.").equals(user)) { //if the user is the owner
 			return true; //the owner can always do *something* with the resource
 		}
 		return !getAllowedPermissionTypes(repository, resourceURI, user).isEmpty(); //see if there is at least one allowed permission for this user
@@ -161,7 +163,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager {
 		protected Boolean getAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final URI permissionTypeURI) throws ResourceIOException
 		{
 	//Log.trace("trying to get allowed for resource", resourceURI);
-			if(checkInstance(owner, "Owner cannot be null.").equals(user)) {	//if the user is the owner
+			if(requireNonNull(owner, "Owner cannot be null.").equals(user)) {	//if the user is the owner
 				return Boolean.TRUE;	//allow the owner to do anything
 			}
 			return allowed;	//return the allowance we found, if any
@@ -179,7 +181,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager {
 	 */
 	public Set<PermissionType> getAllowedPermissionTypes(final Repository repository, final URI resourceURI, final Principal user) throws ResourceIOException {
 		//Log.trace("trying to get allowed permissions for resource", resourceURI, "with user", user!=null ? user.getName() : "(none)");
-		if(checkInstance(repository, "Repository cannot be null.").resourceExists(checkInstance(resourceURI, "Resource URI cannot be null."))) { //see if the resource exists; if not, consider it to have inherited access
+		if(requireNonNull(repository, "Repository cannot be null.").resourceExists(requireNonNull(resourceURI, "Resource URI cannot be null."))) { //see if the resource exists; if not, consider it to have inherited access
 			final URFResource resource = repository.getResourceDescription(resourceURI); //get the resource description
 			final Access access = asInstance(resource.getPropertyValue(ACCESS_PROPERTY_URI), Access.class); //get the security.access property value, if any
 			if(access != null) { //if we have access defined
