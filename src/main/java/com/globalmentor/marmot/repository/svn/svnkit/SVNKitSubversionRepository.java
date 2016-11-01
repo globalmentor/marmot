@@ -127,24 +127,18 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		urfResourceDescriptionIO.setFormatted(false); //turn off formatting
 	}
 
-	/**
-	 * Creates a repository of the same type as this repository with the same access privileges as this one. This factory method is commonly used to use a parent
-	 * repository as a factory for other repositories in its namespace.
-	 * @param publicRepositoryURI The public URI identifying the location of the new repository.
-	 * @param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	 * @throws NullPointerException if the given public repository URI and/or private repository URI is <code>null</code>.
-	 */
+	@Override
 	protected Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI) {
 		return new SVNKitSubversionRepository(publicRepositoryURI, privateRepositoryURI); //create and return a new file repository
 	}
 
-	/**
-	 * Translates a public URI in the repository to a decoded path relative to the public URI, suitable for use with SVNKit.
-	 * @param resourceURI The URI in the public URI namespace.
-	 * @return The decoded path of the resource relative to the public URI.
-	 * @throws NullPointerException if the given resource URI is <code>null</code>.
-	 * @throws IllegalArgumentException if the given resource URI is not in the public resource namespace.
-	 */
+	//	/**
+	//	 * Translates a public URI in the repository to a decoded path relative to the public URI, suitable for use with SVNKit.
+	//	 * @param resourceURI The URI in the public URI namespace.
+	//	 * @return The decoded path of the resource relative to the public URI.
+	//	 * @throws NullPointerException if the given resource URI is <code>null</code>.
+	//	 * @throws IllegalArgumentException if the given resource URI is not in the public resource namespace.
+	//	 */
 	/*TODO del if not needed
 		protected String getResourceRelativePath(final URI resourceURI)
 		{
@@ -213,7 +207,12 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		return resourceURI;
 	}
 
-	/** {@inheritDoc} This version connects to the SVNKit repository. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This version connects to the SVNKit repository.
+	 * </p>
+	 */
 	@Override
 	public void openImpl() throws ResourceIOException {
 		super.openImpl();
@@ -243,7 +242,12 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		}
 	}
 
-	/** {@inheritDoc} This implementation returns <code>false</code> for all resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation returns <code>false</code> for all resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
+	 */
 	@Override
 	protected boolean resourceExistsImpl(URI resourceURI) throws ResourceIOException {
 		final URI privateResourceURI = getSourceResourceURI(resourceURI); //get the resource URI in the private space
@@ -268,7 +272,6 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	protected URFResource getResourceDescriptionImpl(final URI resourceURI) throws ResourceIOException {
 		final URF urf = createURF(); //create a new URF data model
@@ -287,7 +290,12 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		}
 	}
 
-	/** {@inheritDoc} For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any.
+	 * </p>
+	 */
 	@Override
 	protected InputStream getResourceInputStreamImpl(final URI resourceURI) throws ResourceIOException {
 		final SVNRepository svnRepository = getSVNRepository(); //get the SVNKit repository and prevent other threads for accessing it simultaneously
@@ -322,7 +330,12 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		}
 	}
 
-	/** {@inheritDoc} For collections, this implementation stores the content in the {@value #COLLECTION_CONTENT_NAME} file. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * For collections, this implementation stores the content in the {@value #COLLECTION_CONTENT_NAME} file.
+	 * </p>
+	 */
 	@Override
 	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, final ISODateTime newContentModified) throws ResourceIOException {
 		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
@@ -353,7 +366,12 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		}
 	}
 
-	/** {@inheritDoc} This implementation ignores child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation ignores child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
+	 */
 	@Override
 	protected boolean hasChildrenImpl(final URI resourceURI) throws ResourceIOException {
 		if(!isCollectionURI(resourceURI)) { //only collection can have children 
@@ -383,7 +401,12 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		}
 	}
 
-	/** {@inheritDoc} This implementation does not include child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation does not include child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
+	 */
 	@Override
 	public List<URFResource> getChildResourceDescriptionsImpl(final URI resourceURI, final ResourceFilter resourceFilter, final int depth)
 			throws ResourceIOException {
@@ -444,7 +467,12 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		}
 	}
 
-	/** {@inheritDoc} This implementation updates resource properties before storing the contents of the resource. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation updates resource properties before storing the contents of the resource.
+	 * </p>
+	 */
 	@Override
 	protected OutputStream createResourceImpl(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException {
 		final TempOutputStream tempOutputStream = new TempOutputStream() { //create a new temporary output stream that, before it is closed, will save the collected bytes to a new resource
@@ -465,7 +493,6 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		return tempOutputStream; //return the temporary output stream we created 
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	protected URFResource createResourceImpl(final URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents)
 			throws ResourceIOException {
@@ -577,7 +604,12 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		}
 	}
 
-	/** {@inheritDoc} This implementation ignores requests to delete all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation ignores requests to delete all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
+	 */
 	@Override
 	protected void deleteResourceImpl(final URI resourceURI) throws ResourceIOException {
 		final URI sourceResourceURI = getSourceResourceURI(resourceURI);
@@ -609,7 +641,6 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	protected URFResource alterResourcePropertiesImpl(final URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException {
 		final URIPath resourceURIPath = getResourceURIPath(resourceURI); //get the path to the resource
@@ -724,8 +755,10 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	}
 
 	/**
-	 * {@inheritDoc} This implementation throws a {@link ResourceNotFoundException} for all resource for which {@link #isSourceResourceVisible(URI)} returns
-	 * <code>false</code>.
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation throws a {@link ResourceNotFoundException} for all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
 	 */
 	@Override
 	protected void copyResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
@@ -734,8 +767,10 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	}
 
 	/**
-	 * {@inheritDoc} This implementation throws a {@link ResourceNotFoundException} for all resource for which {@link #isSourceResourceVisible(URI)} returns
-	 * <code>false</code>.
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation throws a {@link ResourceNotFoundException} for all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
 	 */
 	@Override
 	protected void moveResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
@@ -976,7 +1011,12 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 		return nodeKind;
 	}
 
-	/** {@inheritDoc} This version calls clears and releases the password, if any. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This version calls clears and releases the password, if any.
+	 * </p>
+	 */
 	@Override
 	public synchronized void dispose() {
 		try {
@@ -1158,7 +1198,12 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			return resourcePropertyChanges;
 		}
 
-		/** {@inheritDoc} This version first ensures there is a property value map for this resource. */
+		/**
+		 * {@inheritDoc}
+		 * <p>
+		 * This version first ensures there is a property value map for this resource.
+		 * </p>
+		 */
 		@Override
 		public boolean visit(final SVNKitSubversionRepository repository, final URI resourceURI, final URIPath resourceURIPath, final SVNRepository svnRepository,
 				final SVNDirEntry svnDirEntry) throws SVNException {
@@ -1169,7 +1214,12 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 			return super.visit(repository, resourceURI, resourceURIPath, svnRepository, svnDirEntry);
 		}
 
-		/** {@inheritDoc} This implementation stores the names of properties that should be renamed. */
+		/**
+		 * {@inheritDoc}
+		 * <p>
+		 * This implementation stores the names of properties that should be renamed.
+		 * </p>
+		 */
 		@Override
 		protected boolean visitProperty(final SVNKitSubversionRepository repository, URI resourceURI, URIPath resourceURIPath, SVNRepository svnRepository,
 				SVNDirEntry svnDirEntry, String propertyName, SVNPropertyValue svnPropertyValue) throws SVNException {
@@ -1259,7 +1309,12 @@ public class SVNKitSubversionRepository extends AbstractHierarchicalSourceReposi
 	 */
 	public static class CollectObsoletePropertyChangesVisitor extends CollectPropertyChangesVisitor {
 
-		/** {@inheritDoc} This version renames obsolete property names. */
+		/**
+		 * {@inheritDoc}
+		 * <p>
+		 * This version renames obsolete property names.
+		 * </p>
+		 */
 		@Override
 		protected NameValuePair<String, SVNPropertyValue> getNewProperty(final SVNKitSubversionRepository repository, final URI resourceURI,
 				final NameValuePair<String, SVNPropertyValue> property) {

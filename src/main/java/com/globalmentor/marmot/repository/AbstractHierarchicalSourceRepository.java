@@ -120,25 +120,12 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 		return URIPath.relativize(getRootURI(), resourceURI);
 	}
 
-	/**
-	 * Creates a repository of the same type as this repository with the same access privileges as this one. This factory method is commonly used to use a parent
-	 * repository as a factory for other repositories in its namespace. This method resolves the private repository path to the current public repository URI.
-	 * @param subrepositoryPath The private path relative to the private URI of this repository.
-	 * @throws NullPointerException if the given private repository path is <code>null</code>.
-	 * @throws IllegalArgumentException if the given subrepository path is absolute and/or is not a collection.
-	 */
+	@Override
 	public final Repository createSubrepository(final URIPath subrepositoryPath) {
 		return createSubrepository(resolve(getRootURI(), subrepositoryPath.checkRelative().checkCollection().toURI()), subrepositoryPath); //resolve the subrepository path to the public repository URI		
 	}
 
-	/**
-	 * Creates a repository of the same type as this repository with the same access privileges as this one. This factory method is commonly used to use a parent
-	 * repository as a factory for other repositories in its namespace.
-	 * @param publicRepositoryURI The public URI identifying the location of the new repository.
-	 * @param privateSubrepositoryPath The private path relative to the private URI of this repository.
-	 * @throws NullPointerException if the given public repository URI and/or private repository path is <code>null</code>.
-	 * @throws IllegalArgumentException if the given private repository path is absolute and/or is not a collection.
-	 */
+	@Override
 	public final Repository createSubrepository(final URI publicRepositoryURI, final URIPath privateSubrepositoryPath) {
 		return createSubrepository(publicRepositoryURI, resolve(getSourceURI(), privateSubrepositoryPath.checkRelative().checkCollection().toURI())); //resolve the subrepository path to the private repository URI		
 	}
@@ -154,7 +141,10 @@ public abstract class AbstractHierarchicalSourceRepository extends AbstractRepos
 	protected abstract Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI);
 
 	/**
-	 * {@inheritDoc} This version ensures that there is a source URI specified.
+	 * {@inheritDoc}
+	 * <p>
+	 * This version ensures that there is a source URI specified.
+	 * </p>
 	 * @throws IllegalStateException if there is no source URI specified.
 	 * @see #getSourceURI()
 	 */

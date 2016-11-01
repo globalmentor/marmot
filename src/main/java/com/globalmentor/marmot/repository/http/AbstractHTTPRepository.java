@@ -162,7 +162,12 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 		return new HTTPResource(privateResourceURI, getHTTPClient(), passwordAuthentication);
 	}
 
-	/** {@inheritDoc} This implementation returns <code>false</code> for all resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation returns <code>false</code> for all resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
+	 */
 	@Override
 	protected boolean resourceExistsImpl(URI resourceURI) throws ResourceIOException {
 		final URI privateResourceURI = getSourceResourceURI(resourceURI); //get the resource URI in the private space
@@ -184,7 +189,12 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 		}
 	}
 
-	/** {@inheritDoc} For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any.
+	 * </p>
+	 */
 	@Override
 	protected InputStream getResourceInputStreamImpl(final URI resourceURI) throws ResourceIOException {
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
@@ -210,7 +220,7 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 		}
 	}
 
-	/** {@inheritDoc} For collections, this implementation stores the content in the {@value #COLLECTION_CONTENT_NAME} file. */
+	///** {@inheritDoc} For collections, this implementation stores the content in the {@value #COLLECTION_CONTENT_NAME} file. */
 	/*TODO fix
 		@Override
 		protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, final URFDateTime newContentModified) throws ResourceIOException
@@ -249,19 +259,19 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 		}
 	*/
 
-	/**
-	 * Creates a new resource with the given description and returns an output stream for writing the contents of the resource. If a resource already exists at
-	 * the given URI it will be replaced. The returned output stream should always be closed. If a resource with no contents is desired,
-	 * {@link #createResource(URI, URFResource, byte[])} with zero bytes is better suited for this task. This implementation updates the resource description
-	 * after its contents are stored.
-	 * @param resourceURI The reference URI to use to identify the resource.
-	 * @param resourceDescription A description of the resource; the resource URI is ignored.
-	 * @return An output stream for storing the contents of the resource.
-	 * @throws NullPointerException if the given resource URI and/or resource description is <code>null</code>.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws ResourceIOException if the resource could not be created.
-	 */
+	//	/**
+	//	 * Creates a new resource with the given description and returns an output stream for writing the contents of the resource. If a resource already exists at
+	//	 * the given URI it will be replaced. The returned output stream should always be closed. If a resource with no contents is desired,
+	//	 * {@link #createResource(URI, URFResource, byte[])} with zero bytes is better suited for this task. This implementation updates the resource description
+	//	 * after its contents are stored.
+	//	 * @param resourceURI The reference URI to use to identify the resource.
+	//	 * @param resourceDescription A description of the resource; the resource URI is ignored.
+	//	 * @return An output stream for storing the contents of the resource.
+	//	 * @throws NullPointerException if the given resource URI and/or resource description is <code>null</code>.
+	//	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	//	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	//	 * @throws ResourceIOException if the resource could not be created.
+	//	 */
 	/*TODO fix
 		public OutputStream createResource(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException {	//TODO fix to prevent resources with special names
 			resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
@@ -292,17 +302,17 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 		}
 	*/
 
-	/**
-	 * Creates a new resource with the given description and contents. If a resource already exists at the given URI it will be replaced.
-	 * @param resourceURI The reference URI to use to identify the resource.
-	 * @param resourceDescription A description of the resource; the resource URI is ignored.
-	 * @param resourceContents The contents to store in the resource.
-	 * @return A description of the resource that was created.
-	 * @throws NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws ResourceIOException if the resource could not be created.
-	 */
+	//	/**
+	//	 * Creates a new resource with the given description and contents. If a resource already exists at the given URI it will be replaced.
+	//	 * @param resourceURI The reference URI to use to identify the resource.
+	//	 * @param resourceDescription A description of the resource; the resource URI is ignored.
+	//	 * @param resourceContents The contents to store in the resource.
+	//	 * @return A description of the resource that was created.
+	//	 * @throws NullPointerException if the given resource URI, resource description, and/or resource contents is <code>null</code>.
+	//	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
+	//	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
+	//	 * @throws ResourceIOException if the resource could not be created.
+	//	 */
 	/*TODO fix
 		public URFResource createResource(URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException {	//TODO fix to prevent resources with special names
 			resourceURI=checkResourceURI(resourceURI);	//makes sure the resource URI is valid and normalize the URI
@@ -344,7 +354,12 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 		}
 	*/
 
-	/** {@inheritDoc} This implementation ignores requests to delete all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation ignores requests to delete all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
+	 */
 	@Override
 	protected void deleteResourceImpl(final URI resourceURI) throws ResourceIOException {
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
@@ -364,7 +379,10 @@ public abstract class AbstractHTTPRepository extends AbstractHierarchicalSourceR
 	}
 
 	/**
-	 * {@inheritDoc} This version makes the following translations:
+	 * {@inheritDoc}
+	 * <p>
+	 * This version makes the following translations:
+	 * </p>
 	 * <dl>
 	 * <dt>{@link HTTPForbiddenException}</dt>
 	 * <dd>{@link ResourceForbiddenException}</dd>

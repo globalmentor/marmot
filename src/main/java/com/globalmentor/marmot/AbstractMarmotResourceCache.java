@@ -54,56 +54,22 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		super(fetchSynchronous, expiration);
 	}
 
-	/**
-	 * Retrieves a value from the cache. Values are fetched from the backing store if needed, and this method blocks until the data is fetched.
-	 * @param repository The repository in which the resource is stored.
-	 * @param resourceURI The URI of the resource.
-	 * @return The cached value.
-	 * @throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	 * @throws IOException if there was an error fetching the value from the backing store.
-	 * @see #get(Object)
-	 */
+	@Override
 	public final File get(final Repository repository, final URI resourceURI) throws IOException {
 		return get(repository, resourceURI, false); //get without deferring fetching
 	}
 
-	/**
-	 * Retrieves a value from the cache. Values are fetched from the backing store if needed, with fetching optionally deferred until later.
-	 * @param repository The repository in which the resource is stored.
-	 * @param resourceURI The URI of the resource.
-	 * @param deferFetch Whether fetching, if needed, should be deferred and performed in an asynchronous thread.
-	 * @return The cached value, or <code>null</code> if fetching was deferred.
-	 * @throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	 * @throws IOException if there was an error fetching the value from the backing store.
-	 * @see #get(Object, boolean)
-	 */
+	@Override
 	public final File get(final Repository repository, final URI resourceURI, final boolean deferFetch) throws IOException {
 		return get(createQuery(repository, resourceURI), deferFetch); //create a query and perform the fetch
 	}
 
-	/**
-	 * Retrieves data from the cache. Data is fetched from the backing store if needed, and this method blocks until the data is fetched.
-	 * @param repository The repository in which the resource is stored.
-	 * @param resourceURI The URI of the resource.
-	 * @return The cached data.
-	 * @throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	 * @throws IOException if there was an error fetching the data from the backing store.
-	 * @see #getData(Object)
-	 */
+	@Override
 	public final Data<File> getData(final Repository repository, final URI resourceURI) throws IOException {
 		return getData(repository, resourceURI, false); //get without deferring fetching
 	}
 
-	/**
-	 * Retrieves data from the cache. Data is fetched from the backing store if needed, with fetching optionally deferred until later.
-	 * @param repository The repository in which the resource is stored.
-	 * @param resourceURI The URI of the resource.
-	 * @param deferFetch Whether fetching, if needed, should be deffered and performed in an asynchronous thread.
-	 * @return The cached data, or <code>null</code> if fetching was deferred.
-	 * @throws NullPointerException if the given repository and/or resource URI is <code>null</code>.
-	 * @throws IOException if there was an error fetching the data from the backing store.
-	 * @see #getData(Object, boolean)
-	 */
+	@Override
 	public final Data<File> getData(final Repository repository, final URI resourceURI, final boolean deferFetch) throws IOException {
 		return getData(createQuery(repository, resourceURI), deferFetch); //create a query and perform the fetch
 	}
@@ -118,12 +84,12 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 	protected abstract Q createQuery(final Repository repository, final URI resourceURI);
 
 	/**
-	 * Determines if a given cached value is stale. This version checks to see if the last modified time of the resource has changed.
-	 * @param query The query for requesting a value from the cache.
-	 * @param cachedInfo The information that is cached.
-	 * @return <code>true</code> if the cached information has become stale.
-	 * @throws IOException if there was an error checking the cached information for staleness.
+	 * {@inheritDoc}
+	 * <p>
+	 * This version checks to see if the last modified time of the resource has changed.
+	 * </p>
 	 */
+	@Override
 	public boolean isStaleData(final Q query, final FileData cachedInfo) throws IOException {
 		if(super.isStaleData(query, cachedInfo)) { //if the default stale checks think the information is stale
 			return true; //the information is stale
@@ -140,14 +106,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		return false; //we couldn't find a reason that the cached information is stale 
 	}
 
-	/**
-	 * Fetches data from the backing store.
-	 * @param query The query for requesting a value from the cache.
-	 * @return New information to cache.
-	 * @throws IOException if there was an error fetching the value from the backing store.
-	 * @see #getCacheDirectory(AbstractMarmotResourceCacheQuery)
-	 * @see #getCacheBaseName(AbstractMarmotResourceCacheQuery)
-	 */
+	@Override
 	public final FileData fetchData(final Q query) throws IOException {
 		//Log.info("Starting to fetch resource", key.getResourceURI());
 		final Repository repository = query.getRepository(); //get the repository
@@ -248,7 +207,7 @@ public abstract class AbstractMarmotResourceCache<K extends AbstractMarmotResour
 		/** A key for looking up data for the query. */
 		private final KK key;
 
-		/** @return A key for looking up data for the query. */
+		@Override
 		public KK getKey() {
 			return key;
 		}
