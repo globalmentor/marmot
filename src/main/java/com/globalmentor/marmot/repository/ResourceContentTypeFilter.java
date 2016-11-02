@@ -80,13 +80,13 @@ public class ResourceContentTypeFilter extends AbstractResourceFilter {
 	 * @param collectionPass Whether collection resources are allowed to pass.
 	 * @param nonCollectionPass Whether non collection resources are allowed to pass.
 	 * @param contentTypes The passed content types.
-	 * @throws NullPointerException if the given Marmos session, content types, and/or any content type is <code>null</code>.
+	 * @throws NullPointerException if the given Marmot session, content types, and/or any content type is <code>null</code>.
 	 */
 	public ResourceContentTypeFilter(final MarmotSession<?> marmotSession, final boolean collectionPass, final boolean nonCollectionPass,
 			final ContentType... contentTypes) {
 		super(collectionPass, nonCollectionPass); //construct the parent class
 		this.marmotSession = requireNonNull(marmotSession, "Marmot session cannot be null.");
-		this.contentTypes = checkInstances(contentTypes).clone(); //create a copy of content types to pass
+		this.contentTypes = requireNonNull(contentTypes).clone(); //create a copy of content types to pass
 	}
 
 	/**

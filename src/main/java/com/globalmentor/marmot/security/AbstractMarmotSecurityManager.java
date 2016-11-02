@@ -183,7 +183,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager {
 		//Log.trace("trying to get allowed permissions for resource", resourceURI, "with user", user!=null ? user.getName() : "(none)");
 		if(requireNonNull(repository, "Repository cannot be null.").resourceExists(requireNonNull(resourceURI, "Resource URI cannot be null."))) { //see if the resource exists; if not, consider it to have inherited access
 			final URFResource resource = repository.getResourceDescription(resourceURI); //get the resource description
-			final Access access = asInstance(resource.getPropertyValue(ACCESS_PROPERTY_URI), Access.class); //get the security.access property value, if any
+			final Access access = asInstance(resource.getPropertyValue(ACCESS_PROPERTY_URI), Access.class).orElse(null); //get the security.access property value, if any
 			if(access != null) { //if we have access defined
 				for(final AccessRule accessRule : access) { //for each access rule
 					final Selector selector = accessRule.getSelector(); //get the selector, if any
