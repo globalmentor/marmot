@@ -83,43 +83,43 @@ public class NTFSFileRepository extends FileRepository {
 		super(publicRepositoryURI, privateRepositoryURI); //construct the parent class
 	}
 
-	/**
-	 * Creates a repository of the same type as this repository with the same access privileges as this one. This factory method is commonly used to use a parent
-	 * repository as a factory for other repositories in its namespace.
-	 * @param publicRepositoryURI The public URI identifying the location of the new repository.
-	 * @param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	 * @throws NullPointerException if the given public repository URI and/or private repository URI is <code>null</code>.
-	 */
+	@Override
 	protected Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI) {
 		return new NTFSFileRepository(publicRepositoryURI, privateRepositoryURI); //create and return a new NTFS file repository
 	}
 
 	/**
-	 * Determines the file that holds the description of the given resource file. This version uses an NTFS Alternate Data Stream of
-	 * {@value #MARMOT_DESCRIPTION_NAME} in the resource file.
-	 * @param resourceFile The file of a resource.
-	 * @return A new file designating the location of the resource description.
+	 * {@inheritDoc}
+	 * <p>
+	 * This version uses an NTFS Alternate Data Stream of {@value #MARMOT_DESCRIPTION_NAME} in the resource file.
+	 * </p>
 	 */
+	@Override
 	protected File getResourceDescriptionFile(final File resourceFile) {
 		return changeName(resourceFile, resourceFile.getName() + Files.NTFS_ADS_DELIMITER + MARMOT_DESCRIPTION_NAME); //return a file in the form "file.ext:marmot-description"
 	}
 
-	/** {@inheritDoc} This version always returns <code>false</code>, as NTFS repositories don't use separate files to store descriptions. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This version always returns <code>false</code>, as NTFS repositories don't use separate files to store descriptions.
+	 * </p>
+	 */
 	@Override
 	protected boolean isSourceResourceDescription(final URI privateResourceURI) {
 		return false; //in an NTFS repository there are no separate files for storing descriptions
 	}
 
 	/**
-	 * Gets an output stream to the contents of the given resource file. For collections, this implementation sets the content of the
-	 * {@value #COLLECTION_CONTENT_NAME} file, if any. If this resource is not a collection, this version gets the resource description, deletes the file, and
-	 * creates a new file with the same description because simply opening a new file output stream to overwrite a file will overwrite the NTFS streams. For
-	 * collections, an output stream is retrieved normally because the special collection content file does not maintain properties.
-	 * @param resourceURI The URI of the resource to access.
-	 * @param resourceFile The file representing the resource.
-	 * @return An output stream to the resource represented by given resource file.
-	 * @throws IOException if there is an error accessing the resource.
+	 * {@inheritDoc}
+	 * <p>
+	 * For collections, this implementation sets the content of the {@value #COLLECTION_CONTENT_NAME} file, if any. If this resource is not a collection, this
+	 * version gets the resource description, deletes the file, and creates a new file with the same description because simply opening a new file output stream
+	 * to overwrite a file will overwrite the NTFS streams. For collections, an output stream is retrieved normally because the special collection content file
+	 * does not maintain properties.
+	 * </p>
 	 */
+	@Override
 	protected OutputStream getResourceOutputStream(final URI resourceURI, final File resourceFile) throws IOException {
 		if(isCollectionURI(resourceURI)) { //if the resource is a collection
 			return super.getResourceOutputStream(resourceURI, resourceFile); //open an output stream to the special resource file normally
@@ -133,3 +133,4 @@ public class NTFSFileRepository extends FileRepository {
 	}
 
 }
+ 

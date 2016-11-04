@@ -132,10 +132,7 @@ public class MarmotMirror extends AbstractApplication {
 		//TODO set the copyright DCMI.setRights(this, COPYRIGHT); //set the application copyright
 	}
 
-	/**
-	 * The main application method.
-	 * @return The application status.
-	 */
+	@Override
 	public int main() {
 		final String[] args = getArgs(); //get the arguments
 		final String sourceRepositoryString = getOption(args, Parameter.SOURCE_REPOSITORY); //get the source repository parameter

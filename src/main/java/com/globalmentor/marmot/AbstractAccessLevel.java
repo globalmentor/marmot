@@ -32,7 +32,7 @@ public abstract class AbstractAccessLevel extends AbstractMarmotSecurityResource
 	/** The access level type this access level represents. */
 	private final AccessLevelType accessLevelType;
 
-	/** The access level type this access level represents. */
+	@Override
 	public AccessLevelType getAccessLevelType() {
 		return accessLevelType;
 	}
@@ -52,38 +52,22 @@ public abstract class AbstractAccessLevel extends AbstractMarmotSecurityResource
 		this.accessLevelType = AccessLevelType.getAccessLevelType(getTypeURI()); //determine the access level type
 	}
 
-	/**
-	 * Returns this access level's allowed permissions.
-	 * @return This access level's allowed permissions.
-	 * @see MarmotSecurity#ALLOW_PROPERTY_URI
-	 */
+	@Override
 	public Iterable<Permission> getAllows() {
 		return getPropertyValues(ALLOW_PROPERTY_URI, Permission.class); //return the allow values
 	}
 
-	/**
-	 * Adds a particular permission as allowed.
-	 * @param permission The permission to be allowed.
-	 * @see MarmotSecurity#ALLOW_PROPERTY_URI
-	 */
+	@Override
 	public void addAllow(final Permission permission) {
 		addPropertyValue(ALLOW_PROPERTY_URI, permission); //add the allow property value
 	}
 
-	/**
-	 * Adds a particular permission as allowed.
-	 * @param permissionType The type of permission to be allowed.
-	 * @see MarmotSecurity#ALLOW_PROPERTY_URI
-	 */
+	@Override
 	public void addAllow(final PermissionType permissionType) {
 		addAllow(createPermission(permissionType)); //create a permission and allow it
 	}
 
-	/**
-	 * Sets the allowed permissions to those specified.
-	 * @param permissions The permissions that should be allowed.
-	 * @see MarmotSecurity#ALLOW_PROPERTY_URI
-	 */
+	@Override
 	public void setAllowedPermissions(final Set<Permission> permissions) {
 		removePropertyValues(ALLOW_PROPERTY_URI); //remove all the allow properties
 		for(final Permission permission : permissions) { //for each permission
@@ -91,11 +75,7 @@ public abstract class AbstractAccessLevel extends AbstractMarmotSecurityResource
 		}
 	}
 
-	/**
-	 * Sets the allowed permissions to those specified.
-	 * @param permissionTypes The permission types that should be allowed.
-	 * @see MarmotSecurity#ALLOW_PROPERTY_URI
-	 */
+	@Override
 	public void setAllowedPermissionTypes(final Set<PermissionType> permissionTypes) {
 		removePropertyValues(ALLOW_PROPERTY_URI); //remove all the allow properties
 		for(final PermissionType permissionType : permissionTypes) { //for each permission
@@ -103,38 +83,22 @@ public abstract class AbstractAccessLevel extends AbstractMarmotSecurityResource
 		}
 	}
 
-	/**
-	 * Returns this access level's denied permissions.
-	 * @return This access level's denied permissions.
-	 * @see MarmotSecurity#DENY_PROPERTY_URI
-	 */
+	@Override
 	public Iterable<Permission> getDenies() {
 		return getPropertyValues(DENY_PROPERTY_URI, Permission.class); //return the deny values
 	}
 
-	/**
-	 * Adds a particular permission as denied.
-	 * @param permission The permission to be denied.
-	 * @see MarmotSecurity#DENY_PROPERTY_URI
-	 */
+	@Override
 	public void addDeny(final Permission permission) {
 		addPropertyValue(DENY_PROPERTY_URI, permission); //add the deny property value
 	}
 
-	/**
-	 * Adds a particular permission as denied.
-	 * @param permissionType The type of permission to be denied.
-	 * @see MarmotSecurity#DENY_PROPERTY_URI
-	 */
+	@Override
 	public void addDeny(final PermissionType permissionType) {
 		addDeny(createPermission(permissionType)); //create a permission and deny it
 	}
 
-	/**
-	 * Sets the denied permissions to those specified.
-	 * @param permissions The permissions that should be denied.
-	 * @see MarmotSecurity#DENY_PROPERTY_URI
-	 */
+	@Override
 	public void setDeniedPermissions(final Set<Permission> permissions) {
 		removePropertyValues(DENY_PROPERTY_URI); //remove all the deny properties
 		for(final Permission permission : permissions) { //for each permission
@@ -142,11 +106,7 @@ public abstract class AbstractAccessLevel extends AbstractMarmotSecurityResource
 		}
 	}
 
-	/**
-	 * Sets the denied permissions to those specified.
-	 * @param permissionTypes The permission types that should be denied.
-	 * @see MarmotSecurity#DENY_PROPERTY_URI
-	 */
+	@Override
 	public void setDeniedPermissionTypes(final Set<PermissionType> permissionTypes) {
 		removePropertyValues(DENY_PROPERTY_URI); //remove all the deny properties
 		for(final PermissionType permissionType : permissionTypes) { //for each permission

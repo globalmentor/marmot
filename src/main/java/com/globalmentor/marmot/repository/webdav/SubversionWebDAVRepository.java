@@ -92,13 +92,7 @@ public class SubversionWebDAVRepository extends WebDAVRepository {
 		ignoredWebDAVNamespaces.add(SUBVERSION_DAV_NAMESPACE_URI.toString()); //by default ignore the Subversion DAV namespace
 	}
 
-	/**
-	 * Creates a repository of the same type as this repository with the same access privileges as this one. This factory method is commonly used to use a parent
-	 * repository as a factory for other repositories in its namespace.
-	 * @param publicRepositoryURI The public URI identifying the location of the new repository.
-	 * @param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	 * @throws NullPointerException if the given public repository URI and/or private repository URI is <code>null</code>.
-	 */
+	@Override
 	protected Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI) {
 		final SubversionWebDAVRepository repository = new SubversionWebDAVRepository(publicRepositoryURI, privateRepositoryURI, getHTTPClient()); //create a new repository
 		repository.setUsername(getUsername()); //transfer authentication info
@@ -107,28 +101,20 @@ public class SubversionWebDAVRepository extends WebDAVRepository {
 	}
 
 	/**
-	 * Determines the WebDAV property name to represent an URF property. This version uses the encoded URF property URI as the local name of the
-	 * {@link SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI} namespace. The standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name
-	 * character.
-	 * @param urfPropertyURI The URI of the URF property to represent.
-	 * @return A WebDAV property name to use in representing an URF property with the given URF property URI.
+	 * {@inheritDoc}
+	 * <p>
+	 * This version uses the encoded URF property URI as the local name of the {@link SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI} namespace. The standard
+	 * URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name character.
+	 * </p>
 	 * @see SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI
 	 * @see MarmotSubversion#encodePropertyURIPropertyName(URI)
 	 */
+	@Override
 	protected WebDAVPropertyName createWebDAVPropertyName(final URI urfPropertyURI) {
 		return new WebDAVPropertyName(SUBVERSION_CUSTOM_NAMESPACE, MarmotSubversion.encodePropertyURIPropertyName(urfPropertyURI)); //create and return a new WebDAV property name in the Subversion custom property namespace
 	}
 
-	/**
-	 * Determines the URF property to represent the given WebDAV property if possible. If the WebDAV property has a local name of
-	 * {@link SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI}, the decoded form of its local name, if an absolute URI, will be used as the URF property URI. The
-	 * standard URI escape character, {@value URIs#ESCAPE_CHAR}, is not a valid name character.
-	 * @param webdavPropertyName The name of the WebDAV property.
-	 * @return The URI of the URF property to represent the given WebDAV property, or <code>null</code> if the given WebDAV property cannot be represented in URF.
-	 * @throws IllegalArgumentException if the given property is not encoded properly.
-	 * @see SubversionWebDAV#SUBVERSION_CUSTOM_NAMESPACE_URI
-	 * @see MarmotSubversion#decodePropertyURIPropertyName(String)
-	 */
+	@Override
 	protected URI getURFPropertyURI(final WebDAVPropertyName webdavPropertyName) {
 		if(SUBVERSION_CUSTOM_NAMESPACE.equals(webdavPropertyName.getNamespace())) { //if this is the Subversion custom property namespace
 			final String propertyName = webdavPropertyName.getLocalName(); //get the property name

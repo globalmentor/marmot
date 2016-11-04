@@ -27,7 +27,7 @@ public class DefaultMarmotConfiguration implements MarmotConfiguration {
 	/** The cache configured for use by Marmot. */
 	private final MarmotResourceCache<?> resourceCache;
 
-	/** @return The cache configured for use by Marmot. */
+	@Override
 	public MarmotResourceCache<?> getResourceCache() {
 		return resourceCache;
 	}

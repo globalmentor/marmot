@@ -81,12 +81,7 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile> {
 		super(rootURI, sourceResourceURI, descriptionIO);
 	}
 
-	/**
-	 * Creates an object to represent the source archive from the given source archive file. The returned archive will be opened and ready for use.
-	 * @param sourceArchiveFile The cached file of the source archive.
-	 * @throws IOException if there is an error creating the source archive.
-	 * @return A new source archive for the file.
-	 */
+	@Override
 	protected ZipFile createSourceArchive(final File sourceArchiveFile) throws IOException {
 		return new ZipFile(sourceArchiveFile); //create a new zip file for reading
 	}
@@ -183,7 +178,6 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile> {
 		return childZipEntries;
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	protected boolean resourceExistsImpl(URI resourceURI) throws ResourceIOException {
 		if(getRootURI().equals(resourceURI)) { //the root resource always exists
@@ -199,7 +193,6 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile> {
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	protected URFResource getResourceDescriptionImpl(final URI resourceURI) throws ResourceIOException {
 		final URF urf = createURF(); //create a new URF data model
@@ -211,7 +204,12 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile> {
 		}
 	}
 
-	/** {@inheritDoc} For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any.
+	 * </p>
+	 */
 	@Override
 	protected InputStream getResourceInputStreamImpl(final URI resourceURI) throws ResourceIOException {
 		try {
@@ -227,7 +225,6 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile> {
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	protected boolean hasChildrenImpl(final URI resourceURI) throws ResourceIOException {
 		try {
@@ -237,7 +234,6 @@ public class ZipArchiveRepository extends AbstractArchiveRepository<ZipFile> {
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public List<URFResource> getChildResourceDescriptionsImpl(final URI resourceURI, final ResourceFilter resourceFilter, final int depth)
 			throws ResourceIOException {

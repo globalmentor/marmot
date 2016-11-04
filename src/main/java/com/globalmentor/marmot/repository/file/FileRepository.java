@@ -80,14 +80,14 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 	private final FileFilter fileFilter = new FileFilter() {
 
 		/**
-		 * Tests whether or not the specified abstract pathname is one of the file types we recognize. This implementation ignores hidden files. This implementation
-		 * delegates to {@link FileRepository#isSourceResourceVisible(URI)}.
-		 * @param file The abstract pathname to be tested.
-		 * @return <code>true</code> if and only if the indicated file should be included.
-		 * @throws NullPointerException if the given file is <code>null</code>.
+		 * {@inheritDoc}
+		 * <p>
+		 * This implementation ignores hidden files. This implementation delegates to {@link FileRepository#isSourceResourceVisible(URI)}.
+		 * </p>
 		 * @see File#isHidden()
 		 * @see FileRepository#isSourceResourceVisible(URI)
 		 */
+		@Override
 		public boolean accept(final File file) {
 			if(file.isHidden()) { //ignore hidden files
 				return false;
@@ -160,18 +160,17 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 		urfResourceDescriptionIO.setFormatted(true); //turn on formatting
 	}
 
-	/**
-	 * Creates a repository of the same type as this repository with the same access privileges as this one. This factory method is commonly used to use a parent
-	 * repository as a factory for other repositories in its namespace.
-	 * @param publicRepositoryURI The public URI identifying the location of the new repository.
-	 * @param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	 * @throws NullPointerException if the given public repository URI and/or private repository URI is <code>null</code>.
-	 */
+	@Override
 	protected Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI) {
 		return new FileRepository(publicRepositoryURI, privateRepositoryURI); //create and return a new file repository
 	}
 
-	/** {@inheritDoc} This implementation returns <code>false</code> for all resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation returns <code>false</code> for all resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
+	 */
 	@Override
 	protected boolean resourceExistsImpl(URI resourceURI) throws ResourceIOException {
 		final URI privateResourceURI = getSourceResourceURI(resourceURI); //get the resource URI in the private space
@@ -187,7 +186,6 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	protected URFResource getResourceDescriptionImpl(final URI resourceURI) throws ResourceIOException {
 		final URF urf = createURF(); //create a new URF data model
@@ -198,7 +196,12 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 		}
 	}
 
-	/** {@inheritDoc} For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any.
+	 * </p>
+	 */
 	@Override
 	protected InputStream getResourceInputStreamImpl(final URI resourceURI) throws ResourceIOException {
 		try {
@@ -220,7 +223,12 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 		}
 	}
 
-	/** {@inheritDoc} For collections, this implementation stores the content in the {@value #COLLECTION_CONTENT_NAME} file. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * For collections, this implementation stores the content in the {@value #COLLECTION_CONTENT_NAME} file.
+	 * </p>
+	 */
 	@Override
 	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, ISODateTime newContentModified) throws ResourceIOException {
 		try {
@@ -258,7 +266,12 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 		return new FileOutputStream(resourceFile); //return an output stream to the file
 	}
 
-	/** {@inheritDoc} This implementation ignores child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation ignores child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
+	 */
 	@Override
 	protected boolean hasChildrenImpl(final URI resourceURI) throws ResourceIOException {
 		final File resourceFile = new File(getSourceResourceURI(resourceURI)); //create a file object for the resource
@@ -275,7 +288,12 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 		}
 	}
 
-	/** {@inheritDoc} This implementation does not include child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation does not include child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
+	 */
 	@Override
 	public List<URFResource> getChildResourceDescriptionsImpl(final URI resourceURI, final ResourceFilter resourceFilter, final int depth)
 			throws ResourceIOException {
@@ -324,7 +342,12 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 		}
 	}
 
-	/** {@inheritDoc} This implementation updates resource properties before storing the contents of the resource. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation updates resource properties before storing the contents of the resource.
+	 * </p>
+	 */
 	@Override
 	protected OutputStream createResourceImpl(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException {
 		try {
@@ -348,7 +371,6 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	protected URFResource createResourceImpl(final URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents)
 			throws ResourceIOException {
@@ -381,7 +403,12 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 		}
 	}
 
-	/** {@inheritDoc} This implementation ignores requests to delete all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation ignores requests to delete all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
+	 */
 	@Override
 	protected void deleteResourceImpl(final URI resourceURI) throws ResourceIOException {
 		try {
@@ -397,7 +424,6 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	protected URFResource alterResourcePropertiesImpl(final URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException {
 		return alterResourceProperties(resourceURI, resourceAlteration, new File(getSourceResourceURI(resourceURI))); //create a file object and alter the properties for the file
@@ -426,8 +452,10 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 	}
 
 	/**
-	 * {@inheritDoc} This implementation throws a {@link ResourceNotFoundException} for all resource for which {@link #isSourceResourceVisible(URI)} returns
-	 * <code>false</code>.
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation throws a {@link ResourceNotFoundException} for all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
 	 */
 	@Override
 	protected void copyResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
@@ -516,8 +544,10 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 	}
 
 	/**
-	 * {@inheritDoc} This implementation throws a {@link ResourceNotFoundException} for all resource for which {@link #isSourceResourceVisible(URI)} returns
-	 * <code>false</code>.
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation throws a {@link ResourceNotFoundException} for all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
 	 */
 	@Override
 	protected void moveResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
@@ -625,7 +655,10 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 	}
 
 	/**
-	 * {@inheritDoc} This version removes the following resources from the public space:
+	 * {@inheritDoc}
+	 * <p>
+	 * This version removes the following resources from the public space:
+	 * </p>
 	 * <ul>
 	 * <li>Any resource description file, as determined by {@link #isSourceResourceDescription(URI)}.</li>
 	 * </ul>
@@ -721,7 +754,10 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 	}
 
 	/**
-	 * {@inheritDoc} This version makes the following translations:
+	 * {@inheritDoc}
+	 * <p>
+	 * This version makes the following translations:
+	 * </p>
 	 * <dl>
 	 * <dt>{@link FileNotFoundException}</dt>
 	 * <dd>{@link ResourceNotFoundException}</dd>
@@ -773,9 +809,12 @@ public class FileRepository extends AbstractHierarchicalSourceRepository impleme
 		}
 
 		/**
-		 * Called after the stream is successfully closed. This version updates the file properties to reflect the given resource description.
-		 * @throws ResourceIOException if an I/O error occurs.
+		 * {@inheritDoc}
+		 * <p>
+		 * This version updates the file properties to reflect the given resource description.
+		 * </p>
 		 */
+		@Override
 		protected void afterClose() throws ResourceIOException {
 			try {
 				saveResourceDescription(getResourceDescription(), getResourceFile()); //save the resource description

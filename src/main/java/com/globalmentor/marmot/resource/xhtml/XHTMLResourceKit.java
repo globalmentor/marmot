@@ -136,14 +136,14 @@ public class XHTMLResourceKit extends AbstractXHTMLResourceKit {
 		resource.setPropertyValue(TEMPLATE_URI_PROPERTY_URI, value);
 	}
 
-	/**
-	 * Loads the template document for the identified resource.
-	 * @param repository The repository in which the resource resides.
-	 * @param resourceURI The URI of the resource.
-	 * @return The template document for the given resource, or <code>null</code> if no template could be found for the identified resource.
-	 * @throws ResourceIOException if there is an error accessing the repository.
-	 * @see #getResourceTemplateURI(Repository, URI)
-	 */
+	//	/**
+	//	 * Loads the template document for the identified resource.
+	//	 * @param repository The repository in which the resource resides.
+	//	 * @param resourceURI The URI of the resource.
+	//	 * @return The template document for the given resource, or <code>null</code> if no template could be found for the identified resource.
+	//	 * @throws ResourceIOException if there is an error accessing the repository.
+	//	 * @see #getResourceTemplateURI(Repository, URI)
+	//	 */
 	/*TODO del if not needed
 		public static Document getResourceTemplate(final Repository repository, final URI resourceURI) throws ResourceIOException
 		{

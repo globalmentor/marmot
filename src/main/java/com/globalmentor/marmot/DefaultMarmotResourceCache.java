@@ -83,14 +83,12 @@ public class DefaultMarmotResourceCache extends
 	}
 
 	/**
-	 * Determines the directory in which to store cached information for the given query. The returned directory will already be created if needed.
+	 * {@inheritDoc}
 	 * <p>
 	 * This implementation returns {@link #getCacheDirectory()}.
 	 * </p>
-	 * @param query The query for requesting a value from the cache.
-	 * @return The directory to use for for storing cached information for the query.
-	 * @throws IOException If there was an error retrieving the cache directory.
 	 */
+	@Override
 	protected File getCacheDirectory(final DefaultMarmotResourceCacheQuery query) throws IOException {
 		return ensureDirectoryExists(getCacheDirectory()); //return the cache directory, making sure it exists
 	}

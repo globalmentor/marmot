@@ -90,11 +90,12 @@ public class ResourceContentTypeFilter extends AbstractResourceFilter {
 	}
 
 	/**
-	 * Determines whether a given resource should pass through the filter or be filtered out. This implementation only passes resources with a content type that
-	 * matches at least one of the provided content types.
-	 * @param resource The resource to filter.
-	 * @return <code>true</code> if the resource should pass through the filter, else <code>false</code> if the resource should be filtered out.
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation only passes resources with a content type that matches at least one of the provided content types.
+	 * </p>
 	 */
+	@Override
 	public boolean isPass(final URFResource resource) {
 		boolean contentTypePass = false;
 		final ContentType contentType = getMarmotSession().determineContentType(resource); //get the content type of the resource

@@ -51,10 +51,12 @@ public class DefaultResourceURIFilter extends AbstractResourceFilter {
 	}
 
 	/**
-	 * Determines whether a given resource should pass through the filter or be filtered out. This implementation unconditionally returns <code>true</code>.
-	 * @param resource The resource to filter.
-	 * @return <code>true</code> if the resource should pass through the filter, else <code>false</code> if the resource should be filtered out.
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation unconditionally returns <code>true</code>.
+	 * </p>
 	 */
+	@Override
 	public boolean isPass(final URFResource resource) {
 		return true;
 	}
