@@ -47,15 +47,7 @@ public class MAQROResourceKit extends AbstractResourceKit {
 		super(new ContentType[] { MENTOR_ACTIVITY_CONTENT_TYPE });
 	}
 
-	/**
-	 * Writes default resource content to the given output stream.
-	 * @param repository The repository that contains the resource.
-	 * @param resourceURI The reference URI to use to identify the resource, which may not exist.
-	 * @param resourceDescription A description of the resource; the resource URI is ignored.
-	 * @throws NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws ResourceIOException if the default resource content could not be written.
-	 */
+	@Override
 	public void writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription,
 			final OutputStream outputStream) throws ResourceIOException {
 		/*TODO fix for MAQRO

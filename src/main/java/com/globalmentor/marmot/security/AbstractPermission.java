@@ -27,7 +27,7 @@ public abstract class AbstractPermission extends AbstractMarmotSecurityResource 
 	/** The permission type this permission represents. */
 	private final PermissionType permissionType;
 
-	/** The permission type this permission represents. */
+	@Override
 	public PermissionType getPermissionType() {
 		return permissionType;
 	}

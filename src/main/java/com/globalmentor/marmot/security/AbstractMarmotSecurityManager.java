@@ -57,13 +57,13 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager {
 
 	//TODO fix	@return <code>true</code> if the given user has the requested permission in relation to a resource in a repository, or <code>false</code> if the user has no such permission.
 
-	/** {@inheritDoc} */
+	@Override
 	public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user,
 			final PermissionType... permissionTypes) throws ResourceIOException {
 		return isAllowed(owner, repository, resourceURI, user, false, permissionTypes);
 	}
 
-	/** {@inheritDoc} */
+	@Override
 	public boolean isAllowed(final Principal owner, final Repository repository, URI resourceURI, final Principal user, boolean checkAncestors,
 			final PermissionType... permissionTypes) throws ResourceIOException {
 		//Log.trace("getting allowed for permission", permissionType, "for user", user!=null ? user.getName() : "(none)");
@@ -90,7 +90,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager {
 		return true;
 	}
 
-	/** {@inheritDoc} */
+	@Override
 	public boolean isOneAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user,
 			PermissionType... permissionTypes) throws ResourceIOException {
 		if(permissionTypes.length == 0) {
@@ -121,7 +121,7 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager {
 		return false;
 	}
 
-	/** {@inheritDoc} */
+	@Override
 	public boolean isSomethingAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user) throws ResourceIOException {
 		if(requireNonNull(owner, "Owner cannot be null.").equals(user)) { //if the user is the owner
 			return true; //the owner can always do *something* with the resource
@@ -129,36 +129,36 @@ public class AbstractMarmotSecurityManager implements MarmotSecurityManager {
 		return !getAllowedPermissionTypes(repository, resourceURI, user).isEmpty(); //see if there is at least one allowed permission for this user
 	}
 
-	/**
-	 * Determines whether a given user has permission to perform some action in relation to a given repository and resource. This method is additive; if a
-	 * superclass doesn't find a permission, a subclass may be able to add the permission. Deleting and renaming the resource repository is never allowed. This
-	 * implementation allows all permissions in all other circumstances if the user is the owner.
-	 * @param owner The principal that owns the repository.
-	 * @param repository The repository that contains the resource.
-	 * @param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
-	 * @param permissionTypeURI The type of permission requested, indicated by permission type URI.
-	 * @return <code>true</code> if the given permission is allowed for the user in relation to the indicated resource, else <code>false</code>.
-	 * @throws NullPointerException if the given owner, repository, resource type, and/or permission URI is <code>null</code>.
-	 * @throws ResourceIOException if there is an error accessing the repository.
-	 */
+	//	/**
+	//	 * Determines whether a given user has permission to perform some action in relation to a given repository and resource. This method is additive; if a
+	//	 * superclass doesn't find a permission, a subclass may be able to add the permission. Deleting and renaming the resource repository is never allowed. This
+	//	 * implementation allows all permissions in all other circumstances if the user is the owner.
+	//	 * @param owner The principal that owns the repository.
+	//	 * @param repository The repository that contains the resource.
+	//	 * @param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
+	//	 * @param permissionTypeURI The type of permission requested, indicated by permission type URI.
+	//	 * @return <code>true</code> if the given permission is allowed for the user in relation to the indicated resource, else <code>false</code>.
+	//	 * @throws NullPointerException if the given owner, repository, resource type, and/or permission URI is <code>null</code>.
+	//	 * @throws ResourceIOException if there is an error accessing the repository.
+	//	 */
 	/*TODO del if not needed
 		public boolean isAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final URI permissionTypeURI) throws ResourceIOException
 		{
 		}
 	*/
 
-	/**
-	 * Determines whether a given user has permission to perform some action in relation to a given repository and resource. This implementation allows all
-	 * permissions if the user is the owner.
-	 * @param owner The principal that owns the repository.
-	 * @param repository The repository that contains the resource.
-	 * @param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
-	 * @param permissionTypeURI The type of permission requested, indicated by permission type URI.
-	 * @return A {@link Boolean} value indicating whether this permission was allowed or denied for this user, or <code>null</code> if no access rule was
-	 *         specified for this user or the resource does not exist.
-	 * @throws NullPointerException if the given owner, repository, resource type, and/or permission URI is <code>null</code>.
-	 * @throws ResourceIOException if there is an error accessing the repository.
-	 */
+	//	/**
+	//	 * Determines whether a given user has permission to perform some action in relation to a given repository and resource. This implementation allows all
+	//	 * permissions if the user is the owner.
+	//	 * @param owner The principal that owns the repository.
+	//	 * @param repository The repository that contains the resource.
+	//	 * @param user The user attempting to access the resource, which may be <code>null</code> if the user is anonymous.
+	//	 * @param permissionTypeURI The type of permission requested, indicated by permission type URI.
+	//	 * @return A {@link Boolean} value indicating whether this permission was allowed or denied for this user, or <code>null</code> if no access rule was
+	//	 *         specified for this user or the resource does not exist.
+	//	 * @throws NullPointerException if the given owner, repository, resource type, and/or permission URI is <code>null</code>.
+	//	 * @throws ResourceIOException if there is an error accessing the repository.
+	//	 */
 	/*TODO del if not needed
 		protected Boolean getAllowed(final Principal owner, final Repository repository, final URI resourceURI, final Principal user, final URI permissionTypeURI) throws ResourceIOException
 		{

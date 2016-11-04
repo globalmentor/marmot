@@ -180,13 +180,7 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 		getIgnoredWebDAVNamespaces().add(MicrosoftWebDAV.MICROSOFT_WEBDAV_PROPERTY_NAMESPACE_URI.toString()); //ignore Microsoft properties placed by Windows Vista; although these properties might have been useful, they forego millisecond precision by using RFC 1123 instead of RFC 3339
 	}
 
-	/**
-	 * Creates a repository of the same type as this repository with the same access privileges as this one. This factory method is commonly used to use a parent
-	 * repository as a factory for other repositories in its namespace.
-	 * @param publicRepositoryURI The public URI identifying the location of the new repository.
-	 * @param privateRepositoryURI The URI identifying the private namespace managed by this repository.
-	 * @throws NullPointerException if the given public repository URI and/or private repository URI is <code>null</code>.
-	 */
+	@Override
 	protected Repository createSubrepository(final URI publicRepositoryURI, final URI privateRepositoryURI) {
 		final WebDAVRepository repository = new WebDAVRepository(publicRepositoryURI, privateRepositoryURI, getHTTPClient()); //create a new repository
 		repository.setUsername(getUsername()); //transfer authentication info
@@ -327,7 +321,12 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 		return username != null && password != null ? new PasswordAuthentication(username, password) : null; //return new password authentication if this information is available
 	}
 
-	/** {@inheritDoc} This implementation returns <code>false</code> for all resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation returns <code>false</code> for all resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
+	 */
 	@Override
 	protected boolean resourceExistsImpl(final URI resourceURI) throws ResourceIOException {
 		final URI privateResourceURI = getSourceResourceURI(resourceURI); //get the resource URI in the private space
@@ -349,7 +348,6 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	protected URFResource getResourceDescriptionImpl(final URI resourceURI) throws ResourceIOException {
 		final URF urf = createURF(); //create a new URF data model
@@ -369,7 +367,12 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 		}
 	}
 
-	/** {@inheritDoc} For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * For collections, this implementation retrieves the content of the {@value #COLLECTION_CONTENT_NAME} file, if any.
+	 * </p>
+	 */
 	@Override
 	protected InputStream getResourceInputStreamImpl(final URI resourceURI) throws ResourceIOException {
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
@@ -398,7 +401,12 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 		}
 	}
 
-	/** {@inheritDoc} For collections, this implementation stores the content in the {@value #COLLECTION_CONTENT_NAME} file. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * For collections, this implementation stores the content in the {@value #COLLECTION_CONTENT_NAME} file.
+	 * </p>
+	 */
 	@Override
 	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, final ISODateTime newContentModified) throws ResourceIOException {
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
@@ -430,7 +438,12 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 		}
 	}
 
-	/** {@inheritDoc} This implementation ignores child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation ignores child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
+	 */
 	@Override
 	protected boolean hasChildrenImpl(final URI resourceURI) throws ResourceIOException {
 		final URI privateResourceURI = getSourceResourceURI(resourceURI); //get the URI of the resource in the private namespace
@@ -454,7 +467,12 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 		}
 	}
 
-	/** {@inheritDoc} This implementation does not include child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation does not include child resources for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
+	 */
 	@Override
 	public List<URFResource> getChildResourceDescriptionsImpl(final URI resourceURI, final ResourceFilter resourceFilter, final int depth)
 			throws ResourceIOException {
@@ -514,7 +532,12 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 		}
 	}
 
-	/** {@inheritDoc} This implementation updates the resource description after its contents are stored.. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation updates the resource description after its contents are stored.
+	 * </p>
+	 */
 	@Override
 	protected OutputStream createResourceImpl(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException {
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
@@ -536,7 +559,6 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	protected URFResource createResourceImpl(final URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents)
 			throws ResourceIOException {
@@ -566,7 +588,12 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 		}
 	}
 
-	/** {@inheritDoc} This implementation ignores requests to delete all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation ignores requests to delete all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
+	 */
 	@Override
 	protected void deleteResourceImpl(final URI resourceURI) throws ResourceIOException {
 		final PasswordAuthentication passwordAuthentication = getPasswordAuthentication(); //get authentication, if any
@@ -585,13 +612,13 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 		}
 	}
 
-	/**
-	 * Determines the WebDAV property names of an existing list of WebDAV properties that correspond to a set of URF property URIs. This is useful for deleting
-	 * existing URF properties.
-	 * @param webdavProperties The existing WebDAV properties.
-	 * @param propertyURIs The set of URF property URIs to match.
-	 * @return The set of names of WebDAV properties that match the given URF property URIs.
-	 */
+	//	/**
+	//	 * Determines the WebDAV property names of an existing list of WebDAV properties that correspond to a set of URF property URIs. This is useful for deleting
+	//	 * existing URF properties.
+	//	 * @param webdavProperties The existing WebDAV properties.
+	//	 * @param propertyURIs The set of URF property URIs to match.
+	//	 * @return The set of names of WebDAV properties that match the given URF property URIs.
+	//	 */
 	/*TODO del if not needed
 		protected Set<WebDAVPropertyName> getWebDAVPropertyNames(final List<WebDAVProperty> webdavProperties, final Set<URI> urfPropertyURIs)
 		{
@@ -608,7 +635,10 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 	*/
 
 	/**
-	 * {@inheritDoc} This implementation does not support removing specific properties by value.
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation does not support removing specific properties by value.
+	 * </p>
 	 * @throws UnsupportedOperationException if a property is requested to be removed by value.
 	 * @throws UnsupportedOperationException if a property is requested to be added without the property URI first being removed (i.e. a property addition instead
 	 *           of a property setting).
@@ -754,8 +784,10 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 	}
 
 	/**
-	 * {@inheritDoc} This implementation throws a {@link ResourceNotFoundException} for all resource for which {@link #isSourceResourceVisible(URI)} returns
-	 * <code>false</code>.
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation throws a {@link ResourceNotFoundException} for all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
 	 */
 	@Override
 	protected void copyResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
@@ -777,8 +809,10 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 	}
 
 	/**
-	 * {@inheritDoc} This implementation throws a {@link ResourceNotFoundException} for all resource for which {@link #isSourceResourceVisible(URI)} returns
-	 * <code>false</code>.
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation throws a {@link ResourceNotFoundException} for all resource for which {@link #isSourceResourceVisible(URI)} returns <code>false</code>.
+	 * </p>
 	 */
 	@Override
 	protected void moveResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
@@ -947,7 +981,10 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 	}
 
 	/**
-	 * {@inheritDoc} This version makes the following translations:
+	 * {@inheritDoc}
+	 * <p>
+	 * This version makes the following translations:
+	 * </p>
 	 * <dl>
 	 * <dt>{@link HTTPForbiddenException}</dt>
 	 * <dd>{@link ResourceForbiddenException}</dd>
@@ -974,7 +1011,12 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 		}
 	}
 
-	/** {@inheritDoc} This version calls clears and releases the password, if any. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This version calls clears and releases the password, if any.
+	 * </p>
+	 */
 	@Override
 	public synchronized void dispose() {
 		try {
@@ -1045,9 +1087,13 @@ public class WebDAVRepository extends AbstractHierarchicalSourceRepository {
 		}
 
 		/**
-		 * Called after the stream is successfully closed. This version updates the WebDAV properties to reflect the given resource description.
+		 * {@inheritDoc}
+		 * <p>
+		 * This version updates the WebDAV properties to reflect the given resource description.
+		 * </p>
 		 * @throws ResourceIOException if an I/O error occurs.
 		 */
+		@Override
 		protected void afterClose() throws ResourceIOException {
 			try {
 				alterResourceProperties(getResourceURI(), getResourceAlteration(), getWebDAVResource()); //alter the properties using the WebDAV resource object

@@ -74,7 +74,12 @@ public abstract class AbstractResourceKit implements ResourceKit {
 		}
 	}
 
-	/** {@inheritDoc} This version returns any of the supported content types, if there are any. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This version returns any of the supported content types, if there are any.
+	 * </p>
+	 */
 	@Override
 	public ContentType getDefaultContentType() {
 		return !supportedContentTypes.isEmpty() ? supportedContentTypes.iterator().next() : null;
@@ -278,19 +283,32 @@ public abstract class AbstractResourceKit implements ResourceKit {
 		return resource; //return the default resource
 	}
 
-	/** {@inheritDoc} This version does nothing. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This version does nothing.
+	 * </p>
+	 */
 	@Override
 	public void initializeResourceDescription(final Repository repository, final URFResource resource) throws ResourceIOException {
 	}
 
-	/** {@inheritDoc} This default version returns the collection of the parent resource. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This default version returns the collection of the parent resource.
+	 * </p>
+	 */
 	@Override
 	public URI getChildResourceCollectionURI(final Repository repository, final URI parentResourceURI) throws ResourceIOException {
 		return repository.getCollectionURI(parentResourceURI); //return the collection URI of the parent resource
 	}
 
 	/**
-	 * {@inheritDoc} This default version resolves the name against the parent resource URI and appends the resource kit's default extension, if any.
+	 * {@inheritDoc}
+	 * <p>
+	 * This default version resolves the name against the parent resource URI and appends the resource kit's default extension, if any.
+	 * </p>
 	 * @see #getDefaultNameExtension()
 	 */
 	@Override
@@ -304,15 +322,23 @@ public abstract class AbstractResourceKit implements ResourceKit {
 		return resolve(parentResourceURI, URIPath.createURIPathURI(stringBuilder.toString())); //resolve the encoded name against the parent resource URI; use the special URIPath method in case the name contains a colon character
 	}
 
-	/** {@inheritDoc} This implementation delegates to {@link #createResource(Repository, URI, URFResource)} with a default description. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation delegates to {@link #createResource(Repository, URI, URFResource)} with a default description.
+	 * </p>
+	 */
 	@Override
 	public final URFResource createResource(final Repository repository, final URI resourceURI) throws ResourceIOException {
 		return createResource(repository, resourceURI, new DefaultURFResource(resourceURI)); //create the resource with a default description
 	}
 
 	/**
-	 * {@inheritDoc} This version creates a resource then writes default content, if any, using
+	 * {@inheritDoc}
+	 * <p>
+	 * This version creates a resource then writes default content, if any, using
 	 * {@link #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)}.
+	 * </p>
 	 */
 	@Override
 	public URFResource createResource(final Repository repository, final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException {
@@ -335,7 +361,12 @@ public abstract class AbstractResourceKit implements ResourceKit {
 		}
 	}
 
-	/** {@inheritDoc} This implementation delegates to {@link #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation delegates to {@link #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)}.
+	 * </p>
+	 */
 	@Override
 	public URFResource writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription)
 			throws ResourceIOException {
@@ -352,30 +383,55 @@ public abstract class AbstractResourceKit implements ResourceKit {
 		return repository.getResourceDescription(resourceURI); //return the resource description
 	}
 
-	/** {@inheritDoc} This version returns <code>false</code>. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This version returns <code>false</code>.
+	 * </p>
+	 */
 	public boolean hasDefaultResourceContent(final Repository repository, final URI resourceURI) throws ResourceIOException {
 		return false;
 	}
 
-	/** {@inheritDoc} This version writes no content. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This version writes no content.
+	 * </p>
+	 */
 	@Override
 	public void writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription,
 			final OutputStream outputStream) throws ResourceIOException {
 	}
 
-	/** {@inheritDoc} This version returns <code>null</code>. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This version returns <code>null</code>.
+	 * </p>
+	 */
 	@Override
 	public Class<? extends ResourceAspect> getAspectType() {
 		return null;
 	}
 
-	/** {@inheritDoc} This version recognizes no aspects. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This version recognizes no aspects.
+	 * </p>
+	 */
 	@Override
 	public boolean isAspectAllowed(final ResourceAspect aspect, final PermissionType permissionType) {
 		return false;
 	}
 
-	/** {@inheritDoc} This version recognizes no aspects. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This version recognizes no aspects.
+	 * </p>
+	 */
 	@Override
 	public ResourceContentFilter[] getAspectFilters(final ResourceAspect aspect) {
 		return new ResourceContentFilter[0];

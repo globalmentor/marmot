@@ -189,28 +189,21 @@ public class AbstractXHTMLResourceKit extends AbstractResourceKit {
 	}
 
 	/**
-	 * Indicates whether this resource has default resource content. This version returns <code>true</code>.
-	 * @param repository The repository that contains the resource.
-	 * @param resourceURI The reference URI to use to identify the resource, which may not exist.
+	 * {@inheritDoc}
+	 * <p>
+	 * This version returns <code>true</code>.
+	 * </p>
 	 * @throws NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
 	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws ResourceIOException if the default resource content could not be written.
 	 * @see #writeDefaultResourceContent(Repository, URI, URFResource)
 	 * @see #writeDefaultResourceContent(Repository, URI, URFResource, OutputStream)
 	 */
+	@Override
 	public boolean hasDefaultResourceContent(final Repository repository, final URI resourceURI) throws ResourceIOException {
 		return true;
 	}
 
-	/**
-	 * Writes default resource content to the given output stream.
-	 * @param repository The repository that contains the resource.
-	 * @param resourceURI The reference URI to use to identify the resource, which may not exist.
-	 * @param resourceDescription A description of the resource; the resource URI is ignored.
-	 * @throws NullPointerException if the given repository, resource URI, resource description, and/or output stream is <code>null</code>.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws ResourceIOException if the default resource content could not be written.
-	 */
+	@Override
 	public void writeDefaultResourceContent(final Repository repository, final URI resourceURI, final URFResource resourceDescription,
 			final OutputStream outputStream) throws ResourceIOException {
 		final String title = getTitle(resourceDescription); //see if there is a title

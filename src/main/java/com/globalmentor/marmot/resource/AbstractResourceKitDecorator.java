@@ -162,10 +162,10 @@ public abstract class AbstractResourceKitDecorator implements ResourceKit {
 		return getResourceKit().isAspectAllowed(aspect, permissionType);
 	}
 
-	/**
-	 * Returns the permissions that This prevents aspects from being accessed at lower permissions. For example, a rogue user may attempt to access a
-	 * preview-permission aspect such as a high-resolution image using a permission such as
-	 */
+	//	/**
+	//	 * Returns the permissions that This prevents aspects from being accessed at lower permissions. For example, a rogue user may attempt to access a
+	//	 * preview-permission aspect such as a high-resolution image using a permission such as
+	//	 */
 	/*TODO fix
 		public boolean getAspectPermissions(final String aspectID, final PermissionType permissionType)
 		{

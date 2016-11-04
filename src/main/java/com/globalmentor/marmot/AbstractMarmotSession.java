@@ -51,7 +51,7 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 	/** The installed Marmot security manager. */
 	private MarmotSecurityManager securityManager = new DefaultMarmotSecurityManager();
 
-	/** @return The installed Marmot security manager. */
+	@Override
 	public MarmotSecurityManager getSecurityManager() {
 		return securityManager;
 	}
@@ -59,7 +59,7 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 	/** The set of resource kits. */
 	private Set<RK> resourceKits = new CopyOnWriteArraySet<RK>();
 
-	/** @return The available resource kits. */
+	@Override
 	public Iterable<RK> getResourceKits() {
 		return unmodifiableSet(resourceKits);
 	}
@@ -173,19 +173,34 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 		}
 	}
 
-	/** {@inheritDoc} This implementation delegates to {@link #installResourceKit(ResourceKit, boolean, boolean)}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation delegates to {@link #installResourceKit(ResourceKit, boolean, boolean)}.
+	 * </p>
+	 */
 	@Override
 	public void installResourceKit(final RK resourceKit) {
 		installResourceKit(resourceKit, false, false); //install the resource kit, but not as the default resource kit
 	}
 
-	/** {@inheritDoc} This implementation delegates to {@link #installResourceKit(ResourceKit, boolean, boolean)}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation delegates to {@link #installResourceKit(ResourceKit, boolean, boolean)}.
+	 * </p>
+	 */
 	@Override
 	public void installDefaultResourceKit(final RK resourceKit) {
 		installResourceKit(resourceKit, true, false); //install the resource kit as the default
 	}
 
-	/** {@inheritDoc} This implementation delegates to {@link #installResourceKit(ResourceKit, boolean, boolean)}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation delegates to {@link #installResourceKit(ResourceKit, boolean, boolean)}.
+	 * </p>
+	 */
 	@Override
 	public void installDefaultCollectionResourceKit(final RK resourceKit) {
 		installResourceKit(resourceKit, false, true); //install the resource kit as the default for collections
@@ -345,7 +360,12 @@ public abstract class AbstractMarmotSession<RK extends ResourceKit> implements M
 		return contentType;
 	}
 
-	/** {@inheritDoc} This implementation delegates to {@link #determineContentType(String)}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation delegates to {@link #determineContentType(String)}.
+	 * </p>
+	 */
 	@Override
 	public ContentType determineContentType(final URI resourceURI) {
 		final String resourceName = !isCollectionURI(resourceURI) ? URIs.getRawName(resourceURI) : null; //get the resource name, if any

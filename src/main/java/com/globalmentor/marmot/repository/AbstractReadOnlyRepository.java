@@ -123,7 +123,12 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository {
 		super(rootURI, descriptionIO);
 	}
 
-	/** {@inheritDoc} This implementation throws a {@link ResourceForbiddenException} if the resource URI exists. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation throws a {@link ResourceForbiddenException} if the resource URI exists.
+	 * </p>
+	 */
 	@Override
 	protected OutputStream getResourceOutputStreamImpl(final URI resourceURI, final ISODateTime newContentModified) throws ResourceIOException {
 		if(!resourceExists(resourceURI)) { //if the resource doesn't exist
@@ -132,32 +137,57 @@ public abstract class AbstractReadOnlyRepository extends AbstractRepository {
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
 	}
 
-	/** {@inheritDoc} This implementation throws a {@link ResourceForbiddenException}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation throws a {@link ResourceForbiddenException}.
+	 * </p>
+	 */
 	@Override
 	protected OutputStream createResourceImpl(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException {
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
 	}
 
-	/** {@inheritDoc} This implementation throws a {@link ResourceForbiddenException}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation throws a {@link ResourceForbiddenException}.
+	 * </p>
+	 */
 	@Override
 	protected URFResource alterResourcePropertiesImpl(final URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException {
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
 	}
 
-	/** {@inheritDoc} This implementation throws a {@link ResourceForbiddenException}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation throws a {@link ResourceForbiddenException}.
+	 * </p>
+	 */
 	@Override
 	protected void copyResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
 			throws ResourceIOException {
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
 	}
 
-	/** {@inheritDoc} This implementation throws a {@link ResourceForbiddenException}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation throws a {@link ResourceForbiddenException}.
+	 * </p>
+	 */
 	@Override
 	protected void deleteResourceImpl(final URI resourceURI) throws ResourceIOException {
 		throw new ResourceForbiddenException(resourceURI, "This repository is read-only.");
 	}
 
-	/** {@inheritDoc} This implementation throws a {@link ResourceForbiddenException}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation throws a {@link ResourceForbiddenException}.
+	 * </p>
+	 */
 	@Override
 	protected void moveResourceImpl(final URI resourceURI, final URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
 			throws ResourceIOException {

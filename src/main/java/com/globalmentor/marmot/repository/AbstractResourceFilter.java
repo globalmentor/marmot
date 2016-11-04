@@ -66,14 +66,14 @@ public abstract class AbstractResourceFilter implements ResourceFilter {
 	}
 
 	/**
-	 * Determines whether a given resource should pass through the filter or be filtered out based upon its URI. This version rejects a resource if its collection
-	 * or non-collection status is not allowed.
-	 * @param resourceURI The resource URI to filter.
-	 * @return <code>true</code> if the resource should pass through the filter based upon its URI, else <code>false</code> if the resource should be filtered
-	 *         out.
+	 * {@inheritDoc}
+	 * <p>
+	 * This version rejects a resource if its collection or non-collection status is not allowed.
+	 * </p>
 	 * @see #isCollectionPass()
 	 * @see #isNonCollectionPass()
 	 */
+	@Override
 	public boolean isPass(final URI resourceURI) {
 		if(isCollectionURI(resourceURI)) { //if this is a collection URI
 			if(!isCollectionPass()) { //if collections shouldn't pass

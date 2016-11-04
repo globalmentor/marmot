@@ -111,20 +111,12 @@ public abstract class AbstractRepository implements Repository {
 		livePropertyURIs = immutableSetOf(livePropertyURIs, livePropertyURI); //add this live property to our existing live properties
 	}
 
-	/**
-	 * Retrieves the live properties, which dynamically determined attributes of the resource such as content size.
-	 * @return The thread-safe set of URIs of live properties.
-	 */
+	@Override
 	public Set<URI> getLivePropertyURIs() {
 		return livePropertyURIs;
 	}
 
-	/**
-	 * Determines whether the indicated property is is a live, dynamically determined property.
-	 * @param propertyURI The URI identifying the property.
-	 * @return <code>true</code> if the property is a live property.
-	 * @throws NullPointerException if the given property URI is <code>null</code>.
-	 */
+	@Override
 	public boolean isLivePropertyURI(final URI propertyURI) {
 		return getLivePropertyURIs().contains(requireNonNull(propertyURI, "Property URI cannot be null."));
 	}
@@ -158,17 +150,12 @@ public abstract class AbstractRepository implements Repository {
 	/** The parent repository, or <code>null</code> if this repository has not been registered as a subrepository of another repository. */
 	private Repository parent = null;
 
-	/** @return The parent repository, or <code>null</code> if this repository has not been registered as a subrepository of another repository. */
+	@Override
 	public Repository getParentRepository() {
 		return parent;
 	}
 
-	/**
-	 * Sets the parent of this repository. This method is used internally when a subrepository is set, and is not intended to be called by normal code.
-	 * @param newParent The new parent of the repository, or <code>null</code> if the repository is being unregistered.
-	 * @throws IllegalStateException if the new parent is non-<code>null</code> and the repository already has a parent.
-	 * @see #registerPathRepository(URIPath, Repository)
-	 */
+	@Override
 	public void setParentRepository(final Repository newParent) {
 		if(parent != null && newParent != null && newParent != parent) { //if the parent is being changed without first removing the old parent
 			throw new IllegalStateException("Repository parent cannot be changed without first unregistering.");
@@ -176,10 +163,7 @@ public abstract class AbstractRepository implements Repository {
 		parent = newParent;
 	}
 
-	/**
-	 * Determines the root of a hierarchy of subrepositories. If this repository has no parent, this method will return this repository.
-	 * @return The root parent of all the repositories.
-	 */
+	@Override
 	public Repository getRootRepository() {
 		Repository rootRepository = this;
 		Repository parentRepository;
@@ -195,18 +179,12 @@ public abstract class AbstractRepository implements Repository {
 	/** The base URI of the public URI namespace being managed. */
 	private URI rootURI = null;
 
-	/** @return The base URI of the public URI namespace being managed. */
+	@Override
 	public URI getRootURI() {
 		return rootURI;
 	}
 
-	/**
-	 * Sets the base URI of the public URI namespace being managed, reference URI of the repository. If there currently is no private repository URI, it will be
-	 * updated to match the given public repository URI. The public URIs of the sub-repositories will be updated accordingly.
-	 * @param rootURI The base URI of the public URI namespace being managed.
-	 * @throws NullPointerException if the given URI is <code>null</code>.
-	 * @see #getPathRepositories()
-	 */
+	@Override
 	public void setRootURI(final URI rootURI) {
 		this.rootURI = normalize(requireNonNull(rootURI, "Root URI must not be null."));
 		for(final Map.Entry<URIPath, Repository> pathRepositoryEntry : pathRepositoryMap.entrySet()) { //look at each path to repository mapping
@@ -249,24 +227,12 @@ public abstract class AbstractRepository implements Repository {
 	/** The map of content types mapped to lowercase URI name extensions. */
 	private final Map<String, ContentType> extensionContentTypeMap = new HashMap<String, ContentType>(FILE_EXTENSION_CONTENT_TYPE_MAP);
 
-	/**
-	 * Associates the given content type with the given extension, without regard to case.
-	 * @param extension The URI name extension with which the content type should be associated, or <code>null</code> if the content type should be associated
-	 *          with resources that have no extension.
-	 * @param contentType The content type to associate with the given extension.
-	 * @return The content type previously registered with the given extension, or <code>null</code> if no content type was previously registered.
-	 * @throws NullPointerException if the given content type is <code>null</code>.
-	 */
+	@Override
 	public ContentType registerExtensionContentType(final String extension, final ContentType contentType) {
 		return extensionContentTypeMap.put(extension != null ? extension.toLowerCase() : null, requireNonNull(contentType, "Content type cannot be null."));
 	}
 
-	/**
-	 * Returns the content type associated with the given extension, without regard to case.
-	 * @param extension The URI name extension with which the content type is associated, or <code>null</code> if the content type is associated with resources
-	 *          that have no extension.
-	 * @return The content type associated with the given extension, or <code>null</code> if there is no content type associated with the given extension.
-	 */
+	@Override
 	public ContentType getExtensionContentType(final String extension) {
 		return extensionContentTypeMap.get(extension != null ? extension.toLowerCase() : null); //return the content type, if any, associated with the given extension
 	}
@@ -274,29 +240,17 @@ public abstract class AbstractRepository implements Repository {
 	/** The map of charsets mapped to base media types. */
 	private final Map<String, Charset> baseContentTypeCharsetMap = new HashMap<String, Charset>();
 
-	/**
-	 * Associates the given charset with the base media type of the given content type. Any association will only override resources that do not explicitly have a
-	 * charset specified. Any parameters of the given content type will be ignored.
-	 * @param contentType The content type with which the charset should be associated.
-	 * @param charset The charset to associate with the given content type.
-	 * @return The charset previously registered with the given content type, or <code>null</code> if no charset was previously registered.
-	 * @throws NullPointerException if the given content type and/or charset is <code>null</code>.
-	 */
+	@Override
 	public Charset registerContentTypeCharset(final ContentType contentType, final Charset charset) {
 		return baseContentTypeCharsetMap.put(contentType.getBaseType(), requireNonNull(charset, "Charset cannot be null."));
 	}
 
-	/**
-	 * Returns the charset associated with the given content type. Any parameters of the given content type will be ignored.
-	 * @param contentType The content type with which the charset is associated.
-	 * @return The charset associated with the given content type, or <code>null</code> if there is no charset associated with the given content type.
-	 * @throws NullPointerException if the given content type is <code>null</code>.
-	 */
+	@Override
 	public Charset getContentTypeCharset(final ContentType contentType) {
 		return baseContentTypeCharsetMap.get(contentType.getBaseType()); //return the charset, if any, associated with the given base content type
 	}
 
-	/** @return The read-only mapping of charsets associated with base content types. */
+	@Override
 	public Map<ContentType, Charset> getContentTypeCharsets() {
 		final Map<ContentType, Charset> contentTypeCharsetMap = new HashMap<ContentType, Charset>(baseContentTypeCharsetMap.size()); //create a new map to hold actual content type objects
 		for(final Map.Entry<String, Charset> baseContentTypeCharsetEntry : baseContentTypeCharsetMap.entrySet()) { //look at each mapping
@@ -305,12 +259,7 @@ public abstract class AbstractRepository implements Repository {
 		return unmodifiableMap(contentTypeCharsetMap); //return a read-only version of the map we created
 	}
 
-	/**
-	 * Sets the content type charset associations to those specified in the given map. Any association will only override resources that do not explicitly have a
-	 * charset specified. The current associations will be lost. Any parameters of the given content types will be ignored.
-	 * @param contentTypeCharsets The associations of charsets to base content types.
-	 * @throws NullPointerException if a given content type and/or charset is <code>null</code>.
-	 */
+	@Override
 	public void setContentTypeCharsets(final Map<ContentType, Charset> contentTypeCharsets) {
 		baseContentTypeCharsetMap.clear(); //clear the current mappings
 		for(final Map.Entry<ContentType, Charset> contentTypeCharsetEntry : contentTypeCharsets.entrySet()) { //look at each mapping
@@ -324,16 +273,7 @@ public abstract class AbstractRepository implements Repository {
 	/** The map of repositories pairs keyed to relative parent collection paths. */
 	private final CollectionMap<URIPath, Repository, Set<Repository>> parentPathRepositoryMap = new HashSetHashMap<URIPath, Repository>();
 
-	/**
-	 * Associates the given repository with a repository path. Access to any resource with a URI beginning with the given path will delegate to the indicated
-	 * repository. The public URI of the given repository will be updated to correspond to its location within this repository.
-	 * @param path The relative collection path with which the repository should be associated.
-	 * @param repository The repository to handle access to all resources beginning with the given path.
-	 * @return The repository previously registered with the given path, or <code>null</code> if no repository was previously registered.
-	 * @throws NullPointerException if the given path and/or repository is <code>null</code>.
-	 * @throws IllegalArgumentException if the given path is not relative.
-	 * @throws IllegalArgumentException if the given path does not represent a collection (i.e. it does not end with a path separator).
-	 */
+	@Override
 	public Repository registerPathRepository(final URIPath path, final Repository repository) {
 		if(getRootURI() != null) { //if the root URI has been initialized
 			repository.setRootURI(resolve(getRootURI(), path)); //update the public URI of the repository to match its location in the repository
@@ -348,32 +288,17 @@ public abstract class AbstractRepository implements Repository {
 		return oldRepository; //return the previous repository, if any, registered for the given path
 	}
 
-	/**
-	 * Returns the repository associated with the given path.
-	 * @param path The relative collection path with which a repository may be associated.
-	 * @return The repository associated with the given path, or <code>null</code> if there is no repository associated with the given path.
-	 * @throws NullPointerException if the given content type is <code>null</code>.
-	 * @throws NullPointerException if the given path is <code>null</code>.
-	 * @throws IllegalArgumentException if the given path is not relative.
-	 * @throws IllegalArgumentException if the given path does not represent a collection (i.e. it does not end with a path separator).
-	 */
+	@Override
 	public Repository getPathRepository(final URIPath path) {
 		return pathRepositoryMap.get(path.checkRelative().checkCollection()); //return the repository, if any, associated with the given path
 	}
 
-	/** @return The read-only mapping of relative paths associated with repositories. */
+	@Override
 	public Map<URIPath, Repository> getPathRepositories() {
 		return unmodifiableMap(pathRepositoryMap); //return an unmodifiable version of the map
 	}
 
-	/**
-	 * Sets the path repository associations to those specified in the given map. Any association will only override resources that do not explicitly have a
-	 * charset specified. The current associations will be lost.
-	 * @param pathRepositories The associations of paths to repositories.
-	 * @throws NullPointerException if a given path and/or repository is <code>null</code>.
-	 * @throws IllegalArgumentException if a given path is not relative.
-	 * @throws IllegalArgumentException if a given path does not represent a collection (i.e. it does not end with a path separator).
-	 */
+	@Override
 	public void setPathRepositories(final Map<URIPath, Repository> pathRepositories) {
 		pathRepositoryMap.clear(); //clear the current mappings
 		parentPathRepositoryMap.clear();
@@ -383,9 +308,13 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} This version makes sure the given URI is a child of the repository root URI.
+	 * {@inheritDoc}
+	 * <p>
+	 * This version makes sure the given URI is a child of the repository root URI.
+	 * </p>
 	 * @see #getRootURI()
 	 */
+	@Override
 	public URI checkResourceURI(URI resourceURI) throws IllegalArgumentException {
 		resourceURI = canonicalize(normalize(requireNonNull(resourceURI, "Resource URI cannot be null."))); //normalize and canonicalize the URI
 		if(!isChild(getRootURI(), resourceURI)) { //if the given resource URI does not designate a resource within this repository's URI namespace (this will normalize the URI, but as we need to return a normalized form it's better to normalize first so that actual normalization changes won't have to be done twice)
@@ -434,21 +363,12 @@ public abstract class AbstractRepository implements Repository {
 	/** A map of resource factories, keyed to namespace URIs. */
 	private final Map<URI, URFResourceFactory> namespaceURIResourceFactoryMap = new HashMap<URI, URFResourceFactory>();
 
-	/**
-	 * Registers a resource factory to be used to create resources with a type from the specified namespace. If a resource factory is already registered for this
-	 * namespace, it will be replaced.
-	 * @param typeNamespaceURI The namespace of the resource type for which this factory should be used to create objects.
-	 * @param factory The resource factory that will be used to create resources of types from this namespace.
-	 */
+	@Override
 	public void registerResourceFactory(final URI typeNamespaceURI, final URFResourceFactory factory) {
 		namespaceURIResourceFactoryMap.put(typeNamespaceURI, factory);
 	}
 
-	/**
-	 * Removes the resource factory being used to create resources with a type from the specified namespace. If there is no resource factory registered for this
-	 * namespace, no action will be taken.
-	 * @param typeNamespaceURI The namespace of the resource type for which this factory should be used to create objects.
-	 */
+	@Override
 	public void unregisterResourceFactory(final URI typeNamespaceURI) {
 		namespaceURIResourceFactoryMap.remove(typeNamespaceURI);
 	}
@@ -504,12 +424,17 @@ public abstract class AbstractRepository implements Repository {
 		return urf; //return the new data model
 	}
 
-	/** @return Whether the repository has been opened for access. */
+	@Override
 	public boolean isOpen() {
 		return open.getObject().booleanValue();
 	}
 
-	/** {@inheritDoc} Child classes should override {@link #openImpl()}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * Child classes should override {@link #openImpl()}.
+	 * </p>
+	 */
 	@Override
 	public final synchronized void open() throws ResourceIOException {
 		if(!isOpen()) { //if the repository isn't yet open
@@ -538,7 +463,12 @@ public abstract class AbstractRepository implements Repository {
 		checkState(getRootURI() != null, "Cannot open repository without root URI specified.");
 	}
 
-	/** {@inheritDoc} Child classes should override {@link #closeImpl()}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * Child classes should override {@link #closeImpl()}.
+	 * </p>
+	 */
 	@Override
 	public final synchronized void close() throws ResourceIOException {
 		if(!isOpen()) { //if the repository isn't yet open
@@ -565,8 +495,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} This version normalizes the URI, delegates to any subrepository if appropriate, and ensures the repository is open. Child classes should
-	 * override {@link #resourceExistsImpl(URI)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * This version normalizes the URI, delegates to any subrepository if appropriate, and ensures the repository is open. Child classes should override
+	 * {@link #resourceExistsImpl(URI)}.
+	 * </p>
 	 */
 	@Override
 	public final boolean resourceExists(URI resourceURI) throws ResourceIOException {
@@ -589,8 +522,11 @@ public abstract class AbstractRepository implements Repository {
 	protected abstract boolean resourceExistsImpl(URI resourceURI) throws ResourceIOException;
 
 	/**
-	 * {@inheritDoc} This version normalizes the URI, delegates to any subrepository if appropriate, and ensures the repository is open. Child classes should
-	 * override {@link #getResourceDescriptionImpl(URI)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * This version normalizes the URI, delegates to any subrepository if appropriate, and ensures the repository is open. Child classes should override
+	 * {@link #getResourceDescriptionImpl(URI)}.
+	 * </p>
 	 */
 	@Override
 	public final URFResource getResourceDescription(URI resourceURI) throws ResourceIOException {
@@ -613,7 +549,12 @@ public abstract class AbstractRepository implements Repository {
 	 */
 	protected abstract URFResource getResourceDescriptionImpl(final URI resourceURI) throws ResourceIOException; //TODO add subclass functionality to ignore non-visible resources
 
-	/** {@inheritDoc} Child classes should override {@link #getResourceContentsImpl(URI)}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * Child classes should override {@link #getResourceContentsImpl(URI)}.
+	 * </p>
+	 */
 	@Override
 	public final byte[] getResourceContents(URI resourceURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
@@ -662,8 +603,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} This version normalizes the URI, delegates to any subrepository if appropriate, and ensures the repository is open. Child classes should
-	 * override {@link #getResourceInputStreamImpl(URI)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * This version normalizes the URI, delegates to any subrepository if appropriate, and ensures the repository is open. Child classes should override
+	 * {@link #getResourceInputStreamImpl(URI)}.
+	 * </p>
 	 */
 	@Override
 	public final InputStream getResourceInputStream(URI resourceURI) throws ResourceIOException {
@@ -687,8 +631,11 @@ public abstract class AbstractRepository implements Repository {
 	protected abstract InputStream getResourceInputStreamImpl(final URI resourceURI) throws ResourceIOException;
 
 	/**
-	 * {@inheritDoc} This version normalizes the URI, delegates to any subrepository if appropriate, and ensures the repository is open. Child classes should
-	 * override {@link #getResourceOutputStreamImpl(URI, ISODateTime)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * This version normalizes the URI, delegates to any subrepository if appropriate, and ensures the repository is open. Child classes should override
+	 * {@link #getResourceOutputStreamImpl(URI, ISODateTime)}.
+	 * </p>
 	 */
 	@Override
 	public final OutputStream getResourceOutputStream(URI resourceURI) throws ResourceIOException {
@@ -702,8 +649,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} This version normalizes the URI, delegates to any subrepository if appropriate, and ensures the repository is open. Child classes should
-	 * override {@link #getResourceOutputStreamImpl(URI, ISODateTime)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * This version normalizes the URI, delegates to any subrepository if appropriate, and ensures the repository is open. Child classes should override
+	 * {@link #getResourceOutputStreamImpl(URI, ISODateTime)}.
+	 * </p>
 	 */
 	@Override
 	public OutputStream getResourceOutputStream(URI resourceURI, final ISODateTime newContentModified) throws ResourceIOException {
@@ -730,8 +680,11 @@ public abstract class AbstractRepository implements Repository {
 	protected abstract OutputStream getResourceOutputStreamImpl(final URI resourceURI, final ISODateTime newContentModified) throws ResourceIOException;
 
 	/**
-	 * {@inheritDoc} This version normalizes the URI, delegates to any subrepository if appropriate, and ensures the repository is open. Child classes should
-	 * override {@link #hasChildrenImpl(URI)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * This version normalizes the URI, delegates to any subrepository if appropriate, and ensures the repository is open. Child classes should override
+	 * {@link #hasChildrenImpl(URI)}.
+	 * </p>
 	 */
 	@Override
 	public final boolean hasChildren(URI resourceURI) throws ResourceIOException {
@@ -755,8 +708,11 @@ public abstract class AbstractRepository implements Repository {
 	protected abstract boolean hasChildrenImpl(final URI resourceURI) throws ResourceIOException;
 
 	/**
-	 * {@inheritDoc} This implementation retrieves a single-level list of unfiltered child resources by calling
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation retrieves a single-level list of unfiltered child resources by calling
 	 * {@link #getChildResourceDescriptionsImpl(URI, ResourceFilter, int)}.
+	 * </p>
 	 */
 	@Override
 	public final List<URFResource> getChildResourceDescriptions(URI resourceURI) throws ResourceIOException {
@@ -770,8 +726,10 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} This implementation retrieves a single-level list of descriptions by delegating to
-	 * {@link #getChildResourceDescriptionsImpl(URI, ResourceFilter, int)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation retrieves a single-level list of descriptions by delegating to {@link #getChildResourceDescriptionsImpl(URI, ResourceFilter, int)}.
+	 * </p>
 	 */
 	@Override
 	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final ResourceFilter resourceFilter) throws ResourceIOException {
@@ -785,8 +743,10 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} This implementation retrieves an unfiltered list of child resources by delegating to
-	 * {@link #getChildResourceDescriptionsImpl(URI, ResourceFilter, int)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation retrieves an unfiltered list of child resources by delegating to {@link #getChildResourceDescriptionsImpl(URI, ResourceFilter, int)}.
+	 * </p>
 	 */
 	@Override
 	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final int depth) throws ResourceIOException {
@@ -800,7 +760,12 @@ public abstract class AbstractRepository implements Repository {
 		return getChildResourceDescriptionsImpl(resourceURI, null, depth); //get a list of child resource descriptions without filtering
 	}
 
-	/** {@inheritDoc} This implementation delegates to {@link #getChildResourceDescriptionsImpl(URI, ResourceFilter, int)}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation delegates to {@link #getChildResourceDescriptionsImpl(URI, ResourceFilter, int)}.
+	 * </p>
+	 */
 	@Override
 	public final List<URFResource> getChildResourceDescriptions(URI resourceURI, final ResourceFilter resourceFilter, final int depth)
 			throws ResourceIOException {
@@ -832,15 +797,7 @@ public abstract class AbstractRepository implements Repository {
 	protected abstract List<URFResource> getChildResourceDescriptionsImpl(final URI resourceURI, final ResourceFilter resourceFilter, final int depth)
 			throws ResourceIOException;
 
-	/**
-	 * Creates all the parent resources necessary for a resource to exist at the given URI. If any parent resources already exist, they will not be replaced.
-	 * @param resourceURI The reference URI of a resource which may not exist.
-	 * @return A description of the most immediate parent resource created, or <code>null</code> if no parent resources were required to be created.
-	 * @throws NullPointerException if the given resource URI is <code>null</code>.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws ResourceIOException if a parent resource could not be created.
-	 */
+	@Override
 	public URFResource createParentResources(URI resourceURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
@@ -860,8 +817,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} This implementation delegates to {@link #createResourceImpl(URI, URFResource)} with a default description. Child classes should override
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation delegates to {@link #createResourceImpl(URI, URFResource)} with a default description. Child classes should override
 	 * {@link #createResourceImpl(URI, URFResource)}.
+	 * </p>
 	 */
 	@Override
 	public final OutputStream createResource(URI resourceURI) throws ResourceIOException {
@@ -878,7 +838,12 @@ public abstract class AbstractRepository implements Repository {
 		return createResourceImpl(resourceURI, resourceDescription); //create the resource with the default description
 	}
 
-	/** {@inheritDoc} Child classes should override {@link #createResourceImpl(URI, URFResource)}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * Child classes should override {@link #createResourceImpl(URI, URFResource)}.
+	 * </p>
+	 */
 	@Override
 	public final OutputStream createResource(URI resourceURI, final URFResource resourceDescription) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
@@ -890,7 +855,6 @@ public abstract class AbstractRepository implements Repository {
 		return createResourceImpl(resourceURI, resourceDescription);
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public URFResource createCollectionResource(final URI resourceURI) throws ResourceIOException {
 		return createResource(checkCollectionURI(resourceURI), NO_BYTES);
@@ -909,7 +873,12 @@ public abstract class AbstractRepository implements Repository {
 	 */
 	protected abstract OutputStream createResourceImpl(final URI resourceURI, final URFResource resourceDescription) throws ResourceIOException;
 
-	/** {@inheritDoc} This implementation delegates to {@link #createResourceImpl(URI, URFResource, byte[])} with a default description. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation delegates to {@link #createResourceImpl(URI, URFResource, byte[])} with a default description.
+	 * </p>
+	 */
 	@Override
 	public final URFResource createResource(URI resourceURI, final byte[] resourceContents) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
@@ -925,7 +894,12 @@ public abstract class AbstractRepository implements Repository {
 		return createResourceImpl(resourceURI, resourceDescription, resourceContents); //create the resource with the default description
 	}
 
-	/** {@inheritDoc} Child classes should override {@link #createResourceImpl(URI, URFResource, byte[])}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * Child classes should override {@link #createResourceImpl(URI, URFResource, byte[])}.
+	 * </p>
+	 */
 	@Override
 	public final URFResource createResource(URI resourceURI, final URFResource resourceDescription, final byte[] resourceContents) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
@@ -963,7 +937,12 @@ public abstract class AbstractRepository implements Repository {
 		}
 	}
 
-	/** {@inheritDoc} Child classes should override {@link #deleteResourceImpl(URI)}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * Child classes should override {@link #deleteResourceImpl(URI)}.
+	 * </p>
+	 */
 	@Override
 	public final void deleteResource(URI resourceURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
@@ -988,8 +967,11 @@ public abstract class AbstractRepository implements Repository {
 	protected abstract void deleteResourceImpl(final URI resourceURI) throws ResourceIOException;
 
 	/**
-	 * {@inheritDoc} This version delegates to {@link #addResourceProperties(URI, Iterable)}. Child classes normally should override
+	 * {@inheritDoc}
+	 * <p>
+	 * This version delegates to {@link #addResourceProperties(URI, Iterable)}. Child classes normally should override
 	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
+	 * </p>
 	 */
 	@Override
 	public final URFResource addResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException {
@@ -997,8 +979,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} This version delegates to {@link #addResourcePropertiesImpl(URI, Iterable)}. Child classes normally should override
+	 * {@inheritDoc}
+	 * <p>
+	 * This version delegates to {@link #addResourcePropertiesImpl(URI, Iterable)}. Child classes normally should override
 	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
+	 * </p>
 	 */
 	@Override
 	public final URFResource addResourceProperties(URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException {
@@ -1026,8 +1011,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} This version delegates to {@link #setResourceProperties(URI, Iterable)}. Child classes normally should override
+	 * {@inheritDoc}
+	 * <p>
+	 * This version delegates to {@link #setResourceProperties(URI, Iterable)}. Child classes normally should override
 	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
+	 * </p>
 	 */
 	@Override
 	public final URFResource setResourceProperties(URI resourceURI, final URFProperty... properties) throws ResourceIOException {
@@ -1035,8 +1023,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} This version delegates to {@link #setResourcePropertiesImpl(URI, Iterable)}. Child classes normally should override
+	 * {@inheritDoc}
+	 * <p>
+	 * This version delegates to {@link #setResourcePropertiesImpl(URI, Iterable)}. Child classes normally should override
 	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
+	 * </p>
 	 */
 	@Override
 	public final URFResource setResourceProperties(URI resourceURI, final Iterable<URFProperty> properties) throws ResourceIOException {
@@ -1065,8 +1056,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} This implementation delegates to {@link #removeResourceProperties(URI, Iterable)}. Child classes normally should override
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation delegates to {@link #removeResourceProperties(URI, Iterable)}. Child classes normally should override
 	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
+	 * </p>
 	 */
 	@Override
 	public final URFResource removeResourceProperties(URI resourceURI, final URI... propertyURIs) throws ResourceIOException {
@@ -1074,8 +1068,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} This implementation delegates to {@link #removeResourcePropertiesImpl(URI, Iterable)}. Child classes normally should override
+	 * {@inheritDoc}
+	 * <p>
+	 * This implementation delegates to {@link #removeResourcePropertiesImpl(URI, Iterable)}. Child classes normally should override
 	 * {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
+	 * </p>
 	 */
 	@Override
 	public final URFResource removeResourceProperties(URI resourceURI, final Iterable<URI> propertyURIs) throws ResourceIOException {
@@ -1103,7 +1100,12 @@ public abstract class AbstractRepository implements Repository {
 		return alterResourcePropertiesImpl(resourceURI, DefaultURFResourceAlteration.createRemovePropertiesAlteration(propertyURIs)); //create an alteration for removing properties and alter the resource
 	}
 
-	/** {@inheritDoc} Child classes should override {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * Child classes should override {@link #alterResourcePropertiesImpl(URI, URFResourceAlteration)}.
+	 * </p>
+	 */
 	@Override
 	public final URFResource alterResourceProperties(URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
@@ -1127,17 +1129,7 @@ public abstract class AbstractRepository implements Repository {
 	 */
 	protected abstract URFResource alterResourcePropertiesImpl(final URI resourceURI, final URFResourceAlteration resourceAlteration) throws ResourceIOException;
 
-	/**
-	 * Determines the URI of the collection resource of the given URI; either the given resource URI if the resource represents a collection, or the parent
-	 * resource if not. If the given resource URI is a collection URI this method returns the given resource URI. If the given resource URI is not a collection
-	 * URI, this implementation returns the equivalent of resolving the path {@value URIs#CURRENT_LEVEL_PATH_SEGMENT} to the URI.
-	 * @param resourceURI The URI of the resource for which the collection resource URI should be returned.
-	 * @return The URI of the indicated resource's deepest collection resource, or <code>null</code> if the given URI designates a non-collection resource with no
-	 *         collection parent.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws ResourceIOException if there is an error accessing the repository.
-	 */
+	@Override
 	public URI getCollectionURI(URI resourceURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
@@ -1148,17 +1140,7 @@ public abstract class AbstractRepository implements Repository {
 		return isCollectionURI(resourceURI) ? resourceURI : getCurrentLevel(resourceURI); //if URI is a collection URI, return the URI; otherwise, get the current level
 	}
 
-	/**
-	 * Determines the URI of the parent resource of the given URI. If the given resource URI is a collection URI this implementation returns the equivalent of
-	 * resolving the path {@value URIs#PARENT_LEVEL_PATH_SEGMENT} to the URI. if the given resource URI is not a collection URI, this implementation returns the
-	 * equivalent of resolving the path {@value URIs#CURRENT_LEVEL_PATH_SEGMENT} to the URI. If the given resource represents this repository, this implementation
-	 * returns <code>null</code>.
-	 * @param resourceURI The URI of the resource for which the parent resource URI should be returned.
-	 * @return The URI of the indicated resource's parent resource, or <code>null</code> if the given URI designates a resource with no parent.
-	 * @throws IllegalArgumentException if the given URI designates a resource that does not reside inside this repository.
-	 * @throws IllegalStateException if the repository is not open for access and auto-open is not enabled.
-	 * @throws ResourceIOException if there is an error accessing the repository.
-	 */
+	@Override
 	public URI getParentResourceURI(URI resourceURI) throws ResourceIOException {
 		resourceURI = checkResourceURI(resourceURI); //makes sure the resource URI is valid and normalize the URI
 		final Repository subrepository = getSubrepository(resourceURI); //see if the resource URI lies within a subrepository
@@ -1179,9 +1161,11 @@ public abstract class AbstractRepository implements Repository {
 	//intra-repository copy
 
 	/**
-	 * {@inheritDoc} If the destination URI lies in a subrepository, this version delegates to
-	 * {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}. Otherwise, this version delegates to
-	 * {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * If the destination URI lies in a subrepository, this version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * Otherwise, this version delegates to {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * </p>
 	 */
 	@Override
 	public final void copyResource(URI resourceURI, URI destinationURI) throws ResourceIOException {
@@ -1205,9 +1189,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} If the destination URI lies in a subrepository, this version delegates to
-	 * {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}. Otherwise, this version delegates to
-	 * {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * If the destination URI lies in a subrepository, this version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * Otherwise, this version delegates to {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * </p>
 	 */
 	@Override
 	public final void copyResource(URI resourceURI, URI destinationURI, final ProgressListener progressListener) throws ResourceIOException {
@@ -1231,9 +1217,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} If the destination URI lies in a subrepository, this version delegates to
-	 * {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}. Otherwise, this version delegates to
-	 * {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * If the destination URI lies in a subrepository, this version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * Otherwise, this version delegates to {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * </p>
 	 */
 	@Override
 	public final void copyResource(URI resourceURI, URI destinationURI, final boolean overwrite) throws ResourceIOException {
@@ -1257,9 +1245,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} If the destination URI lies in a subrepository, this version delegates to
-	 * {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}. Otherwise, this version delegates to
-	 * {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * If the destination URI lies in a subrepository, this version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * Otherwise, this version delegates to {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * </p>
 	 */
 	@Override
 	public final void copyResource(URI resourceURI, URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
@@ -1302,8 +1292,11 @@ public abstract class AbstractRepository implements Repository {
 	//inter-repository copy
 
 	/**
-	 * {@inheritDoc} If the given resource is in this repository, this version delegates to {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
-	 * Otherwise, this version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * If the given resource is in this repository, this version delegates to {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}. Otherwise, this
+	 * version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * </p>
 	 */
 	@Override
 	public final void copyResource(URI resourceURI, final Repository destinationRepository, URI destinationURI) throws ResourceIOException {
@@ -1326,8 +1319,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} If the given resource is in this repository, this version delegates to {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
-	 * Otherwise, this version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * If the given resource is in this repository, this version delegates to {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}. Otherwise, this
+	 * version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * </p>
 	 */
 	@Override
 	public final void copyResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final ProgressListener progressListener)
@@ -1351,8 +1347,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} If the given resource is in this repository, this version delegates to {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
-	 * Otherwise, this version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * If the given resource is in this repository, this version delegates to {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}. Otherwise, this
+	 * version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * </p>
 	 */
 	@Override
 	public final void copyResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final boolean overwrite)
@@ -1376,8 +1375,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} If the given resource is in this repository, this version delegates to {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}.
-	 * Otherwise, this version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * If the given resource is in this repository, this version delegates to {@link #copyResourceImpl(URI, URI, boolean, ProgressListener)}. Otherwise, this
+	 * version delegates to {@link #copyResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * </p>
 	 */
 	@Override
 	public final void copyResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final boolean overwrite,
@@ -1456,9 +1458,11 @@ public abstract class AbstractRepository implements Repository {
 	//intra-repository move
 
 	/**
-	 * {@inheritDoc} If the destination URI lies in a subrepository, this version delegates to
-	 * {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}. Otherwise, this version delegates to
-	 * {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * If the destination URI lies in a subrepository, this version delegates to {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * Otherwise, this version delegates to {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * </p>
 	 */
 	@Override
 	public final void moveResource(URI resourceURI, URI destinationURI) throws ResourceIOException {
@@ -1485,9 +1489,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} If the destination URI lies in a subrepository, this version delegates to
-	 * {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}. Otherwise, this version delegates to
-	 * {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * If the destination URI lies in a subrepository, this version delegates to {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * Otherwise, this version delegates to {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * </p>
 	 */
 	@Override
 	public final void moveResource(URI resourceURI, URI destinationURI, final ProgressListener progressListener) throws ResourceIOException {
@@ -1514,9 +1520,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} If the destination URI lies in a subrepository, this version delegates to
-	 * {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}. Otherwise, this version delegates to
-	 * {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * If the destination URI lies in a subrepository, this version delegates to {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * Otherwise, this version delegates to {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * </p>
 	 */
 	@Override
 	public final void moveResource(URI resourceURI, URI destinationURI, final boolean overwrite) throws ResourceIOException {
@@ -1543,9 +1551,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} If the destination URI lies in a subrepository, this version delegates to
-	 * {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}. Otherwise, this version delegates to
-	 * {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * If the destination URI lies in a subrepository, this version delegates to {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * Otherwise, this version delegates to {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
+	 * </p>
 	 */
 	@Override
 	public final void moveResource(URI resourceURI, URI destinationURI, final boolean overwrite, final ProgressListener progressListener)
@@ -1599,8 +1609,11 @@ public abstract class AbstractRepository implements Repository {
 	//inter-repository move
 
 	/**
-	 * {@inheritDoc} If the given resource is in this repository, this version delegates to {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
-	 * Otherwise, this version delegates to {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * If the given resource is in this repository, this version delegates to {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}. Otherwise, this
+	 * version delegates to {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * </p>
 	 */
 	@Override
 	public final void moveResource(URI resourceURI, final Repository destinationRepository, URI destinationURI) throws ResourceIOException {
@@ -1626,8 +1639,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} If the given resource is in this repository, this version delegates to {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
-	 * Otherwise, this version delegates to {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * If the given resource is in this repository, this version delegates to {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}. Otherwise, this
+	 * version delegates to {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * </p>
 	 */
 	@Override
 	public final void moveResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final ProgressListener progressListener)
@@ -1654,8 +1670,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} If the given resource is in this repository, this version delegates to {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
-	 * Otherwise, this version delegates to {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * If the given resource is in this repository, this version delegates to {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}. Otherwise, this
+	 * version delegates to {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * </p>
 	 */
 	@Override
 	public final void moveResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final boolean overwrite)
@@ -1682,8 +1701,11 @@ public abstract class AbstractRepository implements Repository {
 	}
 
 	/**
-	 * {@inheritDoc} If the given resource is in this repository, this version delegates to {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}.
-	 * Otherwise, this version delegates to {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * {@inheritDoc}
+	 * <p>
+	 * If the given resource is in this repository, this version delegates to {@link #moveResourceImpl(URI, URI, boolean, ProgressListener)}. Otherwise, this
+	 * version delegates to {@link #moveResourceImpl(URI, Repository, URI, boolean, ProgressListener)}.
+	 * </p>
 	 */
 	@Override
 	public final void moveResource(URI resourceURI, final Repository destinationRepository, URI destinationURI, final boolean overwrite,
@@ -1769,7 +1791,12 @@ public abstract class AbstractRepository implements Repository {
 		}
 	*/
 
-	/** {@inheritDoc} This version calls {@link #close()}. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This version calls {@link #close()}.
+	 * </p>
+	 */
 	@Override
 	public synchronized void dispose() {
 		try {
@@ -1779,7 +1806,12 @@ public abstract class AbstractRepository implements Repository {
 		}
 	}
 
-	/** {@inheritDoc} This version closes the repository. */
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * This version closes the repository.
+	 * </p>
+	 */
 	@Override
 	protected void finalize() throws Throwable {
 		try {
