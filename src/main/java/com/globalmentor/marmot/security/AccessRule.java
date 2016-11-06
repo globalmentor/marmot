@@ -49,7 +49,7 @@ public class AccessRule extends AbstractMarmotSecurityResource {
 	 * @see Select#SELECTOR_PROPERTY_URI
 	 */
 	public Selector getSelector() {
-		return asInstance(getPropertyValue(SELECTOR_PROPERTY_URI), Selector.class); //return the select.selector value
+		return asInstance(getPropertyValue(SELECTOR_PROPERTY_URI), Selector.class).orElse(null); //return the select.selector value
 	}
 
 	/**
@@ -66,7 +66,7 @@ public class AccessRule extends AbstractMarmotSecurityResource {
 	 * @see MarmotSecurity#ACCESS_LEVEL_PROPERTY_URI
 	 */
 	public AccessLevel getAccessLevel() {
-		return asInstance(getPropertyValue(ACCESS_LEVEL_PROPERTY_URI), AccessLevel.class); //return the security.accessLevel value
+		return asInstance(getPropertyValue(ACCESS_LEVEL_PROPERTY_URI), AccessLevel.class).orElse(null); //return the security.accessLevel value
 	}
 
 	/**
