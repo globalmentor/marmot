@@ -68,7 +68,7 @@
 		<dependency>
 			<groupId>com.globalmentor</groupId>
 			<artifactId>globalmentor-core</artifactId>
-			<version>0.5.3</version>
+			<version>0.5.5</version>
 		</dependency>
 
 		<dependency>
